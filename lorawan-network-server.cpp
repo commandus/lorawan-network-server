@@ -1,9 +1,7 @@
-#include <string>
-#include <cstring>
-#include <vector>
 #include <iostream>
-#include <iomanip>
+#include <cstring>
 #include <fstream>
+
 #include <sys/time.h>
 #include <signal.h>
 #include <unistd.h>
@@ -20,8 +18,8 @@
 #include "utillora.h"
 #include "utilstring.h"
 
-#include "udp-socket.h"
 #include "udp-emitter.h"
+#include "config-json.h"
 
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
@@ -30,23 +28,14 @@ const std::string progname = "lorawan-network-server";
 #define DEF_BUFFER_SIZE 4096
 #define DEF_BUFFER_SIZE_S "4096"
 
-class PacketOptions
-{
-public:
-  int frameCounter;
-  PacketOptions()
-      : frameCounter(0)
-  {
-  }
-};
+Configuration *config = NULL;
 
 static UDPEmitter emitter;
 
 static void done()
 {
   // destroy and free all
-  emitter.closeSocket();
-  if (emitter.verbosity > 1)
+  if (config && config->serverConfig.verbosity > 1)
     std::cerr << "Semtech UDP packet emitter socket closed gracefully" << std::endl;
   exit(0);
 }
@@ -94,15 +83,12 @@ void setSignalHandler()
  **/
 int parseCmd(
     UDPEmitter &emitter,
-    PacketOptions &packetOptions,
     int argc,
     char *argv[])
 {
   // device path
   struct arg_str *a_address = arg_str1(NULL, NULL, "<host:port>", "destination host name or address and port");
   struct arg_int *a_size = arg_int0("s", "size", "<size>", "buffer size. Default " DEF_BUFFER_SIZE_S);
-
-  struct arg_int *a_frame_counter = arg_int0(NULL, "frame-counter", "<number>", "frame counter. Default 0");
 
   struct arg_str *a_logfilename = arg_str0("l", "logfile", "<file>", "log file");
   struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
@@ -112,7 +98,6 @@ int parseCmd(
 
   void *argtable[] = {
       a_address, a_size,
-      a_frame_counter,
       a_logfilename, a_daemonize, a_verbosity, a_help, a_end};
 
   int nerrors;
@@ -126,8 +111,9 @@ int parseCmd(
   // Parse the command line as defined by argtable[]
   nerrors = arg_parse(argc, argv, argtable);
 
-  emitter.daemonize = a_daemonize->count > 0;
-  emitter.verbosity = a_verbosity->count;
+  config = new Configuration("");
+  config->serverConfig.daemonize = a_daemonize->count > 0;
+  config->serverConfig.verbosity = a_verbosity->count;
   if (a_size->count)
   {
     int sz = *a_size->ival;
@@ -142,30 +128,8 @@ int parseCmd(
     }
   }
 
-  if (a_frame_counter->count)
+    if (a_logfilename->count)
   {
-    packetOptions.frameCounter = *a_frame_counter->ival;
-  }
-
-  if (a_logfilename->count)
-  {
-    emitter.logfilename = *a_logfilename->sval;
-    emitter.logstream = new std::fstream(*a_logfilename->sval, std::ostream::out);
-    if (!emitter.logstream || emitter.logstream->bad())
-    {
-      std::cerr << ERR_INVALID_PAR_LOG_FILE << std::endl;
-      nerrors++;
-      if (emitter.logstream)
-      {
-        delete emitter.logstream;
-        emitter.logstream = NULL;
-      }
-    }
-  }
-  else
-  {
-    emitter.logstream = &std::cerr;
-    emitter.logfilename = "";
   }
 
   if (!nerrors)
@@ -233,8 +197,7 @@ int main(
     int argc,
     char *argv[])
 {
-  PacketOptions packetOptions;
-  if (parseCmd(emitter, packetOptions, argc, argv) != 0)
+  if (parseCmd(emitter, argc, argv) != 0)
   {
     exit(ERR_CODE_COMMAND_LINE);
   }
@@ -243,31 +206,12 @@ int main(
   setSignalHandler();
 #endif
 
-  semtechUDPPacket packet;
-  packet.setGatewayId("00006cc3743eed46");
-
-  packet.setDeviceEUI("1122334455667788");
-  packet.setDeviceAddr("11111111");
-  packet.setNetworkSessionKey("11111111111111111111111111111111");
-  packet.setApplicationSessionKey("11111111111111111111111111111111");
-  packet.setFrameCounter(packetOptions.frameCounter);
-  packet.setPayload(1, "123");
-
-  std::cerr << "GW:  " << deviceEui2string(packet.prefix.mac) << std::endl;
-  std::cerr << "EUI: " << deviceEui2string(packet.deviceEUI) << std::endl;
-  std::cerr << "RFM packet: " << hexString(packet.serialize2RfmPacket()) << std::endl;
-  std::cout << packet.toString() << std::endl;
-
-  // handleUplinkMACCommands
-  // 401111111100000000a1a46f3b80a8eb a1 a4 6f 3b 80 a8 eb
-
-  exit(0);
-
-  if (emitter.daemonize)
+  
+  if (config->serverConfig.daemonize)
   {
     char wd[PATH_MAX];
     std::string progpath = getcwd(wd, PATH_MAX);
-    if (emitter.verbosity > 1)
+    if (config->serverConfig.verbosity > 1)
       std::cerr << MSG_DAEMON_STARTED << progpath << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
     OPENSYSLOG()
     Daemonize daemonize(progname, progpath, run, stop, done);

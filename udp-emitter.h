@@ -1,19 +1,24 @@
+#ifndef UDP_EMITTER_H
+#define UDP_EMITTER_H 1
+
 #include <string>
+#include <functional>
 #include "udp-socket.h"
 
 class UDPEmitter
 {
 private:
 	std::string buffer;
-
 public:
 	UDPSocket mSocket;
 	bool stopped;
-	bool daemonize;
-	int verbosity;
-	std::string logfilename;
-	std::ostream *logstream;
 	struct sockaddr_in remotePeerAddress;
+
+	std::function<void(
+		int level,
+		int code,
+		const std::string &message
+	)> *onLog;
 
 	UDPEmitter();
 	~UDPEmitter();
@@ -52,4 +57,15 @@ public:
 
 	void setLastRemoteAddress(
 		struct sockaddr_in *value);
+
+	void clearLogger();
+	void setLogger(
+		std::function<void(
+			int level,
+			int code,
+			const std::string &message
+	)> *onLog);
+	
 };
+
+#endif

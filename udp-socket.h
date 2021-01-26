@@ -1,3 +1,6 @@
+#ifndef UDP_SOCKET_H
+#define UDP_SOCKET_H 1
+
 #include <string>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -13,3 +16,5 @@ class UDPSocket {
     UDPSocket(const UDPSocket &value);
     std::string toString();
 };
+
+#endif

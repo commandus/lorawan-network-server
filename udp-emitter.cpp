@@ -2,27 +2,40 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include <sstream>
+#include <unistd.h>
+#include <syslog.h>
+
+#include "utilstring.h"
+#include "errlist.h"
 
 #define DEF_BUFFER_SIZE     4096
 
 UDPEmitter::UDPEmitter() :
-	stopped(false), daemonize(false), verbosity(0),
-	logfilename(""), logstream(&std::cerr)
+	stopped(false), onLog(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
 }
 
 UDPEmitter::~UDPEmitter() {
-	if (logstream) {
-	if (!logfilename.empty())
-		delete logstream;
-	logstream = NULL;
-	}
 }
 
 void UDPEmitter::setBufferSize(size_t value) {
 	buffer.resize(value);
+}
+
+void UDPEmitter::clearLogger() {
+	onLog = NULL;
+}
+
+void UDPEmitter::setLogger(
+	std::function<void(
+		int level,
+		int code,
+		const std::string &message
+)> *value) {
+	onLog = value;
 }
 
 std::string UDPEmitter::toString() {
@@ -68,12 +81,12 @@ int UDPEmitter::listenSocket(
 ) {
 	int sock = openSocket(retval, address, port);
 	if (sock >= 0) {
-	int r = bind(sock, retval.addr.ai_addr, retval.addr.ai_addrlen);
-	if (r < 0) {
-		std::cerr << ERR_BIND << errno << ": "<< strerror(errno) << std::endl;
-		close(sock);
-		return r;
-	}
+		int r = bind(sock, retval.addr.ai_addr, retval.addr.ai_addrlen);
+		if (r < 0) {
+			std::cerr << ERR_BIND << errno << ": "<< strerror(errno) << std::endl;
+			close(sock);
+			return r;
+		}
 	}
 	return sock;
 }
@@ -126,23 +139,25 @@ bool UDPEmitter::isPeerAddr(
 ) {
 	struct sockaddr_in *s = (struct sockaddr_in *) mSocket.addr.ai_addr;
 	return (s->sin_family == remotePeerAddr->sin_family && 
-	memcmp(&s->sin_addr, &remotePeerAddr->sin_addr, sizeof(struct in_addr)) == 0 && 
-	s->sin_port == remotePeerAddr->sin_port
+		memcmp(&s->sin_addr, &remotePeerAddr->sin_addr, sizeof(struct in_addr)) == 0 && 
+		s->sin_port == remotePeerAddr->sin_port
 	);
 }
 
 int UDPEmitter::sendDown(
 	size_t size
 ) {
-	if (logstream && verbosity > 2) {
-	struct sockaddr_in *s = (struct sockaddr_in *) mSocket.addr.ai_addr;
-	*logstream << hexString(buffer.c_str(), size) 
-		<< " -> " << inet_ntoa(s->sin_addr) << ":" << ntohs(s->sin_port) << std::endl;
+	if (onLog) {
+		std::stringstream ss;
+		struct sockaddr_in *s = (struct sockaddr_in *) mSocket.addr.ai_addr;
+		ss << hexString(buffer.c_str(), size) 
+			<< " -> " << inet_ntoa(s->sin_addr) << ":" << ntohs(s->sin_port) << std::endl;
+		(*onLog)(LOG_INFO, LOG_UDP_EMITTER, ss.str());
 	}
 
 	size_t r = sendto(mSocket.socket, buffer.c_str(), size, 0, mSocket.addr.ai_addr, mSocket.addr.ai_addrlen);
 	if (r < 0)
-	return r;
+		return r;
 	return 0;
 }
 
@@ -151,9 +166,11 @@ int UDPEmitter::sendUp(
 ) {
 	// skip first socket
 	// size_t r = sendto(sockets[0].socket, msg, size, 0, addr.ai_addr, addr.ai_addrlen);
-	if (logstream && verbosity > 2) {
-	*logstream << hexString(buffer.c_str(), size) 
-		<< " <- " << inet_ntoa(remotePeerAddress.sin_addr) << ":" << ntohs(remotePeerAddress.sin_port) << std::endl;
+	if (onLog) {
+		std::stringstream ss;
+		ss << hexString(buffer.c_str(), size) 
+			<< " <- " << inet_ntoa(remotePeerAddress.sin_addr) << ":" << ntohs(remotePeerAddress.sin_port) << std::endl;
+		(*onLog)(LOG_INFO, LOG_UDP_EMITTER, ss.str());
 	}
 	size_t r = sendto(mSocket.socket, buffer.c_str(), size, 0, (struct sockaddr *) &remotePeerAddress, sizeof(remotePeerAddress));
 	return r;

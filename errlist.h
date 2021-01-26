@@ -1,4 +1,12 @@
 
+/* syslog
+#define	LOG_ERROR							1
+#define	LOG_INFO							2
+#define	LOG_DEBUG							3
+*/
+
+#define LOG_UDP_EMITTER						1
+
 #define LORA_OK            					0
 #define ERR_CODE_COMMAND_LINE		    	-500
 #define ERR_CODE_OPEN_DEVICE		    	-501

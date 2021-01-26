@@ -1,6 +1,8 @@
 #include <sstream>
 #include <cstring>
+
 #include "udp-socket.h"
+#include "errlist.h"
 
 UDPSocket::UDPSocket() 
       : socket(0)
