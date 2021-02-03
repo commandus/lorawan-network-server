@@ -29,7 +29,8 @@ rapid_headers = \
 
 nobase_dist_include_HEADERS = \
 	platform.h utilstring.h utildate.h strptime.h \
-	utillora.h udp-socket.h udp-emitter.h config-json.h \
+	utillora.h udp-socket.h udp-emitter.h udp-listener.h \
+	config-json.h \
 	errlist.h daemonize.h aes-128.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -37,7 +38,8 @@ nobase_dist_include_HEADERS = \
 
 lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp \
-	utillora.cpp udp-socket.cpp udp-emitter.cpp config-json.cpp \
+	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
+	config-json.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp aes-128.c \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp
@@ -60,6 +62,12 @@ test_1_SOURCES = \
 test_1_LDADD = $(commonlibs)
 test_1_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-1
+test_udp_listen_SOURCES = \
+	tests/test-udp-listen.cpp \
+	udp-socket.cpp errlist.cpp
+test_udp_listen_LDADD =
+test_udp_listen_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-1 test-udp-listen
 
 TESTS = $(check_PROGRAMS)

@@ -6,6 +6,7 @@
 */
 
 #define LOG_UDP_EMITTER						1
+#define LOG_UDP_LISTENER					2
 
 #define LORA_OK            					0
 #define ERR_CODE_COMMAND_LINE		    	-500
@@ -19,6 +20,21 @@
 #define ERR_CODE_INVALID_BUFFER_SIZE		-508
 #define ERR_CODE_GRPC_NETWORK_SERVER_FAIL	-509
 #define ERR_CODE_INVALID_RFM_HEADER			-510
+#define ERR_CODE_INVALID_ADDRESS			-511
+#define ERR_CODE_INVALID_FAMILY				-512
+#define ERR_CODE_SOCKET_CREATE		    	-513
+#define ERR_CODE_SOCKET_BIND		    	-514
+#define ERR_CODE_SOCKET_OPEN		    	-515
+#define ERR_CODE_SOCKET_CLOSE		    	-516
+#define ERR_CODE_SOCKET_READ		    	-517
+#define ERR_CODE_SOCKET_WRITE		    	-518
+#define ERR_CODE_SOCKET_NO_ONE				-519
+#define ERR_CODE_SELECT						-520
+
+#define ERR_MESSAGE						"Error "
+#define ERR_DEBUG						"Info "
+#define ERR_WARNING						"Warning "
+#define ERR_TIMEOUT						"Timeout"
 
 #define ERR_COMMAND_LINE        		"Wrong parameter(s)"
 #define ERR_OPEN_SOCKET         		"open socket error "
@@ -26,15 +42,27 @@
 #define ERR_BAD_STATUS          		"Bad status"
 #define ERR_INVALID_PAR_LOG_FILE		"Invalid log file "
 #define ERR_GET_ADDRESS					"get address info error "
-#define ERR_BIND						"bind error "
+#define ERR_BIND						"Can not bind "
 #define ERR_INVALID_SERVICE				"Invalid service address "
 #define ERR_INVALID_GATEWAY_ID			"Invalid gateway identifier"
 #define ERR_INVALID_DEVICE_EUI			"Invalid device EUI"
 #define ERR_INVALID_BUFFER_SIZE			"Invalid buffer size "
 #define ERR_GRPC_NETWORK_SERVER_FAIL	"gRPC network server error "
 #define ERR_INVALID_RFM_HEADER			"Invalid RFM header"
+#define ERR_INVALID_ADDRESS				"Invalid Internet address"
+#define ERR_INVALID_FAMILY				"Invalid Internet address family"
+#define ERR_SOCKET_CREATE		    	"Can not create socket"
+#define ERR_SOCKET_BIND		    		"Can not bind socket "
+#define ERR_SOCKET_OPEN		    		"Can not open socket"
+#define ERR_SOCKET_CLOSE		    	"Can not close socket"
+#define ERR_SOCKET_READ		    		"Can not read socket"
+#define ERR_SOCKET_WRITE		    	"Can not write socket"
+#define ERR_SOCKET_NO_ONE				"No sockets"
+#define ERR_SELECT						"Select error"
 
-#define MSG_INTERRUPTED 				"Interrupted "
+#define MSG_PROG_NAME					"LoRaWAN network listener"
+#define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "
+#define MSG_GRACEFULLY_STOPPED			MSG_PROG_NAME " closed gracefully"
 #define MSG_PG_CONNECTED        		"Connected"
 #define MSG_PG_CONNECTING       		"Connecting..."
 #define MSG_DAEMON_STARTED      		"Start daemon "
