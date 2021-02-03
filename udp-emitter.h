@@ -16,7 +16,8 @@ public:
 
 	std::function<void(
 		int level,
-		int code,
+		int modulecode,
+		int errorcode,
 		const std::string &message
 	)> *onLog;
 
@@ -62,7 +63,8 @@ public:
 	void setLogger(
 		std::function<void(
 			int level,
-			int code,
+			int modulecode,
+			int errorcode,
 			const std::string &message
 	)> *onLog);
 	
