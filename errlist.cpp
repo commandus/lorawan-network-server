@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 21
+#define ERR_COUNT 23
 
 static const char* errlist[ERR_COUNT] = {
   ERR_COMMAND_LINE,
@@ -24,7 +24,9 @@ static const char* errlist[ERR_COUNT] = {
   ERR_SOCKET_READ,
   ERR_SOCKET_WRITE,
   ERR_SOCKET_NO_ONE,
-  ERR_SELECT
+  ERR_SELECT,
+  ERR_INVALID_PACKET,
+  ERR_INVALID_JSON
 };
 
 const char *strerror_client(

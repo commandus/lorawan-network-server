@@ -3,6 +3,8 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
+#include "errlist.h"
+
 #define DEF_BUFFER_SIZE	4096
 
 void ServerConfig::clear() {
@@ -24,14 +26,24 @@ int ServerConfig::parse(
 ) {
 	clear();
 	if (value.HasMember("listenAddressIPv4")) {
-		rapidjson::Value &address = value["listenAddressIPv4"];
-		if (address.IsString())
-			listenAddressIPv4.push_back(address.GetString());
+		rapidjson::Value &addresses = value["listenAddressIPv4"];
+		if (addresses.IsArray()) {
+			for (int i = 0; i < addresses.Size(); i++) {
+				rapidjson::Value &address = addresses[i];
+				if (address.IsString())
+					listenAddressIPv4.push_back(address.GetString());
+			}
+		}
 	}
 	if (value.HasMember("listenAddressIPv6")) {
-		rapidjson::Value &address = value["listenAddressIPv6"];
-		if (address.IsString())
-			listenAddressIPv6.push_back(address.GetString());
+		rapidjson::Value &addresses = value["listenAddressIPv6"];
+		if (addresses.IsArray()) {
+			for (int i = 0; i < addresses.Size(); i++) {
+				rapidjson::Value &address = addresses[i];
+				if (address.IsString())
+					listenAddressIPv6.push_back(address.GetString());
+			}
+		}
 	}
 	if (value.HasMember("readBufferSize")) {
 		rapidjson::Value &rbs =  value["readBufferSize"];
@@ -42,12 +54,12 @@ int ServerConfig::parse(
 	}
 	if (value.HasMember("verbosity")) {
 		rapidjson::Value &verbose =  value["verbosity"];
-		if (verbose.IsString())
+		if (verbose.IsInt())
 			verbosity = verbose.GetInt();
 	}
-	if (value.HasMember("deamonize")) {
-		rapidjson::Value &daemon =  value["deamonize"];
-		if (daemon.IsString())
+	if (value.HasMember("daemonize")) {
+		rapidjson::Value &daemon =  value["daemonize"];
+		if (daemon.IsBool())
 			daemonize = daemon.GetBool();
 	}
 	return 0;
@@ -88,8 +100,8 @@ void ServerConfig::toJson(
 	value.AddMember("verbosity", verbose, allocator);
 
 	rapidjson::Value deamon;
-	deamon.SetBool(verbosity);
-	value.AddMember("deamonize", deamon, allocator);
+	deamon.SetBool(daemonize);
+	value.AddMember("daemonize", deamon, allocator);
 }
 
 int Configuration::parse(
@@ -97,7 +109,7 @@ int Configuration::parse(
 ) {
 	int r = 0;
 	if (!json)
-		return 1;
+		return ERR_CODE_INVALID_JSON;
 	rapidjson::Document doc;
 	doc.Parse(json);
 	if (doc.IsObject()) {
@@ -113,7 +125,6 @@ int Configuration::parse(
 	}
 	return r;
 }
-
 
 Configuration::Configuration() 
 	: configFileName("")

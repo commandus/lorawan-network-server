@@ -1,17 +1,35 @@
 #include <string>
+#include <vector>
 #include <inttypes.h>
 #include "platform.h"
 #include "aes-128.h"
 
-typedef unsigned char DEVADDR[4];
-typedef unsigned char DEVUEI[8];
+#include "rapidjson/document.h"
 
+typedef unsigned char DEVADDR[4];
+typedef unsigned char DEVEUI[8];
+
+/**
+ * PUSH_DATA, PULL_DATA packets
+ * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT section 3.2
+ */
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
-	DEVUEI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
+	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
 } PACKED SEMTECH_LORA_PREFIX;	// 12 bytes
+// After prefix "JSON object", starting with {, ending with }, see section 4
+
+/**
+ * PUSH_ACK packet
+ * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT section 3.3
+ */
+typedef ALIGN struct {
+	uint8_t version;			// protocol version = 2
+	uint16_t token;				// same random token as SEMTECH_LORA_PREFIX
+	uint8_t tag;				// PUSH_ACK 0x01
+} PACKED SEMTECH_ACK;			// 4 bytes
 
 /**
  * 
@@ -48,9 +66,10 @@ typedef enum {
 class rfmMetaData {
 public:
 	time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
+	uint32_t tmst;				// Internal timestamp of "RX finished" event (32b unsigned)
 	uint8_t chan;				// Concentrator "IF" channel used for RX (unsigned integer)
 	uint8_t rfch;				// Concentrator "RF chain" used for RX (unsigned integer)
-	uint32_t freq;				// RX central frequency in MHz (unsigned float, Hz precision) 868.900000
+	double freq;				// RX central frequency in MHz (unsigned float, Hz precision) 868.900000
 	int8_t stat;				// CRC status: 1 = OK, -1 = fail, 0 = no CRC
 	MODULATION modu;			// LORA, FSK
 	std::string datr;			// LoRa datarate identifier e.g. "SF7BW125"
@@ -59,10 +78,19 @@ public:
 	int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
 	float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
 	rfmMetaData();
-	uint32_t tmst();			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
+
+	uint32_t tmms();			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
 	std::string modulation();
+	void setModulation(const char * value);
 	std::string frequency();
 	std::string snrratio();
+	void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator, const std::string &data);
+	int parse(
+		int &retSize,
+		std::string &retData,
+		rapidjson::Value &value
+	);
+	std::string toDebugString(const std::string &data);
 };
 
 class rfmHeader {
@@ -100,17 +128,20 @@ public:
 
 class semtechUDPPacket {
 private:
-	rfmMetaData metadata;
+	std::vector<rfmMetaData> metadata;
 	rfmHeader header;
 	std::string payload;
 	int parse(const std::string &packet);
+	int parseMetadataJSON(const char* json);
 public:	
+	int errcode;
 	SEMTECH_LORA_PREFIX prefix;
-	DEVUEI deviceEUI;
+	DEVEUI deviceEUI;
 	KEY128 nwkSKey;
 	KEY128 appSKey;
 
 	semtechUDPPacket();
+	semtechUDPPacket(const void *packetForwarder, int size);
 	semtechUDPPacket(const std::string &packet, const std::string &devaddr, const std::string &appskey);
 	std::string serialize2RfmPacket();
 	std::string toString();
@@ -132,6 +163,7 @@ public:
 	std::string getPayload();
 	int setPayload(uint8_t port, const std::string &payload);
 	int setPayload(const std::string &value);
+	void ack(SEMTECH_ACK *retval);	// 4 bytes
 };
 
 /**
@@ -153,11 +185,11 @@ std::string loraDataJson(
 );
 
 void setKey(KEY128 &value, const std::string &strvalue);
-void setMAC(DEVUEI &value, const std::string &strvalue);
+void setMAC(DEVEUI &value, const std::string &strvalue);
 void setAddr(DEVADDR &value, const std::string &strvalue);
 
 std::string key2string(const KEY128 &value);
-std::string deviceEui2string(const DEVUEI &value);
+std::string deviceEui2string(const DEVEUI &value);
 
 void encryptPayload(
 	std::string &payload,

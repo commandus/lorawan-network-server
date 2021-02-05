@@ -122,11 +122,9 @@ int parseCmd(
 	nerrors = arg_parse(argc, argv, argtable);
 
 	if (a_config->count)
-	{
 		config->configFileName = *a_config->sval;
-	}
 
-	config->serverConfig.daemonize = a_daemonize->count > 0;
+	config->serverConfig.daemonize = (a_daemonize->count > 0);
 	config->serverConfig.verbosity = a_verbosity->count;
 
 	if (!nerrors)

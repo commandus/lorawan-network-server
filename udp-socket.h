@@ -31,6 +31,7 @@ class UDPSocket {
     UDPSocket(const std::string &address, MODE_OPEN_SOCKET mode, MODE_FAMILY familyHint);
     ~UDPSocket();
     std::string toString() const;
+    static std::string addrString(const struct sockaddr *addr);
     int recv(void *retbuf, size_t size, void *peerAddress) const;
     bool isIPv6() const;
     bool isPeerAddr(struct sockaddr *remotePeerAddr) const;

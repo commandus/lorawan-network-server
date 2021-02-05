@@ -30,6 +30,8 @@
 #define ERR_CODE_SOCKET_WRITE		    	-518
 #define ERR_CODE_SOCKET_NO_ONE				-519
 #define ERR_CODE_SELECT						-520
+#define ERR_CODE_INVALID_PACKET				-521
+#define ERR_CODE_INVALID_JSON				-522
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -59,6 +61,8 @@
 #define ERR_SOCKET_WRITE		    	"Can not write socket"
 #define ERR_SOCKET_NO_ONE				"No sockets"
 #define ERR_SELECT						"Select error"
+#define ERR_INVALID_PACKET				"Invalid packet"
+#define ERR_INVALID_JSON				"Invalid JSON"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "
@@ -74,6 +78,7 @@
 #define MSG_DEVICE						"Device "
 #define MSG_DEVICE_EUI					"Device EUI "
 #define MSG_DEVICE_ACTIVATION			"Device activation "
+#define MSG_READ_BYTES					"Read bytes "
 #define ERROR							"Error "
 
 const char *strerror_client(int errcode);

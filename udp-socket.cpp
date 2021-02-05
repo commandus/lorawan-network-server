@@ -38,6 +38,27 @@ void UDPSocket::closeSocket() {
 		sock = 0;
 	}
 }
+std::string UDPSocket::addrString(
+	const struct sockaddr *value
+) {
+	char buf[INET6_ADDRSTRLEN];
+	int port;
+	if (value->sa_family == AF_INET) {
+		if (inet_ntop(AF_INET, &((struct sockaddr_in *) value)->sin_addr, buf, sizeof(buf)) == NULL)
+			return "";
+		port = ntohs(((struct sockaddr_in *) value)->sin_port);
+	} else {
+		if (value->sa_family == AF_INET6) {
+			if (inet_ntop(AF_INET6, &((struct sockaddr_in6 *) value)->sin6_addr, buf, sizeof(buf)) == NULL) {
+				return "";
+			}
+		}
+		port = ntohs(((struct sockaddr_in6 *) value)->sin6_port);
+	}
+	std::stringstream ss;
+	ss << buf << ":" << port;
+	return ss.str();
+}
 
 std::string UDPSocket::toString() const {
 	char buf[INET6_ADDRSTRLEN];
@@ -55,7 +76,7 @@ std::string UDPSocket::toString() const {
 		port = ntohs(((struct sockaddr_in6 *) addr.ai_addr)->sin6_port);
 	}
 	std::stringstream ss;
-	ss << sock << " " << buf << ":" << port;
+	ss << buf << ":" << port;
 	return ss.str();
 }
 

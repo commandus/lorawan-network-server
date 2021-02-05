@@ -3,6 +3,9 @@
 #include <iomanip>
 #include <cstring>
 
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+
 #include "platform.h"
 #include "utillora.h"
 #include "utildate.h"
@@ -330,7 +333,7 @@ rfmMetaData::rfmMetaData()
 /**
  * GPS time of pkt RX, number of milliseconds since 06.Jan.1980
  */ 
-uint32_t rfmMetaData::tmst() {
+uint32_t rfmMetaData::tmms() {
 	return utc2gps(t);
 }
 
@@ -342,6 +345,15 @@ std::string rfmMetaData::modulation() {
 	default:
 		return "LORA";
 	}
+}
+
+void rfmMetaData::setModulation(
+	const char *value
+) {
+	if (strcmp(value, "FSK") == 0)
+		modu = FSK;
+	else
+		modu = LORA;
 }
 
 std::string rfmMetaData::frequency() {
@@ -356,6 +368,205 @@ std::string rfmMetaData::snrratio() {
 	int n = lsnr; 
 	int m = lsnr * 10.0 - n * 10;
 	ss << n << "." << m;
+	return ss.str();
+}
+
+/**
+ * 	Section 3.3	 
+ */
+const char* METADATA_NAMES[15] = {
+	"rxpk",	// 0 array name
+	"time", // 1 string | UTC time of pkt RX, us precision, ISO 8601 'compact' format
+	"tmms", // 2 number | GPS time of pkt RX, number of milliseconds since 06.Jan.1980
+	"tmst", // 3 number | Internal timestamp of "RX finished" event (32b unsigned)
+	"freq", // 4 number | RX central frequency in MHz (unsigned float, Hz precision)
+	"chan", // 5 number | Concentrator "IF" channel used for RX (unsigned integer)
+	"rfch", // 6 number | Concentrator "RF chain" used for RX (unsigned integer)
+	"stat", // 7 number | CRC status: 1 = OK, -1 = fail, 0 = no CRC
+	"modu", // 8 string | Modulation identifier "LORA" or "FSK"
+	"datr", // 9 string or number | LoRa datarate identifier (eg. SF12BW500) or FSK datarate (unsigned, in bits per second)
+	"codr", // 10 string | LoRa ECC coding rate identifier
+	"rssi", // 11 number | RSSI in dBm (signed integer, 1 dB precision)
+	"lsnr", // 12 number | Lora SNR ratio in dB (signed float, 0.1 dB precision)
+	"size", // 13 number | RF packet payload size in bytes (unsigned integer)
+	"data"  // 14 string | Base64 encoded RF packet payload, padded
+};
+
+void rfmMetaData::toJSON(
+	rapidjson::Value &value,
+	rapidjson::Document::AllocatorType& allocator,
+	const std::string &data
+) {
+	int ms;
+	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
+	rapidjson::Value v1(rapidjson::kStringType);
+	v1.SetString(dt.c_str(), dt.length());
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[1])), v1, allocator);
+
+	rapidjson::Value v2(tmms());
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[2])), v2, allocator);
+
+	rapidjson::Value v3(tmst);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[3])), v3, allocator);
+
+	rapidjson::Value v4(freq);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[4])), v4, allocator);
+
+	rapidjson::Value v5(chan);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[5])), v5, allocator);
+
+	rapidjson::Value v6(rfch);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[6])), v6, allocator);
+
+	rapidjson::Value v7(stat);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[7])), v7, allocator);
+
+	rapidjson::Value v8(rapidjson::kStringType);
+	std::string s8(modulation());
+	v8.SetString(s8.c_str(), s8.length());
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[8])), v8, allocator);
+
+	rapidjson::Value v9(rapidjson::kStringType);
+	v9.SetString(datr.c_str(), datr.length());
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[9])), v9, allocator);
+
+	rapidjson::Value v10(rapidjson::kStringType);
+	v10.SetString(codr.c_str(), codr.length());
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[10])), v10, allocator);
+
+	rapidjson::Value v11(rssi);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[11])), v11, allocator);
+
+	rapidjson::Value v12(lsnr);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[12])), v12, allocator);
+
+	rapidjson::Value v13(data.size());
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[13])), v13, allocator);
+
+	rapidjson::Value v14(rapidjson::kStringType);
+	v14.SetString(data.c_str(), data.size());
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[14])), v14, allocator);
+}
+
+int rfmMetaData::parse(
+	int &retSize,
+	std::string &retData,
+	rapidjson::Value &value
+) {
+	if (value.HasMember(METADATA_NAMES[1])) {
+		rapidjson::Value &v = value[METADATA_NAMES[1]];
+		if (v.IsString()) {
+			t = parseDate(v.GetString());
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[3])) {
+		rapidjson::Value &v = value[METADATA_NAMES[3]];
+		if (v.IsInt()) {
+			tmst = v.GetInt();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[4])) {
+		rapidjson::Value &v = value[METADATA_NAMES[4]];
+		if (v.IsDouble()) {
+			freq = v.GetDouble();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[5])) {
+		rapidjson::Value &v = value[METADATA_NAMES[5]];
+		if (v.IsInt()) {
+			chan = v.GetInt();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[6])) {
+		rapidjson::Value &v = value[METADATA_NAMES[6]];
+		if (v.IsInt()) {
+			rfch = v.GetInt();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[7])) {
+		rapidjson::Value &v = value[METADATA_NAMES[7]];
+		if (v.IsInt()) {
+			stat = v.GetInt();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[8])) {
+		rapidjson::Value &v = value[METADATA_NAMES[8]];
+		if (v.IsString()) {
+			setModulation(v.GetString());
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[9])) {
+		rapidjson::Value &v = value[METADATA_NAMES[9]];
+		if (v.IsString()) {
+			datr = v.GetString();
+		}
+	}
+	
+	if (value.HasMember(METADATA_NAMES[10])) {
+		rapidjson::Value &v = value[METADATA_NAMES[10]];
+		if (v.IsString()) {
+			codr = v.GetString();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[11])) {
+		rapidjson::Value &v = value[METADATA_NAMES[11]];
+		if (v.IsInt()) {
+			rssi = v.GetInt();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[12])) {
+		rapidjson::Value &v = value[METADATA_NAMES[12]];
+		if (v.IsInt()) {
+			lsnr = v.GetInt();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[13])) {
+		rapidjson::Value &v = value[METADATA_NAMES[13]];
+		if (v.IsInt()) {
+			retSize = v.GetInt();
+		}
+	}
+
+	if (value.HasMember(METADATA_NAMES[14])) {
+		rapidjson::Value &v = value[METADATA_NAMES[14]];
+		if (v.IsString()) {
+			retData = v.GetString();
+		}
+	}
+	return 0;
+}
+
+std::string rfmMetaData::toDebugString(
+	const std::string &data
+) {
+	std::stringstream ss;
+	int ms;
+	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
+	ss << "{" 
+		<< "\"time\":\"" << dt << "\""
+		<< "\"tmms\":" << tmms()
+		<< "\"tmst\":" << tmst
+		<< "\"freq\":" << frequency()
+		<< "\"chan\":" << chan
+		<< "\"rfch\":" << rfch
+		<< "\"stat\":" << stat
+		<< "\"modu\":\"" << modulation() << "\""
+		<< "\"datr\":\"" << datr << "\""
+		<< "\"codr\":\"" << codr << "\""
+		<< "\"rssi\":" << rssi
+		<< "\"lsnr\":" << lsnr
+		<< "\"size\":" << data.size()
+		<< "\"data\":\"" << data << "\"}";
 	return ss.str();
 }
 
@@ -388,7 +599,6 @@ rfmHeader::rfmHeader(
 	header.framecontrol = 0;
 	header.macheader = 0x40;
 }
-
 
 rfmHeader::rfmHeader(
 	const DEVADDR &addr,
@@ -433,6 +643,7 @@ std::string rfmHeader::toString() {
 }
 
 semtechUDPPacket::semtechUDPPacket() 
+	: errcode(0)
 {
 	prefix.version = 2;
 	prefix.token = 0;
@@ -448,11 +659,26 @@ semtechUDPPacket::semtechUDPPacket()
 
 	memset(&header.header.devaddr, 0, sizeof(DEVADDR));
 	
-	memset(&deviceEUI, 0, sizeof(DEVUEI));
+	memset(&deviceEUI, 0, sizeof(DEVEUI));
 	memset(&nwkSKey, 0, sizeof(KEY128));
 	memset(&appSKey, 0, sizeof(KEY128));
 
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
+}
+
+semtechUDPPacket::semtechUDPPacket(
+	const void *packetForwarder,
+	int size
+) {
+	if (size < sizeof(SEMTECH_LORA_PREFIX)) {
+		errcode = ERR_CODE_INVALID_PACKET;
+		return;
+	}
+	memmove(&prefix, packetForwarder, sizeof(SEMTECH_LORA_PREFIX));
+	// check version
+	if (prefix.version != 2) {
+		errcode = ERR_CODE_INVALID_PACKET;
+	}
 }
 
 /**
@@ -462,7 +688,9 @@ semtechUDPPacket::semtechUDPPacket(
 	const std::string &packet,
 	const std::string &devaddr,
 	const std::string &appskey
-) {
+)
+	: errcode(0)
+{
 	prefix.version = 2;
 	prefix.token = 0;
 	prefix.tag = 0;
@@ -471,7 +699,7 @@ semtechUDPPacket::semtechUDPPacket(
 	header.header.macheader = 0x40;
 	setAddr(header.header.devaddr, devaddr);
 
-	memset(&deviceEUI, 0, sizeof(DEVUEI));
+	memset(&deviceEUI, 0, sizeof(DEVEUI));
 	memset(&nwkSKey, 0, sizeof(KEY128));
 	setKey(appSKey, appskey);
 
@@ -509,9 +737,9 @@ std::string jsonPackage(
 }
 
 static std::string getMAC(
-	const DEVUEI &value
+	const DEVEUI &value
 ) {
-	return hexString(&value, sizeof(DEVUEI));
+	return hexString(&value, sizeof(DEVEUI));
 }
 
 RFM_HEADER *semtechUDPPacket::getRfmHeader() {
@@ -651,6 +879,12 @@ int semtechUDPPacket::setPayload(
 	payload = value;
 }
 
+void semtechUDPPacket::ack(SEMTECH_ACK *retval) {	// 4 bytes
+	retval->version = 2;
+	retval->token = prefix.token;
+	retval->tag = 1;	// PUSH_ACK
+}
+
 /**
  * @brief constructs a LoRaWAN package and sends it
  * @param data pointer to the array of data that will be transmitted
@@ -785,18 +1019,18 @@ void setKey(
 }
 
 void setMAC(
-	DEVUEI &retval,
+	DEVEUI &retval,
 	const std::string &value
 ) {
-	if (value.size() == sizeof(DEVUEI)) {
+	if (value.size() == sizeof(DEVEUI)) {
 		*(uint64_t*) retval = ntoh8(*(uint64_t *) value.c_str());
 		return;
 	}
-	if (value.size() < sizeof(DEVUEI) * 2)
+	if (value.size() < sizeof(DEVEUI) * 2)
 		return;
-	memset(retval, 0, sizeof(DEVUEI));
+	memset(retval, 0, sizeof(DEVEUI));
 	unsigned char *s = (unsigned char *) value.c_str();
-	for (int i = 0; i < sizeof(DEVUEI); i++) {
+	for (int i = 0; i < sizeof(DEVEUI); i++) {
 		retval[i] = hexdec(s);
 		s += 2;
 	}
@@ -832,14 +1066,54 @@ std::string key2string(
 }
 
 std::string deviceEui2string(
-	const DEVUEI &value
+	const DEVEUI &value
 ) {
 	std::stringstream ss;
 	ss << std::hex << std::setw(2) << std::setprecision(2) << std::setfill('0');
-	for (int i = 0; i < sizeof(DEVUEI); i++) {
+	for (int i = 0; i < sizeof(DEVEUI); i++) {
 		ss << (unsigned int) value[i];
 	}
 	return ss.str();
+}
+
+int semtechUDPPacket::parseMetadataJSON(
+	const char* json
+) {
+	if (!json)
+		return ERR_CODE_INVALID_JSON;
+	rapidjson::Document doc;
+	rapidjson::Document::AllocatorType &allocator(doc.GetAllocator());
+	doc.Parse(json);
+	if (!doc.IsObject())
+		return ERR_CODE_INVALID_JSON;
+
+	int r = 0;
+
+	// rapidjson::StringRef(METADATA_NAMES[1]))
+	if (!doc.HasMember(METADATA_NAMES[0]))
+		return ERR_CODE_INVALID_JSON;
+	rapidjson::Value &rxpk = doc[METADATA_NAMES[0]];
+	if (!rxpk.IsArray())
+		return ERR_CODE_INVALID_JSON;
+	int largestDataSize = -1;
+	std::string largestData;
+	for (int i = 0; i < rxpk.Size(); i++) {
+		rapidjson::Value &jm = rxpk[i];
+		if (!jm.IsObject())
+			return ERR_CODE_INVALID_JSON;
+		rfmMetaData m;
+		int sz;
+		std::string data;
+		int rr = m.parse(sz, data, jm);
+		if (rr)
+			return rr;
+		if (sz > largestDataSize) {
+			largestData = data;
+			largestDataSize = sz;
+		}
+		metadata.push_back(m);
+	}
+	return r;
 }
 
 int semtechUDPPacket::parse(
