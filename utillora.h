@@ -79,18 +79,18 @@ public:
 	float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
 	rfmMetaData();
 
-	uint32_t tmms();			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
-	std::string modulation();
+	uint32_t tmms() const;			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
+	std::string modulation() const;
 	void setModulation(const char * value);
-	std::string frequency();
-	std::string snrratio();
+	std::string frequency() const;
+	std::string snrratio() const;
 	void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator, const std::string &data);
 	int parse(
 		int &retSize,
 		std::string &retData,
 		rapidjson::Value &value
 	);
-	std::string toDebugString(const std::string &data);
+	std::string toJsonString(const std::string &data) const;
 };
 
 class rfmHeader {
@@ -145,6 +145,7 @@ public:
 	semtechUDPPacket(const std::string &packet, const std::string &devaddr, const std::string &appskey);
 	std::string serialize2RfmPacket();
 	std::string toString();
+	std::string metadataToJsonString();
 
 	RFM_HEADER *getRfmHeader();
 	rfmHeader *getHeader();

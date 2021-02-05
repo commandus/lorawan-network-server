@@ -333,11 +333,13 @@ rfmMetaData::rfmMetaData()
 /**
  * GPS time of pkt RX, number of milliseconds since 06.Jan.1980
  */ 
-uint32_t rfmMetaData::tmms() {
+uint32_t rfmMetaData::tmms() const
+{
 	return utc2gps(t);
 }
 
-std::string rfmMetaData::modulation() {
+std::string rfmMetaData::modulation() const
+{
 	switch (modu)
 	{
 	case FSK:
@@ -356,14 +358,16 @@ void rfmMetaData::setModulation(
 		modu = LORA;
 }
 
-std::string rfmMetaData::frequency() {
+std::string rfmMetaData::frequency() const
+{
 	std::stringstream ss;
 	int mhz = freq / 1000000; 
 	ss << mhz << "." << freq - (mhz * 1000000);
 	return ss.str();
 }
 
-std::string rfmMetaData::snrratio() {
+std::string rfmMetaData::snrratio() const
+{
 	std::stringstream ss;
 	int n = lsnr; 
 	int m = lsnr * 10.0 - n * 10;
@@ -546,9 +550,10 @@ int rfmMetaData::parse(
 	return 0;
 }
 
-std::string rfmMetaData::toDebugString(
+std::string rfmMetaData::toJsonString(
 	const std::string &data
-) {
+) const
+{
 	std::stringstream ss;
 	int ms;
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
@@ -712,12 +717,11 @@ std::string jsonPackage(
 	const std::string &rfmTxPackage
 )
 {
-	std::stringstream ss;
-	std::string s = base64_encode(std::string((const char *) rfmTxPackage.c_str(), rfmTxPackage.size()));
 	int ms;
 	time_t t = time_ms(ms);
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 
+	std::stringstream ss;
 	ss << "{\"rxpk\":[{ \
 	\"time\":\""<< dt << "\", \
 	\"tmst\":3512348611, \
@@ -730,8 +734,8 @@ std::string jsonPackage(
 	\"codr\":\"4/6\", \
 	\"rssi\":-35, \
 	\"lsnr\":5.1, \
-	\"size\":" << s.size() << ", \
-	\"data\":\"" << s << "\" \
+	\"size\":" << rfmTxPackage.size() << ", \
+	\"data\":\"" << base64_encode(std::string((const char *) rfmTxPackage.c_str(), rfmTxPackage.size())) << "\" \
 }]}";
 	return ss.str();
 }
@@ -812,7 +816,23 @@ std::string semtechUDPPacket::toString()
 
 	// prefix 12 bytes, metadata + payload
 	ss << std::string((const char *) &prefix, sizeof(SEMTECH_LORA_PREFIX))
-		<< jsonPackage(serialize2RfmPacket());
+		<< metadataToJsonString();
+	return ss.str();
+}
+
+std::string semtechUDPPacket::metadataToJsonString() 
+{
+	std::string d(serialize2RfmPacket());
+	std::stringstream ss;
+	ss << "{\"rxpk\":[";
+	bool needColon = false;
+	for (std::vector<rfmMetaData>::const_iterator it(metadata.begin()); it != metadata.end(); it++) {
+		if (needColon)
+			ss << ",";
+		ss << it->toJsonString(d);
+		needColon = true;
+	}
+	ss << "]}";
 	return ss.str();
 }
 
