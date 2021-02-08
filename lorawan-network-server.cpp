@@ -22,6 +22,7 @@
 #include "errlist.h"
 #include "utillora.h"
 #include "utilstring.h"
+#include "utildate.h"
 
 #include "udp-emitter.h"
 #include "udp-listener.h"

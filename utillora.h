@@ -63,6 +63,17 @@ typedef enum {
 	FSK = 1
 } MODULATION;
 
+class DeviceId {
+private:
+public:
+	DEVEUI deviceEUI;	///< device identifier
+	KEY128 nwkSKey;		///< shared session key
+	KEY128 appSKey;		///< private key
+
+	DeviceId();
+	DeviceId(const DeviceId &value);
+};
+
 class rfmMetaData {
 public:
 	time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
@@ -78,6 +89,7 @@ public:
 	int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
 	float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
 	rfmMetaData();
+	rfmMetaData(const rfmMetaData &value);
 
 	uint32_t tmms() const;			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
 	std::string modulation() const;
@@ -128,21 +140,29 @@ public:
 
 class semtechUDPPacket {
 private:
-	std::vector<rfmMetaData> metadata;
+	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	rfmHeader header;
 	std::string payload;
-	int parse(const std::string &packet);
-	int parseMetadataJSON(const char* json);
+	void clearPrefix();
+	int parseData(const std::string &data);
+	// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
+	int loadCredentialsDevAddr();
 public:	
+	// parse error code
 	int errcode;
+	// prefix contains gateway identifier
 	SEMTECH_LORA_PREFIX prefix;
-	DEVEUI deviceEUI;
-	KEY128 nwkSKey;
-	KEY128 appSKey;
+	// authentication keys
+	DeviceId devId;
 
+	// return array of packets from Basic communication protocol packet
+	static int parse(std::vector<semtechUDPPacket> &retPackets, const void *packetForwarderPacket, int size);
 	semtechUDPPacket();
-	semtechUDPPacket(const void *packetForwarder, int size);
-	semtechUDPPacket(const std::string &packet, const std::string &devaddr, const std::string &appskey);
+	// Called from parse()
+	semtechUDPPacket(const SEMTECH_LORA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data);
+	// TODO I dont remember what is it for
+	semtechUDPPacket(const std::string &data, const std::string &devaddr, const std::string &appskey);
+	
 	std::string serialize2RfmPacket();
 	std::string toString();
 	std::string metadataToJsonString();
@@ -166,36 +186,3 @@ public:
 	int setPayload(const std::string &value);
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
 };
-
-/**
- * @brief constructs a LoRaWAN package and sends it
- * @param data pointer to the array of data that will be transmitted
- * @param dataLength bytes to be transmitted
- * @param frameCounterUp  frame counter of upstream frames
- * @param devAddr 4 bytes long device address
- * @param nwkSkey 128 bits network key
- * @param appSkey 128 bits application key
- */
-std::string loraDataJson(
-	unsigned char *data, 
-	unsigned char dataLength,
-	unsigned int frameCounterTx,
-	DEVADDR &devAddr,
-	KEY128 &nwkSkey,
-	KEY128 &appSkey
-);
-
-void setKey(KEY128 &value, const std::string &strvalue);
-void setMAC(DEVEUI &value, const std::string &strvalue);
-void setAddr(DEVADDR &value, const std::string &strvalue);
-
-std::string key2string(const KEY128 &value);
-std::string deviceEui2string(const DEVEUI &value);
-
-void encryptPayload(
-	std::string &payload,
-	unsigned int frameCounter,
-	unsigned char direction,
-	DEVADDR &devAddr,
-	KEY128 &appSKey
-);

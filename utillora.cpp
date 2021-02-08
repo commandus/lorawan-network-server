@@ -318,6 +318,20 @@ static uint32_t calculateMIC(
 	return r;
 }
 
+DeviceId::DeviceId() {
+	memset(&deviceEUI, 0, sizeof(DEVEUI));
+	memset(&nwkSKey, 0, sizeof(KEY128));
+	memset(&appSKey, 0, sizeof(KEY128));
+}
+
+DeviceId::DeviceId(
+	const DeviceId &value
+) {
+	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
+	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+}
+
 const std::string DEF_DATA_RATE = "SF7BW125";
 const std::string DEF_ECCCODE_RATE = "4/6";
 #define DEF_RSSI	-35
@@ -328,6 +342,14 @@ rfmMetaData::rfmMetaData()
 	bps(0), codr(DEF_ECCCODE_RATE), rssi(DEF_RSSI), lsnr(DEF_LSNR)
 {
 	time(&t);			// UTC time of pkt RX, us precision, ISO 8601 'compact' format
+}
+
+rfmMetaData::rfmMetaData(
+	const rfmMetaData &value
+)
+	: t(value.t), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), modu(value.modu), datr(value.datr),
+		bps(value.bps), codr(value.codr), rssi(value.rssi), lsnr(value.lsnr)
+{
 }
 
 /**
@@ -448,7 +470,8 @@ void rfmMetaData::toJSON(
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[13])), v13, allocator);
 
 	rapidjson::Value v14(rapidjson::kStringType);
-	v14.SetString(data.c_str(), data.size());
+	std::string d(base64_encode(data));	// base64
+	v14.SetString(d.c_str(), d.size());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[14])), v14, allocator);
 }
 
@@ -544,7 +567,7 @@ int rfmMetaData::parse(
 	if (value.HasMember(METADATA_NAMES[14])) {
 		rapidjson::Value &v = value[METADATA_NAMES[14]];
 		if (v.IsString()) {
-			retData = v.GetString();
+			retData = base64_decode(v.GetString());
 		}
 	}
 	return 0;
@@ -558,20 +581,20 @@ std::string rfmMetaData::toJsonString(
 	int ms;
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 	ss << "{" 
-		<< "\"time\":\"" << dt << "\""
-		<< "\"tmms\":" << tmms()
-		<< "\"tmst\":" << tmst
-		<< "\"freq\":" << frequency()
-		<< "\"chan\":" << chan
-		<< "\"rfch\":" << rfch
-		<< "\"stat\":" << stat
-		<< "\"modu\":\"" << modulation() << "\""
-		<< "\"datr\":\"" << datr << "\""
-		<< "\"codr\":\"" << codr << "\""
-		<< "\"rssi\":" << rssi
-		<< "\"lsnr\":" << lsnr
-		<< "\"size\":" << data.size()
-		<< "\"data\":\"" << data << "\"}";
+		<< "\"" << METADATA_NAMES[1] << "\":\"" << dt << "\""
+		<< "\"" << METADATA_NAMES[2] << "\":" << tmms()
+		<< "\"" << METADATA_NAMES[3] << "\":" << tmst
+		<< "\"" << METADATA_NAMES[4] << "\":" << frequency()
+		<< "\"" << METADATA_NAMES[5] << "\":" << chan
+		<< "\"" << METADATA_NAMES[6] << "\":" << rfch
+		<< "\"" << METADATA_NAMES[7] << "\":" << stat
+		<< "\"" << METADATA_NAMES[8] << "\":\"" << modulation() << "\""
+		<< "\"" << METADATA_NAMES[9] << "\":\"" << datr << "\""
+		<< "\"" << METADATA_NAMES[10] << "\":\"" << codr << "\""
+		<< "\"" << METADATA_NAMES[11] << "\":" << rssi
+		<< "\"" << METADATA_NAMES[12] << "\":" << lsnr
+		<< "\"" << METADATA_NAMES[13] << "\":" << data.size()
+		<< "\"" << METADATA_NAMES[14] << "\":\"" << base64_encode(data) << "\"}";
 	return ss.str();
 }
 
@@ -625,7 +648,8 @@ rfmHeader::rfmHeader(
 
 bool rfmHeader::parse(
 	const std::string &value
-) {
+) 
+{
 	size_t sz = sizeof(RFM_HEADER);
 	bool r = sz <= value.size();
 	if (!r)
@@ -664,25 +688,150 @@ semtechUDPPacket::semtechUDPPacket()
 
 	memset(&header.header.devaddr, 0, sizeof(DEVADDR));
 	
-	memset(&deviceEUI, 0, sizeof(DEVEUI));
-	memset(&nwkSKey, 0, sizeof(KEY128));
-	memset(&appSKey, 0, sizeof(KEY128));
 
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
 }
 
-semtechUDPPacket::semtechUDPPacket(
-	const void *packetForwarder,
+int semtechUDPPacket::parse(
+	std::vector<semtechUDPPacket> &retPackets,
+	const void *packetForwarderPacket,
 	int size
 ) {
 	if (size < sizeof(SEMTECH_LORA_PREFIX)) {
-		errcode = ERR_CODE_INVALID_PACKET;
+		return ERR_CODE_INVALID_PACKET;
+	}
+	SEMTECH_LORA_PREFIX rprefix;
+	memmove(&rprefix, packetForwarderPacket, sizeof(SEMTECH_LORA_PREFIX));
+	// check version
+
+	if (rprefix.version != 2) {
+		return ERR_CODE_INVALID_PACKET;
+	}
+	char *json = (char *) packetForwarderPacket + sizeof(SEMTECH_LORA_PREFIX);
+	if (!json)
+		return ERR_CODE_INVALID_JSON;
+
+	rapidjson::Document doc;
+	rapidjson::Document::AllocatorType &allocator(doc.GetAllocator());
+	doc.Parse(json);
+	if (!doc.IsObject())
+		return ERR_CODE_INVALID_JSON;
+
+	int r = 0;
+
+	// rapidjson::StringRef(METADATA_NAMES[1]))
+	if (!doc.HasMember(METADATA_NAMES[0]))
+		return ERR_CODE_INVALID_JSON;
+	rapidjson::Value &rxpk = doc[METADATA_NAMES[0]];
+	if (!rxpk.IsArray())
+		return ERR_CODE_INVALID_JSON;
+	for (int i = 0; i < rxpk.Size(); i++) {
+		rapidjson::Value &jm = rxpk[i];
+		if (!jm.IsObject())
+			return ERR_CODE_INVALID_JSON;
+		rfmMetaData m;
+		int sz;
+		std::string data;
+		int rr = m.parse(sz, data, jm);
+		if (rr)
+			return rr;
+		semtechUDPPacket packet(&rprefix, &m, data);
+		retPackets.push_back(packet);
+	}
+	return r;
+}
+
+/**
+ * @see https://stackoverflow.com/questions/10324/convert-a-hexadecimal-string-to-an-integer-efficiently-in-c/11068850
+ */
+
+/** 
+ * @brief convert a hexidecimal string to a signed long
+ * will not produce or process negative numbers except 
+ * to signal error.
+ * 
+ * @param hex without decoration, case insensitive. 
+ * 
+ * @return -1 on error, or result (max (sizeof(long)*8)-1 bits)
+ */
+static int hexdec(unsigned char *value) {
+	int r;
+	if (!*value)
+		return 0;
+	if (*value >= '0' && *value <= '9') 
+		r = *value - '0';
+    else
+		if (*value >= 'a' && *value <='f')
+			r = *value - 'a' + 10;
+    	else
+			if (*value >= 'A' && *value <='F')
+				r = *value - 'A' + 10; 
+	r <<= 4;
+	value++;
+	if (*value) {
+		if (*value >= '0' && *value <= '9') 
+			r += *value - '0';
+		else
+			if (*value >= 'a' && *value <='f')
+				r += *value - 'a' + 10;
+			else
+				if (*value >= 'A' && *value <='F')
+					r += *value - 'A' + 10; 
+	}
+    return r;
+}
+
+static void setAddr(
+	DEVADDR &retval,
+	const std::string &value
+) {
+	if (value.size() == sizeof(DEVADDR)) {
+		*(uint32_t*) retval = ntoh4(*(uint32_t *) value.c_str());
 		return;
 	}
-	memmove(&prefix, packetForwarder, sizeof(SEMTECH_LORA_PREFIX));
-	// check version
-	if (prefix.version != 2) {
-		errcode = ERR_CODE_INVALID_PACKET;
+	memset(retval, 0, sizeof(DEVADDR));
+	if (value.size() < sizeof(DEVADDR) * 2)
+		return;
+	unsigned char *s = (unsigned char *) value.c_str();
+	for (int i = 0; i < sizeof(DEVADDR); i++) {
+		retval[i] = hexdec(s);
+		s += 2;
+	}
+}
+
+static void setMAC(
+	DEVEUI &retval,
+	const std::string &value
+) {
+	if (value.size() == sizeof(DEVEUI)) {
+		*(uint64_t*) retval = ntoh8(*(uint64_t *) value.c_str());
+		return;
+	}
+	if (value.size() < sizeof(DEVEUI) * 2)
+		return;
+	memset(retval, 0, sizeof(DEVEUI));
+	unsigned char *s = (unsigned char *) value.c_str();
+	for (int i = 0; i < sizeof(DEVEUI); i++) {
+		retval[i] = hexdec(s);
+		s += 2;
+	}
+}
+
+void setKey(
+	KEY128 &retval,
+	const std::string &value
+) {
+	if (value.size() == sizeof(KEY128)) {
+		memcpy(retval, value.c_str(), sizeof(KEY128));
+		ntoh16(retval);
+		return;
+	}
+	if (value.size() < sizeof(KEY128) * 2)
+		return;
+	unsigned char *s = (unsigned char *) value.c_str();
+	for (int i = 0; i < sizeof(KEY128); i++) {
+		retval[i] = hexdec(s);
+		s += 2;
 	}
 }
 
@@ -690,54 +839,48 @@ semtechUDPPacket::semtechUDPPacket(
  * format = 0 hex
  */ 
 semtechUDPPacket::semtechUDPPacket(
-	const std::string &packet,
+	const std::string &data,
 	const std::string &devaddr,
 	const std::string &appskey
 )
 	: errcode(0)
 {
-	prefix.version = 2;
-	prefix.token = 0;
-	prefix.tag = 0;
+	clearPrefix();
 
+	// initialize header ?!!
 	memset(&header.header, 0, sizeof(RFM_HEADER));
 	header.header.macheader = 0x40;
 	setAddr(header.header.devaddr, devaddr);
 
-	memset(&deviceEUI, 0, sizeof(DEVEUI));
-	memset(&nwkSKey, 0, sizeof(KEY128));
-	setKey(appSKey, appskey);
+	// autentication keys
+	setKey(devId.appSKey, appskey);
 
-	memset(&prefix.mac, 0, sizeof(prefix.mac));
-
-	parse(packet);
+	parseData(data);
 }
 
-std::string jsonPackage(
-	const std::string &rfmTxPackage
-)
+void semtechUDPPacket::clearPrefix()
 {
-	int ms;
-	time_t t = time_ms(ms);
-	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
+	prefix.version = 2;
+	prefix.token = 0;
+	prefix.tag = 0;
+	memset(&prefix.mac, 0, sizeof(prefix.mac));
+}
 
-	std::stringstream ss;
-	ss << "{\"rxpk\":[{ \
-	\"time\":\""<< dt << "\", \
-	\"tmst\":3512348611, \
-	\"chan\":0, \
-	\"rfch\":0, \
-	\"freq\":868.900000, \
-	\"stat\":1, \
-	\"modu\":\"LORA\", \
-	\"datr\":\"SF7BW125\", \
-	\"codr\":\"4/6\", \
-	\"rssi\":-35, \
-	\"lsnr\":5.1, \
-	\"size\":" << rfmTxPackage.size() << ", \
-	\"data\":\"" << base64_encode(std::string((const char *) rfmTxPackage.c_str(), rfmTxPackage.size())) << "\" \
-}]}";
-	return ss.str();
+semtechUDPPacket::semtechUDPPacket(
+	const SEMTECH_LORA_PREFIX *aprefix,
+	const rfmMetaData *ametadata,
+	const std::string &data
+)
+	: errcode(0)
+{
+	if (aprefix)
+		memmove(&prefix, aprefix, sizeof(SEMTECH_LORA_PREFIX));
+	else {
+		clearPrefix();
+	}
+	if (ametadata)
+		metadata.push_back(rfmMetaData(*ametadata));
+	parseData(data);
 }
 
 static std::string getMAC(
@@ -797,12 +940,12 @@ std::string semtechUDPPacket::serialize2RfmPacket()
 
 	// load data
 	// encrypt data
-	encryptPayload(p, header.header.framecountertx, direction, header.header.devaddr, appSKey);
+	encryptPayload(p, header.header.framecountertx, direction, header.header.devaddr, devId.appSKey);
 	ss << p;
 
 	std::string rs = ss.str();
 	// calc MIC
-	uint32_t mic = calculateMIC(rs, header.header.framecountertx, direction, header.header.devaddr, nwkSKey);	// nwkSKey
+	uint32_t mic = calculateMIC(rs, header.header.framecountertx, direction, header.header.devaddr, devId.nwkSKey);	// nwkSKey
 	// load MIC in package
 	// mic = ntoh4(mic);
 	ss << std::string((char *) &mic, 4);
@@ -843,13 +986,13 @@ void semtechUDPPacket::setGatewayId(
 }
 
 std::string semtechUDPPacket::getDeviceEUI() {
-	return getMAC(deviceEUI);
+	return getMAC(devId.deviceEUI);
 }
 
 void semtechUDPPacket::setDeviceEUI(
 	const std::string &value
 ) {
-	setMAC(deviceEUI, value);
+	setMAC(devId.deviceEUI, value);
 }
 
 std::string semtechUDPPacket::getDeviceAddr() {
@@ -865,13 +1008,13 @@ void semtechUDPPacket::setDeviceAddr(
 void semtechUDPPacket::setNetworkSessionKey(
 	const std::string &value
 ) {
-	setKey(nwkSKey, value);
+	setKey(devId.nwkSKey, value);
 }
 
 void semtechUDPPacket::setApplicationSessionKey(
 	const std::string &value
 ) {
-	setKey(appSKey, value);
+	setKey(devId.appSKey, value);
 }
 
 void semtechUDPPacket::setFrameCounter(
@@ -905,175 +1048,6 @@ void semtechUDPPacket::ack(SEMTECH_ACK *retval) {	// 4 bytes
 	retval->tag = 1;	// PUSH_ACK
 }
 
-/**
- * @brief constructs a LoRaWAN package and sends it
- * @param data pointer to the array of data that will be transmitted
- * @param dataLength bytes to be transmitted
- * @param frameCounterUp  frame counter of upstream frames
- * @param devAddr 4 bytes long device address
- * @param nwkSkey 128 bits network key
- * @param appSkey 128 bits application key
- */
-std::string loraDataJson(
-	std::string &data, 
-	unsigned int frameCounterTx,
-	DEVADDR &devAddr,
-	KEY128 &nwkSKey,
-	KEY128 &appSKey
-)
-{
-	unsigned char i;
-
-	// direction of frame is up
-	unsigned char direction = 0x00;
-
-	unsigned char rfmData[64];
-	unsigned char rfmPackageLength;
-
-	uint32_t MIC;
-
-	unsigned char frameControl = 0x00;
-	unsigned char framePort = 0x01;
-
-	// encrypt data
-	encryptPayload(data, frameCounterTx, direction, devAddr, appSKey);
-
-	// build radio packet
-	// unconfirmed data up
-	unsigned char macHeader = 0x40;
-
-	rfmData[0] = macHeader;
-
-	rfmData[1] = devAddr[3];
-	rfmData[2] = devAddr[2];
-	rfmData[3] = devAddr[1];
-	rfmData[4] = devAddr[0];
-
-	rfmData[5] = frameControl;
-
-	rfmData[6] = (frameCounterTx & 0x00FF);
-	rfmData[7] = ((frameCounterTx >> 8) & 0x00FF);
-
-	rfmData[8] = framePort;
-
-	// set current packet length
-	rfmPackageLength = 9;
-
-	// load data
-	for (i = 0; i < data.size(); i++) {
-		rfmData[rfmPackageLength + i] = data[i];
-	}
-
-	// Add data Lenth to package length
-	rfmPackageLength = rfmPackageLength + data.size();
-
-	// calc MIC
-	MIC = calculateMIC(std::string((char *) rfmData, rfmPackageLength), frameCounterTx, direction, devAddr, nwkSKey);
-
-	// load MIC in package
-	memcpy(&rfmData + rfmPackageLength, &MIC, 4);
-
-	// add MIC length to RFM package length
-	rfmPackageLength = rfmPackageLength + 4;
-
-	// make JSON package
-	return jsonPackage(std::string((char *)rfmData, rfmPackageLength));
-}
-
-/**
- * @see https://stackoverflow.com/questions/10324/convert-a-hexadecimal-string-to-an-integer-efficiently-in-c/11068850
- */
-
-/** 
- * @brief convert a hexidecimal string to a signed long
- * will not produce or process negative numbers except 
- * to signal error.
- * 
- * @param hex without decoration, case insensitive. 
- * 
- * @return -1 on error, or result (max (sizeof(long)*8)-1 bits)
- */
-static int hexdec(unsigned char *value) {
-	int r;
-	if (!*value)
-		return 0;
-	if (*value >= '0' && *value <= '9') 
-		r = *value - '0';
-    else
-		if (*value >= 'a' && *value <='f')
-			r = *value - 'a' + 10;
-    	else
-			if (*value >= 'A' && *value <='F')
-				r = *value - 'A' + 10; 
-	r <<= 4;
-	value++;
-	if (*value) {
-		if (*value >= '0' && *value <= '9') 
-			r += *value - '0';
-		else
-			if (*value >= 'a' && *value <='f')
-				r += *value - 'a' + 10;
-			else
-				if (*value >= 'A' && *value <='F')
-					r += *value - 'A' + 10; 
-	}
-    return r;
-}
-
-void setKey(
-	KEY128 &retval,
-	const std::string &value
-) {
-	if (value.size() == sizeof(KEY128)) {
-		memcpy(retval, value.c_str(), sizeof(KEY128));
-		ntoh16(retval);
-		return;
-	}
-	if (value.size() < sizeof(KEY128) * 2)
-		return;
-	unsigned char *s = (unsigned char *) value.c_str();
-	for (int i = 0; i < sizeof(KEY128); i++) {
-		retval[i] = hexdec(s);
-		s += 2;
-	}
-}
-
-void setMAC(
-	DEVEUI &retval,
-	const std::string &value
-) {
-	if (value.size() == sizeof(DEVEUI)) {
-		*(uint64_t*) retval = ntoh8(*(uint64_t *) value.c_str());
-		return;
-	}
-	if (value.size() < sizeof(DEVEUI) * 2)
-		return;
-	memset(retval, 0, sizeof(DEVEUI));
-	unsigned char *s = (unsigned char *) value.c_str();
-	for (int i = 0; i < sizeof(DEVEUI); i++) {
-		retval[i] = hexdec(s);
-		s += 2;
-	}
-}
-
-void setAddr(
-	DEVADDR &retval,
-	const std::string &value
-) {
-	if (value.size() == sizeof(DEVADDR)) {
-		*(uint32_t*) retval = ntoh4(*(uint32_t *) value.c_str());
-		return;
-	}
-	memset(retval, 0, sizeof(DEVADDR));
-	if (value.size() < sizeof(DEVADDR) * 2)
-		return;
-	unsigned char *s = (unsigned char *) value.c_str();
-	for (int i = 0; i < sizeof(DEVADDR); i++) {
-		retval[i] = hexdec(s);
-		s += 2;
-	}
-}
-
 std::string key2string(
 	const KEY128 &value
 ) {
@@ -1096,55 +1070,23 @@ std::string deviceEui2string(
 	return ss.str();
 }
 
-int semtechUDPPacket::parseMetadataJSON(
-	const char* json
+int semtechUDPPacket::parseData(
+	const std::string &data
 ) {
-	if (!json)
-		return ERR_CODE_INVALID_JSON;
-	rapidjson::Document doc;
-	rapidjson::Document::AllocatorType &allocator(doc.GetAllocator());
-	doc.Parse(json);
-	if (!doc.IsObject())
-		return ERR_CODE_INVALID_JSON;
-
-	int r = 0;
-
-	// rapidjson::StringRef(METADATA_NAMES[1]))
-	if (!doc.HasMember(METADATA_NAMES[0]))
-		return ERR_CODE_INVALID_JSON;
-	rapidjson::Value &rxpk = doc[METADATA_NAMES[0]];
-	if (!rxpk.IsArray())
-		return ERR_CODE_INVALID_JSON;
-	int largestDataSize = -1;
-	std::string largestData;
-	for (int i = 0; i < rxpk.Size(); i++) {
-		rapidjson::Value &jm = rxpk[i];
-		if (!jm.IsObject())
-			return ERR_CODE_INVALID_JSON;
-		rfmMetaData m;
-		int sz;
-		std::string data;
-		int rr = m.parse(sz, data, jm);
-		if (rr)
-			return rr;
-		if (sz > largestDataSize) {
-			largestData = data;
-			largestDataSize = sz;
-		}
-		metadata.push_back(m);
-	}
-	return r;
-}
-
-int semtechUDPPacket::parse(
-	const std::string &packet
-) {
-	if (!header.parse(packet)) {
+	if (!header.parse(data)) {
 		return ERR_CODE_INVALID_RFM_HEADER;
 	}
+	if (loadCredentialsDevAddr()) {
+		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
+	}
 	char direction = 0;
-	std::string p = packet.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) , packet.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t));
-	decryptPayload(p, header.header.framecountertx, direction, header.header.devaddr, appSKey);
+	std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) , data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t));
+	decryptPayload(p, header.header.framecountertx, direction, header.header.devaddr, devId.appSKey);
 	setPayload(p); 
 	return LORA_OK;
+}
+
+int semtechUDPPacket::loadCredentialsDevAddr() 
+{
+	const DEVADDR &devaddr = header.header.devaddr;
 }

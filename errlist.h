@@ -32,6 +32,7 @@
 #define ERR_CODE_SELECT						-520
 #define ERR_CODE_INVALID_PACKET				-521
 #define ERR_CODE_INVALID_JSON				-522
+#define ERR_CODE_DEVICE_ADDRESS_NOTFOUND	-523
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -63,6 +64,7 @@
 #define ERR_SELECT						"Select error"
 #define ERR_INVALID_PACKET				"Invalid packet"
 #define ERR_INVALID_JSON				"Invalid JSON"
+#define ERR_DEVICE_ADDRESS_NOTFOUND		"Device not found, address is not registered"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "
