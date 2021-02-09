@@ -457,7 +457,7 @@ void string2DEVADDR(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVADDR))
 		memset(&retval + len, 0, sizeof(DEVADDR) - len);
-	ntoh4(*((uint32_t*) &retval));
+	*((uint32_t*) &retval) = ntoh4(*((uint32_t*) &retval));
 }
 
 void string2DEVEUI(
@@ -471,7 +471,7 @@ void string2DEVEUI(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVEUI))
 		memset(&retval + len, 0, sizeof(DEVEUI) - len);
-	ntoh8((uint64_t) retval);
+	*((uint64_t*) &retval) = ntoh8(*((uint64_t*) &retval));
 }
 
 void string2KEY(
