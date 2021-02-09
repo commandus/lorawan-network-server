@@ -498,6 +498,16 @@ std::string DEVADDR2string(
 	return hexString(&v, sizeof(v));
 }
 
+std::string DEVADDRINT2string(
+	const DEVADDRINT &value
+)
+{
+	DEVADDRINT v;
+	memmove(&v, &value, sizeof(v));
+	ntoh4(*((uint32_t*) &v));
+	return hexString(&v, sizeof(v));
+}
+
 std::string DEVEUI2string(
 	const DEVEUI &value
 )

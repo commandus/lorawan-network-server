@@ -31,6 +31,7 @@ nobase_dist_include_HEADERS = \
 	platform.h utilstring.h utildate.h strptime.h \
 	utillora.h udp-socket.h udp-emitter.h udp-listener.h \
 	config-json.h identity-service-abstract.h identity-service-file-json.h \
+	identity-service-file-json.h \
 	errlist.h daemonize.h aes-128.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -55,6 +56,9 @@ dist_config_DATA = \
    autogen.sh CMakeLists.txt CODE_OF_CONDUCT.md CONTRIBUTING.md COPYING HISTORY LICENSE README.md TODO \
    third_party/argtable3/README
 
+#
+# Tests
+#
 test_1_SOURCES = \
 	tests/test1.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
@@ -62,12 +66,21 @@ test_1_SOURCES = \
 test_1_LDADD = $(commonlibs)
 test_1_CPPFLAGS = $(commoncppflags)
 
+test_identity_file_json_SOURCES = \
+	tests/test-identity-file-json.cpp \
+	identity-service-file-json.cpp \
+	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
+	third_party/base64/base64.cpp
+test_identity_file_json_LDADD = $(commonlibs)
+test_identity_file_json_CPPFLAGS = $(commoncppflags)
+
 test_udp_listen_SOURCES = \
 	tests/test-udp-listen.cpp \
 	udp-socket.cpp errlist.cpp
 test_udp_listen_LDADD =
 test_udp_listen_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-1 test-udp-listen
+check_PROGRAMS = test-identity-file-json
+#test-1 test-udp-listen
 
 TESTS = $(check_PROGRAMS)

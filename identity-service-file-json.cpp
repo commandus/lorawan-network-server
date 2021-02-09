@@ -166,11 +166,11 @@ int JsonFileIdentityService::save()
 	os.open(filename, std::ios::out);
 	os << "[";
 	bool addSeparator(false);
-	for (std::map<DEVADDR, DEVICEID>::const_iterator it = storage.begin(); it != storage.end(); it++) {
+	for (std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.begin(); it != storage.end(); it++) {
 		if (addSeparator)
 			os << ",";
 		os << "{\"" 
-			<< ATTR_NAMES[0] << "\":\"" << DEVADDR2string(it->first) << "\",\"" 
+			<< ATTR_NAMES[0] << "\":\"" << DEVADDRINT2string(it->first) << "\",\"" 
 			<< ATTR_NAMES[1] << "\":\"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
 			<< ATTR_NAMES[2] << "\":\"" << KEY2string(it->second.nwkSKey) << "\",\""
 			<< ATTR_NAMES[3] << "\":\"" << KEY2string(it->second.appSKey) << "\"}";
@@ -187,7 +187,7 @@ int JsonFileIdentityService::get(
 ) 
 {
 	int r = 0;
-	std::map<DEVADDR, DEVICEID>::const_iterator it(storage.find(devaddr));
+	std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.find(DEVADDRINT(devaddr)));
     if (it == storage.end())
 		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 	retval.set(it->second);
@@ -199,7 +199,7 @@ void JsonFileIdentityService::put(
 	DEVICEID &id
 )
 {
-	//storage[devaddr] = id;
+	storage[devaddr] = id;
 }
 
 void JsonFileIdentityService::rm(

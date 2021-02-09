@@ -1,3 +1,6 @@
+#ifndef UTIL_LORA_H_
+#define UTIL_LORA_H_	1
+
 #include <string>
 #include <vector>
 #include <inttypes.h>
@@ -9,10 +12,32 @@
 typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
 
+class DEVADDRINT
+{
+	public:
+		uint32_t a;
+		DEVADDRINT() 
+			: a(0)
+		{
+			
+		}
+
+		DEVADDRINT(DEVADDR &v) {
+			memmove(&a, &v, sizeof(DEVADDR));
+		}
+};
+
 struct DEVADDRCompare
 {
 	bool operator() (const DEVADDR& lhs, const DEVADDR& rhs) const {
 		return lhs < rhs;
+	}
+};
+
+struct DEVADDRINTCompare
+{
+	bool operator() (const DEVADDRINT& lhs, const DEVADDRINT& rhs) const {
+		return lhs.a < rhs.a;
 	}
 };
 
@@ -224,5 +249,8 @@ void string2DEVEUI(DEVEUI &retval, const std::string &str);
 void string2KEY(KEY128 &retval, const std::string &str);
 
 std::string DEVADDR2string(const DEVADDR &value);
+std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
+
+#endif

@@ -4,7 +4,7 @@
 
 class JsonFileIdentityService: public IdentityService {
 	private:
-		std::map<DEVADDR, DEVICEID, DEVADDRCompare> storage;
+		std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare> storage;
 		std::string filename;
 		void clear();
 		int load();
