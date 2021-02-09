@@ -332,6 +332,22 @@ DeviceId::DeviceId(
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 }
 
+DeviceId::DeviceId(
+	const DEVICEID &value
+)
+{
+	set(value);
+}
+
+void DeviceId::set(
+	const DEVICEID &value
+)
+{
+	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
+	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+}
+
 const std::string DEF_DATA_RATE = "SF7BW125";
 const std::string DEF_ECCCODE_RATE = "4/6";
 #define DEF_RSSI	-35
@@ -417,6 +433,90 @@ const char* METADATA_NAMES[15] = {
 	"size", // 13 number | RF packet payload size in bytes (unsigned integer)
 	"data"  // 14 string | Base64 encoded RF packet payload, padded
 };
+
+int getMetadataName(
+	const char *name
+)
+{
+	int r = -1;
+	for (int i = 0; i < 15; i++) {
+		if (strcmp(METADATA_NAMES[i], name) == 0)
+			return i;
+	}
+	return r;
+}
+
+void string2DEVADDR(
+	DEVADDR &retval,
+	const std::string &str
+)
+{
+	int len = str.size();
+	if (len > sizeof(DEVADDR))
+		len = sizeof(DEVADDR);
+	memmove(&retval, str.c_str(), len);
+	if (len < sizeof(DEVADDR))
+		memset(&retval + len, 0, sizeof(DEVADDR) - len);
+	ntoh4(*((uint32_t*) &retval));
+}
+
+void string2DEVEUI(
+	DEVEUI &retval,
+	const std::string &str
+)
+{
+	int len = str.size();
+	if (len > sizeof(DEVEUI))
+		len = sizeof(DEVEUI);
+	memmove(&retval, str.c_str(), len);
+	if (len < sizeof(DEVEUI))
+		memset(&retval + len, 0, sizeof(DEVEUI) - len);
+	ntoh8((uint64_t) retval);
+}
+
+void string2KEY(
+	KEY128 &retval,
+	const std::string &str
+)
+{
+	int len = str.size();
+	if (len > sizeof(KEY128))
+		len = sizeof(KEY128);
+	memmove(&retval, str.c_str(), len);
+	if (len < sizeof(KEY128))
+		memset(&retval + len, 0, sizeof(KEY128) - len);
+	ntoh16(&retval);
+}
+
+std::string DEVADDR2string(
+	const DEVADDR &value
+)
+{
+	DEVADDR v;
+	memmove(&v, &value, sizeof(v));
+	ntoh4(*((uint32_t*) &v));
+	return hexString(&v, sizeof(v));
+}
+
+std::string DEVEUI2string(
+	const DEVEUI &value
+)
+{
+	DEVEUI v;
+	memmove(&v, &value, sizeof(v));
+	ntoh8((uint64_t) v);
+	return hexString(&v, sizeof(v));
+}
+
+std::string KEY2string(
+	const KEY128 &value
+)
+{
+	KEY128 v;
+	memmove(&v, &value, sizeof(v));
+	ntoh16(&v);
+	return hexString(&v, sizeof(v));
+}
 
 void rfmMetaData::toJSON(
 	rapidjson::Value &value,

@@ -9,6 +9,20 @@
 typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
 
+struct DEVADDRCompare
+{
+	bool operator() (const DEVADDR& lhs, const DEVADDR& rhs) const {
+		return lhs < rhs;
+	}
+};
+
+/**
+ * @return ind3ex of the rxpk object 
+ */ 
+int getMetadataName(
+	const char *name
+);
+
 /**
  * PUSH_DATA, PULL_DATA packets
  * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT section 3.2
@@ -63,6 +77,22 @@ typedef enum {
 	FSK = 1
 } MODULATION;
 
+
+class NetworkIdentity {
+private:
+public:
+	DEVADDR devaddr;	// MAC address
+	DEVEUI deviceEUI;	///< device identifier
+	KEY128 nwkSKey;		///< shared session key
+	KEY128 appSKey;		///< private key
+};
+
+typedef ALIGN struct {
+	DEVEUI deviceEUI;	///< device identifier 8 bytes
+	KEY128 nwkSKey;		///< shared session key 16 bytes
+	KEY128 appSKey;		///< private key 16 bytes
+} PACKED DEVICEID;		// 40 bytes
+
 class DeviceId {
 private:
 public:
@@ -72,6 +102,8 @@ public:
 
 	DeviceId();
 	DeviceId(const DeviceId &value);
+	DeviceId(const DEVICEID &value);
+	void set(const DEVICEID &value);
 };
 
 class rfmMetaData {
@@ -186,3 +218,11 @@ public:
 	int setPayload(const std::string &value);
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
 };
+
+void string2DEVADDR(DEVADDR &retval, const std::string &str);
+void string2DEVEUI(DEVEUI &retval, const std::string &str);
+void string2KEY(KEY128 &retval, const std::string &str);
+
+std::string DEVADDR2string(const DEVADDR &value);
+std::string DEVEUI2string(const DEVEUI &value);
+std::string KEY2string(const KEY128 &value);
