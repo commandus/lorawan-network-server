@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include "udp-socket.h"
+#include "utillora.h"
 
 class UDPListener
 {
@@ -22,6 +23,10 @@ public:
 		int errorcode,
 		const std::string &message
 	)> onLog;
+
+	std::function<void(
+		semtechUDPPacket &packet
+	)> onPacket;
 
 	UDPListener();
 	~UDPListener();
@@ -52,6 +57,10 @@ public:
 			int errorcode,
 			const std::string &message
 	)> onLog);
+	void setHandler(
+		std::function<void(
+			semtechUDPPacket &value
+	)> onHandler);
 	
 };
 

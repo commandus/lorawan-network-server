@@ -9,12 +9,11 @@
 
 #include "utilstring.h"
 #include "errlist.h"
-#include "utillora.h"
 
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	stopped(false), onLog(NULL)
+	stopped(false), onLog(NULL), onPacket(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -42,6 +41,13 @@ void UDPListener::setLogger(
 	onLog = value;
 }
 
+void UDPListener::setHandler(
+	std::function<void(
+		semtechUDPPacket &value
+)> value) {
+	onPacket = value;
+}
+
 std::string UDPListener::toString() {
 	std::stringstream ss;
 	for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
@@ -54,7 +60,7 @@ void UDPListener::clear() {
 	for (std::vector<UDPSocket>::iterator it = sockets.begin(); it != sockets.end(); it++) {
 		it->closeSocket();
 	}
-	sockets.clear();
+	sockets.clear();	
 }
 
 bool UDPListener::add(
@@ -91,7 +97,8 @@ int UDPListener::listen() {
 	if (!sz)
 		return ERR_CODE_SOCKET_NO_ONE;
 	while (!stopped) {
-        fd_set readHandles;
+	sockets.clear();
+		fd_set readHandles;
 	    FD_ZERO(&readHandles);
 		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
 			FD_SET(it->sock, &readHandles);
@@ -124,8 +131,11 @@ int UDPListener::listen() {
 					int bytesReceived = it->recv((void *) buffer.c_str(), buffer.size(), &clientAddress);
 					if (bytesReceived >= 0) {
 						std::vector<semtechUDPPacket> packets;
+						// get packets
 						semtechUDPPacket::parse(packets, buffer.c_str(), bytesReceived);
 						for (std::vector<semtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
+							memmove(&it->clientAddress, &clientAddress,
+								(clientAddress.sin6_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
 							if (it->errcode) {
 								std::string v = std::string(buffer.c_str(), bytesReceived);
 								std::stringstream ss;
@@ -135,12 +145,16 @@ int UDPListener::listen() {
 								onLog(LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
 								break;
 							}
-							if (onLog) {
-								std::stringstream ss;
-								ss << MSG_READ_BYTES 
-									<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ": "
-									<< it->toString();
-								onLog(LOG_INFO, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
+							if (onPacket) {
+								onPacket(*it);
+							} else {
+								if (onLog) {
+									std::stringstream ss;
+									ss << MSG_READ_BYTES 
+										<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ": "
+										<< it->toString();
+									onLog(LOG_INFO, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
+								}
 							}
 						}
 					} else {

@@ -448,9 +448,10 @@ int getMetadataName(
 
 void string2DEVADDR(
 	DEVADDR &retval,
-	const std::string &str
+	const std::string &value
 )
 {
+	std::string str = hex2string(value);
 	int len = str.size();
 	if (len > sizeof(DEVADDR))
 		len = sizeof(DEVADDR);
@@ -462,9 +463,10 @@ void string2DEVADDR(
 
 void string2DEVEUI(
 	DEVEUI &retval,
-	const std::string &str
+	const std::string &value
 )
 {
+	std::string str = hex2string(value);
 	int len = str.size();
 	if (len > sizeof(DEVEUI))
 		len = sizeof(DEVEUI);
@@ -492,9 +494,9 @@ std::string DEVADDR2string(
 	const DEVADDR &value
 )
 {
-	DEVADDR v;
+	uint32_t v;
 	memmove(&v, &value, sizeof(v));
-	ntoh4(*((uint32_t*) &v));
+	v = ntoh4(v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -503,18 +505,18 @@ std::string DEVADDRINT2string(
 )
 {
 	DEVADDRINT v;
-	memmove(&v, &value, sizeof(v));
-	ntoh4(*((uint32_t*) &v));
-	return hexString(&v, sizeof(v));
+	memmove(&v.a, &value.a, sizeof(DEVADDR));
+	v.a = ntoh4(*((uint32_t*) &v.a));
+	return hexString(&v, sizeof(DEVADDR));
 }
 
 std::string DEVEUI2string(
 	const DEVEUI &value
 )
 {
-	DEVEUI v;
-	memmove(&v, &value, sizeof(v));
-	ntoh8((uint64_t) v);
+	uint64_t v;
+	memmove(&v, &value, sizeof(DEVEUI));
+	v = ntoh8(v);
 	return hexString(&v, sizeof(v));
 }
 

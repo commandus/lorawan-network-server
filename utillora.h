@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 #include <inttypes.h>
+
+#include <netinet/in.h>
+
 #include "platform.h"
 #include "aes-128.h"
 
@@ -19,7 +22,7 @@ class DEVADDRINT
 		DEVADDRINT() 
 			: a(0)
 		{
-			
+
 		}
 
 		DEVADDRINT(DEVADDR &v) {
@@ -102,21 +105,30 @@ typedef enum {
 	FSK = 1
 } MODULATION;
 
+typedef enum {
+	ABP = 0,
+	OTAA = 1
+} ACTIVATION;
 
 class NetworkIdentity {
 private:
 public:
-	DEVADDR devaddr;	// MAC address
-	DEVEUI deviceEUI;	///< device identifier
-	KEY128 nwkSKey;		///< shared session key
-	KEY128 appSKey;		///< private key
+	// key
+	DEVADDR devaddr;		///< MAC address
+	// value
+	ACTIVATION activation;	///< activation type: ABP or OTAA
+	DEVEUI deviceEUI;		///< device identifier
+	KEY128 nwkSKey;			///< shared session key
+	KEY128 appSKey;			///< private key
 };
 
-typedef ALIGN struct {
-	DEVEUI deviceEUI;	///< device identifier 8 bytes
-	KEY128 nwkSKey;		///< shared session key 16 bytes
-	KEY128 appSKey;		///< private key 16 bytes
-} PACKED DEVICEID;		// 40 bytes
+typedef struct {
+	// value, no key
+	ACTIVATION activation;	///< activation type: ABP or OTAA
+	DEVEUI deviceEUI;		///< device identifier 8 bytes
+	KEY128 nwkSKey;			///< shared session key 16 bytes
+	KEY128 appSKey;			///< private key 16 bytes
+} DEVICEID;					// 44 bytes
 
 class DeviceId {
 private:
@@ -205,6 +217,7 @@ private:
 	// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 	int loadCredentialsDevAddr();
 public:	
+	struct sockaddr_in6 clientAddress;
 	// parse error code
 	int errcode;
 	// prefix contains gateway identifier

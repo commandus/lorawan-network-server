@@ -9,16 +9,22 @@
 #include "errlist.h"
 
 /**
- * 	Section 3.3	 
+ * 	JSON attribute names
  */
-const char* ATTR_NAMES[4] = {
-	"addr", 	// network address (hex string, 4 bytes)
-	"eui",		// device identifier (hex string, 8 bytes)
-	"nwkSKey",	// shared session key (hex string, 16 bytes)
-	"appSKey"	// private key (hex string, 16 bytes)
+const char *ATTR_NAMES[5] = {
+	"addr", 		// network address (hex string, 4 bytes)
+	"activation",	// ABP or OTAA
+	"eui",			// device identifier (hex string, 8 bytes)
+	"nwkSKey",		// shared session key (hex string, 16 bytes)
+	"appSKey"		// private key (hex string, 16 bytes)
 };
 
-int getAttrName(
+const char *ACTIVATION_NAMES[2] = {
+	"ABP",
+	"OTAA"
+};
+
+static int getAttrByName(
 	const char *name
 )
 {
@@ -28,6 +34,27 @@ int getAttrName(
 			return i;
 	}
 	return r;
+}
+
+static ACTIVATION getActivationByName(
+	const char *name
+)
+{
+	for (int i = 0; i < 2; i++) {
+		if (strcmp(ACTIVATION_NAMES[i], name) == 0)
+			return (ACTIVATION) i;
+	}
+	// default ABP
+	return ABP;
+}
+
+static std::string getActivationName(
+	ACTIVATION value
+)
+{
+	if (value >= 2 || value < 0)
+		value = ABP;
+	return ACTIVATION_NAMES[value];
 }
 
 JsonFileIdentityService::JsonFileIdentityService() 
@@ -103,12 +130,15 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 					string2DEVADDR(k, s);
 					break;
 				case 1:
-					string2DEVEUI(v.deviceEUI, s);
+					v.activation = getActivationByName(str);
 					break;
 				case 2:
-					string2KEY(v.nwkSKey, s);
+					string2DEVEUI(v.deviceEUI, s);
 					break;
 				case 3:
+					string2KEY(v.nwkSKey, s);
+					break;
+				case 4:
 					string2KEY(v.appSKey, s);
 					break;
 				default:
@@ -122,7 +152,7 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		}
 
 		bool Key(const char* str, rapidjson::SizeType length, bool copy) { 
-			idx = getAttrName(str);
+			idx = getAttrByName(str);
 			return true;
 		}
 		bool EndObject(rapidjson::SizeType memberCount)
@@ -171,9 +201,10 @@ int JsonFileIdentityService::save()
 			os << ",";
 		os << "{\"" 
 			<< ATTR_NAMES[0] << "\":\"" << DEVADDRINT2string(it->first) << "\",\"" 
-			<< ATTR_NAMES[1] << "\":\"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
-			<< ATTR_NAMES[2] << "\":\"" << KEY2string(it->second.nwkSKey) << "\",\""
-			<< ATTR_NAMES[3] << "\":\"" << KEY2string(it->second.appSKey) << "\"}";
+			<< ATTR_NAMES[1] << "\":\"" << getActivationName(it->second.activation) << "\",\"" 
+			<< ATTR_NAMES[2] << "\":\"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
+			<< ATTR_NAMES[3] << "\":\"" << KEY2string(it->second.nwkSKey) << "\",\""
+			<< ATTR_NAMES[4] << "\":\"" << KEY2string(it->second.appSKey) << "\"}";
 
 		addSeparator = true;
 	}
