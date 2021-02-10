@@ -6,6 +6,7 @@
 #include <functional>
 #include "udp-socket.h"
 #include "utillora.h"
+#include "lora-packet-handler-abstract.h"
 
 class UDPListener
 {
@@ -24,9 +25,7 @@ public:
 		const std::string &message
 	)> onLog;
 
-	std::function<void(
-		semtechUDPPacket &packet
-	)> onPacket;
+	LoraPacketHandler *handler;
 
 	UDPListener();
 	~UDPListener();
@@ -57,11 +56,7 @@ public:
 			int errorcode,
 			const std::string &message
 	)> onLog);
-	void setHandler(
-		std::function<void(
-			semtechUDPPacket &value
-	)> onHandler);
-	
+	void setHandler(LoraPacketHandler *value);
 };
 
 #endif

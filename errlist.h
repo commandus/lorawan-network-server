@@ -7,6 +7,8 @@
 
 #define LOG_UDP_EMITTER						1
 #define LOG_UDP_LISTENER					2
+#define LOG_IDENTITY_SVC					3
+#define LOG_PACKET_HANDLER					4
 
 #define LORA_OK            					0
 #define ERR_CODE_COMMAND_LINE		    	-500
@@ -33,6 +35,7 @@
 #define ERR_CODE_INVALID_PACKET				-521
 #define ERR_CODE_INVALID_JSON				-522
 #define ERR_CODE_DEVICE_ADDRESS_NOTFOUND	-523
+#define ERR_CODE_FAIL_IDENTITY_SERVICE		-524
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -65,6 +68,7 @@
 #define ERR_INVALID_PACKET				"Invalid packet"
 #define ERR_INVALID_JSON				"Invalid JSON"
 #define ERR_DEVICE_ADDRESS_NOTFOUND		"Device not found, address is not registered"
+#define ERR_FAIL_IDENTITY_SERVICE		"Identity service failure"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "

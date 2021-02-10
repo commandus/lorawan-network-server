@@ -27,6 +27,7 @@
 #include "udp-emitter.h"
 #include "udp-listener.h"
 #include "config-json.h"
+#include "lora-packet-handler-impl.h"
 
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
@@ -157,7 +158,7 @@ int parseCmd(
 	return 0;
 }
 
-void logErr(
+void onLog(
 	int level,
 	int modulecode,
 	int errorcode,
@@ -180,7 +181,8 @@ int main(
 #else
 	setSignalHandler();
 #endif
-	listener.setLogger(logErr);
+	listener.setLogger(onLog);
+	
 	config = new Configuration("");
 	if (parseCmd(config, argc, argv) != 0)
 	{
@@ -195,6 +197,10 @@ int main(
 		}
 	}
 	std::cerr << config->toString() << std::endl;
+
+	LoraPacketProcessor processor;
+	processor.setLogger(onLog);
+	listener.setHandler(&processor);
 
 	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv4.begin()); it != config->serverConfig.listenAddressIPv4.end(); it++) {
 		if (!listener.add(*it, MODE_FAMILY_HINT_IPV4)) {

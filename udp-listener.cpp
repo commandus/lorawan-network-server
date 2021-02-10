@@ -13,7 +13,7 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	stopped(false), onLog(NULL), onPacket(NULL)
+	stopped(false), onLog(NULL), handler(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -42,10 +42,9 @@ void UDPListener::setLogger(
 }
 
 void UDPListener::setHandler(
-	std::function<void(
-		semtechUDPPacket &value
-)> value) {
-	onPacket = value;
+	LoraPacketHandler *value
+) {
+	handler = value;
 }
 
 std::string UDPListener::toString() {
@@ -145,8 +144,8 @@ int UDPListener::listen() {
 								onLog(LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
 								break;
 							}
-							if (onPacket) {
-								onPacket(*it);
+							if (handler) {
+								handler->process(*it);
 							} else {
 								if (onLog) {
 									std::stringstream ss;
