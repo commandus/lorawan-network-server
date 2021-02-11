@@ -13,4 +13,21 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
+AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
+build_mac=no
+# Detect the target system
+case "${host_os}" in
+  darwin*)
+    build_mac=yes
+    ;;
+esac
+AM_CONDITIONAL([OS_MACH], [test "$build_mac" = "yes"])
+
+# MacOS: install openssl into /usr/local/lib/opt/openssl@1.1
+# brew install openssl@1.1
+LDFLAGS="$LDFLAGS -L/usr/local/lib"
+
+# Checks for header files. Add /usr/local/include for OS X.
+CFLAGS="$CFLAGS -I/usr/local/include"
+
 AC_OUTPUT
