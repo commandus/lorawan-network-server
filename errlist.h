@@ -36,6 +36,17 @@
 #define ERR_CODE_INVALID_JSON				-522
 #define ERR_CODE_DEVICE_ADDRESS_NOTFOUND	-523
 #define ERR_CODE_FAIL_IDENTITY_SERVICE		-524
+#define ERR_CODE_LMDB_TXN_BEGIN				-525
+#define ERR_CODE_LMDB_TXN_COMMIT			-526
+#define ERR_CODE_LMDB_OPEN					-527
+#define ERR_CODE_LMDB_CLOSE					-528
+#define ERR_CODE_LMDB_PUT					-529
+#define ERR_CODE_LMDB_PUT_PROBE				-530
+#define ERR_CODE_LMDB_GET					-531
+#define ERR_CODE_WRONG_PARAM				-532
+#define ERR_CODE_INSUFFICIENT_MEMORY		-533
+#define ERR_CODE_NO_CONFIG					-534
+
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -69,6 +80,16 @@
 #define ERR_INVALID_JSON				"Invalid JSON"
 #define ERR_DEVICE_ADDRESS_NOTFOUND		"Device not found, address is not registered"
 #define ERR_FAIL_IDENTITY_SERVICE		"Identity service failure"
+#define ERR_LMDB_TXN_BEGIN				"Can not begin LMDB transaction "
+#define ERR_LMDB_TXN_COMMIT				"Can not commit LMDB transaction "
+#define ERR_LMDB_OPEN					"Can not open database file "
+#define ERR_LMDB_CLOSE					"Can not close database file "
+#define ERR_LMDB_PUT					"Can not put LMDB "
+#define ERR_LMDB_PUT_PROBE				"Can not put LMDB probe "
+#define ERR_LMDB_GET					"Can not get LMDB "
+#define ERR_WRONG_PARAM					"Wrong parameter"
+#define ERR_INSUFFICIENT_MEMORY			"Insufficient memory"
+#define ERR_NO_CONFIG					"No config is provided"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "
@@ -85,6 +106,7 @@
 #define MSG_DEVICE_EUI					"Device EUI "
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "
+#define MSG_RECEIVED					"Message received "
 #define ERROR							"Error "
 
 const char *strerror_client(int errcode);

@@ -11,7 +11,7 @@
 /**
  * 	JSON attribute names
  */
-const char *ATTR_NAMES[5] = {
+static const char *ATTR_NAMES[5] = {
 	"addr", 		// network address (hex string, 4 bytes)
 	"activation",	// ABP or OTAA
 	"eui",			// device identifier (hex string, 8 bytes)
@@ -19,7 +19,7 @@ const char *ATTR_NAMES[5] = {
 	"appSKey"		// private key (hex string, 16 bytes)
 };
 
-const char *ACTIVATION_NAMES[2] = {
+static const char *ACTIVATION_NAMES[2] = {
 	"ABP",
 	"OTAA"
 };

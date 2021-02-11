@@ -11,6 +11,12 @@ COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 BUILT_SOURCES = $(GEN)
 CLEANFILES = $(GEN)
 
+if OS_MACH
+LMDB=lmdb
+else
+LMDB=mdbx
+endif
+
 #
 # Binaries
 #
@@ -32,6 +38,7 @@ nobase_dist_include_HEADERS = \
 	utillora.h udp-socket.h udp-emitter.h udp-listener.h \
 	config-json.h identity-service-abstract.h identity-service-file-json.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h \
+	db-identity.h identity-service-lmdb.h \
 	errlist.h daemonize.h aes-128.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -42,10 +49,11 @@ lorawan_network_server_SOURCES = \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
 	config-json.cpp identity-service-file-json.cpp lora-packet-handler-impl.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp aes-128.c \
+	db-identity.cpp identity-service-lmdb.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp
 
-lorawan_network_server_LDADD = $(commonlibs)
+lorawan_network_server_LDADD = $(commonlibs) -l$(LMDB)
 lorawan_network_server_CPPFLAGS = $(commoncppflags)
 
 #
