@@ -51,14 +51,40 @@ int LmdbIdentityService::get(
 	retval.set(v);
 }
 
+class ListEnv {
+	public:
+		std::vector<NetworkIdentity> *list;
+		size_t c;
+		size_t offset;
+		size_t size;
+
+		ListEnv(
+			std::vector<NetworkIdentity> *alist,
+			size_t aoffset,
+			size_t asize
+		)
+		: list(alist), c(0), offset(aoffset) {
+			if (asize <= 0)
+				size = UINT64_MAX;
+			else
+				size = asize;
+		}
+};
+
 bool onRecord
 (
 	void *env,
 	DEVADDR *key,
 	DEVICEID *data
 ) {
-	std::vector<NetworkIdentity> *r = (std::vector<NetworkIdentity> *) env;
-	r->push_back(NetworkIdentity(*key, *data));
+	ListEnv *r = (ListEnv *) env;
+	r->c++;	
+	if (r->c <= r->offset)
+		return false;
+	if (r->c > r->offset + r->size)
+		return true;
+	r->list->push_back(NetworkIdentity(*key, *data));
+	return false;
 }
 
 void LmdbIdentityService::list(
@@ -67,7 +93,8 @@ void LmdbIdentityService::list(
 	size_t size
 )
 {
-	lsAddr(env, &onRecord, &retval);
+	ListEnv listenv(&retval, offset, size);
+	lsAddr(env, &onRecord, &listenv);
 }
 
 void LmdbIdentityService::put(

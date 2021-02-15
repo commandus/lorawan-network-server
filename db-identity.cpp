@@ -314,7 +314,7 @@ int rmAddr
 
 	int cnt = 0;
 	do {
-		if ((dbval.mv_size < sizeof(DEVADDR)) || (dbkey.mv_size < sizeof(DEVICEID)))
+		if ((dbkey.mv_size < sizeof(DEVADDR)) || (dbval.mv_size < sizeof(DEVICEID)))
 			continue;
 		DEVADDR key1;
 		memmove(&key1, dbkey.mv_data, sizeof(DEVADDR));

@@ -60,10 +60,40 @@ int main(int argc, char **argv) {
 
 	s.put(a, id);
 
+	a[0] = 2;
+	a[1] = 3;
+	a[2] = 4;
+	a[3] = 5;
+
+	s.put(a, id);
+
+	a[0] = 3;
+	a[1] = 4;
+	a[2] = 5;
+	a[3] = 6;
+
+	s.put(a, id);
+
+
 	std::vector<NetworkIdentity> l;
 	
+	std::cerr << "--" << std::endl;
 	s.list(l, 0, 100);
 	for (std::vector<NetworkIdentity>::const_iterator it(l.begin()); it != l.end(); it++) {
 		std::cout << it->toString() << std::endl;
 	}
+
+	a[0] = 2;
+	a[1] = 3;
+	a[2] = 4;
+	a[3] = 5;
+	s.rm(a);
+
+	std::cerr << "--" << std::endl;
+	l.clear();
+	s.list(l, 0, 100);
+	for (std::vector<NetworkIdentity>::const_iterator it(l.begin()); it != l.end(); it++) {
+		std::cout << it->toString() << std::endl;
+	}
+
 }
