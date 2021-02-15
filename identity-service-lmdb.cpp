@@ -8,8 +8,6 @@
 #include "utilstring.h"
 #include "errlist.h"
 
-#define LOG(verbosity) std::cerr
-
 LmdbIdentityService::LmdbIdentityService() 
 	: filename("")
 {
@@ -32,20 +30,14 @@ int LmdbIdentityService::open()
 	int mode = 0664;
 	env = new dbenv(filename, flags, mode);
 	if (!openDb(env))
-	{
-		LOG(ERROR) << ERR_LMDB_OPEN << filename << std::endl;
 		return ERR_CODE_LMDB_OPEN;
-	}
 	return LORA_OK;
 } 
 
 int LmdbIdentityService::close()
 {
 	if (!closeDb(env))
-	{
-		LOG(ERROR) << ERR_LMDB_CLOSE << filename << std::endl;
 		return ERR_CODE_LMDB_CLOSE;
-	}
 	return LORA_OK;
 }
 
@@ -54,21 +46,43 @@ int LmdbIdentityService::get(
 	DeviceId &retval
 ) 
 {
-	int r = 0;
-	return r;
+	DEVICEID v;
+	return getAddr(env, devaddr, v);
+	retval.set(v);
+}
+
+bool onRecord
+(
+	void *env,
+	DEVADDR *key,
+	DEVICEID *data
+) {
+	std::vector<NetworkIdentity> *r = (std::vector<NetworkIdentity> *) env;
+	r->push_back(NetworkIdentity(*key, *data));
+}
+
+void LmdbIdentityService::list(
+	std::vector<NetworkIdentity> &retval,
+	size_t offset,
+	size_t size
+)
+{
+	lsAddr(env, &onRecord, &retval);
 }
 
 void LmdbIdentityService::put(
 	DEVADDR &devaddr,
-	DEVICEID &id
+	DEVICEID &deviceid
 )
 {
+	putAddr(env, devaddr, deviceid);
 }
 
 void LmdbIdentityService::rm(
-	DEVADDR &addr
+	DEVADDR &devaddr
 )
 {
+	rmAddr(env, devaddr);
 }
 
 int LmdbIdentityService::init(

@@ -318,6 +318,39 @@ static uint32_t calculateMIC(
 	return r;
 }
 
+NetworkIdentity::NetworkIdentity(
+	const DEVADDRINT &a,
+	const DEVICEID &value
+) 
+{
+	memmove(&devaddr, &a.a, sizeof(DEVADDR));
+	memmove(&activation, &value.activation, sizeof(activation));
+	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
+	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+}
+
+std::string KEY2string(
+	const KEY128 &value
+)
+{
+	KEY128 v;
+	memmove(&v, &value, sizeof(v));
+	ntoh16(&v);
+	return hexString(&v, sizeof(v));
+}
+
+std::string NetworkIdentity::toString() const
+{
+	std::stringstream ss;
+	ss << DEVADDR2string(devaddr) 
+		<< " " << (activation == 1 ? "OTAA" : "ABP")
+		<< " " << DEVEUI2string(deviceEUI)
+		<< " " << KEY2string(nwkSKey)
+		<< " " << KEY2string(appSKey);
+	return ss.str();
+}
+
 DeviceId::DeviceId() {
 	memset(&deviceEUI, 0, sizeof(DEVEUI));
 	memset(&nwkSKey, 0, sizeof(KEY128));
@@ -343,6 +376,7 @@ void DeviceId::set(
 	const DEVICEID &value
 )
 {
+	memmove(&activation, &value.activation, sizeof(activation));
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
@@ -517,16 +551,6 @@ std::string DEVEUI2string(
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
 	v = ntoh8(v);
-	return hexString(&v, sizeof(v));
-}
-
-std::string KEY2string(
-	const KEY128 &value
-)
-{
-	KEY128 v;
-	memmove(&v, &value, sizeof(v));
-	ntoh16(&v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -1167,17 +1191,6 @@ std::string key2string(
 	ss << std::hex << std::setw(2) << std::setprecision(2) << std::setfill('0');
 	for (int i = 0; i < sizeof(KEY128); i++) {
 		ss << (unsigned int)  value[i];
-	}
-	return ss.str();
-}
-
-std::string deviceEui2string(
-	const DEVEUI &value
-) {
-	std::stringstream ss;
-	ss << std::hex << std::setw(2) << std::setprecision(2) << std::setfill('0');
-	for (int i = 0; i < sizeof(DEVEUI); i++) {
-		ss << (unsigned int) value[i];
 	}
 	return ss.str();
 }

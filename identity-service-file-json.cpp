@@ -92,7 +92,7 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		IdentityJsonHandler(JsonFileIdentityService *svc)
 			: service(svc), isNetworkIdentity(false), idx(-1)
 		{
-
+			memset(&k, 0, sizeof(DEVADDR));
 		}
 
 		bool Null() {
@@ -158,7 +158,8 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		bool EndObject(rapidjson::SizeType memberCount)
 		{
 			isNetworkIdentity = false;
-			service->put(k, v);
+			if (*((uint64_t *) &k))
+				service->put(k, v);
 			return true;
 		}
 
@@ -223,6 +224,26 @@ int JsonFileIdentityService::get(
 		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 	retval.set(it->second);
 	return r;
+}
+
+// List entries
+void JsonFileIdentityService::list(
+	std::vector<NetworkIdentity> &retval,
+	size_t offset,
+	size_t size
+) {
+	int64_t c = -1;
+	if (size == 0)
+		size = UINT64_MAX;
+	for (std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.begin()); it != storage.end(); it++) {
+		c++;
+		if (c < offset)
+			continue;
+		if (c >= size)
+			break;
+		NetworkIdentity v(it->first, it->second);
+		retval.push_back(v);
+	}
 }
 
 void JsonFileIdentityService::put(

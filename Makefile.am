@@ -79,8 +79,17 @@ test_identity_file_json_SOURCES = \
 	identity-service-file-json.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
 	third_party/base64/base64.cpp
-test_identity_file_json_LDADD = $(commonlibs)
+test_identity_file_json_LDADD = 
 test_identity_file_json_CPPFLAGS = $(commoncppflags)
+
+
+test_identity_lmdb_SOURCES = \
+	tests/test-identity-lmdb.cpp \
+	identity-service-lmdb.cpp db-identity.cpp \
+	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
+	third_party/base64/base64.cpp
+test_identity_lmdb_LDADD = -l$(LMDB)
+test_identity_lmdb_CPPFLAGS = $(commoncppflags)
 
 test_udp_listen_SOURCES = \
 	tests/test-udp-listen.cpp \
@@ -88,7 +97,7 @@ test_udp_listen_SOURCES = \
 test_udp_listen_LDADD =
 test_udp_listen_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-identity-file-json
-#test-1 test-udp-listen
+check_PROGRAMS = test-identity-file-json test-identity-lmdb
+#test-1 test-udp-listen 
 
 TESTS = $(check_PROGRAMS)

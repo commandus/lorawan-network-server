@@ -110,6 +110,14 @@ typedef enum {
 	OTAA = 1
 } ACTIVATION;
 
+typedef struct {
+	// value, no key
+	ACTIVATION activation;	///< activation type: ABP or OTAA
+	DEVEUI deviceEUI;		///< device identifier 8 bytes
+	KEY128 nwkSKey;			///< shared session key 16 bytes
+	KEY128 appSKey;			///< private key 16 bytes
+} DEVICEID;					// 44 bytes
+
 class NetworkIdentity {
 private:
 public:
@@ -120,19 +128,14 @@ public:
 	DEVEUI deviceEUI;		///< device identifier
 	KEY128 nwkSKey;			///< shared session key
 	KEY128 appSKey;			///< private key
+	NetworkIdentity(const DEVADDRINT &a, const DEVICEID &id);
+	std::string toString() const;
 };
-
-typedef struct {
-	// value, no key
-	ACTIVATION activation;	///< activation type: ABP or OTAA
-	DEVEUI deviceEUI;		///< device identifier 8 bytes
-	KEY128 nwkSKey;			///< shared session key 16 bytes
-	KEY128 appSKey;			///< private key 16 bytes
-} DEVICEID;					// 44 bytes
 
 class DeviceId {
 private:
 public:
+	ACTIVATION activation;	///< activation type: ABP or OTAA
 	DEVEUI deviceEUI;	///< device identifier
 	KEY128 nwkSKey;		///< shared session key
 	KEY128 appSKey;		///< private key

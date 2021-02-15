@@ -59,27 +59,6 @@ public:
 	dbenv(const	std::string &path, int flags, int mode);
 };
 
-typedef struct 
-{
-	uint8_t tag;		// 'L'- log entry
-	uint8_t sa[6];		// MAC address
-	time_t dt;			// time, seconds since Unix epoch 
-} LogKey;
-
-typedef struct 
-{
-	uint16_t device_id;	// 0
-	int8_t ssi_signal;	// dBm
-} LogData;
-
-typedef ALIGN struct 
-{
-	uint16_t device_id;	// 0..255 AP identifier
-	int16_t ssi_signal;	// dB
-	uint8_t sa[6];		// MAC address
-} PACKED LogEntry;
-
-
 /**
  * @brief Opens LMDB database file
  * @param env created LMDB environment(transaction, cursor)
@@ -110,7 +89,7 @@ typedef bool (*OnRecord)
 );
 
 /**
- * @brief Store input log data to the LMDB
+ * @brief Store address to the LMDB
  * @param env database env
  * @return 0 - success
  */
@@ -118,12 +97,11 @@ int putAddr
 (
 	dbenv *env,
 	DEVADDR &addr,
-	DEVICEID &deviceid,
-	int verbosity
+	DEVICEID &deviceid
 );
 
 /**
- * @brief Read log data from the LMDB
+ * @brief Get address
  * @param env database env
  * @param DEVADDR Networh address
  * @param onLog callback
@@ -133,12 +111,24 @@ int getAddr
 (
 	dbenv *env,
 	const DEVADDR &addr,
+	DEVICEID &retval
+);
+
+/**
+ * @brief List address
+ * @param env database env
+ * @param onRecord callback
+ * @param onRecordEnv object passed to callback
+ */
+int lsAddr
+(
+	dbenv *env,
 	OnRecord onRecord,
 	void *onRecordEnv
 );
 
 /**
- * @brief remove log data from the LMDB
+ * @brief remove address from the LMDB
  * @param env database env
  * @param DEVADDR Networh address
  */

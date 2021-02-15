@@ -1,4 +1,3 @@
-#include <map>
 #include "identity-service-abstract.h"
 #include "db-identity.h"
 
@@ -13,6 +12,8 @@ class LmdbIdentityService: public IdentityService {
 		LmdbIdentityService();
 		~LmdbIdentityService();
 		int get(DEVADDR &devaddr, DeviceId &retval);
+		// List entries
+		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size);
 		void put(DEVADDR &devaddr, DEVICEID &id);
 		void rm(DEVADDR &addr);
 		

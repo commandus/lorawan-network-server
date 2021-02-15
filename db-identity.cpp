@@ -7,8 +7,6 @@
 #include <sys/ipc.h> 
 #include <sys/msg.h> 
 
-#define LOG(verbosity) std::cerr
-
 dbenv::dbenv(
 	const std::string &apath,
 	int aflags,
@@ -31,40 +29,34 @@ static int processMapFull
 	r = mdb_env_info(env->env, &current_info, sizeof(current_info));
 #endif	
 	if (r)
-	{
-		LOG(ERROR) << "map full, mdb_env_info error " << r << ": " << strerror_client(r) << std::endl;
 		return r;
-	}
 	if (!closeDb(env))
-	{
-		LOG(ERROR) << "map full, error close database " << std::endl;
 		return ERR_CODE_LMDB_CLOSE;
-	}
 	size_t new_size = current_info.me_mapsize * 2;
-	LOG(INFO) << "map full, doubling map size from " << current_info.me_mapsize << " to " << new_size << " bytes" << std::endl;
+	//  map full, doubling map size from current_info.me_mapsize to new_size
 
 	r = mdb_env_create(&env->env);
-	if (r)
-	{
-		LOG(ERROR) << "map full, mdb_env_create error " << r << ": " << strerror_client(r) << std::endl;
+	if (r) {
 		env->env = NULL;
 		return ERR_CODE_LMDB_OPEN;
 	}
 	r = mdb_env_set_mapsize(env->env, new_size);
-	if (r)
-		LOG(ERROR) << "map full, mdb_env_set_mapsize error " << r << ": " << strerror_client(r) << std::endl;
+	if (r) {
+		// map full, mdb_env_set_mapsize error r, nothing to do
+	}
 	r = mdb_env_open(env->env, env->path.c_str(), env->flags, env->mode);
 	mdb_env_close(env->env);
 	if (!openDb(env))
 	{
-		LOG(ERROR) << "map full, error re-open database" << std::endl;
+		// map full, error re-open database
 		return r;
 	}
 
 	// start transaction
 	r = mdb_txn_begin(env->env, NULL, 0, &env->txn);
-	if (r)
-		LOG(ERROR) << "map full, begin transaction error " << r << ": " << strerror_client(r) << std::endl;
+	if (r) {
+		// map full, begin transaction error
+	}
 	return r;
 }
 
@@ -82,7 +74,7 @@ bool openDb
 	int rc = mdb_env_create(&env->env);
 	if (rc)
 	{
-		LOG(ERROR) << "mdb_env_create error " << rc << ": " << strerror_client(rc) << std::endl;
+		// mdb_env_create error
 		env->env = NULL;
 		return false;
 	}
@@ -90,7 +82,7 @@ bool openDb
 	rc = mdb_env_open(env->env, env->path.c_str(), env->flags, env->mode);
 	if (rc)
 	{
-		LOG(ERROR) << "mdb_env_open path: " << env->path << " error " << rc  << ": " << strerror_client(rc) << std::endl;
+		// mdb_env_open path
 		env->env = NULL;
 		return false;
 	}
@@ -98,7 +90,7 @@ bool openDb
 	rc = mdb_txn_begin(env->env, NULL, 0, &env->txn);
 	if (rc)
 	{
-		LOG(ERROR) << "mdb_txn_begin error " << rc << ": " << strerror_client(rc) << std::endl;
+		// mdb_txn_begin error
 		env->env = NULL;
 		return false;
 	}
@@ -106,7 +98,7 @@ bool openDb
 	rc = mdb_dbi_open(env->txn, NULL, 0, &env->dbi);
 	if (rc)
 	{
-		LOG(ERROR) << "mdb_open error " << rc << ": " << strerror_client(rc) << std::endl;
+		// mdb_open error " << rc << ": " << strerror_client(rc) << std::endl;
 		env->env = NULL;
 		return false;
 	}
@@ -131,8 +123,6 @@ bool closeDb
 	return true;
 }
 
-#define DBG(n) if (verbosity > 3)	LOG(INFO) << "putAddr " << n << std::endl;
-
 /**
  * @brief Store input packet to the LMDB
  * @param env database env
@@ -144,8 +134,7 @@ int putAddr
 (
 	dbenv *env,
 	DEVADDR &addr,
-	DEVICEID &deviceid,
-	int verbosity
+	DEVICEID &deviceid
 )
 {
 	// start transaction
@@ -167,7 +156,6 @@ int putAddr
 		}
 		if (r) {
 			mdb_txn_abort(env->txn);
-			LOG(ERROR) << ERR_LMDB_PUT << r << ": " << strerror_client(r) << std::endl;
 			return ERR_CODE_LMDB_PUT;
 		}
 	}
@@ -181,7 +169,6 @@ int putAddr
 			}
 		}
 		if (r) {
-			LOG(ERROR) << ERR_LMDB_TXN_COMMIT << r << ": " << strerror_client(r) << std::endl;
 			return ERR_CODE_LMDB_TXN_COMMIT;
 		}
 	}
@@ -192,29 +179,67 @@ int putAddr
  * @brief Read log data from the LMDB
  * @param env database env
  * @param DEVADDR Networh address
- * @param onRecord callback
- * @param onRecordEnv object passed to callback
+ * @param DEVICEID return found address properties
  */
 int getAddr
 (
 	dbenv *env,
 	const DEVADDR &addr,
-	OnRecord onRecord,
-	void *onRecordEnv
+	DEVICEID &retval
 )
 {
-	if (!onRecordEnv)
-		return ERR_CODE_WRONG_PARAM;
+	// start transaction
+	int r = mdb_txn_begin(env->env, NULL, 0, &env->txn);
+	if (r)
+		return ERR_CODE_LMDB_TXN_BEGIN;
 
-	if (!onRecord) {
-		LOG(ERROR) << ERR_WRONG_PARAM << "onLog" << std::endl;
-		return ERR_CODE_WRONG_PARAM;
+	DEVADDR a;
+	int sz;
+		
+	memset(a, 0, sizeof(DEVADDR));
+	MDB_val dbkey;
+	dbkey.mv_size = sizeof(DEVADDR);
+	dbkey.mv_data = &a;
+	// Get the last key
+	MDB_cursor *cursor;
+	MDB_val dbval;
+	r = mdb_cursor_open(env->txn, env->dbi, &cursor);
+	if (r != MDB_SUCCESS) {
+		mdb_txn_commit(env->txn);
+		return r;
+	}
+	r = mdb_cursor_get(cursor, &dbkey, &dbval, MDB_SET_RANGE);
+	if (r != MDB_SUCCESS) {
+		mdb_txn_commit(env->txn);
+		return r;
 	}
 
+	if (dbval.mv_size < sizeof(DEVICEID))
+		return ERR_CODE_INSUFFICIENT_MEMORY;
+	memmove(&retval, dbval.mv_data, sizeof(DEVICEID));
+
+	r = mdb_txn_commit(env->txn);
+	if (r) {
+		return ERR_CODE_LMDB_TXN_COMMIT;
+	}
+	return r;
+}
+
+/**
+ * @brief List address
+ * @param env database env
+ * @param onLog callback
+ * @param onLogEnv object passed to callback
+ */
+int lsAddr
+(
+	dbenv *env,
+	OnRecord onRecord,
+	void *onRecordEnv
+) {
 	// start transaction
 	int r = mdb_txn_begin(env->env, NULL, 0, &env->txn);
 	if (r) {
-		LOG(ERROR) << ERR_LMDB_TXN_BEGIN << r << ": " << strerror_client(r) << std::endl;
 		return ERR_CODE_LMDB_TXN_BEGIN;
 	}
 
@@ -230,18 +255,11 @@ int getAddr
 	MDB_val dbval;
 	r = mdb_cursor_open(env->txn, env->dbi, &cursor);
 	if (r != MDB_SUCCESS) {
-		LOG(ERROR) << ERR_LMDB_OPEN << r << ": " << strerror_client(r) << std::endl;
-		mdb_txn_commit(env->txn);
-		return r;
-	}
-	r = mdb_cursor_get(cursor, &dbkey, &dbval, MDB_SET_RANGE);
-	if (r != MDB_SUCCESS) {
-		LOG(ERROR) << ERR_LMDB_GET << r << ": " << strerror_client(r) << std::endl;
 		mdb_txn_commit(env->txn);
 		return r;
 	}
 
-	do {
+	while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS) {
 		if (dbval.mv_size < sizeof(DEVICEID))
 			continue;
 		DEVADDR key1;
@@ -250,14 +268,13 @@ int getAddr
 		memmove(&v, dbval.mv_data, sizeof(DEVICEID));
 		if (onRecord(onRecordEnv, &key1, &v))
 			break;
-	} while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS);
+	}
 
 	r = mdb_txn_commit(env->txn);
 	if (r) {
-		LOG(ERROR) << ERR_LMDB_TXN_COMMIT << r << ": " << strerror_client(r) << std::endl;
 		return ERR_CODE_LMDB_TXN_COMMIT;
 	}
-	return r;
+	return r;	
 }
 
 /**
@@ -274,7 +291,6 @@ int rmAddr
 	// start transaction
 	int r = mdb_txn_begin(env->env, NULL, 0, &env->txn);
 	if (r) {
-		LOG(ERROR) << ERR_LMDB_TXN_BEGIN << r << ": " << strerror_client(r) << std::endl;
 		return ERR_CODE_LMDB_TXN_BEGIN;
 	}
 
@@ -287,13 +303,11 @@ int rmAddr
 	MDB_val dbval;
 	r = mdb_cursor_open(env->txn, env->dbi, &cursor);
 	if (r != MDB_SUCCESS) {
-		LOG(ERROR) << ERR_LMDB_OPEN << r << ": " << strerror_client(r) << std::endl;
 		mdb_txn_commit(env->txn);
 		return r;
 	}
 	r = mdb_cursor_get(cursor, &dbkey, &dbval, MDB_SET_RANGE);
 	if (r != MDB_SUCCESS) {
-		LOG(ERROR) << ERR_LMDB_GET << r << ": " << strerror_client(r) << std::endl;
 		mdb_txn_commit(env->txn);
 		return r;
 	}
@@ -313,7 +327,6 @@ int rmAddr
 
 	r = mdb_txn_commit(env->txn);
 	if (r) {
-		LOG(ERROR) << ERR_LMDB_TXN_COMMIT << r << std::endl;
 		return ERR_CODE_LMDB_TXN_COMMIT;
 	}
 	if (r == 0)
