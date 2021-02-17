@@ -140,7 +140,7 @@ static void aesCalculateRoundKey(
 
 void aesEncrypt(
 	unsigned char *data,
-	unsigned char *key
+	const unsigned char *key
 )
 {
 	unsigned char row, column, round = 0;
@@ -230,7 +230,7 @@ static void shiftLeft(
 void generateKeys(
 	unsigned char *K1,
 	unsigned char *K2,
-	unsigned char *key
+	const unsigned char *key
 )
 {
 	unsigned char i;
