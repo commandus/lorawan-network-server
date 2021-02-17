@@ -8,13 +8,13 @@ extern "C" {
 
 void aesEncrypt(
 	unsigned char *data,
-	unsigned char *key
+	const unsigned char *key
 );
 
 void generateKeys(
 	unsigned char *K1,
 	unsigned char *K2,
-	unsigned char *key
+	const unsigned char *key
 );
 
 void XOR(

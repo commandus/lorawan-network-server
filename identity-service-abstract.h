@@ -1,6 +1,11 @@
 #include <map>
 #include "utillora.h"
 
+/**
+ * Identity service interface
+ * Get device identifier and keys by the network address
+ */ 
+
 class IdentityService {
 	public:
 		// Return 0, retval = EUI and keys

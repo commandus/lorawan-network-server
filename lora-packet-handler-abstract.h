@@ -3,6 +3,9 @@
 
 #include "utillora.h"
 
+/**
+ * Handle uplink messages interface
+ */ 
 class LoraPacketHandler {
 	public:
 		// Return 0, retval = EUI and keys

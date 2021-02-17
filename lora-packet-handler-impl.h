@@ -6,6 +6,9 @@
 #include "lora-packet-handler-abstract.h"
 #include "identity-service-abstract.h"
 
+/**
+ * Handle uplink messages
+ */ 
 class LoraPacketProcessor: public LoraPacketHandler {
 	private:
 		IdentityService* identityService;

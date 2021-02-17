@@ -18,11 +18,16 @@ std::string ltimeString(
  */
 time_t parseDate(const char *v);
 
+/**
+ * @return seconds since 1970, milliseconds in @param ms
+ */
 time_t time_ms(
 	int &ms
 );
 
 time_t gps2utc(uint32_t value);
 uint32_t utc2gps(time_t value);
+
+std::string timeval2string(const struct timeval &val);
 
 #endif
