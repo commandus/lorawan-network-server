@@ -64,9 +64,9 @@ time_t time_ms(int &ms) {
 static const uint32_t gpsUnixEpochDiff = 315964800;
 
 static const uint32_t gpsLeap[] = {
-  46828800, 78364801, 109900802, 173059203, 252028804, 315187205, 346723206,
-  393984007, 425520008, 457056009, 504489610, 551750411, 599184012, 820108813,
-  914803214, 1025136015, 1119744016, 1167264017
+	46828800, 78364801, 109900802, 173059203, 252028804, 315187205, 346723206,
+	393984007, 425520008, 457056009, 504489610, 551750411, 599184012, 820108813,
+	914803214, 1025136015, 1119744016, 1167264017	// last is 2017-Jan-01
 };
 
 /**
@@ -129,4 +129,15 @@ uint32_t utc2gps(time_t value) {
 	// Account for leap seconds between 1980 epoch and gpsMS.
 	gps += countLeaps(gps, true);
 	return gps;
+}
+
+std::string timeval2string(
+	const struct timeval &val
+)
+{
+	char buf[64];
+	struct tm *tm = localtime(&val.tv_sec);
+	strftime(buf, sizeof(buf), dateformat, tm);
+	snprintf(buf, sizeof(buf), "%s.%06ld", buf, val.tv_usec);
+	return std::string(buf);
 }

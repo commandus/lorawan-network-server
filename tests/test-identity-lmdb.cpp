@@ -31,9 +31,7 @@ int main(int argc, char **argv) {
 	id.nwkSKey[4] = 5;
 	id.nwkSKey[5] = 6;
 	id.nwkSKey[6] = 7;
-	id.nwkSKey[7] = 8;
-	id.nwkSKey[8] = 9;
-	id.nwkSKey[9] = 10;
+
 	id.nwkSKey[10] = 11;
 	id.nwkSKey[11] = 12;
 	id.nwkSKey[12] = 13;
@@ -64,16 +62,13 @@ int main(int argc, char **argv) {
 	a[1] = 3;
 	a[2] = 4;
 	a[3] = 5;
-
 	s.put(a, id);
 
 	a[0] = 3;
 	a[1] = 4;
 	a[2] = 5;
 	a[3] = 6;
-
 	s.put(a, id);
-
 
 	std::vector<NetworkIdentity> l;
 	

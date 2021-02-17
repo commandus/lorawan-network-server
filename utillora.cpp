@@ -38,10 +38,10 @@ void swapBytes(void *pv, size_t n)
  */
 void encryptPayload(
 	std::string &payload,
-	unsigned int frameCounter,
-	unsigned char direction,
-	DEVADDR &devAddr,
-	KEY128 &appSKey
+	const unsigned int frameCounter,
+	const unsigned char direction,
+	const DEVADDR &devAddr,
+	const KEY128 &appSKey
 )
 {
 	uint8_t blockA[16];
@@ -188,10 +188,10 @@ static void decryptPayload(
  */ 
 static uint32_t calculateMIC(
 	const std::string &payload,
-	unsigned int frameCounter,
-	unsigned char direction,
-	DEVADDR &devAddr,
-	KEY128 &key
+	const unsigned int frameCounter,
+	const unsigned char direction,
+	const DEVADDR &devAddr,
+	const KEY128 &key
 )
 {
 	unsigned char *data = (unsigned char *) payload.c_str();
@@ -795,15 +795,11 @@ bool rfmHeader::parse(
 	return r;
 }
 
-void rfmHeader::ntoh() {
-	*((uint32_t*) &header.devaddr) = ntoh4(*((uint32_t *) &header.devaddr));
-	header.framecountertx = ntoh2(header.framecountertx);
-}
-
-std::string rfmHeader::toString() {
-	ntoh();
-	std::string r((const char *) &header, sizeof(RFM_HEADER));
-	ntoh();
+std::string rfmHeader::toString() const {
+	RFM_HEADER h;
+	*((uint32_t*) &h.devaddr) = ntoh4(*((uint32_t *) &header.devaddr));
+	*((uint16_t*) &h.framecountertx) = ntoh2(*((uint16_t *) &header.framecountertx));
+	std::string r((const char *) &h, sizeof(RFM_HEADER));
 	return r;
 }
 
@@ -1054,15 +1050,12 @@ void semtechUDPPacket::setRfmHeader(
  *   DEV-ADDR  FRAMCN  PAYLOA
  * MH        FC(1.0) FP      MIC
  *           FRAME-CN (1.1)
- * 
- * MH MAC header (40)
- * FC Frame control
- * CN Frame counter
+ * packet.getDeviceAddr();
  * FP Frame port
  
  * 
  */
-std::string semtechUDPPacket::serialize2RfmPacket()
+std::string semtechUDPPacket::serialize2RfmPacket() const
 {
 	std::stringstream ss;
 	std::string p(payload);
@@ -1088,7 +1081,7 @@ std::string semtechUDPPacket::serialize2RfmPacket()
 	return ss.str();
 }
 
-std::string semtechUDPPacket::toString()
+std::string semtechUDPPacket::toString() const
 {
 	std::stringstream ss;
 	std::string p(payload);
@@ -1099,7 +1092,7 @@ std::string semtechUDPPacket::toString()
 	return ss.str();
 }
 
-std::string semtechUDPPacket::metadataToJsonString() 
+std::string semtechUDPPacket::metadataToJsonString() const
 {
 	std::string d(serialize2RfmPacket());
 	std::stringstream ss;
@@ -1131,8 +1124,12 @@ void semtechUDPPacket::setDeviceEUI(
 	setMAC(devId.deviceEUI, value);
 }
 
-std::string semtechUDPPacket::getDeviceAddr() {
-	return hexString(&header.header.devaddr, sizeof(DEVADDR));;
+std::string semtechUDPPacket::getDeviceAddrStr() const {
+	return DEVADDR2string(header.header.devaddr);
+}
+
+DEVADDRINT semtechUDPPacket::getDeviceAddr() const {
+	return *(DEVADDRINT *) &header.header.devaddr;
 }
 
 void semtechUDPPacket::setDeviceAddr(

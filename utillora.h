@@ -25,7 +25,7 @@ class DEVADDRINT
 
 		}
 
-		DEVADDRINT(DEVADDR &v) {
+		DEVADDRINT(const DEVADDR &v) {
 			memmove(&a, &v, sizeof(DEVADDR));
 		}
 };
@@ -113,11 +113,20 @@ typedef enum {
 typedef struct {
 	// value, no key
 	ACTIVATION activation;	///< activation type: ABP or OTAA
-	DEVEUI deviceEUI;		///< device identifier 8 bytes
+	DEVEUI deviceEUI;		///< device identifier 8 bytes (ABP device may not store EUI)
 	KEY128 nwkSKey;			///< shared session key 16 bytes
 	KEY128 appSKey;			///< private key 16 bytes
 } DEVICEID;					// 44 bytes
 
+/**
+ * Section 6.3 Activating an end-device by personalization 
+ * - DevAddr ->
+ * - FNwkSIntKey
+ * - SNwkSIntKey shared session key ->
+ * - NwkSEncKey
+ * - AppSKey private key ->
+ * are directly stored into the end-device
+*/
 class NetworkIdentity {
 private:
 public:
@@ -178,8 +187,6 @@ public:
 };
 
 class rfmHeader {
-private:
-	void ntoh();
 public:	
 	RFM_HEADER header;
 	FOPTS fopts;
@@ -206,7 +213,7 @@ public:
 		const std::string &value
 	);
 
-	std::string toString();
+	std::string toString() const;
 	bool parse(const std::string &value);
 };
 
@@ -236,9 +243,9 @@ public:
 	// TODO I dont remember what is it for
 	semtechUDPPacket(const std::string &data, const std::string &devaddr, const std::string &appskey);
 	
-	std::string serialize2RfmPacket();
-	std::string toString();
-	std::string metadataToJsonString();
+	std::string serialize2RfmPacket() const;
+	std::string toString() const;
+	std::string metadataToJsonString() const;
 
 	RFM_HEADER *getRfmHeader();
 	rfmHeader *getHeader();
@@ -247,7 +254,8 @@ public:
 	std::string getDeviceEUI();
 	void setDeviceEUI(const std::string &value);
 
-	std::string getDeviceAddr();
+	std::string getDeviceAddrStr() const;
+	DEVADDRINT getDeviceAddr() const;
 	void setDeviceAddr(const std::string &value);
 	void setGatewayId(const std::string &value);
 	void setNetworkSessionKey(const std::string &value);
