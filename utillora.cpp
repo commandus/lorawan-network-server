@@ -925,10 +925,17 @@ static void setAddr(
 	if (value.size() < sizeof(DEVADDR) * 2)
 		return;
 	unsigned char *s = (unsigned char *) value.c_str();
+#if BYTE_ORDER == BIG_ENDIAN
 	for (int i = 0; i < sizeof(DEVADDR); i++) {
 		retval[i] = hexdec(s);
 		s += 2;
 	}
+#else
+	for (int i = sizeof(DEVADDR) - 1; i >= 0; i--) {
+		retval[i] = hexdec(s);
+		s += 2;
+	}
+#endif	
 }
 
 static void setMAC(
@@ -943,10 +950,17 @@ static void setMAC(
 		return;
 	memset(retval, 0, sizeof(DEVEUI));
 	unsigned char *s = (unsigned char *) value.c_str();
+#if BYTE_ORDER == BIG_ENDIAN
 	for (int i = 0; i < sizeof(DEVEUI); i++) {
 		retval[i] = hexdec(s);
 		s += 2;
 	}
+#else
+	for (int i = sizeof(DEVEUI) - 1; i >= 0; i--) {
+		retval[i] = hexdec(s);
+		s += 2;
+	}
+#endif	
 }
 
 void setKey(
@@ -961,10 +975,17 @@ void setKey(
 	if (value.size() < sizeof(KEY128) * 2)
 		return;
 	unsigned char *s = (unsigned char *) value.c_str();
+#if BYTE_ORDER == BIG_ENDIAN
 	for (int i = 0; i < sizeof(KEY128); i++) {
 		retval[i] = hexdec(s);
 		s += 2;
 	}
+#else
+	for (int i = sizeof(KEY128) - 1; i >= 0; i--) {
+		retval[i] = hexdec(s);
+		s += 2;
+	}
+#endif	
 }
 
 /**

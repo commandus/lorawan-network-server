@@ -94,3 +94,20 @@ bool PacketQueue::getFirstExpired(
 
 	return true;
 }
+
+std::string PacketQueue::toString() const
+{
+	std::stringstream ss;
+	/*
+	for (std::deque <DEVADDRINT>::const_iterator it(addrs.begin()); it != addrs.end(); it++) {
+		ss << DEVADDRINT2string(*it) << std::endl;
+	}
+	ss << std::endl;
+	*/
+	for (std::map<DEVADDRINT, SemtechUDPPacketsAddr, DEVADDRINTCompare>::const_iterator it(packets.begin()); it != packets.end(); it++) {
+		ss << DEVADDRINT2string(it->first) << ": " 
+			<< it->second.toString()
+			<< std::endl;
+	}
+	return ss.str();
+}

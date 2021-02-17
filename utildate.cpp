@@ -138,6 +138,7 @@ std::string timeval2string(
 	char buf[64];
 	struct tm *tm = localtime(&val.tv_sec);
 	strftime(buf, sizeof(buf), dateformat, tm);
-	snprintf(buf, sizeof(buf), "%s.%06ld", buf, val.tv_usec);
-	return std::string(buf);
+	std::stringstream ss;
+	ss << buf << "." << val.tv_usec;
+	return ss.str();
 }

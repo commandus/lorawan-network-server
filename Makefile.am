@@ -98,7 +98,15 @@ test_udp_listen_SOURCES = \
 test_udp_listen_LDADD =
 test_udp_listen_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-identity-file-json test-identity-lmdb
-#test-1 test-udp-listen 
+test_packet_queue_SOURCES = \
+	tests/test-packet-queue.cpp \
+	packet-queue.cpp utillora.cpp errlist.cpp \
+	utilstring.cpp utildate.cpp aes-128.c \
+	third_party/base64/base64.cpp
+test_packet_queue_LDADD =
+test_packet_queue_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-packet-queue
+#test-1 test-udp-listen test-identity-file-json test-identity-lmdb
 
 TESTS = $(check_PROGRAMS)
