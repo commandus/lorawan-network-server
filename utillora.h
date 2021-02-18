@@ -219,7 +219,6 @@ public:
 
 class semtechUDPPacket {
 private:
-	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	rfmHeader header;
 	std::string payload;
 	void clearPrefix();
@@ -227,6 +226,7 @@ private:
 	// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 	int loadCredentialsDevAddr();
 public:	
+	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	struct sockaddr_in6 clientAddress;
 	// parse error code
 	int errcode;
@@ -254,6 +254,7 @@ public:
 	std::string getDeviceEUI();
 	void setDeviceEUI(const std::string &value);
 
+	float getSignalLevel() const;
 	std::string getDeviceAddrStr() const;
 	DEVADDRINT getDeviceAddr() const;
 	void setDeviceAddr(const std::string &value);
@@ -266,6 +267,7 @@ public:
 	int setPayload(uint8_t port, const std::string &payload);
 	int setPayload(const std::string &value);
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
+	int16_t getStrongesSignalLevel(int &idx) const;
 };
 
 void string2DEVADDR(DEVADDR &retval, const std::string &str);

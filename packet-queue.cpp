@@ -53,13 +53,21 @@ void PacketQueue::put(
 ) {
 	SemtechUDPPacketItem item(value);
 	DEVADDRINT a(item.getAddr());
+	mutexq.lock();
 	std::map<DEVADDRINT, SemtechUDPPacketsAddr>::iterator it(packets.find(a));
+	// add first packet, add metadata only for others
 	if (it != packets.end()) {
-		it->second.packets.push_back(item);
+		if (it->second.packets.size() == 0)
+			it->second.packets.push_back(item);
+		else {
+			if (value.metadata.size())
+				it->second.packets[0].packet.metadata.push_back(value.metadata[0]);
+		}
 	} else {
 		packets[a].packets.push_back(item);
 		addrs.push_back(a);
 	}
+	mutexq.unlock();
 }
 
 /**
@@ -73,6 +81,11 @@ int PacketQueue::diffMS(
 	return ((t2.tv_sec - t1.tv_sec) * 1000) + ((t2.tv_usec - t1.tv_usec) / 1000);
 }
 
+size_t PacketQueue::count()
+{
+	return packets.size();
+}
+
 bool PacketQueue::getFirstExpired(
 	semtechUDPPacket &retval,
 	struct timeval &currenttime
@@ -80,17 +93,32 @@ bool PacketQueue::getFirstExpired(
 {
 	if (!addrs.size())
 		return false;
+
+	mutexq.lock();
+
 	DEVADDRINT a = addrs.front();
 	std::map<DEVADDRINT, SemtechUDPPacketsAddr>::iterator it(packets.find(a));
-	if (it == packets.end())
+	if (it == packets.end()) {
+		mutexq.unlock();
 		return false;
+	}
 
-	if (diffMS(it->second.packets[0].timeAdded, currenttime) < delayMS)
+	// always keep at leats 1 item
+	if (!it->second.packets.size()) {
+		mutexq.unlock();
 		return false;
-	
+	}
+	// first packet is earliest packet
+	if (diffMS(it->second.packets[0].timeAdded, currenttime) < delayMS) {
+		mutexq.unlock();
+		return false;
+	}
 	retval = it->second.packets[0].packet;
+
 	packets.erase(it);
 	addrs.pop_front();
+
+	mutexq.unlock();
 
 	return true;
 }

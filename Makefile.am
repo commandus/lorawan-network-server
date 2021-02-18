@@ -103,7 +103,7 @@ test_packet_queue_SOURCES = \
 	packet-queue.cpp utillora.cpp errlist.cpp \
 	utilstring.cpp utildate.cpp aes-128.c \
 	third_party/base64/base64.cpp
-test_packet_queue_LDADD =
+test_packet_queue_LDADD = -lpthread
 test_packet_queue_CPPFLAGS = $(commoncppflags)
 
 check_PROGRAMS = test-packet-queue

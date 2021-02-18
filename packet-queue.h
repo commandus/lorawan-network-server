@@ -5,7 +5,8 @@
 #include <deque>
 #include <vector>
 #include <map>
-#include <thread>
+#include <vector>
+#include <mutex>
 #include <time.h>
 
 #include "utillora.h"
@@ -33,13 +34,14 @@ class SemtechUDPPacketsAddr {
 class PacketQueue {
 	private:
 		int delayMS;
-		std::thread t;
+		std::mutex mutexq;
 	public:
 		std::map<DEVADDRINT, SemtechUDPPacketsAddr, DEVADDRINTCompare> packets;
 		std::deque <DEVADDRINT> addrs;
 		PacketQueue();
 		PacketQueue(int delayMs);
 		void put(const semtechUDPPacket &value);
+		size_t count();
 		bool getFirstExpired(semtechUDPPacket &retval, struct timeval &currenttime);
 		void start();
 		void stop();

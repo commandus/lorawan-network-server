@@ -1145,7 +1145,24 @@ void semtechUDPPacket::setDeviceEUI(
 	setMAC(devId.deviceEUI, value);
 }
 
-std::string semtechUDPPacket::getDeviceAddrStr() const {
+/**
+ * 0- strongest, -120- nothing
+ * @return INT16_MIN if N/A
+ */
+int16_t semtechUDPPacket::getStrongesSignalLevel(int &idx) const {
+	int16_t r = INT16_MIN;;
+	idx = -1;
+	for (int i = 0; i < metadata.size(); i++) {
+		if (metadata[0].rssi > r) {
+			r = metadata[0].rssi;
+			idx = i;
+		}
+	}
+	return r;
+}
+
+std::string semtechUDPPacket::getDeviceAddrStr() const 
+{
 	return DEVADDR2string(header.header.devaddr);
 }
 
