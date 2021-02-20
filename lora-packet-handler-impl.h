@@ -5,13 +5,16 @@
 #include <functional>
 #include "lora-packet-handler-abstract.h"
 #include "identity-service-abstract.h"
+#include "packet-queue.h"
+#include "packet-handler-abstract.h"
 
 /**
  * Handle uplink messages
  */ 
-class LoraPacketProcessor: public LoraPacketHandler {
+class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 	private:
 		IdentityService* identityService;
+		PacketQueue packetQueue;
 		std::function<void(
 			int level,
 			int modulecode,
@@ -22,7 +25,10 @@ class LoraPacketProcessor: public LoraPacketHandler {
 		LoraPacketProcessor();
 		~LoraPacketProcessor();
 		void setIdentityService(IdentityService* identityService);
-		int process(semtechUDPPacket &packet);
+		/**
+		 * Add packet to be processed
+		 */
+		int put(semtechUDPPacket &packet);
 		void setLogger(
 			std::function<void(
 				int level,
@@ -30,6 +36,7 @@ class LoraPacketProcessor: public LoraPacketHandler {
 				int errorcode,
 				const std::string &message
 		)> value);
+		int onPacket(semtechUDPPacket &value);
 };
 
 #endif

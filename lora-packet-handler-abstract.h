@@ -9,7 +9,7 @@
 class LoraPacketHandler {
 	public:
 		// Return 0, retval = EUI and keys
-		virtual int process(semtechUDPPacket &packet) = 0;
+		virtual int put(semtechUDPPacket &packet) = 0;
 };
 
 #endif
