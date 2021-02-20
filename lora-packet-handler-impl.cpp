@@ -3,18 +3,23 @@
 #include "utilstring.h"
 #include "errlist.h"
 
+int LoraPacketProcessor::onPacket(semtechUDPPacket &value)
+{
+	return 0;
+}
+
 LoraPacketProcessor::LoraPacketProcessor()
 	: onLog(NULL), identityService(NULL)
 {
-
+	packetQueue.start(*this);
 }
 
 LoraPacketProcessor::~LoraPacketProcessor()
 {
-
+	packetQueue.stop();
 }
 
-int LoraPacketProcessor::process
+int LoraPacketProcessor::put
 (
 	semtechUDPPacket &packet
 )
@@ -24,6 +29,7 @@ int LoraPacketProcessor::process
 		DeviceId id;
 		r = identityService->get(packet.getHeader()->header.devaddr, id);
 		if (r) {
+			// report error
 			std::stringstream ss;
 			ss << ERR_MESSAGE << r << ": " 
 				<< strerror_client(r) << " " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);

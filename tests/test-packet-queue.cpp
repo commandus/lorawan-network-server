@@ -89,7 +89,7 @@ void setSignalHandler()
 #endif
 
 void timeout60s() {
-	sleep(3600);
+	sleep(10);
 	std::cerr << "Timeout" << std::endl;
 	stopped = true;
 }
@@ -106,10 +106,6 @@ void t1() {
 		struct timeval t;
 		gettimeofday(&t, NULL);
 		if (q.getFirstExpired(p, t)) {
-			/*
-			std::cerr << timeval2string(t) << " " << p.getDeviceAddrStr() << " "
-				<< p.metadataToJsonString() << std::endl;
-			*/
 		}
 	}
 }
@@ -125,6 +121,15 @@ void printStat() {
 	}
 }
 
+void onPacket(
+	const void *env,
+	semtechUDPPacket &value
+)
+{
+	packetsRead++;
+	// std::cerr << value.getDeviceAddrStr() << " " << value.metadataToJsonString() << std::endl;
+}
+
 void t2() {
 	setSignalHandler();
 	std::cerr << "Press Ctrl+C to exit or wait 60s" << std::endl;
@@ -132,13 +137,16 @@ void t2() {
 	tp.detach();
 
 	std::thread ts(printStat);
-	ts.detach();
+	// ts.detach();
 
 	std::thread tw(timeout60s);
 	tw.detach();
 
-	std::thread tr(readPackets);
-	tr.join();
+	// std::thread tr(readPackets);
+	// tr.detach();
+	q.start(onPacket);
+	
+	ts.join();
 	printStat();
 }
 

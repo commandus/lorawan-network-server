@@ -1,5 +1,6 @@
 #include "packet-queue.h"
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "utildate.h"
 
@@ -33,19 +34,31 @@ std::string SemtechUDPPacketsAddr::toString() const
 }
 
 PacketQueue::PacketQueue()
-	: delayMS(MIN_DELAY_MS)
+	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), isStarted(false), isDone(false)
 {
 }
 
 PacketQueue::PacketQueue(
-	int delayms
+	int delayMillisSeconds
 )
+	: packetsRead(0), isStarted(false), threadSend(NULL)
 {
-	delayMS = delayms;
-	if (delayMS < MIN_DELAY_MS)
-		delayMS = MIN_DELAY_MS;
-	if (delayMS > MAX_DELAY_MS)
-		delayMS = MAX_DELAY_MS;
+	setDelay(delayMillisSeconds);
+}
+
+void PacketQueue::setDelay(
+	int delayMilliSeconds
+) {
+	if (delayMilliSeconds < MIN_DELAY_MS)
+		delayMilliSeconds = MIN_DELAY_MS;
+	if (delayMilliSeconds > MAX_DELAY_MS)
+		delayMilliSeconds = MAX_DELAY_MS;
+	delayMicroSeconds = delayMilliSeconds * 1000;
+}
+
+PacketQueue::~PacketQueue()
+{
+	stop();
 }
 
 void PacketQueue::put(
@@ -73,12 +86,12 @@ void PacketQueue::put(
 /**
  * @return time dirrerence in milliseconds 
  **/
-int PacketQueue::diffMS(
+int PacketQueue::diffMicroSeconds(
 	struct timeval &t1,
 	struct timeval &t2
 )
 {
-	return ((t2.tv_sec - t1.tv_sec) * 1000) + ((t2.tv_usec - t1.tv_usec) / 1000);
+	return 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
 }
 
 size_t PacketQueue::count()
@@ -109,7 +122,7 @@ bool PacketQueue::getFirstExpired(
 		return false;
 	}
 	// first packet is earliest packet
-	if (diffMS(it->second.packets[0].timeAdded, currenttime) < delayMS) {
+	if (diffMicroSeconds(it->second.packets[0].timeAdded, currenttime) < delayMicroSeconds) {
 		mutexq.unlock();
 		return false;
 	}
@@ -121,6 +134,22 @@ bool PacketQueue::getFirstExpired(
 	mutexq.unlock();
 
 	return true;
+}
+
+int PacketQueue::getNextTimeout(struct timeval &currenttime)
+{
+	DEVADDRINT a = addrs.front();
+	std::map<DEVADDRINT, SemtechUDPPacketsAddr>::iterator it(packets.find(a));
+	if (it == packets.end()) {
+		return DEF_TIMEOUT_MS;
+	}
+
+	// always keep at leats 1 item
+	if (!it->second.packets.size()) {
+		return DEF_TIMEOUT_MS;
+	}
+	// first packet is earliest packet
+	return diffMicroSeconds(it->second.packets[0].timeAdded, currenttime);
 }
 
 std::string PacketQueue::toString() const
@@ -138,4 +167,62 @@ std::string PacketQueue::toString() const
 			<< std::endl;
 	}
 	return ss.str();
+}
+
+void PacketQueue::runner()
+{
+	// PacketHandler value;
+	packetsRead = 0;
+	int timeoutMicroSeconds = DEF_TIMEOUT_MS * 1000;
+	while (isStarted) {
+		struct timeval timeout;
+		timeout.tv_sec = 0;
+		timeout.tv_usec = timeoutMicroSeconds;
+		int retval = select(0, NULL, NULL, NULL, &timeout);
+		switch (retval) {
+			case -1:
+				break;
+			case 0:
+				// timeout
+				if (count()) {
+					semtechUDPPacket p;
+					struct timeval t;
+					gettimeofday(&t, NULL);
+					while (getFirstExpired(p, t)) {
+						/*
+						std::cerr << timeval2string(t) << " "  << p.getDeviceAddrStr() << " "
+							<< p.metadataToJsonString() << std::endl;
+						*/
+						packetsRead++;
+						// value.onPacket(p);
+					}
+					timeoutMicroSeconds = getNextTimeout(t);
+				}
+				continue;
+			default:
+				break;
+		}
+	}
+	isDone = true;
+}
+
+void PacketQueue::start(
+	PacketHandler &value
+) 
+{
+	if (isStarted)
+		return;
+	isStarted = true;
+	isDone = false;
+	threadSend = new std::thread(&PacketQueue::runner, this);
+}
+
+void PacketQueue::stop()
+{
+	if (!isStarted)
+		return;
+	isStarted = false;
+	while(!isDone) {
+		usleep(100);
+	}
 }

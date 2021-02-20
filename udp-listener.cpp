@@ -145,7 +145,7 @@ int UDPListener::listen() {
 								break;
 							}
 							if (handler) {
-								handler->process(*it);
+								handler->put(*it);
 							} else {
 								if (onLog) {
 									std::stringstream ss;
