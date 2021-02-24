@@ -49,6 +49,13 @@ public:
 		struct sockaddr *value);
 
 	void clearLogger();
+
+	int sendAck(
+		const UDPSocket &socket,
+		const struct sockaddr_in *dest,
+		const SEMTECH_ACK &response
+	);
+
 	void setLogger(
 		std::function<void(
 			int level,

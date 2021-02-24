@@ -91,6 +91,18 @@ int UDPListener::largestSocket() {
 	return r;
 }
 
+int UDPListener::sendAck(
+	const UDPSocket &socket,
+	const struct sockaddr_in *dest,
+	const SEMTECH_ACK &response
+)
+{
+	size_t r = sendto(socket.sock, &response, sizeof(SEMTECH_ACK), 0,
+		(const struct sockaddr*) dest,
+		((dest->sin_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+	return r;
+}
+
 int UDPListener::listen() {
 	int sz = sockets.size();
 	if (!sz)
@@ -123,6 +135,7 @@ int UDPListener::listen() {
 				break;
         	default:
 			{
+				// By default two sockets: one for IPv4, second for IPv6
 				for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
 					if (!FD_ISSET(it->sock, &readHandles))
 						continue;
@@ -131,11 +144,37 @@ int UDPListener::listen() {
 					if (bytesReceived >= 0) {
 						std::vector<semtechUDPPacket> packets;
 						// get packets
-						semtechUDPPacket::parse(packets, buffer.c_str(), bytesReceived);
-						for (std::vector<semtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
-							memmove(&it->clientAddress, &clientAddress,
+						SEMTECH_DATA_PREFIX dataprefix;
+						int pr = semtechUDPPacket::parse(dataprefix, packets, buffer.c_str(), bytesReceived);
+						switch (pr) {
+							case ERR_CODE_INVALID_JSON:
+								// it is completely invalid packet, do not response
+								break;
+							default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue
+								// send ACK immediately
+								SEMTECH_ACK response;
+								response.version = 2;
+								response.tag = 1; // must be 1 PUSH_ACK;
+								response.token = dataprefix.token;
+								int ar = sendAck(*it, (const sockaddr_in*) &clientAddress, response);
+								if (ar) {
+									std::stringstream ss;
+									ss << ERR_MESSAGE << ERR_CODE_SEND_ACK << " "
+										<< UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< ": " << ERR_SEND_ACK;
+									onLog(LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+								} else {
+									std::stringstream ss;
+									ss << ERR_MESSAGE << MSG_SENT_ACK_TO << " "
+										<< UDPSocket::addrString((const struct sockaddr *) &clientAddress);
+									onLog(LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+								}
+								break;
+						}
+						for (std::vector<semtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
+							memmove(&itp->clientAddress, &clientAddress,
 								(clientAddress.sin6_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
-							if (it->errcode) {
+							if (itp->errcode) {
 								std::string v = std::string(buffer.c_str(), bytesReceived);
 								std::stringstream ss;
 								ss << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << " "
@@ -145,13 +184,13 @@ int UDPListener::listen() {
 								break;
 							}
 							if (handler) {
-								handler->put(*it);
+								handler->put(*itp);
 							} else {
 								if (onLog) {
 									std::stringstream ss;
 									ss << MSG_READ_BYTES 
 										<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ": "
-										<< it->toString();
+										<< itp->toString();
 									onLog(LOG_INFO, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
 								}
 							}

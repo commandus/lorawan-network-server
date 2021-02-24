@@ -46,6 +46,7 @@
 #define ERR_CODE_WRONG_PARAM				-532
 #define ERR_CODE_INSUFFICIENT_MEMORY		-533
 #define ERR_CODE_NO_CONFIG					-534
+#define ERR_CODE_SEND_ACK					-535
 
 
 #define ERR_MESSAGE						"Error "
@@ -90,6 +91,7 @@
 #define ERR_WRONG_PARAM					"Wrong parameter"
 #define ERR_INSUFFICIENT_MEMORY			"Insufficient memory"
 #define ERR_NO_CONFIG					"No config is provided"
+#define ERR_SEND_ACK					"Send ACK error "
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "
@@ -107,6 +109,7 @@
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "
 #define MSG_RECEIVED					"Message received "
+#define MSG_SENT_ACK_TO					"Sent ACK to "
 #define ERROR							"Error "
 
 const char *strerror_client(int errcode);

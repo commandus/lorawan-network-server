@@ -52,7 +52,7 @@ int getMetadataName(
 );
 
 /**
- * PUSH_DATA, PULL_DATA packets
+ * PUSH_DATA, PULL_DATA packets prefix.
  * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT section 3.2
  */
 typedef ALIGN struct {
@@ -60,7 +60,7 @@ typedef ALIGN struct {
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
-} PACKED SEMTECH_LORA_PREFIX;	// 12 bytes
+} PACKED SEMTECH_DATA_PREFIX;	// 12 bytes
 // After prefix "JSON object", starting with {, ending with }, see section 4
 
 /**
@@ -69,7 +69,7 @@ typedef ALIGN struct {
  */
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
-	uint16_t token;				// same random token as SEMTECH_LORA_PREFIX
+	uint16_t token;				// same random token as SEMTECH_DATA_PREFIX
 	uint8_t tag;				// PUSH_ACK 0x01
 } PACKED SEMTECH_ACK;			// 4 bytes
 
@@ -231,15 +231,20 @@ public:
 	// parse error code
 	int errcode;
 	// prefix contains gateway identifier
-	SEMTECH_LORA_PREFIX prefix;
+	SEMTECH_DATA_PREFIX prefix;
 	// authentication keys
 	DeviceId devId;
 
 	// return array of packets from Basic communication protocol packet
-	static int parse(std::vector<semtechUDPPacket> &retPackets, const void *packetForwarderPacket, int size);
+	static int parse(
+		SEMTECH_DATA_PREFIX &retprefix,
+		std::vector<semtechUDPPacket> &retPackets, 
+		const void *packetForwarderPacket, 
+		int size
+	);
 	semtechUDPPacket();
 	// Called from parse()
-	semtechUDPPacket(const SEMTECH_LORA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data);
+	semtechUDPPacket(const SEMTECH_DATA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data);
 	// TODO I dont remember what is it for
 	semtechUDPPacket(const std::string &data, const std::string &devaddr, const std::string &appskey);
 	
@@ -266,6 +271,7 @@ public:
 	std::string getPayload();
 	int setPayload(uint8_t port, const std::string &payload);
 	int setPayload(const std::string &value);
+	// Create ACK response to be send to the BS 
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
 	int16_t getStrongesSignalLevel(int &idx) const;
 };

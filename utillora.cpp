@@ -824,22 +824,26 @@ semtechUDPPacket::semtechUDPPacket()
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
 }
 
+/**
+ * Parse Semtech UDP packet
+ * @return 0, ERR_CODE_INVALID_PACKET or ERR_CODE_INVALID_JSON
+ */ 
 int semtechUDPPacket::parse(
+	SEMTECH_DATA_PREFIX &retprefix,
 	std::vector<semtechUDPPacket> &retPackets,
 	const void *packetForwarderPacket,
 	int size
 ) {
-	if (size < sizeof(SEMTECH_LORA_PREFIX)) {
+	if (size < sizeof(SEMTECH_DATA_PREFIX)) {
 		return ERR_CODE_INVALID_PACKET;
 	}
-	SEMTECH_LORA_PREFIX rprefix;
-	memmove(&rprefix, packetForwarderPacket, sizeof(SEMTECH_LORA_PREFIX));
+	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_DATA_PREFIX));
 	// check version
 
-	if (rprefix.version != 2) {
+	if (retprefix.version != 2) {
 		return ERR_CODE_INVALID_PACKET;
 	}
-	char *json = (char *) packetForwarderPacket + sizeof(SEMTECH_LORA_PREFIX);
+	char *json = (char *) packetForwarderPacket + sizeof(SEMTECH_DATA_PREFIX);
 	if (!json)
 		return ERR_CODE_INVALID_JSON;
 
@@ -867,7 +871,7 @@ int semtechUDPPacket::parse(
 		int rr = m.parse(sz, data, jm);
 		if (rr)
 			return rr;
-		semtechUDPPacket packet(&rprefix, &m, data);
+		semtechUDPPacket packet(&retprefix, &m, data);
 		retPackets.push_back(packet);
 	}
 	return r;
@@ -1020,14 +1024,14 @@ void semtechUDPPacket::clearPrefix()
 }
 
 semtechUDPPacket::semtechUDPPacket(
-	const SEMTECH_LORA_PREFIX *aprefix,
+	const SEMTECH_DATA_PREFIX *aprefix,
 	const rfmMetaData *ametadata,
 	const std::string &data
 )
 	: errcode(0)
 {
 	if (aprefix)
-		memmove(&prefix, aprefix, sizeof(SEMTECH_LORA_PREFIX));
+		memmove(&prefix, aprefix, sizeof(SEMTECH_DATA_PREFIX));
 	else {
 		clearPrefix();
 	}
@@ -1108,7 +1112,7 @@ std::string semtechUDPPacket::toString() const
 	std::string p(payload);
 
 	// prefix 12 bytes, metadata + payload
-	ss << std::string((const char *) &prefix, sizeof(SEMTECH_LORA_PREFIX))
+	ss << std::string((const char *) &prefix, sizeof(SEMTECH_DATA_PREFIX))
 		<< metadataToJsonString();
 	return ss.str();
 }
