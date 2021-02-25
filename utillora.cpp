@@ -434,7 +434,7 @@ std::string rfmMetaData::frequency() const
 {
 	std::stringstream ss;
 	int mhz = freq / 1000000; 
-	ss << mhz << "." << freq - (mhz * 1000000);
+	ss << mhz << "." << (freq - (mhz * 1000000));
 	return ss.str();
 }
 
@@ -633,7 +633,7 @@ int rfmMetaData::parse(
 	if (value.HasMember(METADATA_NAMES[4])) {
 		rapidjson::Value &v = value[METADATA_NAMES[4]];
 		if (v.IsDouble()) {
-			freq = v.GetDouble();
+			freq = v.GetDouble() * 1000000;
 		}
 	}
 
@@ -717,20 +717,20 @@ std::string rfmMetaData::toJsonString(
 	int ms;
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 	ss << "{" 
-		<< "\"" << METADATA_NAMES[1] << "\":\"" << dt << "\""
-		<< "\"" << METADATA_NAMES[2] << "\":" << tmms()
-		<< "\"" << METADATA_NAMES[3] << "\":" << tmst
-		<< "\"" << METADATA_NAMES[4] << "\":" << frequency()
-		<< "\"" << METADATA_NAMES[5] << "\":" << chan
-		<< "\"" << METADATA_NAMES[6] << "\":" << rfch
-		<< "\"" << METADATA_NAMES[7] << "\":" << stat
-		<< "\"" << METADATA_NAMES[8] << "\":\"" << modulation() << "\""
-		<< "\"" << METADATA_NAMES[9] << "\":\"" << datr << "\""
-		<< "\"" << METADATA_NAMES[10] << "\":\"" << codr << "\""
-		<< "\"" << METADATA_NAMES[11] << "\":" << rssi
-		<< "\"" << METADATA_NAMES[12] << "\":" << lsnr
-		<< "\"" << METADATA_NAMES[13] << "\":" << data.size()
-		<< "\"" << METADATA_NAMES[14] << "\":\"" << base64_encode(data) << "\"}";
+		<< "\"" << METADATA_NAMES[1] << "\":\"" << dt
+		<< "\",\"" << METADATA_NAMES[2] << "\":" << tmms()
+		<< ",\"" << METADATA_NAMES[3] << "\":" << tmst
+		<< ",\"" << METADATA_NAMES[4] << "\":" << frequency()
+		<< ",\"" << METADATA_NAMES[5] << "\":" << (int) chan
+		<< ",\"" << METADATA_NAMES[6] << "\":" << (int) rfch
+		<< ",\"" << METADATA_NAMES[7] << "\":" << (int) stat
+		<< ",\"" << METADATA_NAMES[8] << "\":\"" << modulation()
+		<< "\",\"" << METADATA_NAMES[9] << "\":\"" << datr
+		<< "\",\"" << METADATA_NAMES[10] << "\":\"" << codr
+		<< "\",\"" << METADATA_NAMES[11] << "\":" << rssi
+		<< ",\"" << METADATA_NAMES[12] << "\":" << lsnr
+		<< ",\"" << METADATA_NAMES[13] << "\":" << data.size()
+		<< ",\"" << METADATA_NAMES[14] << "\":\"" << base64_encode(data) << "\"}";
 	return ss.str();
 }
 
@@ -830,22 +830,26 @@ semtechUDPPacket::semtechUDPPacket()
  */ 
 int semtechUDPPacket::parse(
 	SEMTECH_DATA_PREFIX &retprefix,
+	GatewayStat &retgwstat,
 	std::vector<semtechUDPPacket> &retPackets,
 	const void *packetForwarderPacket,
 	int size
 ) {
+	retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
+
 	if (size < sizeof(SEMTECH_DATA_PREFIX)) {
-		return ERR_CODE_INVALID_PACKET;
+		return ERR_CODE_PACKET_TOO_SHORT;
 	}
 	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_DATA_PREFIX));
 	// check version
 
 	if (retprefix.version != 2) {
-		return ERR_CODE_INVALID_PACKET;
+		return ERR_CODE_INVALID_PROTOCOL_VERSION;
 	}
 	char *json = (char *) packetForwarderPacket + sizeof(SEMTECH_DATA_PREFIX);
-	if (!json)
-		return ERR_CODE_INVALID_JSON;
+	if (size == sizeof(SEMTECH_DATA_PREFIX)) {
+		return 0;	// that's ok
+	}
 
 	rapidjson::Document doc;
 	rapidjson::Document::AllocatorType &allocator(doc.GetAllocator());
@@ -856,8 +860,20 @@ int semtechUDPPacket::parse(
 	int r = 0;
 
 	// rapidjson::StringRef(METADATA_NAMES[1]))
+
+	if (doc.HasMember("stat")) {
+		rapidjson::Value &jstat = doc["stat"];
+		if (retgwstat.parse(jstat) == 0) {
+			// set gateway identifier
+			retgwstat.gatewayId = deveui2int(retprefix.mac);
+		}
+	} else {
+		retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
+	}
+
 	if (!doc.HasMember(METADATA_NAMES[0]))
-		return ERR_CODE_INVALID_JSON;
+		return 0;	// that's ok
+
 	rapidjson::Value &rxpk = doc[METADATA_NAMES[0]];
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
@@ -1253,4 +1269,13 @@ int semtechUDPPacket::parseData(
 int semtechUDPPacket::loadCredentialsDevAddr() 
 {
 	const DEVADDR &devaddr = header.header.devaddr;
+}
+
+uint64_t deveui2int(
+	const DEVEUI &value
+)
+{
+	uint64_t v;
+	memmove(&v, &value, sizeof(DEVEUI));
+	return ntoh8(v);
 }

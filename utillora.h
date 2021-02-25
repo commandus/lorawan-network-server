@@ -12,6 +12,8 @@
 
 #include "rapidjson/document.h"
 
+#include "gateway-stat.h"
+
 typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
 
@@ -161,7 +163,7 @@ public:
 	uint32_t tmst;				// Internal timestamp of "RX finished" event (32b unsigned)
 	uint8_t chan;				// Concentrator "IF" channel used for RX (unsigned integer)
 	uint8_t rfch;				// Concentrator "RF chain" used for RX (unsigned integer)
-	double freq;				// RX central frequency in MHz (unsigned float, Hz precision) 868.900000
+	uint32_t freq;				// RX central frequency in Hz, not Mhz. MHz (unsigned float, Hz precision) 868.900000
 	int8_t stat;				// CRC status: 1 = OK, -1 = fail, 0 = no CRC
 	MODULATION modu;			// LORA, FSK
 	std::string datr;			// LoRa datarate identifier e.g. "SF7BW125"
@@ -238,6 +240,7 @@ public:
 	// return array of packets from Basic communication protocol packet
 	static int parse(
 		SEMTECH_DATA_PREFIX &retprefix,
+		GatewayStat &retgwstat,
 		std::vector<semtechUDPPacket> &retPackets, 
 		const void *packetForwarderPacket, 
 		int size
@@ -279,6 +282,8 @@ public:
 void string2DEVADDR(DEVADDR &retval, const std::string &str);
 void string2DEVEUI(DEVEUI &retval, const std::string &str);
 void string2KEY(KEY128 &retval, const std::string &str);
+
+uint64_t deveui2int(const DEVEUI &value);
 
 std::string DEVADDR2string(const DEVADDR &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);

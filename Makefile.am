@@ -39,7 +39,7 @@ nobase_dist_include_HEADERS = \
 	config-json.h identity-service-abstract.h identity-service-file-json.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
-	errlist.h daemonize.h aes-128.h \
+	errlist.h daemonize.h aes-128.h gateway-stat.h gateway-list.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	$(rapid_headers)
@@ -48,7 +48,7 @@ lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
 	config-json.cpp identity-service-file-json.cpp lora-packet-handler-impl.cpp \
-	packet-queue.cpp \
+	packet-queue.cpp gateway-stat.cpp gateway-list.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp aes-128.c \
 	db-identity.cpp identity-service-lmdb.cpp \
 	third_party/argtable3/argtable3.c \
@@ -82,7 +82,6 @@ test_identity_file_json_SOURCES = \
 	third_party/base64/base64.cpp
 test_identity_file_json_LDADD = 
 test_identity_file_json_CPPFLAGS = $(commoncppflags)
-
 
 test_identity_lmdb_SOURCES = \
 	tests/test-identity-lmdb.cpp \
