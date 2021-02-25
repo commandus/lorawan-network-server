@@ -47,6 +47,9 @@
 #define ERR_CODE_INSUFFICIENT_MEMORY		-533
 #define ERR_CODE_NO_CONFIG					-534
 #define ERR_CODE_SEND_ACK					-535
+#define ERR_CODE_NO_GATEWAY_STAT			-536
+#define ERR_CODE_INVALID_PROTOCOL_VERSION	-537
+#define ERR_CODE_PACKET_TOO_SHORT			-538
 
 
 #define ERR_MESSAGE						"Error "
@@ -92,6 +95,9 @@
 #define ERR_INSUFFICIENT_MEMORY			"Insufficient memory"
 #define ERR_NO_CONFIG					"No config is provided"
 #define ERR_SEND_ACK					"Send ACK error "
+#define ERR_NO_GATEWAY_STAT				"No gateway statistics provided"
+#define ERR_INVALID_PROTOCOL_VERSION	"Invalie protocol version"
+#define ERR_PACKET_TOO_SHORT			"Protocol packet is too short"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "
@@ -101,6 +107,7 @@
 #define MSG_DAEMON_STARTED      		"Start daemon "
 #define MSG_DAEMON_STARTED_1    		". Check syslog."
 #define MSG_WS_TIMEOUT					"Web service time out"
+#define MSG_TIMEOUT						"Timeout"
 #define MSG_STOPPED						"ChirpStack logger stopped gracefully"
 #define MSG_CHIRPSTACK_SERVER_VERSION	"ChirpStack network server version "
 #define MSG_GATEWAY						"Gateway "
@@ -110,6 +117,9 @@
 #define MSG_READ_BYTES					"Read bytes "
 #define MSG_RECEIVED					"Message received "
 #define MSG_SENT_ACK_TO					"Sent ACK to "
+#define MSG_GATEWAY_STAT				"Gateway statistics "
+#define MSG_RXPK						"rxpk "
+
 #define ERROR							"Error "
 
 const char *strerror_client(int errcode);

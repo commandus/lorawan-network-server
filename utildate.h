@@ -30,4 +30,6 @@ uint32_t utc2gps(time_t value);
 
 std::string timeval2string(const struct timeval &val);
 
+std::string time2string(time_t val);
+
 #endif
