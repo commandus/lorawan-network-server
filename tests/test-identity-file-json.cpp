@@ -2,10 +2,12 @@
 #include "identity-service-file-json.h"
 #include "utilstring.h"
 
-int main(int argc, char **argv) {
-	JsonFileIdentityService s;
-	s.init("identity.json", NULL);
+void putTest(
+	JsonFileIdentityService &s
+)
+{
 	DEVADDR a;
+
 	a[0] = 1;
 	a[1] = 2;
 	a[2] = 3;
@@ -90,4 +92,31 @@ int main(int argc, char **argv) {
 	}
 
 	s.flush();
+}
+
+void getTest(
+	JsonFileIdentityService &s,
+	uint32_t address
+)
+{
+	DeviceId id;
+	DEVADDR a;
+	int2DEVADDR(a, address);
+	if (s.get(a, id) == 0) {
+		std::cout 
+			<< " Address: " << DEVADDR2string(a) 
+			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " appSKey: " << KEY2string(id.appSKey)
+			<< " nwkSKey: " << KEY2string(id.nwkSKey)
+			<< std::endl;
+	} else {
+		std::cerr << "Not found" << std::endl;
+	}
+}
+
+int main(int argc, char **argv) {
+	JsonFileIdentityService s;
+	s.init("identity.json", NULL);
+	// putTest(s);
+	getTest(s, 0x01450330);
 }
