@@ -28,11 +28,20 @@ int LoraPacketProcessor::put
 	if (identityService) {
 		DeviceId id;
 		r = identityService->get(packet.getHeader()->header.devaddr, id);
+
+		if (onLog) {
+			std::stringstream ss;
+			ss << "Request identity service r: " << r << ", device id: " << DEVEUI2string(id.deviceEUI);
+			onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+		}
+
 		if (r) {
 			// report error
 			std::stringstream ss;
 			ss << ERR_MESSAGE << r << ": " 
-				<< strerror_client(r) << " " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
+				<< strerror_client(r) << " " 
+				<< ", device network address " << DEVADDR2string(packet.getHeader()->header.devaddr)
+				<< ", client " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
 			onLog(LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 			return r;
 		}

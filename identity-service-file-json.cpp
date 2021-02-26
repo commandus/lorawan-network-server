@@ -29,7 +29,7 @@ static int getAttrByName(
 )
 {
 	int r = -1;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 5; i++) {
 		if (strcmp(ATTR_NAMES[i], name) == 0)
 			return i;
 	}
@@ -124,21 +124,23 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		}
 
 		bool String(const char* str, rapidjson::SizeType length, bool copy) { 
-			std::string s = hex2string(str); 
+			std::string s; 
 			switch(idx) {
 				case 0:
-					string2DEVADDR(k, s);
+					string2DEVADDR(k, str);
 					break;
 				case 1:
 					v.activation = getActivationByName(str);
 					break;
 				case 2:
-					string2DEVEUI(v.deviceEUI, s);
+					string2DEVEUI(v.deviceEUI, str);
 					break;
 				case 3:
+					s = hex2string(str);
 					string2KEY(v.nwkSKey, s);
 					break;
 				case 4:
+					s = hex2string(str);
 					string2KEY(v.appSKey, s);
 					break;
 				default:
@@ -218,12 +220,11 @@ int JsonFileIdentityService::get(
 	DeviceId &retval
 ) 
 {
-	int r = 0;
 	std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.find(DEVADDRINT(devaddr)));
     if (it == storage.end())
 		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 	retval.set(it->second);
-	return r;
+	return 0;
 }
 
 // List entries

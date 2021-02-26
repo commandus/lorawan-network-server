@@ -133,7 +133,7 @@ class NetworkIdentity {
 private:
 public:
 	// key
-	DEVADDR devaddr;		///< MAC address
+	DEVADDR devaddr;		///< network address
 	// value
 	ACTIVATION activation;	///< activation type: ABP or OTAA
 	DEVEUI deviceEUI;		///< device identifier
@@ -253,6 +253,7 @@ public:
 	
 	std::string serialize2RfmPacket() const;
 	std::string toString() const;
+	std::string toDebugString() const;
 	std::string metadataToJsonString() const;
 
 	RFM_HEADER *getRfmHeader();
@@ -284,6 +285,7 @@ void string2DEVEUI(DEVEUI &retval, const std::string &str);
 void string2KEY(KEY128 &retval, const std::string &str);
 
 uint64_t deveui2int(const DEVEUI &value);
+void int2DEVADDR(DEVADDR &retval, uint32_t value);
 
 std::string DEVADDR2string(const DEVADDR &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);

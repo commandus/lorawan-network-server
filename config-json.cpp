@@ -16,7 +16,7 @@ void ServerConfig::clear() {
 }
 
 ServerConfig::ServerConfig() 
-	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false)
+	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false), identityStorageName("")
 {
 
 }
@@ -43,6 +43,12 @@ int ServerConfig::parse(
 				if (address.IsString())
 					listenAddressIPv6.push_back(address.GetString());
 			}
+		}
+	}
+	if (value.HasMember("identityStorageName")) {
+		rapidjson::Value &jn = value["identityStorageName"];
+		if (jn.IsString()) {
+			identityStorageName = jn.GetString();
 		}
 	}
 	if (value.HasMember("readBufferSize")) {
@@ -90,6 +96,10 @@ void ServerConfig::toJson(
 
 	}
 	value.AddMember("listenAddressIPv6", addressesIPv6, allocator);
+
+	rapidjson::Value n;
+	n.SetString(identityStorageName.c_str(), identityStorageName.size(), allocator);
+	value.AddMember("identityStorageName", n, allocator);
 
 	rapidjson::Value rbs;
 	rbs.SetInt(readBufferSize);

@@ -28,9 +28,11 @@
 #include "udp-listener.h"
 #include "config-json.h"
 #include "lora-packet-handler-impl.h"
+#include "identity-service-file-json.h"
 
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
+#define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_TIME_FORMAT "%FT%T"
 
 #define DEF_BUFFER_SIZE 4096
@@ -196,10 +198,17 @@ int main(
 			config->parse(js.c_str());
 		}
 	}
+	if (config->serverConfig.identityStorageName.empty()) {
+		config->serverConfig.identityStorageName = DEF_IDENTITY_STORAGE_NAME;
+	}
 	std::cerr << config->toString() << std::endl;
 
 	LoraPacketProcessor processor;
+	JsonFileIdentityService identityService;
+	identityService.init(config->serverConfig.identityStorageName, NULL);
+	
 	processor.setLogger(onLog);
+	processor.setIdentityService(&identityService);
 	listener.setHandler(&processor);
 
 	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv4.begin()); it != config->serverConfig.listenAddressIPv4.end(); it++) {

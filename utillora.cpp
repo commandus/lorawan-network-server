@@ -492,7 +492,7 @@ void string2DEVADDR(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVADDR))
 		memset(&retval + len, 0, sizeof(DEVADDR) - len);
-	*((uint32_t*) &retval) = ntoh4(*((uint32_t*) &retval));
+	// *((uint32_t*) &retval) = ntoh4(*((uint32_t*) &retval));
 }
 
 void string2DEVEUI(
@@ -507,7 +507,7 @@ void string2DEVEUI(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVEUI))
 		memset(&retval + len, 0, sizeof(DEVEUI) - len);
-	*((uint64_t*) &retval) = ntoh8(*((uint64_t*) &retval));
+	// *((uint64_t*) &retval) = ntoh8(*((uint64_t*) &retval));
 }
 
 void string2KEY(
@@ -522,6 +522,14 @@ void string2KEY(
 	if (len < sizeof(KEY128))
 		memset(&retval + len, 0, sizeof(KEY128) - len);
 	ntoh16(&retval);
+}
+
+void int2DEVADDR(
+	DEVADDR &retval,
+	uint32_t value
+)
+{
+	*((uint32_t*) &retval) = ntoh4(value);
 }
 
 std::string DEVADDR2string(
@@ -550,7 +558,7 @@ std::string DEVEUI2string(
 {
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
-	v = ntoh8(v);
+	// v = ntoh8(v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -1129,6 +1137,15 @@ std::string semtechUDPPacket::toString() const
 
 	// prefix 12 bytes, metadata + payload
 	ss << std::string((const char *) &prefix, sizeof(SEMTECH_DATA_PREFIX))
+		<< metadataToJsonString();
+	return ss.str();
+}
+
+std::string semtechUDPPacket::toDebugString() const
+{
+	std::stringstream ss;
+	ss << "device network address " << getDeviceAddrStr()
+		<< ": "
 		<< metadataToJsonString();
 	return ss.str();
 }

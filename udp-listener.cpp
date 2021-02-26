@@ -214,7 +214,7 @@ int UDPListener::listen() {
 										if (onLog) {
 											std::stringstream ss;
 											ss << MSG_RXPK
-												<< itp->toString();
+												<< itp->toDebugString();
 											onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 										}
 									}

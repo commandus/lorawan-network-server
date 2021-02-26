@@ -79,6 +79,7 @@ test_identity_file_json_SOURCES = \
 	tests/test-identity-file-json.cpp \
 	identity-service-file-json.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
+	gateway-stat.cpp \
 	third_party/base64/base64.cpp
 test_identity_file_json_LDADD = 
 test_identity_file_json_CPPFLAGS = $(commoncppflags)
@@ -105,7 +106,7 @@ test_packet_queue_SOURCES = \
 test_packet_queue_LDADD = -lpthread
 test_packet_queue_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-packet-queue
-#test-1 test-udp-listen test-identity-file-json test-identity-lmdb
+check_PROGRAMS = test-identity-file-json
+#test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue
 
 TESTS = $(check_PROGRAMS)
