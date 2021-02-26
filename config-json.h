@@ -13,6 +13,7 @@ class ServerConfig {
 		int readBufferSize;
 		int verbosity;
 		bool daemonize;
+		std::string identityStorageName;
 		void clear();
 		ServerConfig();
 		int parse(

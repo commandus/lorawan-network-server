@@ -1,3 +1,6 @@
+#ifndef IDENTITY_FILE_JSON_LMDB_H_
+#define IDENTITY_FILE_JSON_LMDB_H_ 1
+
 #include <vector>
 #include "identity-service-abstract.h"
 #include "rapidjson/document.h"
@@ -22,3 +25,5 @@ class JsonFileIdentityService: public IdentityService {
 		void flush();
 		void done();
 };
+
+#endif

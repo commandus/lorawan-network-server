@@ -1,3 +1,6 @@
+#ifndef IDENTITY_SERVICE_LMDB_H_
+#define IDENTITY_SERVICE_LMDB_H_ 1
+
 #include "identity-service-abstract.h"
 #include "db-identity.h"
 
@@ -21,3 +24,5 @@ class LmdbIdentityService: public IdentityService {
 		void flush();
 		void done();
 };
+
+#endif
