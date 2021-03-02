@@ -15,7 +15,7 @@
 #include "errlist.h"
 
 #if BYTE_ORDER == BIG_ENDIAN
-#define ntoh16(x) (x)
+#define swap16(x) (x)
 #else
 
 // @see https://stackoverflow.com/questions/2182002/convert-big-endian-to-little-endian-in-c-without-using-provided-func
@@ -29,8 +29,8 @@ void swapBytes(void *pv, size_t n)
         p[hi] = tmp;
     }
 }
-#define ntohVar(x) swapBytes(&x, sizeof(x));
-#define ntoh16(x) swapBytes(x, 16);
+#define swapVar(x) swapBytes(&x, sizeof(x));
+#define swap16(x) swapBytes(x, 16);
 #endif
 
 /**
@@ -55,10 +55,10 @@ void encryptPayload(
 	blockA[3] = 0;
 	blockA[4] = 0;
     blockA[5] = direction;
-    blockA[6] = devAddr[3];
-	blockA[7] = devAddr[2];
-	blockA[8] = devAddr[1];
-	blockA[9] = devAddr[0];
+    blockA[6] = devAddr[0];
+	blockA[7] = devAddr[1];
+	blockA[8] = devAddr[2];
+	blockA[9] = devAddr[3];
 	blockA[10] = (frameCounter & 0x00FF);
 	blockA[11] = ((frameCounter >> 8) & 0x00FF);
 	blockA[12] = 0; // frame counter upper Bytes
@@ -156,7 +156,7 @@ static void encryptPayload2(
 }
 */
 
-static void decryptPayload(
+void decryptPayload(
 	std::string &payload,
 	unsigned int frameCounter,
 	unsigned char direction,
@@ -186,7 +186,7 @@ static void decryptPayload(
  * CN Frame counter
  * FP Frame port
  */ 
-static uint32_t calculateMIC(
+uint32_t calculateMIC(
 	const std::string &payload,
 	const unsigned int frameCounter,
 	const unsigned char direction,
@@ -223,10 +223,10 @@ static uint32_t calculateMIC(
 
 	blockB[5] = direction;
 
-	blockB[6] = devAddr[3];
-	blockB[7] = devAddr[2];
-	blockB[8] = devAddr[1];
-	blockB[9] = devAddr[0];
+	blockB[6] = devAddr[0];
+	blockB[7] = devAddr[1];
+	blockB[8] = devAddr[2];
+	blockB[9] = devAddr[3];
 
 	blockB[10] = (frameCounter & 0x00FF);
 	blockB[11] = ((frameCounter >> 8) & 0x00FF);
@@ -336,7 +336,6 @@ std::string KEY2string(
 {
 	KEY128 v;
 	memmove(&v, &value, sizeof(v));
-	ntoh16(&v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -492,7 +491,7 @@ void string2DEVADDR(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVADDR))
 		memset(&retval + len, 0, sizeof(DEVADDR) - len);
-	// *((uint32_t*) &retval) = ntoh4(*((uint32_t*) &retval));
+	*((uint32_t*) &retval) = ntoh4(*((uint32_t*) &retval));
 }
 
 void string2DEVEUI(
@@ -507,7 +506,7 @@ void string2DEVEUI(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVEUI))
 		memset(&retval + len, 0, sizeof(DEVEUI) - len);
-	// *((uint64_t*) &retval) = ntoh8(*((uint64_t*) &retval));
+	*((uint64_t*) &retval) = ntoh8(*((uint64_t*) &retval));
 }
 
 void string2KEY(
@@ -516,12 +515,17 @@ void string2KEY(
 )
 {
 	int len = str.size();
+	std::string v;
+	if (len > sizeof(KEY128))
+		v = hex2string(str);
+	else
+		v= str;
+	len = v.size();
 	if (len > sizeof(KEY128))
 		len = sizeof(KEY128);
-	memmove(&retval, str.c_str(), len);
+	memmove(&retval, v.c_str(), len);
 	if (len < sizeof(KEY128))
 		memset(&retval + len, 0, sizeof(KEY128) - len);
-	ntoh16(&retval);
 }
 
 void int2DEVADDR(
@@ -529,7 +533,8 @@ void int2DEVADDR(
 	uint32_t value
 )
 {
-	*((uint32_t*) &retval) = ntoh4(value);
+	// *((uint32_t*) &retval) = ntoh4(value);
+	*((uint32_t*) &retval) = value;
 }
 
 std::string DEVADDR2string(
@@ -538,6 +543,7 @@ std::string DEVADDR2string(
 {
 	uint32_t v;
 	memmove(&v, &value, sizeof(v));
+	// hex string is MSB first, swap if need it
 	v = ntoh4(v);
 	return hexString(&v, sizeof(v));
 }
@@ -556,9 +562,11 @@ std::string DEVEUI2string(
 	const DEVEUI &value
 )
 {
+	// EUI stored in memory as 8 bit integer x86 LSB first, ARM MSB first
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
-	// v = ntoh8(v);
+	// hex string is MSB first, swap if need it
+	v = ntoh8(v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -763,12 +771,12 @@ rfmHeader::rfmHeader(
 
 rfmHeader::rfmHeader(
 	const DEVADDR &addr,
-	uint16_t frameCounter
+	uint16_t fcnt
 ) {
 	memcpy(&header.devaddr, &addr, sizeof(DEVADDR));
-	header.framecountertx = frameCounter;
+	header.fcnt = fcnt;
 	fport = 0;
-	header.framecontrol = 0;
+	header.fctrl.i = 0;
 	header.macheader = 0x40;
 }
 
@@ -779,9 +787,9 @@ rfmHeader::rfmHeader(
 ) {
 	header.macheader = 0x40;
 	memcpy(&header.devaddr, &addr, sizeof(DEVADDR));
-	header.framecountertx = frameCounter;
+	header.fcnt = frameCounter;
 	fport = framePort;
-	header.framecontrol = 0;
+	header.fctrl.i = 0;
 }
 
 rfmHeader::rfmHeader(
@@ -806,7 +814,7 @@ bool rfmHeader::parse(
 std::string rfmHeader::toString() const {
 	RFM_HEADER h;
 	*((uint32_t*) &h.devaddr) = ntoh4(*((uint32_t *) &header.devaddr));
-	*((uint16_t*) &h.framecountertx) = ntoh2(*((uint16_t *) &header.framecountertx));
+	*((uint16_t*) &h.fcnt) = ntoh2(*((uint16_t *) &header.fcnt));
 	std::string r((const char *) &h, sizeof(RFM_HEADER));
 	return r;
 }
@@ -821,10 +829,9 @@ semtechUDPPacket::semtechUDPPacket()
 	header.header.macheader = 0x40;
 	memset(&header.header.devaddr, 0, sizeof(DEVADDR));			// MAC address
 
-	header.header.framecontrol = 0;
-	header.header.framecountertx = 0;
+	header.header.fctrl.i = 0;
+	header.header.fcnt = 0;
 	header.fport = 0;
-	header.header.framecontrol = 0;
 
 	memset(&header.header.devaddr, 0, sizeof(DEVADDR));
 	
@@ -997,7 +1004,7 @@ void setKey(
 ) {
 	if (value.size() == sizeof(KEY128)) {
 		memcpy(retval, value.c_str(), sizeof(KEY128));
-		ntoh16(retval);
+		swap16(retval);
 		return;
 	}
 	if (value.size() < sizeof(KEY128) * 2)
@@ -1118,12 +1125,12 @@ std::string semtechUDPPacket::serialize2RfmPacket() const
 
 	// load data
 	// encrypt data
-	encryptPayload(p, header.header.framecountertx, direction, header.header.devaddr, devId.appSKey);
+	encryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
 	ss << p;
 
 	std::string rs = ss.str();
 	// calc MIC
-	uint32_t mic = calculateMIC(rs, header.header.framecountertx, direction, header.header.devaddr, devId.nwkSKey);	// nwkSKey
+	uint32_t mic = calculateMIC(rs, header.header.fcnt, direction, header.header.devaddr, devId.nwkSKey);	// nwkSKey
 	// load MIC in package
 	// mic = ntoh4(mic);
 	ss << std::string((char *) &mic, 4);
@@ -1228,7 +1235,7 @@ void semtechUDPPacket::setApplicationSessionKey(
 void semtechUDPPacket::setFrameCounter(
 	uint16_t value
 ) {
-	header.header.framecountertx = value;
+	header.header.fcnt = value;
 }
 
 std::string semtechUDPPacket::getPayload() {
@@ -1240,7 +1247,7 @@ int semtechUDPPacket::setPayload(
 	const std::string &value
 ) {
 	header.fport = port;
-	header.header.framecontrol = 0;
+	header.header.fctrl.i = 0;
 	payload = value;
 }
 
@@ -1278,7 +1285,7 @@ int semtechUDPPacket::parseData(
 	}
 	char direction = 0;
 	std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) , data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t));
-	decryptPayload(p, header.header.framecountertx, direction, header.header.devaddr, devId.appSKey);
+	decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
 	setPayload(p); 
 	return LORA_OK;
 }
@@ -1295,4 +1302,10 @@ uint64_t deveui2int(
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
 	return ntoh8(v);
+}
+
+uint32_t getMic(const std::string &v)
+{
+	uint32_t r = *((uint32_t *) (v.c_str() + v.size() - 4));
+	return r; //ntoh4(r);
 }

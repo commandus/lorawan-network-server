@@ -93,8 +93,17 @@ typedef ALIGN struct {
 	uint8_t macheader;			// 0x40 unconfirmed uplink
 	// Frame header (FHDR)
 	DEVADDR devaddr;			// MAC address
-	uint8_t framecontrol;		// 
-	uint16_t framecountertx;	// frame counter
+	union {
+		uint8_t i;
+		struct {
+			uint8_t foptslen: 4;
+			uint8_t fpending: 1;
+			uint8_t ack: 1;
+			uint8_t rfu: 1;
+			uint8_t adr: 1;
+		} f;
+	} fctrl;	// frame control
+	uint16_t fcnt;	// frame counter 0..15
 	// FOpts 0..15
 } PACKED RFM_HEADER;			// 8 bytes, +1
 
@@ -291,5 +300,25 @@ std::string DEVADDR2string(const DEVADDR &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
+
+// Debug only
+
+void decryptPayload(
+	std::string &payload,
+	unsigned int frameCounter,
+	unsigned char direction,
+	DEVADDR &devAddr,
+	KEY128 &appSKey
+);
+
+uint32_t calculateMIC(
+	const std::string &payload,
+	const unsigned int frameCounter,
+	const unsigned char direction,
+	const DEVADDR &devAddr,
+	const KEY128 &key
+);
+
+uint32_t getMic(const std::string &v);
 
 #endif

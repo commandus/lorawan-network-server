@@ -1,6 +1,7 @@
 #include <iostream>
 #include "identity-service-file-json.h"
 #include "utilstring.h"
+#include "base64/base64.h"
 
 void putTest(
 	JsonFileIdentityService &s
@@ -94,7 +95,7 @@ void putTest(
 	s.flush();
 }
 
-void getTest(
+void getIdentityTest(
 	JsonFileIdentityService &s,
 	uint32_t address
 )
@@ -114,9 +115,139 @@ void getTest(
 	}
 }
 
+/**
+ * 
+ * MH--AD----FC-CN-
+ * 400401000280290002e582067cc78ab54e49a538aee94431d5a424
+ * 
+ * MH 0x40 unconfirmed uplink
+ * AD Device address 04010002 
+ * FC frame control 80
+ * CN frame counter 2900
+ * 
+ */ 
+void decodeTest(
+	JsonFileIdentityService &s,
+	uint32_t address,
+	const std::string &base64Value
+)
+{
+	DeviceId id;
+	DEVADDR a;
+	int2DEVADDR(a, address);
+	if (s.get(a, id) == 0) {
+		std::string v = base64_decode(base64Value);
+		rfmHeader hdr;
+		hdr.parse(v);
+		std::cout 
+			<< " hex encoded: " << hexString(v) 
+			<< " size: " << v.size()
+			<< " RFM header size: " << sizeof(RFM_HEADER)
+			<< " payload size: " << v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen 
+			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " appSKey: " << KEY2string(id.appSKey)
+			<< " nwkSKey: " << KEY2string(id.nwkSKey)
+			<< std::endl;
+		std::cout 
+			<< " hdr.header.fcnt: " << hdr.header.fcnt 
+			<< " hdr.header.fctrl: " << (int) hdr.header.fctrl.i 
+			<< " hdr.header.fctrl.f.foptslen: " << (int) hdr.header.fctrl.f.foptslen 
+			<< " hdr.header.fctrl.f.ack: " << (int) hdr.header.fctrl.f.ack 
+			<< " hdr.header.fctrl.f.adr: " << (int) hdr.header.fctrl.f.adr
+			<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
+			<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
+			<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
+			<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+			<< std::endl;
+		int direction = 0;
+
+		std::string p = v.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + hdr.header.fctrl.f.foptslen,
+			v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen );
+		std::cout 
+			<< " v: " << hexString(p)
+			<< " size: " << p.size()
+			<< std::endl;
+
+		decryptPayload(p, hdr.header.fcnt, direction, hdr.header.devaddr, id.appSKey);
+		std::cout 
+			<< " hex decoded: " << hexString(p) 
+			<< std::endl;
+	} else {
+		std::cerr << "Not found" << std::endl;
+	}
+}
+
+void decodeTest2()
+{
+	KEY128 nwkSKey;
+	string2KEY(nwkSKey, "99D58493D1205B43EFF938F0F66C339E");
+
+	KEY128 appSKey;
+	string2KEY(appSKey, "0A501524F8EA5FCBF9BDB5AD7D126F75");
+	// string2KEY(appSKey, "756f127dadb5bdf9cb5feaf82415500a");
+	std::string v = base64_decode("QK4TBCaAAAABb4ldmIEHFOMmgpU=");
+	rfmHeader hdr;
+	hdr.parse(v);
+	std::cout 
+		<< " hex encoded: " << hexString(v) 
+		<< " size: " << v.size()
+		<< " RFM header size: " << sizeof(RFM_HEADER)
+		<< " payload size: " << v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen 
+		<< " appSKey: " << KEY2string(appSKey)
+		<< " nwkSKey: " << KEY2string(nwkSKey)
+		<< std::endl;
+	std::cout 
+		<< " FRMPayload: " << hexString(v.substr(sizeof(RFM_HEADER) + sizeof(uint8_t),
+			v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t)))
+		<< std::endl;
+	uint32_t mico = getMic(v);
+	std::cout 
+		<< " MIC: " << std::hex << mico
+		<< std::endl;
+	
+	std::cout 
+		<< " hdr.header.fcnt: " << hdr.header.fcnt 
+		<< " hdr.header.fctrl: " << (int) hdr.header.fctrl.i 
+		<< " hdr.header.fctrl.f.foptslen: " << (int) hdr.header.fctrl.f.foptslen 
+		<< " hdr.header.fctrl.f.ack: " << (int) hdr.header.fctrl.f.ack 
+		<< " hdr.header.fctrl.f.adr: " << (int) hdr.header.fctrl.f.adr
+		<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
+		<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
+		<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
+		<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+		<< std::endl;
+	int direction = 0;
+
+	std::string p = v.substr(sizeof(RFM_HEADER) + sizeof(uint8_t),
+			v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t));
+	std::cout 
+		<< " v: " << hexString(p)
+		<< " size: " << p.size()
+		<< std::endl;
+
+	decryptPayload(p, hdr.header.fcnt, direction, hdr.header.devaddr, appSKey);
+	std::cout 
+		<< " hex decoded: " << hexString(p) << " " << p 
+		<< std::endl;
+
+	std::string msg = v.substr(0, v.size() - sizeof(uint32_t));
+	std::cout 
+		<< " message to calc MIC: " << hexString(msg)
+		<< " hdr.header.fcnt: " << hdr.header.fcnt
+		
+		<< std::endl;
+	uint32_t mic = calculateMIC(msg, hdr.header.fcnt, direction, hdr.header.devaddr, nwkSKey);
+	std::cout 
+		<< " MIC: " << std::hex << mic
+		<< std::endl;
+}
+
 int main(int argc, char **argv) {
 	JsonFileIdentityService s;
 	s.init("identity.json", NULL);
 	// putTest(s);
-	getTest(s, 0x01450330);
+	
+	// getIdentityTest(s, 0x01450330);
+	decodeTest(s, 0x01450330, "QAQBAAKAKQAC5YIGfMeKtU5JpTiu6UQx1aQkiwHWChl71bQxxvMlO2qilnIEbvG74hIRj2Y="); // "ADMxaXNhZzIwEoE3ZjU4NDSS9yoDlRQ="
+	// decodeTest2();
 }
