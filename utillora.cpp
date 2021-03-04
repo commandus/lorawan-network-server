@@ -17,6 +17,8 @@
 #include "system/crypto/aes.h"
 #include "system/crypto/cmac.h"
 
+#include "identity-service-abstract.h"
+
 #if BYTE_ORDER == BIG_ENDIAN
 #define swap16(x) (x)
 #else
@@ -812,7 +814,8 @@ int semtechUDPPacket::parse(
 	GatewayStat &retgwstat,
 	std::vector<semtechUDPPacket> &retPackets,
 	const void *packetForwarderPacket,
-	int size
+	int size,
+	IdentityService *identityService
 ) {
 	retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 
@@ -866,7 +869,7 @@ int semtechUDPPacket::parse(
 		int rr = m.parse(sz, data, jm);
 		if (rr)
 			return rr;
-		semtechUDPPacket packet(&retprefix, &m, data);
+		semtechUDPPacket packet(&retprefix, &m, data, identityService);
 		retPackets.push_back(packet);
 	}
 	return r;
@@ -1007,7 +1010,7 @@ semtechUDPPacket::semtechUDPPacket(
 	// autentication keys
 	setKey(devId.appSKey, appskey);
 
-	parseData(data);
+	parseData(data, NULL);
 }
 
 void semtechUDPPacket::clearPrefix()
@@ -1021,7 +1024,8 @@ void semtechUDPPacket::clearPrefix()
 semtechUDPPacket::semtechUDPPacket(
 	const SEMTECH_DATA_PREFIX *aprefix,
 	const rfmMetaData *ametadata,
-	const std::string &data
+	const std::string &data,
+	IdentityService *identityService
 )
 	: errcode(0)
 {
@@ -1032,7 +1036,7 @@ semtechUDPPacket::semtechUDPPacket(
 	}
 	if (ametadata)
 		metadata.push_back(rfmMetaData(*ametadata));
-	parseData(data);
+	parseData(data, identityService);
 }
 
 static std::string getMAC(
@@ -1239,7 +1243,8 @@ std::string key2string(
 }
 
 int semtechUDPPacket::parseData(
-	const std::string &data
+	const std::string &data,
+	IdentityService *identityService
 ) {
 	if (!header.parse(data)) {
 		return ERR_CODE_INVALID_RFM_HEADER;
@@ -1248,9 +1253,19 @@ int semtechUDPPacket::parseData(
 		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 	}
 	char direction = 0;
-	std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) , data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t));
-	decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
-	setPayload(p); 
+	int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
+	std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
+	// get identity
+	if (identityService) {
+		int rc = identityService->get(header.header.devaddr, devId);
+		if (rc == 0) {
+			decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
+		}
+		setPayload(p); 
+	} else {
+		// put cipher data
+		setPayload(p); 
+	}
 	return LORA_OK;
 }
 

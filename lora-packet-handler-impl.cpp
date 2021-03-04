@@ -40,8 +40,8 @@ int LoraPacketProcessor::put
 			std::stringstream ss;
 			ss << ERR_MESSAGE << r << ": " 
 				<< strerror_client(r) << " " 
-				<< ", device network address " << DEVADDR2string(packet.getHeader()->header.devaddr)
-				<< ", client " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
+				<< ", device " << DEVADDR2string(packet.getHeader()->header.devaddr)
+				<< ", remote " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
 			onLog(LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 			return r;
 		}

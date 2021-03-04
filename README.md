@@ -170,3 +170,12 @@ Sent ACK to 84.237.104.16:41095
 Gateway statistics 6cc3743eed46 2021-03-02T06:25:34 (62.02774, 129.72883, 348), rxnb: 2, rxok: 1, rxfw: 1, ackr: 0.0, dwnb: 0, txnb: 0
 Message received 84.237.104.16:54820: 02f2fb0200006cc3743eed46
 Sent ACK to 84.237.104.16:54820
+
+
+## Thitd-party dependencies
+
+[Semtech LoRaWAN-lib](https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/) uses
+
+[arduino aes implementation](https://raw.githubusercontent.com/arduino-libraries/LoraNodeShield/master/src/system/crypto/cmac.h)
+
+[Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)

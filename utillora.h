@@ -18,6 +18,8 @@ typedef unsigned char KEY128[16];
 typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
 
+class IdentityService;
+
 class DEVADDRINT
 {
 	public:
@@ -234,7 +236,7 @@ private:
 	rfmHeader header;
 	std::string payload;
 	void clearPrefix();
-	int parseData(const std::string &data);
+	int parseData(const std::string &data, IdentityService *identityService);
 	// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 	int loadCredentialsDevAddr();
 public:	
@@ -253,11 +255,12 @@ public:
 		GatewayStat &retgwstat,
 		std::vector<semtechUDPPacket> &retPackets, 
 		const void *packetForwarderPacket, 
-		int size
+		int size,
+		IdentityService *identityService
 	);
 	semtechUDPPacket();
 	// Called from parse()
-	semtechUDPPacket(const SEMTECH_DATA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data);
+	semtechUDPPacket(const SEMTECH_DATA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
 	// TODO I dont remember what is it for
 	semtechUDPPacket(const std::string &data, const std::string &devaddr, const std::string &appskey);
 	

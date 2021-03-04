@@ -210,6 +210,7 @@ int main(
 	processor.setLogger(onLog);
 	processor.setIdentityService(&identityService);
 	listener.setHandler(&processor);
+	listener.setIdentityService(&identityService);
 
 	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv4.begin()); it != config->serverConfig.listenAddressIPv4.end(); it++) {
 		if (!listener.add(*it, MODE_FAMILY_HINT_IPV4)) {

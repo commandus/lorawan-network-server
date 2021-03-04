@@ -13,7 +13,7 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	stopped(false), onLog(NULL), handler(NULL)
+	stopped(false), onLog(NULL), handler(NULL), identityService(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -45,6 +45,14 @@ void UDPListener::setHandler(
 	LoraPacketHandler *value
 ) {
 	handler = value;
+}
+
+void UDPListener::setIdentityService
+(
+	IdentityService* value
+)
+{
+	identityService = value;
 }
 
 std::string UDPListener::toString() {
@@ -158,7 +166,7 @@ int UDPListener::listen() {
 						SEMTECH_DATA_PREFIX dataprefix;
 						// rapidjson operates with \0 terminated string, just in case add terminator. Extra space is reserved
 						buffer[bytesReceived] = '\0';
-						int pr = semtechUDPPacket::parse(dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived);
+						int pr = semtechUDPPacket::parse(dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
 
 						// std::cerr << "===" << pr << ": " << strerror_client(pr) << std::endl;
 
