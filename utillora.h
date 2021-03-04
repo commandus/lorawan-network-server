@@ -8,12 +8,13 @@
 #include <netinet/in.h>
 
 #include "platform.h"
-#include "aes-128.h"
+#include "system/crypto/aes.h"
 
 #include "rapidjson/document.h"
 
 #include "gateway-stat.h"
 
+typedef unsigned char KEY128[16];
 typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
 

@@ -14,6 +14,9 @@
 
 #include "errlist.h"
 
+#include "system/crypto/aes.h"
+#include "system/crypto/cmac.h"
+
 #if BYTE_ORDER == BIG_ENDIAN
 #define swap16(x) (x)
 #else
@@ -34,6 +37,7 @@ void swapBytes(void *pv, size_t n)
 #endif
 
 /**
+ * @see 4.3.3 MAC Frame Payload Encryption (FRMPayload)
  * @see https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/
  */
 void encryptPayload(
@@ -44,65 +48,107 @@ void encryptPayload(
 	const KEY128 &appSKey
 )
 {
-	uint8_t blockA[16];
-
-    uint16_t i;
-    uint16_t ctr = 1;
+	aes_context aesContext;
+	memset(aesContext.ksch, '\0', 240);
+    aes_set_key(appSKey, sizeof(KEY128), &aesContext);
  
- 	blockA[0] = 1;
-	blockA[1] = 0;
-	blockA[2] = 0;
-	blockA[3] = 0;
-	blockA[4] = 0;
-    blockA[5] = direction;
-    blockA[6] = devAddr[0];
-	blockA[7] = devAddr[1];
-	blockA[8] = devAddr[2];
-	blockA[9] = devAddr[3];
-	blockA[10] = (frameCounter & 0x00FF);
-	blockA[11] = ((frameCounter >> 8) & 0x00FF);
-	blockA[12] = 0; // frame counter upper Bytes
-	blockA[13] = 0;
-	blockA[14] = 0;
+ 	uint8_t a[16];
+ 	a[0] = 1;	// 1- uplink, 0- downlink
+	a[1] = 0;
+	a[2] = 0;
+	a[3] = 0;
+	a[4] = 0;
+    a[5] = direction;
+    a[6] = devAddr[0];
+	a[7] = devAddr[1];
+	a[8] = devAddr[2];
+	a[9] = devAddr[3];
+	a[10] = (frameCounter & 0x00FF);
+	a[11] = ((frameCounter >> 8) & 0x00FF);
+	a[12] = 0; // frame counter upper Bytes
+	a[13] = 0;
+	a[14] = 0;
 
-	unsigned char size = payload.size();
+	uint8_t s[16];
+	memset(s, 0, sizeof(s));
 
+	int size = payload.size();
+	uint16_t ctr = 1;
+	uint8_t bufferIndex = 0;
 	std::string encBuffer(payload);
-    uint8_t bufferIndex = 0;
-
-    while (size >= 16) {
-        blockA[15] = ( ( ctr ) & 0xff );
+	while( size >= 16 ) {
+        a[15] = ctr & 0xff;
         ctr++;
- 		// calculate S
-		aesEncrypt(blockA, appSKey);
-        for (i = 0; i < 16; i++) {
-            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ blockA[i];
+        aes_encrypt(a, s, &aesContext);
+        for(int i = 0; i < 16; i++) {
+            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
         }
         size -= 16;
         bufferIndex += 16;
     }
- 	if (size > 0) {
-        blockA[15] = ( ( ctr ) & 0xff );
-        aesEncrypt(blockA, appSKey);
-        for (i = 0; i < size; i++) {
-            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ blockA[i];
+ 
+    if( size > 0 )
+    {
+        a[15] = ctr & 0xff;
+        aes_encrypt(a, s, &aesContext);
+        for(int i = 0; i < size; i++) {
+            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
         }
     }
+
+	/*
+	std::string app(16 - (payload.size() % 16), '\0');
+	std::string encBuffer(payload + app);
+	
+	int sz1 = size + 16 - (payload.size() % 16);
+payload8_t bufferIndex = 0;
+
+	for (int i = 0; i < sz1 / 16; i++)
+	{
+		a[15] = i + 1;
+		aes_encrypt(a, appSKey);
+		for (int j = 0; j < 16; j++) {
+			encBuffer[ i * 16 + j] = encBuffer[i * 16 + j] ^ s[j];
+		}
+	}
+	*/
+	/*
+    while (sz1 >= 16) {
+        a[15] = ( ( ctr ) & 0xff );
+        ctr++;
+ 		// calculate S
+		aesEncrypt(a, appSKey);
+        for (i = 0; i < 16; i++) {
+            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ a[i];
+        }
+        sz1 -= 16;
+        bufferIndex += 16;
+    }
+	*/
+	/*
+ 	if (size > 0) {
+        a[15] = ( ( ctr ) & 0xff );
+        aesEncrypt(a, appSKey);
+        for (i = 0; i < size; i++) {
+            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ a[i];
+        }
+    }
+	*/
 	payload = encBuffer;
 }
 
 /*
 static void encryptPayload2(
 	std::string &payload,
-	unsigned int frameCounter,
-	unsigned char direction,
-	DEVADDR &devAddr,
-	KEY128 &appSKey
+	const unsigned int frameCounter,
+	const unsigned char direction,
+	const DEVADDR &devAddr,
+	const KEY128 &appSKey
 )
 {
 	unsigned char *data = (unsigned char *) payload.c_str();
 	unsigned char size = payload.size();
-	unsigned char blockA[16];
+	unsigned char a[16];
 
 	// calc number of blocks
 	unsigned char numberOfBlocks = size / 16;
@@ -111,36 +157,34 @@ static void encryptPayload2(
 		numberOfBlocks++;
 
 	for (int i = 1; i <= numberOfBlocks; i++) {
-		blockA[0] = 0x01;
-		blockA[1] = 0x00;
-		blockA[2] = 0x00;
-		blockA[3] = 0x00;
-		blockA[4] = 0x00;
+		a[0] = 0x01;
+		a[1] = 0x00;
+		a[2] = 0x00;
+		a[3] = 0x00;
+		a[4] = 0x00;
 
-		blockA[5] = direction;
+		a[5] = direction;
 
-		blockA[6] = devAddr[3];
-		blockA[7] = devAddr[2];
-		blockA[8] = devAddr[1];
-		blockA[9] = devAddr[0];
+		a[6] = devAddr[3];
+		a[7] = devAddr[2];
+		a[8] = devAddr[1];
+		a[9] = devAddr[0];
 
-		blockA[10] = (frameCounter & 0x00FF);
-		blockA[11] = ((frameCounter >> 8) & 0x00FF);
+		a[10] = (frameCounter & 0x00FF);
+		a[11] = ((frameCounter >> 8) & 0x00FF);
 
-		blockA[12] = 0x00; // frame counter upper Bytes
-		blockA[13] = 0x00;
+		a[12] = 0x00; // frame counter upper Bytes
+		a[13] = 0x00;
 
-		blockA[14] = 0x00;
+		a[14] = 0x00;
 
-		blockA[15] = i;
-
-		// calculate S
-		aesEncrypt(blockA, appSKey);
+		a[15] = i;
+ + app
 
 		// check for last block
 		if (i != numberOfBlocks) {
 			for (int j = 0; j < 16; j++) {
-				*data = *data ^ blockA[j];
+				*data = *data ^ a[j];
 				data++;
 			}
 		} else {
@@ -148,7 +192,7 @@ static void encryptPayload2(
 				incompleteBlockSize = 16;
 
 			for (int j = 0; j < incompleteBlockSize; j++) {
-				*data = *data ^ blockA[j];
+				*data = *data ^ a[j];
 				data++;
 			}
 		}
@@ -194,26 +238,10 @@ uint32_t calculateMIC(
 	const KEY128 &key
 )
 {
+	AES_CMAC_CTX aesCmacCtx;
 	unsigned char *data = (unsigned char *) payload.c_str();
-	unsigned char dataLength = payload.size();
+	unsigned char size = payload.size();
 	unsigned char blockB[16];
-
-	unsigned char keyK1[16] = {
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-	unsigned char keyK2[16] = {
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-	unsigned char oldData[16] = {
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-	unsigned char newData[16] = {
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-	unsigned char blockCounter = 0x01;
-
 	// blockB
 	blockB[0] = 0x49;
 	blockB[1] = 0x00;
@@ -235,86 +263,20 @@ uint32_t calculateMIC(
 	blockB[13] = 0x00;
 
 	blockB[14] = 0x00;
-	blockB[15] = dataLength;
+	blockB[15] = size;
 
-	// calc number of blocks and blocksize of last block
-	unsigned char numberOfBlocks = dataLength / 16;
-	unsigned char incompleteBlockSize = dataLength % 16;
+	aes_context aesContext;
 
-	if (incompleteBlockSize != 0)
-		numberOfBlocks++;
-
-	generateKeys(keyK1, keyK2, key);
-
-	// calc on Block B0
-
-	// AES encryption
-	aesEncrypt(blockB, key);
-
-	// copy blockB to oldData
-	for (int i = 0; i < 16; i++)
-	{
-		oldData[i] = blockB[i];
-	}
-
-	// full calculating until n-1 messsage blocks
-	while (blockCounter < numberOfBlocks) {
-		// Copy data into array
-		for (int i = 0; i < 16; i++) {
-			newData[i] = *data;
-			data++;
-		}
-
-		// XOR with old data
-		XOR(newData, oldData);
-		//  AES encryption
-		aesEncrypt(newData, key);
-		// copy newData to oldData
-		for (int i = 0; i < 16; i++) {
-			oldData[i] = newData[i];
-		}
-		// raise Block counter
-		blockCounter++;
-	}
-
-	// Perform calculation on last block
-	// Check if Datalength is a multiple of 16
-	if (incompleteBlockSize == 0) {
-		// copy last data into array
-		for (int i = 0; i < 16; i++) {
-			newData[i] = *data;
-			data++;
-		}
-
-		// XOR with Key 1
-		XOR(newData, keyK1);
-
-		// XOR with old data
-		XOR(newData, oldData);
-
-		// last AES routine
-		aesEncrypt(newData, key);
-	} else {
-		// copy the remaining data and fill the rest
-		for (int i = 0; i < 16; i++) {
-			if (i < incompleteBlockSize) {
-				newData[i] = *data;
-				data++;
-			}
-			if (i == incompleteBlockSize)
-				newData[i] = 0x80;
-			if (i > incompleteBlockSize)
-				newData[i] = 0x00;
-		}
-		// XOR with Key 2
-		XOR(newData, keyK2);
-		// XOR with Old data
-		XOR(newData, oldData);
-		// last AES routine
-		aesEncrypt(newData, key);
-	}
+	memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+	AES_CMAC_Init(&aesCmacCtx);
+	AES_CMAC_SetKey(&aesCmacCtx, key);
+	AES_CMAC_Update(&aesCmacCtx, blockB, sizeof(blockB));
+	AES_CMAC_Update(&aesCmacCtx, data, size);
 	uint32_t r;
-	memcpy(&r, &newData, 4);
+	uint8_t mic[16];
+	AES_CMAC_Final(mic, &aesCmacCtx);
+    r = (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
 	return r;
 }
 
@@ -623,6 +585,7 @@ void rfmMetaData::toJSON(
 
 	rapidjson::Value v14(rapidjson::kStringType);
 	std::string d(base64_encode(data));	// base64
+
 	v14.SetString(d.c_str(), d.size());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[14])), v14, allocator);
 }
@@ -732,6 +695,7 @@ std::string rfmMetaData::toJsonString(
 	std::stringstream ss;
 	int ms;
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
+
 	ss << "{" 
 		<< "\"" << METADATA_NAMES[1] << "\":\"" << dt
 		<< "\",\"" << METADATA_NAMES[2] << "\":" << tmms()
@@ -1151,9 +1115,9 @@ std::string semtechUDPPacket::toString() const
 std::string semtechUDPPacket::toDebugString() const
 {
 	std::stringstream ss;
-	ss << "device network address " << getDeviceAddrStr()
+	ss << "device " << getDeviceAddrStr()
 		<< ": "
-		<< metadataToJsonString();
+		<< hexString(payload);
 	return ss.str();
 }
 

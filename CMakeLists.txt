@@ -4,8 +4,9 @@ project(lorawan-network-server VERSION 1.0)
 INCLUDE_DIRECTORIES("third_party")
 
 set(SRC 
-	lorawan-network-server.cpp errlist.cpp daemonize.cpp utilstring.cpp utillora.cpp aes-128.c
+	lorawan-network-server.cpp errlist.cpp daemonize.cpp utilstring.cpp utillora.cpp 
 	third_party/argtable3/argtable3.c
+	third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 )
 add_executable(lorawan-network-server ${SRC})
 # target_link_libraries(lorawan-network-server ev)

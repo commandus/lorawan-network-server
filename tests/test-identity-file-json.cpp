@@ -159,18 +159,33 @@ void decodeTest(
 			<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
 			<< " hdr.header.macheader: " << (int) hdr.header.macheader 
 			<< std::endl;
+
+		uint32_t mico = getMic(v);
+		std::cout 
+			<< " MIC: " << std::hex << mico
+			<< std::dec
+			<< std::endl;
+				
 		int direction = 0;
 
-		std::string p = v.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + hdr.header.fctrl.f.foptslen,
-			v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen );
+		int payloadSize = v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen;
+		std::string p = v.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + hdr.header.fctrl.f.foptslen, payloadSize);
 		std::cout 
 			<< " v: " << hexString(p)
-			<< " size: " << p.size()
+			<< " size: " << p.length()
+			<< " payloadSize: " << payloadSize
+			
 			<< std::endl;
 
 		decryptPayload(p, hdr.header.fcnt, direction, hdr.header.devaddr, id.appSKey);
 		std::cout 
 			<< " hex decoded: " << hexString(p) 
+			<< std::endl;
+
+		std::string msg = v.substr(0, v.size() - sizeof(uint32_t));
+		uint32_t mic = calculateMIC(msg, hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
+		std::cout 
+			<< " MIC: " << std::hex << mic
 			<< std::endl;
 	} else {
 		std::cerr << "Not found" << std::endl;
@@ -185,7 +200,7 @@ void decodeTest2()
 	KEY128 appSKey;
 	string2KEY(appSKey, "0A501524F8EA5FCBF9BDB5AD7D126F75");
 	// string2KEY(appSKey, "756f127dadb5bdf9cb5feaf82415500a");
-	std::string v = base64_decode("QK4TBCaAAAABb4ldmIEHFOMmgpU=");
+	std::string v = base64_decode("QDADRQGAvQYCr/WbeIJ/+r95BvZus+xszlkT4Lrr6d91/KnQ5Q==");	// QK4TBCaAAAABb4ldmIEHFOMmgpU=
 	rfmHeader hdr;
 	hdr.parse(v);
 	std::cout 
@@ -242,12 +257,87 @@ void decodeTest2()
 		<< std::endl;
 }
 
+void decodeTest3(
+	JsonFileIdentityService &s,
+	uint32_t address,
+	const std::string &base64Value
+)
+{
+	DeviceId id;
+	DEVADDR a;
+	int2DEVADDR(a, address);
+	if (s.get(a, id) == 0) {
+		std::string v = hex2string(base64Value);
+		rfmHeader hdr;
+		hdr.parse(v);
+		std::cout 
+			<< " hex encoded: " << hexString(v) 
+			<< " size: " << v.size()
+			<< " RFM header size: " << sizeof(RFM_HEADER)
+			<< " payload size: " << v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen 
+			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " appSKey: " << KEY2string(id.appSKey)
+			<< " nwkSKey: " << KEY2string(id.nwkSKey)
+			<< std::endl;
+		std::cout 
+			<< " hdr.header.fcnt: " << hdr.header.fcnt 
+			<< " hdr.header.fctrl: " << (int) hdr.header.fctrl.i 
+			<< " hdr.header.fctrl.f.foptslen: " << (int) hdr.header.fctrl.f.foptslen 
+			<< " hdr.header.fctrl.f.ack: " << (int) hdr.header.fctrl.f.ack 
+			<< " hdr.header.fctrl.f.adr: " << (int) hdr.header.fctrl.f.adr
+			<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
+			<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
+			<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
+			<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+			<< std::endl;
+
+		uint32_t mico = getMic(v);
+		std::cout 
+			<< " MIC: " << std::hex << mico
+			<< std::dec
+			<< std::endl;
+				
+		int direction = 0;
+
+		int payloadSize = v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen;
+		std::string p = v.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + hdr.header.fctrl.f.foptslen, payloadSize);
+		std::cout 
+			<< " v: " << hexString(p)
+			<< " size: " << p.length()
+			<< " payloadSize: " << payloadSize
+			
+			<< std::endl;
+
+		decryptPayload(p, hdr.header.fcnt, direction, hdr.header.devaddr, id.appSKey);
+		std::cout 
+			<< " hex decoded: " << hexString(p) 
+			<< std::endl;
+
+		std::string msg = v.substr(0, v.size() - sizeof(uint32_t));
+		uint32_t mic = calculateMIC(msg, hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
+		std::cout 
+			<< " MIC: " << std::hex << mic
+			<< std::endl;
+	} else {
+		std::cerr << "Not found" << std::endl;
+	}
+}
+
 int main(int argc, char **argv) {
 	JsonFileIdentityService s;
 	s.init("identity.json", NULL);
 	// putTest(s);
 	
 	// getIdentityTest(s, 0x01450330);
-	decodeTest(s, 0x01450330, "QAQBAAKAKQAC5YIGfMeKtU5JpTiu6UQx1aQkiwHWChl71bQxxvMlO2qilnIEbvG74hIRj2Y="); // "ADMxaXNhZzIwEoE3ZjU4NDSS9yoDlRQ="
+	decodeTest(s, 0x01450330, "QDADRQGAvQYCr/WbeIJ/+r95BvZus+xszlkT4Lrr6d91/KnQ5Q=="); // "ADMxaXNhZzIwEoE3ZjU4NDSS9yoDlRQ="
+	// must 01002124f13e601e000000004a0000000000000000000000
+	//      01002124f13e601e000000004a0000008582e9b18f284ecf
+
+	// decodeTest(s, 0x01450330, "YAFFAzAABVwAj7fiZ+K9xg==");
+	
 	// decodeTest2();
 }
+
+/*
+QDADRQGAvQYCr/WbeIJ/+r95BvZus+xszlkT4Lrr6d91/KnQ5Q==
+*/

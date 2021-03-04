@@ -39,20 +39,22 @@ nobase_dist_include_HEADERS = \
 	config-json.h identity-service-abstract.h identity-service-file-json.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
-	errlist.h daemonize.h aes-128.h gateway-stat.h gateway-list.h \
+	errlist.h daemonize.h gateway-stat.h gateway-list.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
+	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h
 	$(rapid_headers)
 
+SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
 	config-json.cpp identity-service-file-json.cpp lora-packet-handler-impl.cpp \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp \
-	utilstring.cpp utildate.cpp strptime.cpp aes-128.c \
+	utilstring.cpp utildate.cpp strptime.cpp \
 	db-identity.cpp identity-service-lmdb.cpp \
 	third_party/argtable3/argtable3.c \
-	third_party/base64/base64.cpp
+	third_party/base64/base64.cpp $(SRC_AES)
 
 lorawan_network_server_LDADD = $(commonlibs) -l$(LMDB) -lpthread
 lorawan_network_server_CPPFLAGS = $(commoncppflags)
@@ -70,39 +72,39 @@ dist_config_DATA = \
 #
 test_1_SOURCES = \
 	tests/test1.cpp \
-	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
-	third_party/base64/base64.cpp
+	utillora.cpp utildate.cpp utilstring.cpp \
+	third_party/base64/base64.cpp $(SRC_AES)
 test_1_LDADD = $(commonlibs)
 test_1_CPPFLAGS = $(commoncppflags)
 
 test_identity_file_json_SOURCES = \
 	tests/test-identity-file-json.cpp \
 	identity-service-file-json.cpp \
-	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
+	utillora.cpp utildate.cpp utilstring.cpp \
 	gateway-stat.cpp \
-	third_party/base64/base64.cpp
+	third_party/base64/base64.cpp $(SRC_AES)
 test_identity_file_json_LDADD = 
 test_identity_file_json_CPPFLAGS = $(commoncppflags)
 
 test_identity_lmdb_SOURCES = \
 	tests/test-identity-lmdb.cpp \
 	identity-service-lmdb.cpp db-identity.cpp \
-	utillora.cpp utildate.cpp utilstring.cpp aes-128.c \
-	third_party/base64/base64.cpp
+	utillora.cpp utildate.cpp utilstring.cpp \
+	third_party/base64/base64.cpp $(SRC_AES)
 test_identity_lmdb_LDADD = -l$(LMDB)
 test_identity_lmdb_CPPFLAGS = $(commoncppflags)
 
 test_udp_listen_SOURCES = \
 	tests/test-udp-listen.cpp \
-	udp-socket.cpp errlist.cpp
+	udp-socket.cpp errlist.cpp $(SRC_AES)
 test_udp_listen_LDADD =
 test_udp_listen_CPPFLAGS = $(commoncppflags)
 
 test_packet_queue_SOURCES = \
 	tests/test-packet-queue.cpp \
 	packet-queue.cpp utillora.cpp errlist.cpp \
-	utilstring.cpp utildate.cpp aes-128.c \
-	third_party/base64/base64.cpp
+	utilstring.cpp utildate.cpp \
+	third_party/base64/base64.cpp $(SRC_AES)
 test_packet_queue_LDADD = -lpthread
 test_packet_queue_CPPFLAGS = $(commoncppflags)
 
