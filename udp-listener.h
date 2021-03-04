@@ -7,6 +7,7 @@
 #include "udp-socket.h"
 #include "utillora.h"
 #include "lora-packet-handler-abstract.h"
+#include "identity-service-abstract.h"
 
 class UDPListener
 {
@@ -14,6 +15,7 @@ private:
 	std::string buffer;
 	int largestSocket();
 public:
+	IdentityService* identityService;
 	std::vector<UDPSocket> sockets;
 	bool stopped;
 	struct sockaddr_in6 remotePeerAddress;
@@ -64,6 +66,8 @@ public:
 			const std::string &message
 	)> onLog);
 	void setHandler(LoraPacketHandler *value);
+	void setIdentityService(IdentityService* value);
+
 };
 
 #endif
