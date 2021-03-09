@@ -10,19 +10,20 @@
 #include "gateway-stat.h"
 
 class GatewayList {
+	private:
+		std::string filename;
 	public:
-		std::map<uint64_t, GatewayStat> statistics;
+		std::map<uint64_t, GatewayStat> gateways;
 		GatewayList();
+		GatewayList(const std::string &filename);
 		GatewayList(const GatewayList &value);
+		int put(uint64_t gatewayId, const std::string &value);
+		bool update(const GatewayStat &value);
+		int parse(uint64_t gatewayId, rapidjson::Value &value);
+		void parse(const std::string &value);
 		void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator) const;
-		int parse(
-			uint64_t gatewayId,
-			rapidjson::Value &value
-		);
-		int parse(
-			const std::string &value
-		);
 		std::string toJsonString() const;
+		void save();
 };
 
 #endif
