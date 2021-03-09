@@ -30,15 +30,19 @@
 #include "lora-packet-handler-impl.h"
 #include "identity-service-file-json.h"
 
+#include "gateway-list.h"
+
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
+#define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_TIME_FORMAT "%FT%T"
 
 #define DEF_BUFFER_SIZE 4096
 #define DEF_BUFFER_SIZE_S "4096"
 
-Configuration *config = NULL;
+static Configuration *config = NULL;
+static GatewayList *gatewayList = NULL;
 
 static UDPEmitter emitter;
 static UDPListener listener;
@@ -48,6 +52,11 @@ static void done()
 	// destroy and free all
 	if (config && config->serverConfig.verbosity > 1)
 		std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
+	if (gatewayList) {
+		gatewayList->save();
+		delete gatewayList;
+		gatewayList = NULL;
+	}
 	exit(0);
 }
 
@@ -179,10 +188,6 @@ int main(
 	int argc,
 	char *argv[])
 {
-#ifdef _MSC_VER
-#else
-	setSignalHandler();
-#endif
 	listener.setLogger(onLog);
 	
 	config = new Configuration("");
@@ -201,7 +206,14 @@ int main(
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = DEF_IDENTITY_STORAGE_NAME;
 	}
+	if (config->gatewaysFileName.empty()) {
+		config->gatewaysFileName = DEF_GATEWAYS_STORAGE_NAME;
+	}
 	std::cerr << config->toString() << std::endl;
+
+	gatewayList = new GatewayList(config->gatewaysFileName);
+	
+	std::cerr << gatewayList->toJsonString() << std::endl;
 
 	LoraPacketProcessor processor;
 	JsonFileIdentityService identityService;
@@ -209,6 +221,7 @@ int main(
 	
 	processor.setLogger(onLog);
 	processor.setIdentityService(&identityService);
+	listener.setGatewayList(gatewayList);
 	listener.setHandler(&processor);
 	listener.setIdentityService(&identityService);
 
@@ -237,7 +250,10 @@ int main(
 	}
 	else
 	{
+#ifdef _MSC_VER
+#else
 		setSignalHandler();
+#endif
 		run();
 		done();
 	}

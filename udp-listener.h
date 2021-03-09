@@ -8,12 +8,14 @@
 #include "utillora.h"
 #include "lora-packet-handler-abstract.h"
 #include "identity-service-abstract.h"
+#include "gateway-list.h"
 
 class UDPListener
 {
 private:
 	std::string buffer;
 	int largestSocket();
+	GatewayList *gatewayList;
 public:
 	IdentityService* identityService;
 	std::vector<UDPSocket> sockets;
@@ -67,7 +69,7 @@ public:
 	)> onLog);
 	void setHandler(LoraPacketHandler *value);
 	void setIdentityService(IdentityService* value);
-
+	void setGatewayList(GatewayList *value);
 };
 
 #endif

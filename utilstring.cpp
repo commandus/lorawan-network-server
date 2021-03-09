@@ -8,14 +8,18 @@
 #include <iomanip>
 #include <fstream>
 
-static std::string file2string(std::istream &strm)
+static std::string file2string(
+	std::istream &strm
+)
 {
 	if (!strm)
 		return "";
 	return std::string((std::istreambuf_iterator<char>(strm)), std::istreambuf_iterator<char>());
 }
 
-std::string file2string(const char *filename)
+std::string file2string(
+	const char *filename
+)
 {
 	if (!filename)
 		return "";
@@ -23,21 +27,34 @@ std::string file2string(const char *filename)
 	return file2string(t);
 }
 
+bool string2file(
+	const std::string &filename,
+	const std::string &value
+)
+{
+	FILE* f = fopen(filename.c_str(), "w");
+	if (!f)
+		return false;
+	fwrite(value.c_str(), value.size(), 1, f);
+	fclose(f);
+	return true;
+}
+
 // http://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
 struct HexCharStruct
 {
-        unsigned char c;
-        HexCharStruct(unsigned char _c) : c(_c) { }
+	unsigned char c;
+	HexCharStruct(unsigned char _c) : c(_c) { }
 };
 
 inline std::ostream& operator<<(std::ostream& o, const HexCharStruct& hs)
 {
-        return (o << std::setfill('0') << std::setw(2) << std::hex << (int) hs.c);
+	return (o << std::setfill('0') << std::setw(2) << std::hex << (int) hs.c);
 }
 
 inline HexCharStruct hex(unsigned char c)
 {
-        return HexCharStruct(c);
+	return HexCharStruct(c);
 }
 
 static void bufferPrintHex(std::ostream &sout, const void* value, size_t size)

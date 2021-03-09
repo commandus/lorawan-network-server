@@ -38,6 +38,19 @@ lorawan-network-server is lightweigth LoRaWAN network server.
           |                   |
           +-------------------+
 ```
+
+Gateways
+
+```
++---------------------+
+|     GatewayList     |
++---------------------+
+           |
++---------------------+
+|     GatewayStat     |
++---------------------+
+```
+
 ## Run
 
 ```
@@ -65,6 +78,42 @@ export CC=/usr/bin/clang;export CXX=/usr/bin/clang++;cmake ..
 make
 ```
 
+## Configuration files
+
+### gateway.json
+
+Array of gateways identifier and last statistics
+
+  - gwid Gateway identifier (hex number string)
+  - time UTC time of pkt RX, us precision, ISO 8601 'compact' format
+  - lati latitude
+  - long longitude
+  - alti altitude, meters, integer
+  - rxnb Number of radio packets received (unsigned integer)
+  - rxok Number of radio packets received with a valid PHY CRC
+  - rxfw Number of radio packets forwarded (unsigned integer)
+  - ackr Percentage of upstream datagrams that were acknowledged
+  - dwnb Number of downlink datagrams received (unsigned integer)
+  - txnb Number of packets emitted (unsigned integer)
+
+Example:
+```
+[
+  {
+    "gwid": "00006cc3743eed46"
+   	"time": 0,
+	  "lati": 62.02774,
+    "long": 129.72883,
+    "alti": 348,
+    "rxnb": 0,
+    "rxok": 0,
+    "rxfw": 0,
+    "ackr": 0.0,
+    "dwnb": 0,
+    "txnb": 0
+  }
+]
+```
 
 ## Packet types sent by Semtech gateway
 

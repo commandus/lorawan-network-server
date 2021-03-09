@@ -132,12 +132,17 @@ int Configuration::parse(
 			if (cfn.IsString())
 				configFileName = cfn.GetString();
 		}
+		if (doc.HasMember("gatewaysFileName")) {
+			rapidjson::Value &gfn =  doc["gatewaysFileName"];
+			if (gfn.IsString())
+				gatewaysFileName = gfn.GetString();
+		}
 	}
 	return r;
 }
 
 Configuration::Configuration() 
-	: configFileName("")
+	: configFileName(""), gatewaysFileName("")
 {
 }
 
@@ -149,6 +154,7 @@ Configuration::Configuration(
 
 void Configuration::clear() {
 	configFileName = "";
+	gatewaysFileName = "";
 	serverConfig.clear();
 }
 
@@ -163,6 +169,10 @@ std::string Configuration::toString() {
 	rapidjson::Value cfn;
 	cfn.SetString(configFileName.c_str(), configFileName.length(), allocator);
 	doc.AddMember("configFileName", cfn, allocator);
+
+	rapidjson::Value gfn;
+	gfn.SetString(gatewaysFileName.c_str(), gatewaysFileName.length(), allocator);
+	doc.AddMember("gatewaysFileName", gfn, allocator);
 
 	serverConfig.toJson(server, allocator);
 	doc.AddMember("server", server, allocator);

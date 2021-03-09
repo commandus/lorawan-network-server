@@ -13,7 +13,7 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	stopped(false), onLog(NULL), handler(NULL), identityService(NULL)
+	stopped(false), onLog(NULL), handler(NULL), identityService(NULL), gatewayList(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -45,6 +45,13 @@ void UDPListener::setHandler(
 	LoraPacketHandler *value
 ) {
 	handler = value;
+}
+
+void UDPListener::setGatewayList(
+	GatewayList *value
+)
+{
+	gatewayList = value;
 }
 
 void UDPListener::setIdentityService
@@ -240,10 +247,13 @@ int UDPListener::listen() {
 								}
 								// reflect stat
 								if (gatewayStat.errcode == 0) {
-										std::stringstream ss;
-										ss << MSG_GATEWAY_STAT
-											<< gatewayStat.toString();
-										onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+									if (gatewayList) {
+										gatewayList->update(gatewayStat);
+									}
+									std::stringstream ss;
+									ss << MSG_GATEWAY_STAT
+										<< gatewayStat.toString();
+									onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 								}
 								break;
 							case 1:

@@ -28,6 +28,7 @@ class ServerConfig {
 class Configuration {
 	public:
 		std::string configFileName;
+		std::string gatewaysFileName;
 		ServerConfig serverConfig;
 		Configuration();
 		Configuration(const char* value);

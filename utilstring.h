@@ -30,6 +30,9 @@ std::string hex2string(const std::string &hex);
 
 std::string file2string(const char *filename);
 
+// write file
+bool string2file(const std::string &filename, const std::string &value);
+
 std::string &trim(std::string &s);
 
 #endif

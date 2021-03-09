@@ -3,6 +3,8 @@
 
 #include "rapidjson/writer.h"
 
+#include "utilstring.h"
+
 GatewayList::GatewayList()
 {
 
@@ -12,7 +14,16 @@ GatewayList::GatewayList(
 	const GatewayList &value
 )
 {
-	statistics = value.statistics;
+	filename = value.filename;
+	gateways = value.gateways;
+}
+
+GatewayList::GatewayList(
+	const std::string &afilename
+)
+	: filename(afilename)
+{
+	parse(file2string(afilename.c_str()));
 }
 
 void GatewayList::toJSON(
@@ -20,7 +31,7 @@ void GatewayList::toJSON(
 	rapidjson::Document::AllocatorType& allocator
 ) const
 {
-	for (std::map<uint64_t, GatewayStat>::const_iterator it(statistics.begin()); it != statistics.end(); it++) {
+	for (std::map<uint64_t, GatewayStat>::const_iterator it(gateways.begin()); it != gateways.end(); it++) {
 		rapidjson::Value v;
 		v.SetObject();
 		it->second.toJSON(v, allocator);
@@ -28,16 +39,26 @@ void GatewayList::toJSON(
 	}
 }
 
-int GatewayList::parse(
+int GatewayList::put(
+	uint64_t gatewayId,
 	const std::string &value
 )
 {
 	rapidjson::Document doc;
 	rapidjson::Document::AllocatorType &allocator(doc.GetAllocator());
 	doc.Parse(value.c_str());
-	if (!doc.IsArray())
-		return ERR_CODE_INVALID_JSON;
-	return parse(0, doc);
+	return parse(gatewayId, doc);
+}
+
+bool GatewayList::update(
+	const GatewayStat &value
+)
+{
+	std::map<uint64_t, GatewayStat>::iterator it(gateways.find(value.gatewayId));
+	// save anyway
+	gateways[value.gatewayId] = value;
+	// indicate it is new one
+	return it != gateways.end();
 }
 
 int GatewayList::parse(
@@ -52,7 +73,7 @@ int GatewayList::parse(
 		if (stat.parse(value[i])) {
 			if (gatewayId)
 				stat.gatewayId = gatewayId;
-			statistics[stat.gatewayId] = stat;
+			gateways[stat.gatewayId] = stat;
 		}
 	}
 	return 0;
@@ -70,4 +91,18 @@ std::string GatewayList::toJsonString() const
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	doc.Accept(writer);
 	return std::string(buffer.GetString());
+}
+
+void GatewayList::parse(
+	const std::string &value
+)
+{
+	rapidjson::Document doc;
+	doc.Parse(value.c_str());
+	parse(0, doc);
+}
+
+void GatewayList::save()
+{
+	string2file(filename, toJsonString());
 }
