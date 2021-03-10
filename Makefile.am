@@ -39,7 +39,7 @@ nobase_dist_include_HEADERS = \
 	config-json.h identity-service-abstract.h identity-service-file-json.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
-	errlist.h daemonize.h gateway-stat.h gateway-list.h \
+	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h
@@ -50,7 +50,7 @@ lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
 	config-json.cpp identity-service-file-json.cpp lora-packet-handler-impl.cpp \
-	packet-queue.cpp gateway-stat.cpp gateway-list.cpp \
+	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp \
 	db-identity.cpp identity-service-lmdb.cpp \
 	third_party/argtable3/argtable3.c \

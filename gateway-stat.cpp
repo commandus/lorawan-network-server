@@ -59,13 +59,16 @@ void GatewayStat::toJSON(
 	rapidjson::Document::AllocatorType& allocator
 ) const
 {
-	rapidjson::Value vId(gatewayId);
+	rapidjson::Value vId;
+	std::stringstream ss;
+	ss << std::hex << gatewayId;
+	std::string ssr = ss.str();
+	vId.SetString(ssr.c_str(), ssr.length(), allocator);
 	value.AddMember("gwid", vId, allocator);
 
-	int ms;
-	std::string dt = ltimeString(t, ms, "%F %T %Z");
+	std::string dt = ltimeString(t, -1, "%F %T %Z");
 	rapidjson::Value v1(rapidjson::kStringType);
-	v1.SetString(dt.c_str(), dt.length());
+	v1.SetString(dt.c_str(), dt.length(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[1])), v1, allocator);
 
 	rapidjson::Value v2(lat);
@@ -106,6 +109,8 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value["gwid"];
 		if (v.IsUint64()) {
 			gatewayId = v.GetUint64();
+		} else if (v.IsString()) {
+			gatewayId = strtoull(v.GetString(), NULL, 16);
 		}
 	}
 
@@ -186,17 +191,17 @@ std::string GatewayStat::toJsonString() const
 {
 		std::stringstream ss;
 		ss << "{"
-			<< "\"gwid\":" << gatewayId
-			<< "\"time\":\"" << time2string(t) << "\""
-			<< "\"lati\":" << std::fixed << std::setprecision(5) << lat
-			<< "\"long\":" << std::fixed << std::setprecision(5) << lon
-			<< "\"alti\":" << alt
-			<< "\"rxnb\":" << rxnb
-			<< "\"rxok\":" << rxok
-			<< "\"rxfw\":" << rxfw
-			<< "\"ackr\":" << std::fixed << std::setprecision(1) << ackr
-			<< "\"dwnb\":" << dwnb
-			<< "\"txnb\":" << txnb
+			<< "\"gwid\":\"" << std::hex << gatewayId << std::dec
+			<< "\", \"time\":\"" << time2string(t) << "\""
+			<< ",\"lati\":" << std::fixed << std::setprecision(5) << lat
+			<< ",\"long\":" << std::fixed << std::setprecision(5) << lon
+			<< ",\"alti\":" << alt
+			<< ",\"rxnb\":" << rxnb
+			<< ",\"rxok\":" << rxok
+			<< ",\"rxfw\":" << rxfw
+			<< ",\"ackr\":" << std::fixed << std::setprecision(1) << ackr
+			<< ",\"dwnb\":" << dwnb
+			<< ",\"txnb\":" << txnb
 			<< "}";
 		return ss.str();
 }

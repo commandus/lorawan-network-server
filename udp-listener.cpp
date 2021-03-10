@@ -249,6 +249,7 @@ int UDPListener::listen() {
 								if (gatewayStat.errcode == 0) {
 									if (gatewayList) {
 										gatewayList->update(gatewayStat);
+										// gatewayList->save();
 									}
 									std::stringstream ss;
 									ss << MSG_GATEWAY_STAT

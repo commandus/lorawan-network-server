@@ -2,6 +2,7 @@
 #include "errlist.h"
 
 #include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
 
 #include "utilstring.h"
 
@@ -88,7 +89,7 @@ std::string GatewayList::toJsonString() const
 	
 	rapidjson::StringBuffer buffer;
 	buffer.Clear();
-	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
 	doc.Accept(writer);
 	return std::string(buffer.GetString());
 }

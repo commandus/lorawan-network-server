@@ -31,7 +31,7 @@ std::string ltimeString(
 		return std::string(dt);
 	else {
 		std::stringstream ss;
-		ss << dt << "." << std::setw(5) << std::setfill('0') << ms;
+		ss << std::string(dt) << "." << std::setw(5) << std::setfill('0') << ms;
 		return ss.str();
 	}
 }

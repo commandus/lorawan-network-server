@@ -1,6 +1,6 @@
 #include "config-json.h"
 
-#include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
 #include "errlist.h"
@@ -160,7 +160,7 @@ void Configuration::clear() {
 
 std::string Configuration::toString() {
 	rapidjson::StringBuffer buffer;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
 	rapidjson::Document doc;
 	doc.SetObject();
 	rapidjson::Value server;
