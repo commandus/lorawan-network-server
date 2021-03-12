@@ -48,21 +48,21 @@ static const MAC_PAYLOAD_SIZE macPayloadRegistry[] {
 	{0, 2},	// 2	MAC_EMPTY					MAC_LINK_CHECK
 	{4, 1},	// 3	MAC_LINK_ADR_REQ			MAC_LINK_ADR_RESP
 	{1, 1},	// 4	MAC_DUTY_CYCLE				MAC_DUTY_CYCLE
-	{4, 1},	// 5	MAC_RARAMSETUP_REQ			MAC_RARAMSETUP_RESP
-	{5, 2},	// 6	MAC_EMPTY					MAC_DEVSTATUS_RESP
+	{4, 1},	// 5	MAC_RXRARAMSETUP_REQ		MAC_RXRARAMSETUP_RESP
+	{5, 2},	// 6	MAC_EMPTY					MAC_DEVSTATUS
 	{1, 1},	// 7	MAC_NEWCHANNEL_REQ			MAC_NEWCHANNEL_RESP
 	{1, 1},	// 8	MAC_TIMINGSETUP				MAC_EMPTY
-	{1, 1},	// 9	MAC_PARAMSETUP				MAC_EMPTY
+	{1, 1},	// 9	MAC_TXPARAMSETUP			MAC_EMPTY
 	{4, 1},	// a	MAC_DLCHANNEL_REQ			MAC_DLCHANNEL_RESP
 	{1, 1},	// b	MAC_REKEY_REQ				MAC_REKEY_RESP
 	{1, 0},	// c	MAC_ADRPARAMSETUP			MAC_EMPTY
-	{0, 1},	// d	MAC_EMPTY					MAC_DEVICETIME
+	{0, 3},	// d	MAC_EMPTY					MAC_DEVICETIME
 	{2, -1},// e	MAC_FORCEREJOIN				The command has no answer
 	{2, 1},	// f	MAC_REJOINPARAMSETUP_REQ	MAC_REJOINPARAMSETUP_RESP
 	{1, 1},	// 10	MAC_PINGSLOTINFO			MAC_EMPTY? No decription in spec. The command has no answer?
 	{4, 1}, // 11	MAC_PINGSLOTCHANNEL_REQ		MAC_PINGSLOTCHANNEL_RESP
 	{1, 1},	// 12	MAC_EMPTY					MAC_BEACONTIMING
-	{1, 1}	// 13	MAC_BEACONFREQUENCY_REQ		MAC_BEACONFREQUENCY_REЫЗ
+	{1, 1}	// 13	MAC_BEACONFREQUENCY_REQ		MAC_BEACONFREQUENCY_RESP
 			// 20	MAC_DEVICEMODE				MAC_DEVICEMODE
 };
 
@@ -75,7 +75,7 @@ typedef ALIGN struct {
 
 // 2) Link check request
 typedef ALIGN struct {
-} MAC_EMPTY;					// zero bytes
+} PACKED MAC_EMPTY;					// zero bytes
 
 // 2) Link check answer
 // @param margin 0..254- dB of the last successfully received LinkCheckReq command, e.g. 20- 20dB. 255 is reserved.
@@ -132,7 +132,7 @@ typedef ALIGN struct {
 	uint8_t rx1droffset: 3;
 	uint8_t rfu: 1;
 	uint8_t frequency[3];			// 24 bit uyint, 100*Hz
-} PACKED MAC_RARAMSETUP_REQ;		// 4 bytes
+} PACKED MAC_RXRARAMSETUP_REQ;		// 4 bytes
 
 // @param channelack
 // @param rx2datatrateack
@@ -143,7 +143,7 @@ typedef ALIGN struct {
 	uint8_t rx2datatrateack: 1;
 	uint8_t rx1droffsetack: 1;
 	uint8_t rfu: 5;
-} PACKED MAC_RARAMSETUP_RESP;		// 1 byte
+} PACKED MAC_RXRARAMSETUP_RESP;		// 1 byte
 
 // 6) End-Device Status response
 // @param battery 0- external power source, 1- min, 254- max, 255- end-device was not able to mearure battery level
@@ -151,7 +151,7 @@ typedef ALIGN struct {
 typedef ALIGN struct {
 	uint8_t battery;
 	int8_t margin;
-} PACKED MAC_DEVSTATUS_RESP;		// 2 bytes
+} PACKED MAC_DEVSTATUS;		// 2 bytes
 
 // 7) Creation / Modification of a Channel
 // @param chindex N,,15 where N- channels count. e.g. Russia N = 2, additioonal channels 2..15
@@ -191,7 +191,7 @@ typedef ALIGN struct {
 	uint8_t uplinkdwelltime: 1;
 	uint8_t downlinkdwelltime: 1;
 	uint8_t rfu: 2;
-} PACKED MAC_PARAMSETUP;			// 1 byte
+} PACKED MAC_TXPARAMSETUP;			// 1 byte
 
 // A) DlChannelReq Associate a different downlink frequency to the RX1 slot. 
 // Available for EU and China but not for US or Australia
@@ -232,11 +232,11 @@ typedef ALIGN struct {
 
 // D) request from the network the current network date and time
 // @param minor 
-// @param rfu not used
+// @param 10.2.216.32fu not used
 typedef ALIGN struct {
 	uint32_t gpstime;				// GPS epoch seconds
 	uint8_t frac;					// 1/256 seconds
-} PACKED MAC_DEVICETIME;			// 1 byte
+} PACKED MAC_DEVICETIME;			// 3 byteы
 
 // E) network asks a device to immediately transmit a Rejoin-Request
 // The command has no answer,
@@ -258,7 +258,7 @@ typedef ALIGN struct {
 // F) network request end-device to periodically send a RejoinReq Type 0 message
 // The command has no answer,
 // @param maxcount MUST send a Rejoin-request type 0 at least every 2^C+4 uplink messages. 0- 16, 1- 32...
-// @param maxtime 2^T+10: 0- 17 minutes, 15- 1 year
+// @param ma10.2.216.32ime 2^T+10: 0- 17 minutes, 15- 1 year
 typedef ALIGN struct {
 	uint8_t maxccount: 4;			// MUST send a Rejoin-request type 0 at least every 2^C+4 uplink messages. 0- 16, 1- 32...
 	uint8_t maxtime: 4;				//  2^T+10: 0- 17 minutes, 15- 1 year
@@ -297,10 +297,6 @@ typedef ALIGN struct {
 // 12) Deprecated.
 // @param channel index of the beaconing channel on which the next beacon will be broadcasted.
 // @param delay 30 ms x (Delay+1) > RTime >= 30 ms x Delay
-typedef ALIGN struct {
-	uint8_t channel;				// index of the beaconing channel on which the next beacon will be broadcasted.
-	uint16_t delay;					// delay 30 ms x (Delay+1) > RTime >= 30 ms x Delay
-} PACKED MAC_BEACONTIMING_REQ;		// 3 bytes
 
 typedef ALIGN struct {
 	uint8_t channel;				// index of the beaconing channel on which the next beacon will be broadcasted.
@@ -323,5 +319,317 @@ typedef ALIGN struct {
 typedef ALIGN struct {
 	uint8_t cl;						// class: 0- A, 1- RFU, 2- C
 } PACKED MAC_DEVICEMODE;			// 1 byte
+
+typedef union MAC_DATA
+{
+	MAC_EMPTY empty;
+	MAC_RESET reset;
+	MAC_LINK_CHECK linkcheck;
+ 	MAC_LINK_ADR_REQ linkadrreq;
+	MAC_LINK_ADR_RESP linkadrresp;
+	MAC_DUTY_CYCLE dutycycle;
+	MAC_RXRARAMSETUP_REQ paramsetupreq;
+	MAC_RXRARAMSETUP_RESP paramsetupresp;
+	MAC_DEVSTATUS devstatus;
+	MAC_NEWCHANNEL_REQ newchacnnelreq;
+	MAC_NEWCHANNEL_RESP newchacnnelresp;
+	MAC_TIMINGSETUP timingsetup;
+	MAC_TXPARAMSETUP paramsetup;
+	MAC_DLCHANNEL_REQ dlcchannelreq;
+	MAC_DLCHANNEL_RESP dlcchannelresp;
+	MAC_REKEY_REQ macrekeyreq;
+	MAC_REKEY_RESP macrekeyresp;
+	MAC_ADRPARAMSETUP adrparamsetup;
+	MAC_DEVICETIME devicetime;
+	MAC_FORCEREJOIN forcerejoin;
+	MAC_REJOINPARAMSETUP_REQ rejoinparamsetupreq;
+	MAC_REJOINPARAMSETUP_RESP rejoinparamsetupresp;
+	MAC_PINGSLOTINFO pinginfoslot;
+	MAC_PINGSLOTCHANNEL_REQ pingslotchannelreq;
+	MAC_PINGSLOTCHANNEL_RESP pingslotchannelresp;
+	MAC_BEACONTIMING beacontiming;
+	MAC_BEACONFREQUENCY_REQ beaconfrequencyreq;
+	MAC_BEACONFREQUENCY_RESP beaconfrequencyresp;
+	MAC_DEVICEMODE devicemode;
+};	// 5 bytes
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_DATA data;
+} PACKED MAC_COMMAND;					// 1-6 byte(s)
+
+// --- for casting ---
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_EMPTY data;
+} PACKED MAC_COMMAND_EMPTY;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_RESET data;
+} PACKED MAC_COMMAND_RESET;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_LINK_CHECK data;
+} PACKED MAC_COMMAND_LINK_CHECK;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_LINK_ADR_REQ data;
+} PACKED MAC_COMMAND_LINK_ADR_REQ;
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_LINK_ADR_RESP data;
+} PACKED MAC_COMMAND_LINK_ADR_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_DUTY_CYCLE data;
+} PACKED MAC_COMMAND_DUTY_CYCLE;
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_RXRARAMSETUP_REQ data;
+} PACKED MAC_COMMAND_RXRARAMSETUP_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_RXRARAMSETUP_RESP data;
+} PACKED MAC_COMMAND_RXRARAMSETUP_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_DEVSTATUS data;
+} PACKED MAC_COMMAND_DEVSTATUS;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_NEWCHANNEL_REQ data;
+} PACKED MAC_COMMAND_NEWCHANNEL_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_NEWCHANNEL_RESP data;
+} PACKED MAC_COMMAND_NEWCHANNEL_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_TIMINGSETUP data;
+} PACKED MAC_COMMAND_TIMINGSETUP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_TXPARAMSETUP data;
+} PACKED MAC_COMMAND_TXPARAMSETUP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_DLCHANNEL_REQ data;
+} PACKED MAC_COMMAND_DLCHANNEL_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_DLCHANNEL_RESP data;
+} PACKED MAC_COMMAND_DLCHANNEL_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_REKEY_REQ data;
+} PACKED MAC_COMMAND_REKEY_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_REKEY_RESP data;
+} PACKED MAC_COMMAND_REKEY_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_ADRPARAMSETUP data;
+} PACKED MAC_COMMAND_ADRPARAMSETUP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_DEVICETIME data;
+} PACKED MAC_COMMAND_DEVICETIME;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_FORCEREJOIN data;
+} PACKED MAC_COMMAND_FORCEREJOIN;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_REJOINPARAMSETUP_REQ data;
+} PACKED MAC_COMMAND_REJOINPARAMSETUP_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_REJOINPARAMSETUP_RESP data;
+} PACKED MAC_COMMAND_REJOINPARAMSETUP_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_PINGSLOTINFO data;
+} PACKED MAC_COMMAND_PINGSLOTINFO;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_PINGSLOTCHANNEL_REQ data;
+} PACKED MAC_COMMAND_PINGSLOTCHANNEL_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_PINGSLOTCHANNEL_REQ data;
+} PACKED MAC_COMMAND_PINGSLOTCHANNEL_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_PINGSLOTCHANNEL_RESP data;
+} PACKED MAC_COMMAND_PINGSLOTCHANNEL_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_BEACONTIMING data;
+} PACKED MAC_COMMAND_BEACONTIMING;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_BEACONFREQUENCY_REQ data;
+} PACKED MAC_COMMAND_BEACONFREQUENCY_REQ;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_BEACONFREQUENCY_RESP data;
+} PACKED MAC_COMMAND_BEACONFREQUENCY_RESP;
+
+typedef ALIGN struct {
+	uint8_t command;
+	MAC_DEVICEMODE data;
+} PACKED MAC_COMMAND_DEVICEMODE;
+
+class MacData {
+	public:
+		MAC_COMMAND command;
+
+		// 1) Reset
+		MAC_COMMAND_RESET *getResetReq();
+		void setResetReq(const MAC_COMMAND_RESET &value);
+		MAC_COMMAND_RESET *getResetResp();
+		void setResetResp(const MAC_COMMAND_RESET &value);
+
+		// 2) Link check
+		MAC_COMMAND_EMPTY *getLinkCheckReq();
+		void setLinkCheckReq(const MAC_COMMAND_EMPTY &value);
+		MAC_COMMAND_LINK_CHECK *getLinkCheckResp();
+		void setLinkCheckResp(const MAC_COMMAND_LINK_CHECK &value);
+
+		// 3)
+		MAC_COMMAND_LINK_ADR_REQ *getLinkAdrReq();
+		void setLinkAdrReq(const MAC_COMMAND_LINK_ADR_REQ &value);
+		MAC_COMMAND_LINK_ADR_RESP *getLinkAdrResp();
+		void setLinkAdrResp(const MAC_COMMAND_LINK_ADR_RESP &value);
+
+		// 4)
+		MAC_COMMAND_DUTY_CYCLE *getDutyCycleReq();
+		void setDutyCycleReq(const MAC_COMMAND_DUTY_CYCLE &value);
+		MAC_COMMAND_DUTY_CYCLE *getDutyCycleResp();
+		void setDutyCycleResp(const MAC_COMMAND_DUTY_CYCLE &value);
+
+		// 5)
+		MAC_COMMAND_REJOINPARAMSETUP_REQ *getRxParamSetupReq();
+		void setRxParamSetupReq(const MAC_COMMAND_REJOINPARAMSETUP_REQ &value);
+		MAC_COMMAND_REJOINPARAMSETUP_RESP *getRxParamSetupResp();
+		void setRxParamSetupResp(const MAC_COMMAND_REJOINPARAMSETUP_RESP &value);
+
+		// 6)
+		MAC_COMMAND_EMPTY *getDevStatusReq();
+		void setDevStatusReq(const MAC_COMMAND_EMPTY &value);
+		MAC_COMMAND_DEVSTATUS *getDevStatusResp();
+		void setDevStatusResp(const MAC_COMMAND_DEVSTATUS &value);
+
+		// 7)
+		MAC_COMMAND_NEWCHANNEL_REQ *getNewChannelReq();
+		void setNewChannelReq(const MAC_COMMAND_NEWCHANNEL_REQ &value);
+		MAC_COMMAND_NEWCHANNEL_RESP *getNewChannelResp();
+		void setNewChannelResp(const MAC_COMMAND_NEWCHANNEL_RESP &value);
+
+		// 8)
+		MAC_COMMAND_TIMINGSETUP *getTimingSetupReq();
+		void setTimingSetupReq(const MAC_COMMAND_TIMINGSETUP &value);
+		MAC_COMMAND_EMPTY *getTimingSetupResp();
+		void setTimingSetupResp(const MAC_COMMAND_EMPTY &value);
+
+		// 9)
+		MAC_COMMAND_TXPARAMSETUP *getTxParamSetupReq();
+		void setTxParamSetupReq(const MAC_COMMAND_TXPARAMSETUP &value);
+		MAC_COMMAND_EMPTY *getTxParamSetupResp();
+		void setTxParamSetupResp(const MAC_COMMAND_EMPTY &value);
+
+		// a )
+		MAC_COMMAND_DLCHANNEL_REQ *getDlChannelReq();
+		void setDlChannelReq(const MAC_COMMAND_DLCHANNEL_REQ &value);
+		MAC_DLCHANNEL_RESP *getDlChannelResp();
+		void setDlChannelResp(const MAC_DLCHANNEL_RESP &value);
+
+		// b )
+		MAC_COMMAND_REKEY_REQ *getRekeyReq();
+		void setRekeyReq(const MAC_COMMAND_REKEY_REQ &value);
+		MAC_COMMAND_REKEY_RESP *getRekeyResp();
+		void setRekeyResp(const MAC_COMMAND_REKEY_RESP &value);
+
+		// c )
+		MAC_COMMAND_ADRPARAMSETUP *getAdrParamSetupReq();
+		void setAdrParamSetupReq(const MAC_COMMAND_ADRPARAMSETUP &value);
+		MAC_COMMAND_EMPTY *getAdrParamSetupResp();
+		void setAdrParamSetupResp(const MAC_COMMAND_EMPTY &value);
+
+		// d )
+		MAC_COMMAND_EMPTY *getDeviceTimeReq();
+		void setDeviceTimeReq(const MAC_COMMAND_EMPTY &value);
+		MAC_COMMAND_DEVICETIME *getDeviceTimeResp();
+		void setDeviceTimeResp(const MAC_COMMAND_DEVICETIME &value);
+
+		// e )
+		MAC_COMMAND_FORCEREJOIN *getForceJoinReq();
+		void setForceJoinReq(const MAC_COMMAND_FORCEREJOIN &value);
+		// no response
+
+		// f )
+		MAC_COMMAND_REJOINPARAMSETUP_REQ *getRejoinParamSetupReq();
+		void setRejoinParamSetupReq(const MAC_COMMAND_REJOINPARAMSETUP_REQ &value);
+		MAC_COMMAND_REJOINPARAMSETUP_RESP *getRejoinParamSetupResp();
+		void setRejoinParamSetupResp(const MAC_COMMAND_REJOINPARAMSETUP_RESP &value);
+
+		// 10 )
+		MAC_COMMAND_PINGSLOTINFO *getPingSlotInfoReq();
+		void setPingSlotInfoReq(const MAC_COMMAND_PINGSLOTINFO &value);
+		MAC_COMMAND_EMPTY *getPingSlotInfoResp();
+		void setPingSlotInfoResp(const MAC_COMMAND_EMPTY &value);
+
+		// 11 )
+		MAC_COMMAND_PINGSLOTCHANNEL_REQ *getPingSlotChannelReq();
+		void setPingSlotChannelReq(const MAC_COMMAND_PINGSLOTCHANNEL_REQ &value);
+		MAC_COMMAND_PINGSLOTCHANNEL_RESP *getPingSlotChannelResp();
+		void setPingSlotChannelResp(const MAC_COMMAND_PINGSLOTCHANNEL_RESP &value);
+
+		// 12) Beacon timing (deorecated)
+		MAC_COMMAND_EMPTY *getBeaconTimingReq();
+		void setBeaconTimingReq(const MAC_COMMAND_EMPTY &value);
+		MAC_COMMAND_BEACONTIMING *getBeaconTimingResp();
+		void setBeaconTimingResp(const MAC_COMMAND_BEACONTIMING &value);
+
+		// 13) Beacon timing (deorecated)
+		MAC_COMMAND_BEACONFREQUENCY_REQ *getBeaconFrequencyReq();
+		void setBeaconFrequencyReq(const MAC_COMMAND_BEACONFREQUENCY_REQ &value);
+		MAC_COMMAND_BEACONFREQUENCY_RESP *getBeaconFrequencyResp();
+		void setBeaconFrequencyResp(const MAC_COMMAND_BEACONFREQUENCY_RESP &value);
+
+		// 20) Beacon timing (deorecated)
+		MAC_COMMAND_DEVICEMODE *getDeviceModeReq();
+		void setDeviceModeReq(const MAC_COMMAND_DEVICEMODE &value);
+		MAC_COMMAND_DEVICEMODE *getDeviceModeResp();
+		void setDeviceModeResp(const MAC_COMMAND_DEVICEMODE &value);
+};
 
 #endif
