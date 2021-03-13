@@ -1,12 +1,18 @@
-#ifdef USE_LMDB
-#include "lmdb.h"
-#else
-#include "mdbx.h"
+#ifndef DB_IDENTITY_H
+#define DB_IDENTITY_H 1
 
 #include <string>
 
+#ifdef USE_LMDB
+#include <lmdb.h>
+#endif
+#ifdef USE_MDBX
+#include <mdbx.h>
+#endif
+
 #include "utillora.h"
 
+#ifdef USE_MDBX
 #define MDB_SET_RANGE MDBX_SET_RANGE
 #define MDB_FIRST MDBX_FIRST
 #define MDB_NEXT MDBX_NEXT
@@ -43,6 +49,7 @@
 #define MDB_MAP_FULL MDBX_MAP_FULL
 #endif
 
+#ifdef USE_MDBX or USE_LMDB
 /**
  * @brief LMDB environment(transaction, cursor)
  */
@@ -137,3 +144,6 @@ int rmAddr
 	dbenv *env,
 	const DEVADDR &addr
 );
+
+#endif
+#endif

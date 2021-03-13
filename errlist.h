@@ -50,6 +50,7 @@
 #define ERR_CODE_NO_GATEWAY_STAT			-536
 #define ERR_CODE_INVALID_PROTOCOL_VERSION	-537
 #define ERR_CODE_PACKET_TOO_SHORT			-538
+#define ERR_CODE_PARAM_NO_INTERFACE			-539
 
 
 #define ERR_MESSAGE						"Error "
@@ -98,6 +99,7 @@
 #define ERR_NO_GATEWAY_STAT				"No gateway statistics provided"
 #define ERR_INVALID_PROTOCOL_VERSION	"Invalie protocol version"
 #define ERR_PACKET_TOO_SHORT			"Protocol packet is too short"
+#define ERR_PARAM_NO_INTERFACE			"No interface specified"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "

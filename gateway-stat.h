@@ -3,7 +3,11 @@
 
 #include <time.h>
 #include <inttypes.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
+#pragma clang diagnostic pop
 
 /* 
  * PUSH_DATA (0) stat Section 4

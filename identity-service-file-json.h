@@ -3,7 +3,11 @@
 
 #include <vector>
 #include "identity-service-abstract.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
+#pragma clang diagnostic pop
 
 class JsonFileIdentityService: public IdentityService {
 	private:

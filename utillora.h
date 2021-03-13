@@ -10,7 +10,10 @@
 #include "platform.h"
 #include "system/crypto/aes.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
+#pragma clang diagnostic pop
 
 #include "gateway-stat.h"
 
@@ -237,8 +240,6 @@ private:
 	std::string payload;
 	void clearPrefix();
 	int parseData(const std::string &data, IdentityService *identityService);
-	// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
-	int loadCredentialsDevAddr();
 public:	
 	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	struct sockaddr_in6 clientAddress;
@@ -286,8 +287,8 @@ public:
 	void setFrameCounter(uint16_t value);
 
 	std::string getPayload();
-	int setPayload(uint8_t port, const std::string &payload);
-	int setPayload(const std::string &value);
+	void setPayload(uint8_t port, const std::string &payload);
+	void setPayload(const std::string &value);
 	// Create ACK response to be send to the BS 
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
 	int16_t getStrongesSignalLevel(int &idx) const;

@@ -4,7 +4,10 @@
 #include <string>
 #include <vector>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
+#pragma clang diagnostic pop
 
 class ServerConfig {
 	public:

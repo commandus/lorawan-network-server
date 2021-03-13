@@ -320,7 +320,7 @@ typedef ALIGN struct {
 	uint8_t cl;						// class: 0- A, 1- RFU, 2- C
 } PACKED MAC_DEVICEMODE;			// 1 byte
 
-typedef union MAC_DATA
+union MAC_DATA
 {
 	MAC_EMPTY empty;
 	MAC_RESET reset;
@@ -472,11 +472,6 @@ typedef ALIGN struct {
 	uint8_t command;
 	MAC_PINGSLOTINFO data;
 } PACKED MAC_COMMAND_PINGSLOTINFO;
-
-typedef ALIGN struct {
-	uint8_t command;
-	MAC_PINGSLOTCHANNEL_REQ data;
-} PACKED MAC_COMMAND_PINGSLOTCHANNEL_REQ;
 
 typedef ALIGN struct {
 	uint8_t command;

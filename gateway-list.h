@@ -5,7 +5,10 @@
 #include <map>
 #include <inttypes.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
+#pragma clang diagnostic pop
 
 #include "gateway-stat.h"
 

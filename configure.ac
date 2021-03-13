@@ -23,6 +23,33 @@ case "${host_os}" in
 esac
 AM_CONDITIONAL([OS_MACH], [test "$build_mac" = "yes"])
 
+AC_ARG_ENABLE([usejson],
+[  --enable-lmdb    Turn on JSON file storage],
+[case "${enableval}" in
+  yes) usejson=true ;;
+  no)  usejson=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-json]) ;;
+esac],[usejson=true])
+AM_CONDITIONAL([USEJSON], [test x$usejson = xtrue])
+
+AC_ARG_ENABLE([uselmdb],
+[  --enable-lmdb    Turn on LMDB],
+[case "${enableval}" in
+  yes) uselmdb=true ;;
+  no)  uselmdb=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-lmdb]) ;;
+esac],[uselmdb=false])
+AM_CONDITIONAL([USELMDB], [test x$uselmdb = xtrue])
+
+AC_ARG_ENABLE([usemdbx],
+[  --enable-lmdb    Turn on MDBX],
+[case "${enableval}" in
+  yes) usemdbx=true ;;
+  no)  usemdbx=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-mdbx]) ;;
+esac],[usemdbx=false])
+AM_CONDITIONAL([USEMDBX], [test x$usemdbx = xtrue])
+
 # MacOS: install openssl into /usr/local/lib/opt/openssl@1.1
 # brew install openssl@1.1
 LDFLAGS="$LDFLAGS -L/usr/local/lib"
