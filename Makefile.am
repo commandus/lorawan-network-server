@@ -11,10 +11,22 @@ COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 BUILT_SOURCES = $(GEN)
 CLEANFILES = $(GEN)
 
-if OS_MACH
-LMDB=lmdb
-else
-LMDB=mdbx
+if USEJSON
+LIB_STORAGE=
+C_STORAGE=
+H_STORAGE=
+endif
+
+if USELMDB
+LIB_STORAGE=-l lmdb
+C_STORAGE=identity-service-lmdb.cpp db-identity.cpp
+H_STORAGE=
+endif
+
+if USEMDBX
+LIB_STORAGE=-l mdbx
+C_STORAGE=identity-service-lmdb.cpp db-identity.cpp
+H_STORAGE=
 endif
 
 #
@@ -52,11 +64,11 @@ lorawan_network_server_SOURCES = \
 	config-json.cpp identity-service-file-json.cpp lora-packet-handler-impl.cpp \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp \
-	db-identity.cpp identity-service-lmdb.cpp \
+	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
-lorawan_network_server_LDADD = $(commonlibs) -l$(LMDB) -lpthread
+lorawan_network_server_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
 lorawan_network_server_CPPFLAGS = $(commoncppflags)
 
 #
@@ -88,10 +100,10 @@ test_identity_file_json_CPPFLAGS = $(commoncppflags)
 
 test_identity_lmdb_SOURCES = \
 	tests/test-identity-lmdb.cpp \
-	identity-service-lmdb.cpp db-identity.cpp \
+	$(C_STORAGE) \
 	utillora.cpp utildate.cpp utilstring.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
-test_identity_lmdb_LDADD = -l$(LMDB)
+test_identity_lmdb_LDADD = $(LIB_STORAGE)
 test_identity_lmdb_CPPFLAGS = $(commoncppflags)
 
 test_udp_listen_SOURCES = \

@@ -3,8 +3,11 @@
 #include <iomanip>
 #include <cstring>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+#pragma clang diagnostic pop
 
 #include "platform.h"
 #include "utillora.h"
@@ -780,7 +783,8 @@ bool rfmHeader::parse(
 std::string rfmHeader::toString() const {
 	RFM_HEADER h;
 	*((uint32_t*) &h.devaddr) = ntoh4(*((uint32_t *) &header.devaddr));
-	*((uint16_t*) &h.fcnt) = ntoh2(*((uint16_t *) &header.fcnt));
+	h.fcnt = ntoh2(header.fcnt);
+
 	std::string r((const char *) &h, sizeof(RFM_HEADER));
 	return r;
 }
@@ -1179,7 +1183,8 @@ std::string semtechUDPPacket::getDeviceAddrStr() const
 }
 
 DEVADDRINT semtechUDPPacket::getDeviceAddr() const {
-	return *(DEVADDRINT *) &header.header.devaddr;
+	DEVADDRINT r = static_cast<DEVADDRINT>(header.header.devaddr);
+	return r;
 }
 
 void semtechUDPPacket::setDeviceAddr(
@@ -1210,7 +1215,7 @@ std::string semtechUDPPacket::getPayload() {
 	return payload;
 }
 
-int semtechUDPPacket::setPayload(
+void semtechUDPPacket::setPayload(
 	uint8_t port,
 	const std::string &value
 ) {
@@ -1219,7 +1224,7 @@ int semtechUDPPacket::setPayload(
 	payload = value;
 }
 
-int semtechUDPPacket::setPayload(
+void semtechUDPPacket::setPayload(
 	const std::string &value
 ) {
 	payload = value;
@@ -1249,17 +1254,17 @@ int semtechUDPPacket::parseData(
 	if (!header.parse(data)) {
 		return ERR_CODE_INVALID_RFM_HEADER;
 	}
-	if (loadCredentialsDevAddr()) {
-		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
-	}
 	char direction = 0;
 	int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
 	std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
 	// get identity
 	if (identityService) {
+		// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 		int rc = identityService->get(header.header.devaddr, devId);
 		if (rc == 0) {
 			decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
+		} else {
+			// return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 		}
 		setPayload(p); 
 	} else {
@@ -1267,11 +1272,6 @@ int semtechUDPPacket::parseData(
 		setPayload(p); 
 	}
 	return LORA_OK;
-}
-
-int semtechUDPPacket::loadCredentialsDevAddr() 
-{
-	const DEVADDR &devaddr = header.header.devaddr;
 }
 
 uint64_t deveui2int(

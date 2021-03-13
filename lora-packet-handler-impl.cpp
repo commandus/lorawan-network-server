@@ -52,6 +52,7 @@ int LoraPacketProcessor::put
 			onLog(LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 		}
 	}
+	return 0;
 }
 
 void LoraPacketProcessor::setIdentityService

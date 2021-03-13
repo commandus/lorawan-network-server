@@ -1,8 +1,11 @@
 #include "gateway-list.h"
 #include "errlist.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/writer.h"
 #include "rapidjson/prettywriter.h"
+#pragma clang diagnostic pop
 
 #include "utilstring.h"
 

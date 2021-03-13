@@ -225,6 +225,10 @@ int main(
 	listener.setHandler(&processor);
 	listener.setIdentityService(&identityService);
 
+	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
+			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;
+			exit(ERR_CODE_PARAM_NO_INTERFACE);
+	}
 	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv4.begin()); it != config->serverConfig.listenAddressIPv4.end(); it++) {
 		if (!listener.add(*it, MODE_FAMILY_HINT_IPV4)) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;

@@ -1,7 +1,10 @@
 #include "config-json.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
+#pragma clang diagnostic pop
 
 #include "errlist.h"
 

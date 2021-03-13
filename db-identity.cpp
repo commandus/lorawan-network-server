@@ -1,11 +1,9 @@
 #include <sstream>
-#include "db-identity.h"
-#include "iostream"
-#include "errlist.h"
+#include <iostream>
 #include <string.h>
 
-#include <sys/ipc.h> 
-#include <sys/msg.h> 
+#include "db-identity.h"
+#include "errlist.h"
 
 dbenv::dbenv(
 	const std::string &apath,

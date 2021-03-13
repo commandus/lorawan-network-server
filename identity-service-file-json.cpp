@@ -1,8 +1,11 @@
 #include <iostream>
 #include <fstream>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/reader.h"
 #include "rapidjson/filereadstream.h"
+#pragma clang diagnostic pop
  
 #include "identity-service-file-json.h"
 #include "utilstring.h"
@@ -52,7 +55,7 @@ static std::string getActivationName(
 	ACTIVATION value
 )
 {
-	if (value >= 2 || value < 0)
+	if (value >= OTAA)
 		value = ABP;
 	return ACTIVATION_NAMES[value];
 }
@@ -189,8 +192,9 @@ int JsonFileIdentityService::load()
 		return ERR_CODE_INVALID_JSON;
  	char readBuffer[4096];
 	rapidjson::FileReadStream istrm(fp, readBuffer, sizeof(readBuffer));
-    reader.Parse(istrm, handler);
+    rapidjson::ParseResult r = reader.Parse(istrm, handler);
 	fclose(fp);
+	return r.IsError() ? ERR_CODE_INVALID_JSON : 0;
 } 
 
 int JsonFileIdentityService::save()
@@ -212,7 +216,9 @@ int JsonFileIdentityService::save()
 		addSeparator = true;
 	}
 	os << "]";
+	int r = os.bad() ? ERR_CODE_OPEN_DEVICE : 0;
 	os.close();
+	return r;
 }
 
 int JsonFileIdentityService::get(
@@ -268,7 +274,7 @@ int JsonFileIdentityService::init(
 )
 {
 	filename = option;
-	load();
+	return load();
 }
 
 void JsonFileIdentityService::flush()

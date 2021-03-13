@@ -279,6 +279,7 @@ int UDPListener::listen() {
 			}
         }
     }
+	return 0;
 }
 
 int UDPListener::peerAddrIndex(
