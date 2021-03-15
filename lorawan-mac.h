@@ -36,6 +36,12 @@ enum MAC_CID {
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 };
 
+enum MAC_COMMAND_TYPE {
+	MCT_KNOWN = 0,
+	MCT_PROPRIETARY = 1,
+	MCT_INVALID = 2
+};
+
 // macPayloadInfo contains the info about a MAC payload
 typedef struct {
 	uint8_t size_uplink;	// sent by end-device
@@ -353,6 +359,34 @@ union MAC_DATA
 	MAC_DEVICEMODE devicemode;
 };	// 5 bytes
 
+enum MC_COMMAND {
+	MC_RESET 				= 1,
+	MC_LINKCHECK        	= 2,
+	MC_LINKADR          	= 3,
+	MC_DUTYCYCLE        	= 4,
+	MC_RXPARAMSETUP     	= 5,
+	MC_DEVSTATUS        	= 6,
+	MC_NEWCHANNEL       	= 7,
+	MC_RXTIMINGSETUP    	= 8,
+	MC_TXPARAMSETUP     	= 9,
+	MC_DLCHANNEL        	= 0xa,
+	MC_REKEY            	= 0xb,
+	MC_ADRPARAMSETUP    	= 0xc,
+	MC_DEVICETIME       	= 0xd,
+	MC_FORCEREJOIN      	= 0xe,
+	MC_REJOINPARAMSETUP 	= 0xf,
+
+	// class B
+	MC_PINGSLOTINFO    		= 0x10,
+	MC_PINGSLOTCHANNEL	 	= 0x11,
+	// 0x12 has been deprecated in 1.1
+	MC_BEACONFREQ	 		= 0x13,
+	
+	// class-C
+	MC_DEVICEMODE			= 0x20
+	// 0x80 to 0xff reserved for proprietary network command extensions
+};
+
 typedef ALIGN struct {
 	uint8_t command;
 	MAC_DATA data;
@@ -503,9 +537,61 @@ typedef ALIGN struct {
 	MAC_DEVICEMODE data;
 } PACKED MAC_COMMAND_DEVICEMODE;
 
+#define MAC_EMPTY_SIZE sizeof(MAC_COMMAND_EMPTY)
+#define MAC_RESET_SIZE sizeof(MAC_COMMAND_RESET)
+#define MAC_LINK_CHECK_SIZE sizeof(MAC_COMMAND_LINK_CHECK)
+#define MAC_LINK_ADR_REQ_SIZE sizeof(MAC_COMMAND_LINK_ADR_REQ)
+#define MAC_LINK_ADR_RESP_SIZE sizeof(MAC_COMMAND_LINK_ADR_RESP)
+#define MAC_DUTY_CYCLE_SIZE sizeof(MAC_COMMAND_DUTY_CYCLE)
+#define MAC_RXRARAMSETUP_REQ_SIZE sizeof(MAC_COMMAND_RXRARAMSETUP_REQ)
+#define MAC_RXRARAMSETUP_RESP_SIZE sizeof(MAC_COMMAND_RXRARAMSETUP_RESP)
+#define MAC_DEVSTATUS_SIZE sizeof(MAC_COMMAND_DEVSTATUS)
+#define MAC_NEWCHANNEL_REQ_SIZE sizeof(MAC_COMMAND_NEWCHANNEL_REQ)
+#define MAC_NEWCHANNEL_RESP_SIZE sizeof(MAC_COMMAND_NEWCHANNEL_RESP)
+#define MAC_TIMINGSETUP_SIZE sizeof(MAC_COMMAND_TIMINGSETUP)
+#define MAC_TXPARAMSETUP_SIZE sizeof(MAC_COMMAND_TXPARAMSETUP)
+#define MAC_DLCHANNEL_REQ_SIZE sizeof(MAC_COMMAND_DLCHANNEL_REQ)
+#define MAC_DLCHANNEL_RESP_SIZE sizeof(MAC_COMMAND_DLCHANNEL_RESP)
+#define MAC_REKEY_REQ_SIZE sizeof(MAC_COMMAND_REKEY_REQ)
+#define MAC_REKEY_RESP_SIZE sizeof(MAC_COMMAND_REKEY_RESP)
+#define MAC_ADRPARAMSETUP_SIZE sizeof(MAC_COMMAND_ADRPARAMSETUP)
+#define MAC_DEVICETIME_SIZE sizeof(MAC_COMMAND_DEVICETIME)
+#define MAC_FORCEREJOIN_SIZE sizeof(MAC_COMMAND_FORCEREJOIN)
+#define MAC_REJOINPARAMSETUP_REQ_SIZE sizeof(MAC_COMMAND_REJOINPARAMSETUP_REQ)
+#define MAC_REJOINPARAMSETUP_RESP_SIZE sizeof(MAC_COMMAND_REJOINPARAMSETUP_RESP)
+#define MAC_PINGSLOTINFO_SIZE sizeof(MAC_COMMAND_PINGSLOTINFO)
+#define MAC_PINGSLOTCHANNEL_REQ_SIZE sizeof(MAC_COMMAND_PINGSLOTCHANNEL_REQ)
+#define MAC_PINGSLOTCHANNEL_RESP_SIZE sizeof(MAC_COMMAND_PINGSLOTCHANNEL_RESP)
+#define MAC_BEACONTIMING_SIZE sizeof(MAC_COMMAND_BEACONTIMING)
+#define MAC_BEACONFREQUENCY_REQ_SIZE sizeof(MAC_COMMAND_BEACONFREQUENCY_REQ)
+#define MAC_BEACONFREQUENCY_RESP_SIZE sizeof(MAC_COMMAND_BEACONFREQUENCY_RESP)
+#define MAC_DEVICEMODE_SIZE sizeof(MAC_COMMAND_DEVICEMODE)
+
+/**
+ * @param cmd MAC command code
+ * @return 0- known, 1- proprietary network command extensions, 2- invalid
+ */
+MAC_COMMAND_TYPE isMACCommand(uint8_t cmd);
+
+int parseServerSide(
+	MAC_COMMAND &retval,
+	const std::string &value
+);
+
+int parseClientSide(
+	MAC_COMMAND &retval,
+	const std::string &value
+);
+
 class MacData {
 	public:
 		MAC_COMMAND command;
+		int errcode;
+
+		MacData();
+		MacData(MacData &macData);
+		MacData(MAC_COMMAND &command);
+		MacData(const std::string &command);
 
 		// 1) Reset
 		MAC_COMMAND_RESET *getResetReq();
