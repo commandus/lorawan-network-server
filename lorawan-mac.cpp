@@ -21,7 +21,7 @@ MAC_COMMAND_TYPE isMACCommand(uint8_t cmd)
 		if (sz < MAC_##cn##_SIZE) \
 			return ERR_CODE_MAC_TOO_SHORT; \
 		r = MAC_##cn##_SIZE; \
-		memmove(&retval, value.c_str(), MAC_##cn##_SIZE);
+		memmove(&retval, value, MAC_##cn##_SIZE);
 
 /**
  * Parse transmitted by the server
@@ -29,10 +29,10 @@ MAC_COMMAND_TYPE isMACCommand(uint8_t cmd)
  */
 int parseClientSide(
 	MAC_COMMAND &retval,
-	const std::string &value
+	const char* value,
+	size_t sz
 )
 {
-	size_t sz = value.size();
 	if (sz < 1)
 		return ERR_CODE_MAC_TOO_SHORT;
 	int r = 0;
@@ -112,10 +112,10 @@ int parseClientSide(
  */
 int parseServerSide(
 	MAC_COMMAND &retval,
-	const std::string &value
+	const char* value,
+	size_t sz
 )
 {
-	size_t sz = value.size();
 	if (sz < 1)
 		return ERR_CODE_MAC_TOO_SHORT;
 	int r = 0;
@@ -190,15 +190,15 @@ int parseServerSide(
 }
 
 MacData::MacData()
-	: errcode(0)
+	: errcode(0), isClientSide(false)
 {
 	memset(&command, 0, sizeof(MAC_COMMAND));
 }
 
 MacData::MacData(
-	MacData &value
+	const MacData &value
 )
-	: errcode(0)
+	: errcode(0), isClientSide(false)
 {
 	memmove(&command, &value.command, sizeof(MAC_COMMAND));
 }
@@ -206,17 +206,63 @@ MacData::MacData(
 MacData::MacData(
 	MAC_COMMAND &value
 ) 
+	: errcode(0), isClientSide(false)
 {
 	memmove(&command, &value, sizeof(MAC_COMMAND));
 }
 
 MacData::MacData(
-	const std::string &value
+	const std::string &value,
+	const bool clientSide
 )
+	: isClientSide(clientSide)
 {
-	int r = parseServerSide(command, value);
+	int r;
+	if (clientSide)
+		r = parseClientSide(command, value.c_str(), value.size());
+	else
+		r = parseServerSide(command, value.c_str(), value.size());
+
 	if (r < 0)
 		errcode = r;
 	else
 		errcode = 0;
+}
+
+MacDataList::MacDataList()
+	: isClientSide(false)
+{
+
+}
+
+MacDataList::MacDataList(
+	const MacDataList &value
+)
+	: isClientSide(false)
+{
+	list = value.list;
+}
+
+MacDataList::MacDataList(
+	const std::string &value,
+	const bool clientSide
+)
+	: isClientSide(clientSide)
+{
+	MacData data;
+	int r;
+
+	char *c = (char *) value.c_str();
+	size_t sz = value.size();
+	while(true) {
+		if (clientSide)
+			r = parseClientSide(data.command, c, sz);
+		else
+			r = parseServerSide(data.command, c, sz);
+		if (r < 0)
+			break;
+		list.push_back(data);
+		sz -= r;
+		c+= r;
+	}
 }

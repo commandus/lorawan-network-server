@@ -2,6 +2,7 @@
 #define LORAWAN_MAC_H 1
 
 #include <string>
+#include <vector>
 #include "platform.h"
 
 // MAC commands as specified by the LoRaWAN R1.0 specs section 5
@@ -575,23 +576,25 @@ MAC_COMMAND_TYPE isMACCommand(uint8_t cmd);
 
 int parseServerSide(
 	MAC_COMMAND &retval,
-	const std::string &value
+	const char* value,
+	size_t sz
 );
 
 int parseClientSide(
 	MAC_COMMAND &retval,
-	const std::string &value
+	const char* value,
+	size_t sz
 );
 
 class MacData {
 	public:
 		MAC_COMMAND command;
 		int errcode;
-
+		bool isClientSide;
 		MacData();
-		MacData(MacData &macData);
+		MacData(const MacData &macData);
 		MacData(MAC_COMMAND &command);
-		MacData(const std::string &command);
+		MacData(const std::string &command, const bool clientSide = false);
 
 		// 1) Reset
 		MAC_COMMAND_RESET *getResetReq();
@@ -711,6 +714,15 @@ class MacData {
 		void setDeviceModeReq(const MAC_COMMAND_DEVICEMODE &value);
 		MAC_COMMAND_DEVICEMODE *getDeviceModeResp();
 		void setDeviceModeResp(const MAC_COMMAND_DEVICEMODE &value);
+};
+
+class MacDataList {
+	public:
+		bool isClientSide;
+		std::vector<MacData> list;
+		MacDataList();
+		MacDataList(const MacDataList &macData);
+		MacDataList(const std::string &command, const bool clientSide = false);
 };
 
 #endif
