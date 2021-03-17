@@ -574,6 +574,8 @@ typedef ALIGN struct {
  */
 MAC_COMMAND_TYPE isMACCommand(uint8_t cmd);
 
+size_t commandSize(const MAC_COMMAND &value, bool clientSide);
+
 int parseServerSide(
 	MAC_COMMAND &retval,
 	const char* value,
@@ -714,6 +716,8 @@ class MacData {
 		void setDeviceModeReq(const MAC_COMMAND_DEVICEMODE &value);
 		MAC_COMMAND_DEVICEMODE *getDeviceModeResp();
 		void setDeviceModeResp(const MAC_COMMAND_DEVICEMODE &value);
+
+		size_t size() const;
 };
 
 class MacDataList {
@@ -723,6 +727,7 @@ class MacDataList {
 		MacDataList();
 		MacDataList(const MacDataList &macData);
 		MacDataList(const std::string &command, const bool clientSide = false);
+		size_t size();
 };
 
 #endif

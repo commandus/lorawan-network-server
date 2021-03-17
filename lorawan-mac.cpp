@@ -125,10 +125,7 @@ int parseServerSide(
 		break;
 	case LinkCheck:
 		COPY_MAC(EMPTY)
-		break;
-	case LinkADR:
-		COPY_MAC(LINK_ADR_RESP)
-		break;
+		break;	// same request and response
 	case DutyCycle:
 		COPY_MAC(DUTY_CYCLE)	// same request and response
 		break;
@@ -189,6 +186,8 @@ int parseServerSide(
 	return r;
 }
 
+// ---------------- MacData ----------------
+
 MacData::MacData()
 	: errcode(0), isClientSide(false)
 {
@@ -229,6 +228,119 @@ MacData::MacData(
 		errcode = 0;
 }
 
+size_t commandSize(
+	const MAC_COMMAND &value,
+	bool clientSide
+)
+{
+	if (clientSide)	{
+		switch (value.command) {
+		case Reset:	// req
+			return MAC_RESET_SIZE;
+		case LinkCheck:
+			return MAC_LINK_CHECK_SIZE;
+		case LinkADR:
+			return MAC_LINK_ADR_REQ_SIZE;
+		case DutyCycle:
+			return MAC_DUTY_CYCLE_SIZE;
+		case RXParamSetup:
+			return MAC_RXRARAMSETUP_REQ_SIZE;
+		case DevStatus:
+			return MAC_EMPTY_SIZE;
+		case NewChannel:
+			return MAC_NEWCHANNEL_REQ_SIZE;
+		case RXTimingSetup:
+			return MAC_TIMINGSETUP_SIZE;
+		case TXParamSetup:
+			return MAC_TXPARAMSETUP_SIZE;
+		case DLChannel:
+			return MAC_DLCHANNEL_REQ_SIZE;
+		case Rekey:
+			return MAC_REKEY_RESP_SIZE;
+		case ADRParamSetup:
+			return MAC_ADRPARAMSETUP_SIZE;
+		case DeviceTime:
+			return MAC_DEVICETIME_SIZE;
+		case ForceRejoin:
+			return MAC_FORCEREJOIN_SIZE;
+		case RejoinParamSetup:
+			return MAC_REJOINPARAMSETUP_REQ_SIZE;
+		// Class-B Section 14
+		case PingSlotInfo:
+			return MAC_EMPTY_SIZE;
+		case PingSlotChannel:
+			return MAC_PINGSLOTCHANNEL_REQ_SIZE;
+		// 0x12 has been deprecated in 1.1
+		case BeaconTiming:
+			return MAC_BEACONTIMING_SIZE;
+		case BeaconFreq:
+			return MAC_BEACONFREQUENCY_REQ_SIZE;
+		// Class-C
+		case DeviceMode:
+			return MAC_DEVICEMODE_SIZE;
+		default:
+			return 0;
+		}
+	} else {
+		switch (value.command) {
+			case Reset:	// req
+				return MAC_RESET_SIZE;
+			case LinkCheck:
+				return MAC_EMPTY_SIZE;
+			case LinkADR:
+				return MAC_LINK_ADR_RESP_SIZE;
+			case DutyCycle:
+				return MAC_DUTY_CYCLE_SIZE;
+			case RXParamSetup:
+				return MAC_RXRARAMSETUP_RESP_SIZE;
+			case DevStatus:
+				return MAC_DEVSTATUS_SIZE;
+			case NewChannel:
+				return MAC_NEWCHANNEL_RESP_SIZE;
+			case RXTimingSetup:
+				return MAC_EMPTY_SIZE;
+			case TXParamSetup:
+				return MAC_EMPTY_SIZE;
+			case DLChannel:
+				return MAC_DLCHANNEL_RESP_SIZE;
+			case Rekey:
+				return MAC_REKEY_REQ_SIZE;
+			case ADRParamSetup:
+				return MAC_EMPTY_SIZE;
+			case DeviceTime:
+				return MAC_EMPTY_SIZE;
+			case ForceRejoin:
+				return MAC_EMPTY_SIZE;
+			case RejoinParamSetup:
+				return MAC_REJOINPARAMSETUP_RESP_SIZE;
+			// Class-B Section 14
+			case PingSlotInfo:
+				return MAC_PINGSLOTINFO_SIZE;
+			case PingSlotChannel:
+				return MAC_PINGSLOTCHANNEL_RESP_SIZE;
+			// 0x12 has been deprecated in 1.1
+			case BeaconTiming:
+				return MAC_EMPTY_SIZE;
+			case BeaconFreq:
+				return MAC_BEACONFREQUENCY_RESP_SIZE;
+			// Class-C
+			case DeviceMode:
+				return MAC_DEVICEMODE_SIZE;
+			default:
+				return 0;
+			}
+	}
+}
+
+size_t MacData::size() const
+{
+	if (errcode)
+		return 0;
+	return commandSize(command, isClientSide);
+}
+
+// ---------------- MacDataList ----------------
+
 MacDataList::MacDataList()
 	: isClientSide(false)
 {
@@ -265,4 +377,13 @@ MacDataList::MacDataList(
 		sz -= r;
 		c+= r;
 	}
+}
+
+size_t MacDataList::size()
+{
+	size_t sz = 0;
+	for (std::vector<MacData>::const_iterator it(list.begin()); it != list.end(); it++) {
+		sz += it->size();
+	}
+	return sz;
 }
