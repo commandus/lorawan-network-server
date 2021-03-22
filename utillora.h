@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 
 #include "platform.h"
+#include "lora-radio.h"
 #include "system/crypto/aes.h"
 
 #pragma clang diagnostic push
@@ -68,7 +69,7 @@ typedef ALIGN struct {
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
-} PACKED SEMTECH_DATA_PREFIX;	// 12 bytes
+} PACKED SEMTECH_DATA_PREFIX;	// 12 bytesRADIO
 // After prefix "JSON object", starting with {, ending with }, see section 4
 
 /**
@@ -92,7 +93,7 @@ typedef ALIGN struct {
  * 10000000 80   Confirmed Data Up
  * 10100000 A0   Confirmed Data Down
  * 11000000 C0   Rejoin-request
- * 11100000 E0   Proprietary
+ * 11100000 E0   ProprietaryRADIO
 */
 typedef ALIGN struct {
 	// MAC heaader byte: message type, RFU, Major
@@ -116,11 +117,6 @@ typedef ALIGN struct {
 typedef ALIGN struct {
 	uint8_t fopts[15];
 } PACKED FOPTS;					// 0..15 bytes
-
-typedef enum {
-	LORA = 0,
-	FSK = 1
-} MODULATION;
 
 typedef enum {
 	ABP = 0,
@@ -181,9 +177,11 @@ public:
 	uint32_t freq;				// RX central frequency in Hz, not Mhz. MHz (unsigned float, Hz precision) 868.900000
 	int8_t stat;				// CRC status: 1 = OK, -1 = fail, 0 = no CRC
 	MODULATION modu;			// LORA, FSK
-	std::string datr;			// LoRa datarate identifier e.g. "SF7BW125"
+	BANDWIDTH bandwith;
+	SPREADING_FACTOR spreadingFactor;
+ 	CODING_RATE codingRate;
+
 	uint32_t bps;				// FSK bite per second
-	std::string codr;			// LoRa ECC coding rate identifier e.g. "4/6"
 	int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
 	float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
 	rfmMetaData();
@@ -201,6 +199,10 @@ public:
 		rapidjson::Value &value
 	);
 	std::string toJsonString(const std::string &data) const;
+	std::string datr() const;			// LoRa datarate identifier e.g. "SF7BW125"
+	void setDatr(const std::string &value);			// LoRa datarate identifier e.g. "SF7BW125"
+	std::string codr() const;			// LoRa ECC coding rate identifier e.g. "4/6"
+	void setCodr(const std::string &value);			// LoRa datarate identifier e.g. "SF7BW125"
 };
 
 class rfmHeader {
@@ -211,7 +213,7 @@ public:
 
 	rfmHeader();
 	rfmHeader(
-		const RFM_HEADER &header
+		const RFM_HEADER &headerRADIO
 	);
 	rfmHeader(
 		const DEVADDR &addr
@@ -306,7 +308,7 @@ std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
 
-// Debug only
+// Debug onlyRADIO
 
 void decryptPayload(
 	std::string &payload,

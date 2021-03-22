@@ -348,23 +348,220 @@ void DeviceId::set(
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 }
 
-const std::string DEF_DATA_RATE = "SF7BW125";
-const std::string DEF_ECCCODE_RATE = "4/6";
+// const std::string DEF_DATA_RATE = "SF7BW125";
+// const std::string DEF_ECCCODE_RATE = "4/6";
+#define DEF_BANDWIDTH BW_200KHZ
+#define DEF_SPREADING_FACTOR DRLORA_SF7
+#define DEF_CODING_RATE CRLORA_4_6
+
 #define DEF_RSSI	-35
 #define DEF_LSNR	5.1
 
 rfmMetaData::rfmMetaData() 
-	: chan(0), rfch(0), freq(868900000), stat(0), modu(LORA), datr(DEF_DATA_RATE),
-	bps(0), codr(DEF_ECCCODE_RATE), rssi(DEF_RSSI), lsnr(DEF_LSNR)
+	: chan(0), rfch(0), freq(868900000), stat(0), 
+	modu(LORA), bandwith(DEF_BANDWIDTH), spreadingFactor(DEF_SPREADING_FACTOR),
+ 	codingRate(DEF_CODING_RATE), bps(0), rssi(DEF_RSSI), lsnr(DEF_LSNR)
 {
 	time(&t);			// UTC time of pkt RX, us precision, ISO 8601 'compact' format
+}
+
+/*
+200:
+203:
+
+400:
+406:
+
+800:
+812:
+
+1600:
+1625:
+
+*/
+/**
+ * @return  LoRa datarate identifier e.g. "SF7BW125"
+ */
+std::string rfmMetaData::datr() const
+{
+	int bandwithValue;
+	switch (bandwith) {
+     = 0,    // 7.8
+    BW_10KHZ  = 1,   // 10.4
+    BW_15KHZ  = 2,   // 15.6
+    BW_20KHZ  = 3,   // 20.8
+    BW_31KHZ  = 4,   // 31.2
+    BW_41KHZ  = 5,   // 41.6
+    BW_62KHZ  = 6,   // 62.5
+    BW_125KHZ  = 7,   // 125
+
+
+		case BW_7KHZ:
+			bandwithValue = 7; // 7.8
+			break;
+		case BW_10KHZ:
+			bandwithValue = 10; // 10.4
+			break;
+		case BW_15KHZ:
+			bandwithValue = 15; // 15.6
+			break;
+		case BW_20KHZ:
+			bandwithValue = 20; // 20.8
+			break;
+		case BW_31KHZ:
+			bandwithValue = 31; // 31.2
+			break;
+		case BW_41KHZ:
+			bandwithValue = 41; // 41.6
+			break;
+		case BW_62KHZ:
+			bandwithValue = 62; // 62.5
+			break;
+		case BW_125KHZ:
+			bandwithValue = 125; // 125
+			break;
+
+		case BW_200KHZ:
+			bandwithValue = 203; // 200
+			break;
+		case BW_400KHZ:
+			bandwithValue = 406; // 400
+			break;
+		case BW_800KHZ:
+			bandwithValue = 812; // 800
+			break;
+		case BW_1600KHZ:
+			bandwithValue = 1625; // 1600
+			break;
+		default:
+			bandwithValue = 203;
+			break;
+	}
+	std::stringstream ss;
+	ss << "SF" << (int) spreadingFactor 
+		<< "BW"  << bandwithValue;
+	return ss.str();
+}
+
+/**
+ * @param value LoRa datarate identifier e.g. "SF7BW125"
+ */
+void rfmMetaData::setDatr(
+	const std::string &value
+) 
+{
+	size_t sz = value.size();
+	if (sz < 3)
+		return;
+	std::size_t p = value.find('B');
+	if (p == std::string::npos)
+		return;
+	std::string s = value.substr(2, p - 2);
+	spreadingFactor = static_cast<SPREADING_FACTOR>(atoi(s.c_str()));
+	s = value.substr(p + 2);
+	int bandwithValue = atoi(s.c_str());
+	switch (bandwithValue) {
+		case 200:
+		case 203:
+			bandwith = BW_200KHZ;
+			break;
+		case 400:
+		case 406:
+			bandwith = BW_400KHZ;
+			break;
+		case 800:
+		case 812:
+			bandwith = BW_800KHZ;
+			break;
+		case 1600:
+		case 1625:
+			bandwith = BW_1600KHZ
+			break;
+		default:
+			bandwith = BW_200KHZ;
+			break;
+	}
+}
+
+/**
+ * @return LoRa ECC coding rate identifier e.g. "4/6"
+ */
+std::string rfmMetaData::codr() const
+{
+	switch(codingRate) {
+		case CRLORA_4_5: // 1
+			return "4/5";
+		case CRLORA_4_6: // 2
+			return "2/3";
+		case CRLORA_4_7: // 3
+			return "4/7";
+		case CRLORA_4_8: // 4
+			return "1/2";
+		case CRLORA_LI_4_5: // 5
+			return "4/5LI";
+		case CRLORA_LI_4_6: // 6
+			return "4/6LI";
+		case CRLORA_LI_4_8: // 7
+			return "4/8LI";
+		default:
+			return "";
+	}
+}
+
+/**
+ * @param LoRa LoRa ECC coding rate identifier e.g. "4/6"
+ */
+void rfmMetaData::setCodr(
+	const std::string &value
+)
+{
+	size_t sz = value.size();
+	switch (sz) {
+		case 3:
+			switch(value[2]) {
+				case '5':
+					codingRate = CRLORA_4_5;
+					break;	
+				case '2':
+					codingRate = CRLORA_4_6;
+					break;	
+				case '7':
+					codingRate = CRLORA_4_7;
+					break;	
+				case '1':
+					codingRate = CRLORA_4_8;
+					break;	
+				default:
+					codingRate = DEF_CODING_RATE;
+			}
+			break;
+		case 5:
+			switch(value[2]) {
+				case '5':
+					codingRate = CRLORA_LI_4_5;
+					break;	
+				case '6':
+					codingRate = CRLORA_LI_4_6;
+					break;	
+				case '8':
+					codingRate = CRLORA_LI_4_8;
+					break;	
+				default:
+					codingRate = DEF_CODING_RATE;
+			}
+			break;
+		default:
+			codingRate = DEF_CODING_RATE;
+	}
 }
 
 rfmMetaData::rfmMetaData(
 	const rfmMetaData &value
 )
-	: t(value.t), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), modu(value.modu), datr(value.datr),
-		bps(value.bps), codr(value.codr), rssi(value.rssi), lsnr(value.lsnr)
+	: t(value.t), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), 
+	modu(value.modu), bandwith(value.bandwith),
+	spreadingFactor(value.spreadingFactor), codingRate(value.codingRate), 
+	bps(value.bps), rssi(value.rssi), lsnr(value.lsnr)
 {
 }
 
@@ -572,11 +769,13 @@ void rfmMetaData::toJSON(
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[8])), v8, allocator);
 
 	rapidjson::Value v9(rapidjson::kStringType);
-	v9.SetString(datr.c_str(), datr.length());
+	std::string dr = datr();
+	v9.SetString(dr.c_str(), dr.length());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[9])), v9, allocator);
 
 	rapidjson::Value v10(rapidjson::kStringType);
-	v10.SetString(codr.c_str(), codr.length());
+	std::string cr = codr();
+	v10.SetString(cr.c_str(), cr.length());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[10])), v10, allocator);
 
 	rapidjson::Value v11(rssi);
@@ -652,14 +851,14 @@ int rfmMetaData::parse(
 	if (value.HasMember(METADATA_NAMES[9])) {
 		rapidjson::Value &v = value[METADATA_NAMES[9]];
 		if (v.IsString()) {
-			datr = v.GetString();
+			setDatr(v.GetString());
 		}
 	}
 	
 	if (value.HasMember(METADATA_NAMES[10])) {
 		rapidjson::Value &v = value[METADATA_NAMES[10]];
 		if (v.IsString()) {
-			codr = v.GetString();
+			setCodr(v.GetString());
 		}
 	}
 
@@ -710,8 +909,8 @@ std::string rfmMetaData::toJsonString(
 		<< ",\"" << METADATA_NAMES[6] << "\":" << (int) rfch
 		<< ",\"" << METADATA_NAMES[7] << "\":" << (int) stat
 		<< ",\"" << METADATA_NAMES[8] << "\":\"" << modulation()
-		<< "\",\"" << METADATA_NAMES[9] << "\":\"" << datr
-		<< "\",\"" << METADATA_NAMES[10] << "\":\"" << codr
+		<< "\",\"" << METADATA_NAMES[9] << "\":\"" << datr()
+		<< "\",\"" << METADATA_NAMES[10] << "\":\"" << codr()
 		<< "\",\"" << METADATA_NAMES[11] << "\":" << rssi
 		<< ",\"" << METADATA_NAMES[12] << "\":" << lsnr
 		<< ",\"" << METADATA_NAMES[13] << "\":" << data.size()

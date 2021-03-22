@@ -46,7 +46,7 @@ rapid_headers = \
 	third_party/rapidjson/msinttypes/inttypes.h third_party/rapidjson/msinttypes/stdint.h
 
 nobase_dist_include_HEADERS = \
-	platform.h utilstring.h utildate.h strptime.h \
+	platform.h utilstring.h utildate.h strptime.h lora-radio.h \
 	utillora.h udp-socket.h udp-emitter.h udp-listener.h \
 	config-json.h identity-service-abstract.h identity-service-file-json.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
