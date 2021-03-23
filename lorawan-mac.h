@@ -730,4 +730,142 @@ class MacDataList {
 		size_t size();
 };
 
+/**
+ * Build server -> to end-device request
+ */
+// Reset end-device request
+class MacDataClientReset : public MacData {
+	public:
+		MacDataClientReset();
+};
+
+// Check link answer
+class MacDataClientLinkCheck : public MacData {
+	public:
+		/**
+		 * @brief Answer with default 1 gateway, 20dB margin
+		 */
+		MacDataClientLinkCheck();
+		MacDataClientLinkCheck(uint8_t linkMarginDb, uint8_t gatewaysReceivedRequestCount);
+};
+
+// Network Server requests an end-device to perform a rate adaptation
+class MacDataClientLinkADR : public MacData {
+	public:
+		// set some "default" data rate, channels. Do not use!
+		MacDataClientLinkADR();
+		MacDataClientLinkADR(
+			uint8_t txpower,
+			uint8_t datarate,
+			uint16_t chmask,
+			uint8_t nbtans,
+			uint8_t chmaskcntl
+		);
+};
+
+// Network coordinator limit the maximum aggregated transmit duty cycle of an end-device.
+class MacDataClientDutyCycle : public MacData {
+	public:
+		MacDataClientDutyCycle();
+		/**
+		 * @param value limit 0..15,  0- no duty cycle limitation except the one set by the regional regulation.
+		 */
+		MacDataClientDutyCycle(uint8_t value);
+};
+
+// Network server change frequency/data rate for the second receive window RX2
+class MacDataClientRXParamSetup : public MacData {
+	public:
+		MacDataClientRXParamSetup();
+		/**
+		 * @brief Network server change frequency/data rate for the second receive window RX2
+ 		 * @param frequency 100 * Hz
+ 		 * @param rx1droffset 0..7, default 7
+ 		 * @param rx2datatrate 0..15 means 1008 DR0/125kHz
+		 */
+		MacDataClientRXParamSetup(
+			uint32_t frequency,
+			uint8_t rx1droffset,
+			uint8_t rx2datatrate
+		);
+};
+
+class MacDataClientDevStatus : public MacData {
+	public:
+		MacDataClientDevStatus();
+};
+
+class MacDataClientNewChannel : public MacData {
+	public:
+		MacDataClientNewChannel();
+};
+
+class MacDataClientRXTimingSetup : public MacData {
+	public:
+		MacDataClientRXTimingSetup();
+};
+
+class MacDataTXParamSetup : public MacData {
+	public:
+		MacDataTXParamSetup();
+};
+
+class MacDataDLChannel : public MacData {
+	public:
+		MacDataDLChannel();
+};
+
+class MacDataRekey : public MacData {
+	public:
+		MacDataRekey();
+};
+
+class MacDataADRParamSetup : public MacData {
+	public:
+		MacDataADRParamSetup();
+};
+
+class MacDataDeviceTime : public MacData {
+	public:
+		MacDataDeviceTime();
+};
+
+class MacDataForceRejoin : public MacData {
+	public:
+		MacDataForceRejoin();
+};
+
+class MacDataRejoinParamSetup : public MacData {
+	public:
+		MacDataRejoinParamSetup();
+};
+
+// Class-B Section 14
+class MacDataPingSlotInfo : public MacData {
+	public:
+		MacDataPingSlotInfo();
+};
+
+class MacDataPingSlotChannel : public MacData {
+	public:
+		MacDataPingSlotChannel();
+};
+
+// 0x12 has been deprecated in 1.1
+class MacDataBeaconTiming : public MacData {
+	public:
+		MacDataBeaconTiming();
+};
+
+class MacDataBeaconFreq : public MacData {
+	public:
+		MacDataBeaconFreq();
+};
+
+// Class-C
+class MacDataDeviceMode : public MacData {
+	public:
+		MacDataDeviceMode();
+};
+
 #endif

@@ -386,16 +386,6 @@ std::string rfmMetaData::datr() const
 {
 	int bandwithValue;
 	switch (bandwith) {
-     = 0,    // 7.8
-    BW_10KHZ  = 1,   // 10.4
-    BW_15KHZ  = 2,   // 15.6
-    BW_20KHZ  = 3,   // 20.8
-    BW_31KHZ  = 4,   // 31.2
-    BW_41KHZ  = 5,   // 41.6
-    BW_62KHZ  = 6,   // 62.5
-    BW_125KHZ  = 7,   // 125
-
-
 		case BW_7KHZ:
 			bandwithValue = 7; // 7.8
 			break;
@@ -461,6 +451,30 @@ void rfmMetaData::setDatr(
 	s = value.substr(p + 2);
 	int bandwithValue = atoi(s.c_str());
 	switch (bandwithValue) {
+		case 7:
+			bandwith = BW_7KHZ; // 7.8
+			break;
+		case 10:
+			bandwith = BW_10KHZ; // 10.4
+			break;
+		case 15:
+			bandwith = BW_15KHZ; // 15.6
+			break;
+		case 20:
+			bandwith = BW_20KHZ; // 20.8
+			break;
+		case 31:
+			bandwith = BW_31KHZ; // 31.2
+			break;
+		case 41:
+			bandwith = BW_41KHZ; // 41.6
+			break;
+		case 62:
+			bandwith = BW_62KHZ; // 62.5
+			break;
+		case 125:
+			bandwith = BW_125KHZ; // 125
+			break;
 		case 200:
 		case 203:
 			bandwith = BW_200KHZ;
@@ -475,7 +489,7 @@ void rfmMetaData::setDatr(
 			break;
 		case 1600:
 		case 1625:
-			bandwith = BW_1600KHZ
+			bandwith = BW_1600KHZ;
 			break;
 		default:
 			bandwith = BW_200KHZ;

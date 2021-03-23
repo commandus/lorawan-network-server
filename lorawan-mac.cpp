@@ -3,6 +3,13 @@
 
 #include "errlist.h"
 
+#define DEF_FREQUENCY_100 868900
+
+#define SET_FREQUENCY(arr, value) \
+	arr[0] = value && 0xff; \
+	arr[1] = (value >> 8) && 0xff; \
+	arr[2] = (value >> 16) && 0xff;
+
 /**
  * @param cmd MAC command code
  * @return 0- known, 1- proprietary network command extensions, 2- invalid
@@ -386,4 +393,155 @@ size_t MacDataList::size()
 		sz += it->size();
 	}
 	return sz;
+}
+
+/**
+ * Build server -> to end-device request
+ */
+
+/**
+ * @brief Reset end-device request
+ */ 
+MacDataClientReset::MacDataClientReset()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_RESET *v = (MAC_COMMAND_RESET*) &command;
+	v->command = Reset;
+	v->data.rfu = 0;		// not used
+	v->data.minor = 1;		// LoRaWAN x.1
+}
+
+/**
+ * @brief Check link answer
+ */ 
+MacDataClientLinkCheck::MacDataClientLinkCheck()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_LINK_CHECK *v = (MAC_COMMAND_LINK_CHECK*) &command;
+	v->command = LinkCheck;
+	v->data.gwcnt = 1;		// at leat 1
+	v->data.margin = 20;		// dB 255 reserverd
+}
+
+/**
+ * @param linkMarginDb dB 0..154, 255 reserverd. number of gateways that successfully received the last LinkCheckReq
+ * @param gatewaysReceivedRequestCount  link margin in dB of the last successfully received LinkCheckReq command
+ */ 
+MacDataClientLinkCheck::MacDataClientLinkCheck(
+	uint8_t linkMarginDb,
+	uint8_t gatewaysReceivedRequestCount
+) {
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_LINK_CHECK *v = (MAC_COMMAND_LINK_CHECK*) &command;
+	v->command = LinkCheck;
+	v->data.gwcnt = gatewaysReceivedRequestCount;		// at leat 1
+	v->data.margin = linkMarginDb;		
+}
+
+/**
+ * @brief Network Server requests an end-device to perform a rate adaptation
+ */
+MacDataClientLinkADR::MacDataClientLinkADR()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_LINK_ADR_REQ *v = (MAC_COMMAND_LINK_ADR_REQ*) &command;
+	v->command = LinkADR;
+	v->data.txpower = 0xf;		// ignore, keep the current parameter value. 
+	v->data.datarate = 0;		// LoRa: SF12 / 125 kHz
+	v->data.chmask = 0xffff;	// all 16 channels
+	v->data.nbtans = 1;			// The default value is 1 corresponding to a single transmission of each frame. 
+	v->data.chmaskcntl = 0;		// 0- mask, 6- all channels ON
+	v->data.rfu = 0;
+}
+
+/**
+ * @brief Network Server requests an end-device to perform a rate adaptation
+ */
+MacDataClientLinkADR::MacDataClientLinkADR(
+	uint8_t txpower,
+	uint8_t datarate,
+	uint16_t chmask,
+	uint8_t nbtans,
+	uint8_t chmaskcntl
+) {
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_LINK_ADR_REQ *v = (MAC_COMMAND_LINK_ADR_REQ*) &command;
+	v->command = LinkADR;
+	v->data.txpower = 0xf;		// ignore, keep the current parameter value. 
+	v->data.datarate = 0;		// LoRa: SF12 / 125 kHz
+	v->data.chmask = 0xffff;	// all 16 channels
+	v->data.nbtans = 1;			// The default value is 1 corresponding to a single transmission of each frame. 
+	v->data.chmaskcntl = 0;		// 0- mask, 6- all channels ON
+	v->data.rfu = 0;
+}
+
+/**
+ * @brief Network coordinator limit the maximum aggregated transmit duty cycle of an end-device.
+ */
+MacDataClientDutyCycle::MacDataClientDutyCycle()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_DUTY_CYCLE *v = (MAC_COMMAND_DUTY_CYCLE*) &command;
+	v->command = DutyCycle;
+	v->data.maxdccycle = 0; // 0- no duty cycle limitation except the one set by the regional regulation.
+	v->data.rfu = 0;
+}
+
+/**
+ * @param value limit 0..15,  0- no duty cycle limitation except the one set by the regional regulation.
+ */
+MacDataClientDutyCycle::MacDataClientDutyCycle(
+	uint8_t value
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_DUTY_CYCLE *v = (MAC_COMMAND_DUTY_CYCLE*) &command;
+	v->command = DutyCycle;
+	v->data.maxdccycle = value & 0xf;
+	v->data.rfu = 0;
+}
+
+/**
+ * @brief Network server change frequency/data rate for the second receive window RX2
+ */
+MacDataClientRXParamSetup::MacDataClientRXParamSetup(
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_RXRARAMSETUP_REQ *v = (MAC_COMMAND_RXRARAMSETUP_REQ*) &command;
+	v->command = RXParamSetup;
+	SET_FREQUENCY(v->data.frequency, DEF_FREQUENCY_100) 
+	v->data.rx1droffset = 0;				// Default 0. offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first reception slot (RX1)
+	v->data.rx2datatrate = 0;				// 0 means 1008 DR0/125kHz
+	v->data.rfu = 0;						// not used
+}
+
+/**
+ * @brief Network server change frequency/data rate for the second receive window RX2
+ * @param frequency 100 * Hz
+ * @param rx1droffset 0..7, default 7
+ * @param rx2datatrate 0..15 means 1008 DR0/125kHz
+ */
+MacDataClientRXParamSetup::MacDataClientRXParamSetup(
+	uint32_t frequency,
+	uint8_t rx1droffset,
+	uint8_t rx2datatrate
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_RXRARAMSETUP_REQ *v = (MAC_COMMAND_RXRARAMSETUP_REQ*) &command;
+	v->command = RXParamSetup;
+	SET_FREQUENCY(v->data.frequency, frequency) 	// 24 bit uyint, 100*Hz;
+	v->data.rx1droffset = rx1droffset & 0x7;		// Default 0. offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first reception slot (RX1)
+	v->data.rx2datatrate = rx1droffset & 0xf;		// 0 means 1008 DR0/125kHz
+	v->data.rfu = 0;								// not used
 }
