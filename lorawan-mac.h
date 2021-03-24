@@ -848,32 +848,85 @@ class MacDataDLChannel : public MacData {
 		MacDataDLChannel();
 };
 
+/**
+ * @brief Confirm security key update OTA devices 1,1 version
+ */ 
 class MacDataRekey : public MacData {
 	public:
 		MacDataRekey();
 };
 
+/**
+ * After ADR_ACK_LIMIT uplinks without any downlink response, it sets the ADR
+ * acknowledgment request bit (ADRACKReq). 
+ * @brief change ADR_ACK_LIMIT, ADR_ACK_DELAY 
+ */ 
 class MacDataADRParamSetup : public MacData {
 	public:
+		/**
+		 * set ackLimit, ackDelay to 1(0)
+		 */ 
 		MacDataADRParamSetup();
+		/**
+		 * @param ackLimit 0..15 -> 1..32768 (ackLimit ^ 2)
+		 * @param ackDelay 0..15 -> 1..32768 (ackLimit ^ 2)
+		 */ 
+		MacDataADRParamSetup(
+			uint8_t ackLimit,
+			uint8_t ackDelay
+		);
 };
 
+/**
+ * @brief Network Server provides the network date/time to the end device
+ */
 class MacDataDeviceTime : public MacData {
 	public:
 		MacDataDeviceTime();
 };
 
+/**
+ * @brief network asks a device to immediately transmit a Rejoin-Request 
+ * with a programmable number of retries,periodicity and data rate
+ */ 
 class MacDataForceRejoin : public MacData {
 	public:
 		MacDataForceRejoin();
+		/**
+		 * @param period delay, s: 32s * 2^Period + Random(0..32)
+		 * @param maxretries 0- no retry, 1..7 
+		 * @param rejointype 0 or 1: A Rejoin-request type 0, 2: type 2
+		 * @param dr 0..15 data rate
+		 */
+		MacDataForceRejoin(
+			uint8_t period,
+			uint8_t maxretries,
+			uint8_t rejointype,
+			uint8_t dr
+		);
 };
 
+/**
+ * @brief network request end-device to periodically send a RejoinReq Type 0
+ */ 
 class MacDataRejoinParamSetup : public MacData {
 	public:
 		MacDataRejoinParamSetup();
+		/**
+		 * @param maxtime 0..15
+		 * @param maxcount 0..15
+		 */
+		MacDataRejoinParamSetup(
+			uint8_t maxtime,
+			uint8_t maxcount
+		);
 };
 
 // Class-B Section 14
+/**
+ * @brief Answer to end-device informs the server of its unicast ping slot periodicity
+ * No decription in spec. The command has no answer?
+ */ 
 class MacDataPingSlotInfo : public MacData {
 	public:
 		MacDataPingSlotInfo();
@@ -882,23 +935,54 @@ class MacDataPingSlotInfo : public MacData {
 class MacDataPingSlotChannel : public MacData {
 	public:
 		MacDataPingSlotChannel();
+		/**
+		 * @param frequency 100 * Hz
+		 * @param datarate 0..15
+		 */
+		MacDataPingSlotChannel(
+			uint32_t frequency,
+			uint8_t datarate
+		);
 };
 
 // 0x12 has been deprecated in 1.1
 class MacDataBeaconTiming : public MacData {
 	public:
 		MacDataBeaconTiming();
+		/**
+		 * @param frequency 100 * Hz
+		 * @param datarate 0..15
+		 */
+		MacDataBeaconTiming(
+			uint8_t channel,
+			uint16_t delay
+		);
 };
 
+/**
+ * @brief server modify the frequency on which end-device expects the beacon
+ */ 
 class MacDataBeaconFreq : public MacData {
 	public:
 		MacDataBeaconFreq();
+		MacDataBeaconFreq(
+			uint32_t frequency
+		);
 };
 
-// Class-C
+/**
+ * @brief server set end-device class A or C
+ */ 
 class MacDataDeviceMode : public MacData {
 	public:
+		/**
+		 * @brief set class A
+		 */ 
 		MacDataDeviceMode();
+		/**
+		 * @param classC true- C, false- A
+		 */ 
+		MacDataDeviceMode(bool classC);	
 };
 
 #endif

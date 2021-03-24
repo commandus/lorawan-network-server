@@ -1,5 +1,8 @@
 #include "lorawan-mac.h"
 #include <cstring>
+#include <sys/time.h>
+
+#include "utildate.h"
 
 #include "errlist.h"
 
@@ -629,16 +632,6 @@ MacDataClientRXTimingSetup::MacDataClientRXTimingSetup(
 	v->data.rfu = 0;
 }
 
-MacDataTXParamSetup::MacDataTXParamSetup() {
-	errcode = 0;
-	isClientSide = false;
-	MAC_COMMAND_TXPARAMSETUP *v = (MAC_COMMAND_TXPARAMSETUP*) &command;
-	v->command = TXParamSetup;
-	v->data.downlinkdwelltime = 0;
-	v->data.uplinkdwelltime = 0;
-	v->data.maxeirp = 0;
-	v->data.rfu = 0;
-}
 
 /**
  * @param downlinkDwellTime400ms true - 400ms, false- no limit
@@ -659,3 +652,257 @@ MacDataTXParamSetup::MacDataTXParamSetup(
 	v->data.maxeirp = maxEIRP & 0xf;
 	v->data.rfu = 0;
 }
+
+/**
+ * @brief Confirm security key update OTA devices
+ */ 
+MacDataRekey::MacDataRekey() {
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_REKEY_REQ *v = (MAC_COMMAND_REKEY_REQ*) &command;
+	v->command = Rekey;
+	v->data.minor = 1;
+	v->data.rfu = 0;
+}
+
+/**
+ * @brief Confirm security key update OTA devices
+ */ 
+MacDataADRParamSetup::MacDataADRParamSetup() {
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_ADRPARAMSETUP *v = (MAC_COMMAND_ADRPARAMSETUP*) &command;
+	v->command = ADRParamSetup;
+	v->data.delayexp = 0;
+	v->data.limitexp = 0;
+}
+
+/**
+ * @brief set ackLimit, ackDelay to 1(0)
+ */ 
+MacDataADRParamSetup::MacDataADRParamSetup(
+	uint8_t ackLimit,
+	uint8_t ackDelay
+) {
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_ADRPARAMSETUP *v = (MAC_COMMAND_ADRPARAMSETUP*) &command;
+	v->command = ADRParamSetup;
+	v->data.delayexp = ackLimit & 0xf;
+	v->data.limitexp = ackDelay & 0xf;
+}
+
+/**
+ * @brief set ackLimit, ackDelay to 1(0)
+ */ 
+MacDataDeviceTime::MacDataDeviceTime()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_DEVICETIME *v = (MAC_COMMAND_DEVICETIME*) &command;
+	v->command = DeviceTime;
+	
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	v->data.gpstime = utc2gps(t.tv_sec);
+	v->data.frac = t.tv_usec;
+}
+
+/**
+ * @brief network asks a device to immediately transmit a Rejoin-Request 
+ * with a programmable number of retries,periodicity and data rate
+ */
+MacDataForceRejoin::MacDataForceRejoin()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_FORCEREJOIN *v = (MAC_COMMAND_FORCEREJOIN*) &command;
+	v->command = ForceRejoin;
+	v->data.period = 0;
+	v->data.maxretries = 0;
+	v->data.rejointype = 0;
+	v->data.rfu = 0;
+	v->data.rfu2 = 0;
+}
+
+/**
+ * @brief network asks a device to immediately transmit a Rejoin-Request 
+ * with a programmable number of retries,periodicity and data rate
+ * @param period delay, s: 32s * 2^Period + Random(0..32)
+ * @param maxretries 0- no retry, 1..7 
+ * @param rejointype 0 or 1: A Rejoin-request type 0, 2: type 2
+ * @param dr 0..15 data rate
+ */
+MacDataForceRejoin::MacDataForceRejoin(
+	uint8_t period,
+	uint8_t maxretries,
+	uint8_t rejointype,
+	uint8_t dr
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_FORCEREJOIN *v = (MAC_COMMAND_FORCEREJOIN*) &command;
+	v->command = ForceRejoin;
+	v->data.period = period & 7;
+	v->data.maxretries = maxretries & 7;
+	v->data.rejointype = rejointype & 7;
+	v->data.dr = dr & 0xf;
+	v->data.rfu = 0;
+	v->data.rfu2 = 0;
+}
+
+/**
+ * @brief network request end-device to periodically send a RejoinReq Type 0
+ */ 
+MacDataRejoinParamSetup::MacDataRejoinParamSetup()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_REJOINPARAMSETUP_REQ *v = (MAC_COMMAND_REJOINPARAMSETUP_REQ*) &command;
+	v->command = ForceRejoin;
+	v->data.maxtime = 0;
+	v->data.maxccount = 0;
+}
+
+/**
+ * @brief network request end-device to periodically send a RejoinReq Type 0
+ * @param maxtime 0..15
+ * @param maxcount 0..15
+ */ 
+MacDataRejoinParamSetup::MacDataRejoinParamSetup(
+	uint8_t maxtime,
+	uint8_t maxcount
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_REJOINPARAMSETUP_REQ *v = (MAC_COMMAND_REJOINPARAMSETUP_REQ*) &command;
+	v->command = ForceRejoin;
+	v->data.maxtime = maxtime & 0xf;
+	v->data.maxccount = maxcount & 0xf;
+}
+
+// Class-B Section 14
+/**
+  * @brief Answer to  end-device informs the server of its unicast ping slot periodicity
+  * No decription in spec. The command has no answer?
+  */ 
+MacDataPingSlotInfo::MacDataPingSlotInfo()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_EMPTY *v = (MAC_COMMAND_EMPTY*) &command;
+	v->command = PingSlotInfo;
+}
+
+/**
+  * @brief Answer to  end-device informs the server of its unicast ping slot periodicity
+  * No decription in spec. The command has no answer?
+  */ 
+MacDataPingSlotChannel::MacDataPingSlotChannel()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_PINGSLOTCHANNEL_REQ *v = (MAC_COMMAND_PINGSLOTCHANNEL_REQ*) &command;
+	v->command = PingSlotChannel;
+	v->data.dr = 0;
+	SET_FREQUENCY(v->data.frequency, DEF_FREQUENCY_100)
+	v->data.rfu = 0;
+}
+
+/**
+ * @param frequency 100 * Hz
+ * @param datarate 0..15
+ */
+MacDataPingSlotChannel::MacDataPingSlotChannel(
+	uint32_t frequency,
+	uint8_t datarate
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_PINGSLOTCHANNEL_REQ *v = (MAC_COMMAND_PINGSLOTCHANNEL_REQ*) &command;
+	v->command = PingSlotChannel;
+	v->data.dr = datarate & 0xf;
+	SET_FREQUENCY(v->data.frequency, frequency)
+	v->data.rfu = 0;
+}
+
+/**
+  * @brief 0x12 has been deprecated in 1.1
+  */ 
+MacDataBeaconTiming::MacDataBeaconTiming()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_BEACONTIMING *v = (MAC_COMMAND_BEACONTIMING*) &command;
+	v->command = BeaconFreq;
+	v->data.channel = 0;
+	v->data.delay = 0;
+}
+
+/**
+  * @brief 0x12 has been deprecated in 1.1
+  */ 
+MacDataBeaconTiming::MacDataBeaconTiming(
+	uint8_t channel,
+	uint16_t delay
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_BEACONTIMING *v = (MAC_COMMAND_BEACONTIMING*) &command;
+	v->command = BeaconTiming;
+	v->data.channel = channel & 0xf;
+	v->data.delay = delay;
+}
+
+/**
+ * @brief server modify the frequency on which end-device expects the beacon
+ */ 
+MacDataBeaconFreq::MacDataBeaconFreq()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_BEACONFREQUENCY_REQ *v = (MAC_COMMAND_BEACONFREQUENCY_REQ*) &command;
+	v->command = BeaconFreq;
+	SET_FREQUENCY(v->data.frequency, DEF_FREQUENCY_100)
+}
+
+MacDataBeaconFreq::MacDataBeaconFreq(
+	uint32_t frequency
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_BEACONFREQUENCY_REQ *v = (MAC_COMMAND_BEACONFREQUENCY_REQ*) &command;
+	v->command = BeaconFreq;
+	SET_FREQUENCY(v->data.frequency, frequency)
+}
+
+/**
+ * @brief @brief server set end-device class A or C
+ */ 
+// Set class A
+MacDataDeviceMode::MacDataDeviceMode()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_DEVICEMODE *v = (MAC_COMMAND_DEVICEMODE*) &command;
+	v->command = DeviceMode;
+	v->data.cl = 0; // class: 0- A, 1- RFU, 2- C
+}
+
+MacDataDeviceMode::MacDataDeviceMode(
+	bool classC
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_DEVICEMODE *v = (MAC_COMMAND_DEVICEMODE*) &command;
+	v->command = DeviceMode;
+	v->data.cl = classC ? 2 : 0; // class: 0- A, 1- RFU, 2- C
+}
+
+
