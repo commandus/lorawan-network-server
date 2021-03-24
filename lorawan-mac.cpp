@@ -654,6 +654,38 @@ MacDataTXParamSetup::MacDataTXParamSetup(
 }
 
 /**
+ * @param downlinkDwellTime400ms true - 400ms, false- no limit
+ * @param uplinkDwellTime400ms true - 400ms, false- no limit
+ * @param maxEIRP 0..15 -> 8dBm 10 12 13 14 16 18 20 21 24 26 27 29 30 33 36dBm
+*/
+MacDataDLChannel::MacDataDLChannel()
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_DLCHANNEL_REQ *v = (MAC_COMMAND_DLCHANNEL_REQ*) &command;
+	v->command = DLChannel;
+	v->data.chindex = 0;
+	SET_FREQUENCY(v->data.freq, DEF_FREQUENCY_100)
+}
+
+/**
+ * @param chindex 0..15
+ * @param frequency 10 * Hz
+*/
+MacDataDLChannel::MacDataDLChannel(
+	uint8_t chindex,
+	uint32_t frequency
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_DLCHANNEL_REQ *v = (MAC_COMMAND_DLCHANNEL_REQ*) &command;
+	v->command = DLChannel;
+	v->data.chindex = chindex & 0xf;
+	SET_FREQUENCY(v->data.freq, frequency)
+}
+
+/**
  * @brief Confirm security key update OTA devices
  */ 
 MacDataRekey::MacDataRekey() {

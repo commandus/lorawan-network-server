@@ -843,9 +843,20 @@ class MacDataTXParamSetup : public MacData {
 		);
 };
 
+/**
+ * @brief network to associate a different downlink frequency to the RX1 slot
+ */ 
 class MacDataDLChannel : public MacData {
 	public:
 		MacDataDLChannel();
+		/**
+		 * @param chindex 0..15
+		 * @param frequency 10 * Hz
+		*/
+		MacDataDLChannel(
+			uint8_t chindex,
+			uint32_t frequency
+		);
 };
 
 /**
