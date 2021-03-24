@@ -545,3 +545,117 @@ MacDataClientRXParamSetup::MacDataClientRXParamSetup(
 	v->data.rx2datatrate = rx1droffset & 0xf;		// 0 means 1008 DR0/125kHz
 	v->data.rfu = 0;								// not used
 }
+
+/**
+ * @brief Network Server may request status information from an end-device: battery, temperature
+ */
+MacDataClientDevStatus::MacDataClientDevStatus(
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_EMPTY *v = (MAC_COMMAND_EMPTY*) &command;
+	v->command = DevStatus;
+}
+
+/**
+ * @brief Network Server may request status information from an end-device: battery, temperature
+ */
+MacDataClientNewChannel::MacDataClientNewChannel(
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_NEWCHANNEL_REQ *v = (MAC_COMMAND_NEWCHANNEL_REQ*) &command;
+	v->command = NewChannel;
+	v->data.chindex = 0;
+	SET_FREQUENCY(v->data.freq, DEF_FREQUENCY_100)
+	v->data.mindr = 0;
+	v->data.maxdr = 0;
+}
+
+/**
+ * @brief modify the parameters of an existing bidirectional channel or to create a new one
+ * The commands SHALL not be answered by the device
+ * @param channelIndex 0..15 channnel index 0..N N- see 
+ * @param frequency 10 * Hz
+ * @param mindr 0..15
+ * @param maxdr 0..15
+ */
+MacDataClientNewChannel::MacDataClientNewChannel(
+	uint8_t channelIndex,
+	uint32_t frequency,
+	uint8_t mindr,
+	uint8_t maxdr
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_NEWCHANNEL_REQ *v = (MAC_COMMAND_NEWCHANNEL_REQ*) &command;
+	v->command = NewChannel;
+	v->data.chindex = channelIndex & 0xf;
+	SET_FREQUENCY(v->data.freq, frequency)
+	v->data.mindr = mindr &0xf;
+	v->data.maxdr = maxdr &0xf;
+}
+
+/**
+ * @brief Configuring the delay between the end of the TX uplink and the opening of the first reception slot. The second reception slot opens one second after the first reception slot.
+ */
+MacDataClientRXTimingSetup::MacDataClientRXTimingSetup(
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_TIMINGSETUP *v = (MAC_COMMAND_TIMINGSETUP*) &command;
+	v->command = RXTimingSetup;
+	v->data.delay = 0;	// 1s
+	v->data.rfu = 0;
+}
+
+/**
+ * @brief Configuring the delay between the end of the TX uplink and the opening of the first reception slot. The second reception slot opens one second after the first reception slot.
+ * @param delay 0..15 seconds + 1
+ */
+MacDataClientRXTimingSetup::MacDataClientRXTimingSetup(
+	uint8_t secomdsPlus1
+)
+{
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_TIMINGSETUP *v = (MAC_COMMAND_TIMINGSETUP*) &command;
+	v->command = RXTimingSetup;
+	v->data.delay = secomdsPlus1;
+	v->data.rfu = 0;
+}
+
+MacDataTXParamSetup::MacDataTXParamSetup() {
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_TXPARAMSETUP *v = (MAC_COMMAND_TXPARAMSETUP*) &command;
+	v->command = TXParamSetup;
+	v->data.downlinkdwelltime = 0;
+	v->data.uplinkdwelltime = 0;
+	v->data.maxeirp = 0;
+	v->data.rfu = 0;
+}
+
+/**
+ * @param downlinkDwellTime400ms true - 400ms, false- no limit
+ * @param uplinkDwellTime400ms true - 400ms, false- no limit
+ * @param maxEIRP 0..15 -> 8dBm 10 12 13 14 16 18 20 21 24 26 27 29 30 33 36dBm
+*/
+MacDataTXParamSetup::MacDataTXParamSetup(
+	bool downlinkDwellTime,
+	bool uplinkDwellTime,
+	uint8_t maxEIRP
+) {
+	errcode = 0;
+	isClientSide = false;
+	MAC_COMMAND_TXPARAMSETUP *v = (MAC_COMMAND_TXPARAMSETUP*) &command;
+	v->command = TXParamSetup;
+	v->data.downlinkdwelltime = downlinkDwellTime ? 1 : 0;
+	v->data.uplinkdwelltime = uplinkDwellTime ? 1 : 0;
+	v->data.maxeirp = maxEIRP & 0xf;
+	v->data.rfu = 0;
+}

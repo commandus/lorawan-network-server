@@ -790,24 +790,57 @@ class MacDataClientRXParamSetup : public MacData {
 		);
 };
 
+/**
+ * @brief Network Server may request status information from an end-device: battery, temperature
+ */
 class MacDataClientDevStatus : public MacData {
 	public:
 		MacDataClientDevStatus();
 };
 
+/**
+ * @brief modify the parameters of an existing bidirectional channel or to create a new one
+ * The commands SHALL not be answered by the device
+ */
 class MacDataClientNewChannel : public MacData {
 	public:
 		MacDataClientNewChannel();
+		MacDataClientNewChannel(
+			uint8_t channelIndex,
+			uint32_t frequency,
+			uint8_t mindr,
+			uint8_t maxdr
+		);
 };
 
+/**
+ * @brief Configuring the delay between the end of the TX uplink and the opening of the first reception slot. The second reception slot opens one second after the first reception slot.
+ */
 class MacDataClientRXTimingSetup : public MacData {
 	public:
 		MacDataClientRXTimingSetup();
+		// @param delay 0..15 seconds + 1
+		MacDataClientRXTimingSetup(uint8_t secomdsPlus1);
 };
 
+/**
+ * @brief notify the end-device of the maximum allowed dwell time
+ * The maximum continuous transmission time of a packet over the air,
+ * as well as the maximum allowed end-device EIRP.
+ */ 
 class MacDataTXParamSetup : public MacData {
 	public:
 		MacDataTXParamSetup();
+		/**
+		 * @param downlinkDwellTime400ms true - 400ms, false- no limit
+		 * @param uplinkDwellTime400ms true - 400ms, false- no limit
+		 * @param maxEIRP 0..15 -> 8dBm 10 12 13 14 16 18 20 21 24 26 27 29 30 33 36dBm
+		*/
+		MacDataTXParamSetup(
+			bool downlinkDwellTime400ms,
+			bool uplinkDwellTime400ms,
+			uint8_t maxEIRP
+		);
 };
 
 class MacDataDLChannel : public MacData {
