@@ -780,7 +780,7 @@ class MacDataClientRXParamSetup : public MacData {
 		/**
 		 * @brief Network server change frequency/data rate for the second receive window RX2
  		 * @param frequency 100 * Hz
- 		 * @param rx1droffset 0..7, default 7
+ 		 * @param rx1droffset 0..7, default 0s
  		 * @param rx2datatrate 0..15 means 1008 DR0/125kHz
 		 */
 		MacDataClientRXParamSetup(

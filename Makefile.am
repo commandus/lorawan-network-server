@@ -32,7 +32,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server
+bin_PROGRAMS = lorawan-network-server mac-gw
 
 commonlibs =
 
@@ -52,6 +52,7 @@ nobase_dist_include_HEADERS = \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
 	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
+	macgw-config-json.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h
@@ -70,6 +71,20 @@ lorawan_network_server_SOURCES = \
 
 lorawan_network_server_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
 lorawan_network_server_CPPFLAGS = $(commoncppflags)
+
+mac_gw_SOURCES = \
+	mac-gw.cpp macgw-config-json.cpp errlist.cpp \
+	utillora.cpp udp-socket.cpp udp-emitter.cpp \
+	config-json.cpp identity-service-file-json.cpp \
+	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
+	lora-packet-handler-impl.cpp \
+	utilstring.cpp utildate.cpp strptime.cpp \
+	$(C_STORAGE) \
+	third_party/argtable3/argtable3.c \
+	third_party/base64/base64.cpp $(SRC_AES)
+
+mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
+mac_gw_CPPFLAGS = $(commoncppflags)
 
 #
 # Configs, readme, CMake etc.
@@ -120,7 +135,16 @@ test_packet_queue_SOURCES = \
 test_packet_queue_LDADD = -lpthread
 test_packet_queue_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-identity-file-json
-#test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue
+test_mac_gw_SOURCES = \
+	tests/test-mac-gw.cpp \
+	macgw-config-json.cpp \
+	lorawan-mac.cpp \
+	utilstring.cpp utildate.cpp \
+	third_party/base64/base64.cpp $(SRC_AES)
+test_mac_gw_LDADD =
+test_mac_gw_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-mac-gw
+#test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 
 TESTS = $(check_PROGRAMS)

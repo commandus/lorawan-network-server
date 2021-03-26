@@ -424,7 +424,7 @@ MacDataClientLinkCheck::MacDataClientLinkCheck()
 	isClientSide = false;
 	MAC_COMMAND_LINK_CHECK *v = (MAC_COMMAND_LINK_CHECK*) &command;
 	v->command = LinkCheck;
-	v->data.gwcnt = 1;		// at leat 1
+	v->data.gwcnt = 1;			// at leat 1
 	v->data.margin = 20;		// dB 255 reserverd
 }
 
