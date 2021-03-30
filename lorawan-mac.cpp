@@ -238,6 +238,174 @@ MacData::MacData(
 		errcode = 0;
 }
 
+bool MacData::set(
+	enum MAC_CID cid,
+	const std::vector <int> &values,
+	bool clientSide
+) {
+	command.command = cid;
+	if (clientSide)	{
+		switch (cid) {
+		case Reset:	// req
+		case LinkCheck:
+		case LinkADR:
+		case DutyCycle:
+		case RXParamSetup:
+		case DevStatus:
+		case NewChannel:
+		case RXTimingSetup:
+		case TXParamSetup:
+		case DLChannel:
+		case Rekey:
+		case ADRParamSetup:
+		case DeviceTime:
+		case ForceRejoin:
+		case RejoinParamSetup:
+		// Class-B Section 14
+		case PingSlotInfo:
+		case PingSlotChannel:
+		// 0x12 has been deprecated in 1.1
+		case BeaconTiming:
+		case BeaconFreq:
+		// Class-C
+		case DeviceMode:
+			break;
+		default:
+			break;
+		}
+	} else {
+		switch (cid) {
+			case Reset:	// req
+				command.data.reset.rfu = 0;			// not used
+				command.data.reset.minor = 1;		// LoRaWAN x.1
+				break;
+			case LinkCheck:
+				if (values.size() < 2)
+					break;
+				command.data.linkcheck.margin = values[0];
+				command.data.linkcheck.gwcnt = values[1];
+				break;
+			case LinkADR:
+				if (values.size() < 5)
+					break;
+				command.data.linkadrreq.txpower = values[0];
+				command.data.linkadrreq.datarate = values[1];
+				command.data.linkadrreq.chmask = values[2];
+				command.data.linkadrreq.nbtans = values[3];
+				command.data.linkadrreq.chmaskcntl = values[4];
+				command.data.linkadrreq.rfu = 0;
+				break;
+			case DutyCycle:
+				if (values.size() < 1)
+					break;
+				command.data.dutycycle.maxdccycle = values[0];
+				command.data.dutycycle.rfu = 0;
+				break;
+			case RXParamSetup:
+				if (values.size() < 3)
+					break;
+				SET_FREQUENCY(command.data.rxparamsetupreq.frequency, values[0]);
+				command.data.rxparamsetupreq.rx1droffset = values[1];
+				command.data.rxparamsetupreq.rx2datatrate = values[2];
+				command.data.rxparamsetupreq.rfu = 0;
+				break;
+			case DevStatus:
+				break;
+			case NewChannel:
+				if (values.size() < 4)
+					break;
+				command.data.newchacnnelreq.chindex = values[0];
+				SET_FREQUENCY(command.data.newchacnnelreq.frequency, values[1]);
+				command.data.newchacnnelreq.mindr = values[2];
+				command.data.newchacnnelreq.maxdr = values[2];
+				break;
+			case RXTimingSetup:
+				if (values.size() < 1)
+					break;
+				command.data.timingsetup.rfu = values[0];
+				command.data.timingsetup.rfu = 0;
+				break;
+			case TXParamSetup:
+				if (values.size() < 3)
+					break;
+				command.data.txparamsetup.downlinkdwelltime = values[0];
+				command.data.txparamsetup.uplinkdwelltime = values[1];
+				command.data.txparamsetup.maxeirp = values[2];
+				command.data.txparamsetup.rfu = 0;
+				break;
+			case DLChannel:
+				if (values.size() < 2)
+					break;
+				command.data.dlcchannelreq.chindex = values[0];
+				SET_FREQUENCY(command.data.dlcchannelreq.frequency, values[1]);
+				break;
+			case Rekey:
+				command.data.rekeyreq.minor = 1;		// LoRaWAN x.1
+				command.data.rekeyreq.rfu = 0;			// not used
+				break;
+			case ADRParamSetup:
+				if (values.size() < 2)
+					break;
+				command.data.adrparamsetup.limitexp = values[0];
+				command.data.adrparamsetup.limitexp = values[1];
+				break;
+			case DeviceTime:
+				{
+					struct timeval t;
+					gettimeofday(&t, NULL);
+					command.data.devicetime.gpstime = utc2gps(t.tv_sec);
+					command.data.devicetime.frac = t.tv_usec;
+				}
+				break;
+			case ForceRejoin:
+				if (values.size() < 3)
+					break;
+				command.data.forcerejoin.period = values[0];
+				command.data.forcerejoin.maxretries = values[1];
+				command.data.forcerejoin.rejointype = values[2];
+				command.data.forcerejoin.rfu = 0;
+				command.data.forcerejoin.rfu2 = 0;
+				break;
+			case RejoinParamSetup:
+				if (values.size() < 2)
+					break;
+				command.data.rejoinparamsetupreq.maxtime = values[0];
+				command.data.rejoinparamsetupreq.maxccount = values[1];
+				break;
+			// Class-B Section 14
+			case PingSlotInfo:
+				break;
+			case PingSlotChannel:
+				if (values.size() < 2)
+					break;
+				SET_FREQUENCY(command.data.pingslotchannelreq.frequency, values[0]);
+				command.data.pingslotchannelreq.dr = values[1];
+				command.data.pingslotchannelreq.rfu = 0;
+				break;
+			// 0x12 has been deprecated in 1.1
+			case BeaconTiming:
+				if (values.size() < 2)
+					break;
+				command.data.beacontiming.delay = values[0];
+				command.data.beacontiming.channel = values[1];
+				break;
+			case BeaconFreq:
+				if (values.size() < 1)
+					break;
+				SET_FREQUENCY(command.data.beaconfrequencyreq.frequency, values[0]);
+				break;
+			// Class-C
+			case DeviceMode:
+				if (values.size() < 1)
+					break;
+				command.data.devicemode.cl = values[0];
+				break;
+			default:
+				break;
+			}
+	}
+}
+
 size_t commandSize(
 	const MAC_COMMAND &value,
 	bool clientSide
@@ -424,7 +592,7 @@ MacDataClientLinkCheck::MacDataClientLinkCheck()
 	isClientSide = false;
 	MAC_COMMAND_LINK_CHECK *v = (MAC_COMMAND_LINK_CHECK*) &command;
 	v->command = LinkCheck;
-	v->data.gwcnt = 1;			// at leat 1
+	v->data.gwcnt = 1;			// at least 1
 	v->data.margin = 20;		// dB 255 reserverd
 }
 
@@ -572,7 +740,7 @@ MacDataClientNewChannel::MacDataClientNewChannel(
 	MAC_COMMAND_NEWCHANNEL_REQ *v = (MAC_COMMAND_NEWCHANNEL_REQ*) &command;
 	v->command = NewChannel;
 	v->data.chindex = 0;
-	SET_FREQUENCY(v->data.freq, DEF_FREQUENCY_100)
+	SET_FREQUENCY(v->data.frequency, DEF_FREQUENCY_100)
 	v->data.mindr = 0;
 	v->data.maxdr = 0;
 }
@@ -597,7 +765,7 @@ MacDataClientNewChannel::MacDataClientNewChannel(
 	MAC_COMMAND_NEWCHANNEL_REQ *v = (MAC_COMMAND_NEWCHANNEL_REQ*) &command;
 	v->command = NewChannel;
 	v->data.chindex = channelIndex & 0xf;
-	SET_FREQUENCY(v->data.freq, frequency)
+	SET_FREQUENCY(v->data.frequency, frequency)
 	v->data.mindr = mindr &0xf;
 	v->data.maxdr = maxdr &0xf;
 }
@@ -665,7 +833,7 @@ MacDataDLChannel::MacDataDLChannel()
 	MAC_COMMAND_DLCHANNEL_REQ *v = (MAC_COMMAND_DLCHANNEL_REQ*) &command;
 	v->command = DLChannel;
 	v->data.chindex = 0;
-	SET_FREQUENCY(v->data.freq, DEF_FREQUENCY_100)
+	SET_FREQUENCY(v->data.frequency, DEF_FREQUENCY_100)
 }
 
 /**
@@ -682,7 +850,7 @@ MacDataDLChannel::MacDataDLChannel(
 	MAC_COMMAND_DLCHANNEL_REQ *v = (MAC_COMMAND_DLCHANNEL_REQ*) &command;
 	v->command = DLChannel;
 	v->data.chindex = chindex & 0xf;
-	SET_FREQUENCY(v->data.freq, frequency)
+	SET_FREQUENCY(v->data.frequency, frequency)
 }
 
 /**

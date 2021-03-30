@@ -356,22 +356,72 @@ static int commandIndex(
 	return -1;
 }
 
+static int64_t paramValNum(
+	int64_t v,
+	int paramIndex,
+	const COMMAND_DESCRIPTION &cmd
+) {
+	const COMMAND_PARAM *p = cmd.param[paramIndex];
+	int choiceCount = p->count;
+	for (int c = 0; c < choiceCount; c++) {
+		const COMMAND_PARAM_CHOICE *choice = p->list[c];
+		if (v >= choice->minvalue && c <= choice->maxvalue) {
+			return v;
+		}
+	}
+	return  0;
+}
+
+static int64_t paramValAlias(
+	const std::string &v,
+	int paramIndex,
+	const COMMAND_DESCRIPTION &cmd
+) {
+	const COMMAND_PARAM *p = cmd.param[paramIndex];
+	int choiceCount = p->count;
+	for (int c = 0; c < choiceCount; c++) {
+		const COMMAND_PARAM_CHOICE *choice = p->list[c];
+		if (v == choice->name) {
+			return choice->minvalue;
+		}
+	}
+	return  0;
+}
+
 static int paramValue(
 	const std::string &value,
 	int paramIndex,
 	const COMMAND_DESCRIPTION &cmd
 )
 {
+	if (paramIndex >= cmd.paramcount)
+		return ERR_CODE_MAC_INVALID;
+	
 	uint64_t v = atoll(value.c_str());
 	if (v == 0) {
 		// check is a number
-
+		std::string cc(value + "1");
+		uint64_t c = atoll(cc.c_str());
+		if (c == 0) {
+			// NaN, return alias value if exists
+			return paramValAlias(value, paramIndex, cmd);
+		}
 	}
-	if (cmd.)
-	return v;
+	return paramValNum(v, paramIndex, cmd);
+}
+
+static void putMacCommand(
+	MacData &retval,
+	const COMMAND_DESCRIPTION &command,
+	const std::vector<int> &paramval
+)
+{
+	retval.set((enum MAC_CID) command.cmd, paramval, false);
 }
 
 /**
+ * @brief parse already tokenized cmd array (from the command line)
+ * @return 0- success, <0- error
  * states: 0- wait next command, 1- wait next parameters (if exists), 2- eof
  */ 
 int MacGwConfig::parse() {
@@ -391,20 +441,30 @@ int MacGwConfig::parse() {
 				cmdIdx = commandIndex(v);
 				if (cmdIdx < 0) {
 					state = 2;
+					break;
 				}
 				if (validCommands[cmdIdx].paramcount) {
 					state = 1;
 					paramval.clear();
+				} else {
+					// got all parameters, next command
+					MacData md;
+					putMacCommand(md, validCommands[cmdIdx], paramval);
+					macCommands.list.push_back(md);
 				}
 				break;
 			case 1:	// wait parameter
 				val = paramValue(v, paramval.size(), validCommands[cmdIdx]);
 				if (val < 0) {
 					state = 2;
+					break;
 				}
 				paramval.push_back(val);
 				if (paramval.size() >= validCommands[cmdIdx].paramcount) {
 					// got all parameters, next command
+					MacData md;
+					putMacCommand(md, validCommands[cmdIdx], paramval);
+					macCommands.list.push_back(md);
 					state = 0;
 				}
 				break;
@@ -412,6 +472,7 @@ int MacGwConfig::parse() {
 				break;
 		}
 	}
+	return 0;
 }
 
 std::string macCommandlist() {

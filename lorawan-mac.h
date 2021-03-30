@@ -167,7 +167,7 @@ typedef ALIGN struct {
 // @param mandr 0 -  0 DR0/125kHz
 typedef ALIGN struct {
 	uint8_t chindex;
-	uint8_t freq[3];
+	uint8_t frequency[3];
 	uint8_t mindr: 4;
 	uint8_t maxdr: 4;
 } PACKED MAC_NEWCHANNEL_REQ;		// 5 bytes
@@ -206,7 +206,7 @@ typedef ALIGN struct {
 // @param freq 24 bin integer frequncy in 100 * Hz
 typedef ALIGN struct {
 	uint8_t chindex;
-	uint8_t freq[3];
+	uint8_t frequency[3];
 } PACKED MAC_DLCHANNEL_REQ;			// 4 bytes
 
 // @param channelfrequencyack 1- ok
@@ -335,17 +335,17 @@ union MAC_DATA
  	MAC_LINK_ADR_REQ linkadrreq;
 	MAC_LINK_ADR_RESP linkadrresp;
 	MAC_DUTY_CYCLE dutycycle;
-	MAC_RXRARAMSETUP_REQ paramsetupreq;
-	MAC_RXRARAMSETUP_RESP paramsetupresp;
+	MAC_RXRARAMSETUP_REQ rxparamsetupreq;
+	MAC_RXRARAMSETUP_RESP rxparamsetupresp;
 	MAC_DEVSTATUS devstatus;
 	MAC_NEWCHANNEL_REQ newchacnnelreq;
 	MAC_NEWCHANNEL_RESP newchacnnelresp;
 	MAC_TIMINGSETUP timingsetup;
-	MAC_TXPARAMSETUP paramsetup;
+	MAC_TXPARAMSETUP txparamsetup;
 	MAC_DLCHANNEL_REQ dlcchannelreq;
 	MAC_DLCHANNEL_RESP dlcchannelresp;
-	MAC_REKEY_REQ macrekeyreq;
-	MAC_REKEY_RESP macrekeyresp;
+	MAC_REKEY_REQ rekeyreq;
+	MAC_REKEY_RESP rekeyresp;
 	MAC_ADRPARAMSETUP adrparamsetup;
 	MAC_DEVICETIME devicetime;
 	MAC_FORCEREJOIN forcerejoin;
@@ -598,6 +598,7 @@ class MacData {
 		MacData(MAC_COMMAND &command);
 		MacData(const std::string &command, const bool clientSide = false);
 
+		bool set(enum MAC_CID cid,  const std::vector <int> &values, bool clientSide);
 		// 1) Reset
 		MAC_COMMAND_RESET *getResetReq();
 		void setResetReq(const MAC_COMMAND_RESET &value);
