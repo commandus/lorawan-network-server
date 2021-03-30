@@ -37,7 +37,6 @@ static const COMMAND_PARAM_CHOICE CHOICE_GWCNT_1_255 = {
 	1, 255, ""
 };
 
-//
 static const COMMAND_PARAM_CHOICE CHOICE_TXPOWER = {
 	0, 7, ""
 };
@@ -76,16 +75,61 @@ static const COMMAND_PARAM_CHOICE CHOICE_CHANNEL_INDEX = {
 	0, 15, ""
 };
 
-
 static const COMMAND_PARAM_CHOICE CHOICE_RXTIMING = {
 	0, 15, " + 1s"
 };
 
-static const COMMAND_PARAM_CHOICE CHOICE_TXPARAMSETUP = {
-	0, 15, " + 1s"
+static const COMMAND_PARAM_CHOICE CHOICE_DWELLTIME_0 = {
+	0, 0, "no-limit"
 };
 
+static const COMMAND_PARAM_CHOICE CHOICE_DWELLTIME_1 = {
+	1, 1, "400"
+};
 
+static const COMMAND_PARAM_CHOICE CHOICE_MAXEIRP = {
+	0, 15, ""
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_1_32768 = {
+	0, 15, ""
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_1_7 = {
+	0, 7, ""
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_REJOIN_TYPE_0 = {
+	0, 0, "0"
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_REJOIN_TYPE_2 = {
+	2, 2, "2"
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_MAXTIME = {
+	0, 15, ""
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_MAXCOUNT = {
+	0, 15, ""
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_BEACON_DELAY = {
+	0, 65535, ""
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_BEACON_CHANNEL = {
+	0, 15, ""
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_DEVICEMODE_A = {
+	0, 0, "A"
+};
+
+static const COMMAND_PARAM_CHOICE CHOICE_DEVICEMODE_C = {
+	2, 2, "C"
+};
 
 // ------------------------- Param choice -------------------------
 
@@ -101,10 +145,16 @@ static const COMMAND_PARAM_CHOICE *CHOICES_FREQUENCY[] = { &CHOICE_FREQUENCY };
 static const COMMAND_PARAM_CHOICE *CHOICES_RX1_DR_OFFSET[] = { &CHOICE_RX1_DR_OFFSET };
 static const COMMAND_PARAM_CHOICE *CHOICES_CHANNEL_INDEX[] = { &CHOICE_CHANNEL_INDEX };
 static const COMMAND_PARAM_CHOICE *CHOICES_RXTIMING[] = { &CHOICE_RXTIMING };
-
-static const COMMAND_PARAM_CHOICE *CHOICES_DOWNLINK_DWELLTIME[] = { &CHOICE_DOWNLINK_DWELLTIME };
-static const COMMAND_PARAM_CHOICE *CHOICES_UPLINK_DWELLTIME[] = { &CHOICE_UPLINK_DWELLTIME };
-static const COMMAND_PARAM_CHOICE *CHOICES_MAXEIRP[] = { &CHOICES_MAXEIRP };
+static const COMMAND_PARAM_CHOICE *CHOICES_DWELLTIME[] = { &CHOICE_DWELLTIME_0, &CHOICE_DWELLTIME_1 };
+static const COMMAND_PARAM_CHOICE *CHOICES_MAXEIRP[] = { &CHOICE_MAXEIRP };
+static const COMMAND_PARAM_CHOICE *CHOICES_1_32768[] = { &CHOICE_1_32768 };
+static const COMMAND_PARAM_CHOICE *CHOICES_1_7[] = { &CHOICE_1_7 };
+static const COMMAND_PARAM_CHOICE *CHOICES_REJOIN_TYPES[] = { &CHOICE_REJOIN_TYPE_0, &CHOICE_REJOIN_TYPE_2 };
+static const COMMAND_PARAM_CHOICE *CHOICES_MAXTIME[] = { &CHOICE_MAXTIME };
+static const COMMAND_PARAM_CHOICE *CHOICES_MAXCOUNT[] = { &CHOICE_MAXCOUNT };
+static const COMMAND_PARAM_CHOICE *CHOICES_BEACON_DELAY[] = { &CHOICE_BEACON_DELAY };
+static const COMMAND_PARAM_CHOICE *CHOICES_BEACON_CHANNEL[] = { &CHOICE_BEACON_CHANNEL };
+static const COMMAND_PARAM_CHOICE *CHOICES_DEVICEMODE[] = { &CHOICE_DEVICEMODE_A, &CHOICE_DEVICEMODE_C };
 
 // ------------------------- Param -------------------------
 
@@ -176,12 +226,12 @@ static const COMMAND_PARAM PARAM_RXTIMING = {
 
 static const COMMAND_PARAM PARAM_DOWNLINK_DWELLTIME = {
 	"downlink dwell time",
-	1, CHOICES_DOWNLINK_DWELLTIME
+	2, CHOICES_DWELLTIME
 };
 
 static const COMMAND_PARAM &PARAM_UPLINK_DWELLTIME = {
 	"uplink dwell time",
-	1, CHOICES_UPLINK_DWELLTIME
+	2, CHOICES_DWELLTIME
 };
 
 static const COMMAND_PARAM PARAM_MAXEIRP = {
@@ -189,22 +239,73 @@ static const COMMAND_PARAM PARAM_MAXEIRP = {
 	1, CHOICES_MAXEIRP
 };
 
+static const COMMAND_PARAM PARAM_LIMIT_EXP = {
+	"ADR ACK limit",
+	1, CHOICES_1_32768
+};
+
+static const COMMAND_PARAM PARAM_DELAY_EXP = {
+	"ADR ACK delay",
+	1, CHOICES_1_32768
+};
+
+static const COMMAND_PARAM PARAM_REJOIN_PERIOD = {
+	"retransmission delay",
+	1, CHOICES_1_7
+};
+
+static const COMMAND_PARAM PARAM_REJOIN_RETRIES = {
+	"max retransmission",
+	1, CHOICES_1_7
+};
+
+static const COMMAND_PARAM PARAM_REJOIN_TYPE = {
+	"rejoin type ",
+	2, CHOICES_REJOIN_TYPES
+};
+
+static const COMMAND_PARAM PARAM_MAXTIME = {
+	"max time ",
+	1, CHOICES_MAXTIME
+};
+
+static const COMMAND_PARAM PARAM_MAXCOUNT = {
+	"max count ",
+	1, CHOICES_MAXCOUNT
+};
+
+static const COMMAND_PARAM PARAM_BEACON_DELAY = {
+	"beacon delay ",
+	1, CHOICES_BEACON_DELAY
+};
+
+static const COMMAND_PARAM PARAM_BEACON_CHANNEL = {
+	"beacon channel ",
+	1, CHOICES_BEACON_CHANNEL
+};
+
+static const COMMAND_PARAM PARAM_DEVICE_MODE = {
+	"device mode ",
+	2, CHOICES_DEVICEMODE
+};
+
 // ------------------------- Params -------------------------
 
 const COMMAND_PARAM *LINK_CHECK_PARAMS[] = { &PARAM_MARGIN, &PARAM_GWCNT };
-
-const COMMAND_PARAM *LINK_ADR_PARAMS[] = { &PARAM_TXPOWER, &PARAM_DATARATE,
-	&PARAM_CHMASK, &PARAM_NBTRANS, &PARAM_CHMASKCTL };
-
+const COMMAND_PARAM *LINK_ADR_PARAMS[] = { &PARAM_TXPOWER, &PARAM_DATARATE, &PARAM_CHMASK, &PARAM_NBTRANS, &PARAM_CHMASKCTL };
 const COMMAND_PARAM *DUTY_CYCLE_PARAMS[] = { &PARAM_DUTY_CYCLE_LIMIT };
-
 const COMMAND_PARAM *RXPARAMSETUP_PARAMS[] = { &PARAM_FREQUENCY, &PARAM_RX1_DR_OFFSET, &PARAM_DATARATE};
-
 const COMMAND_PARAM *NEWS_CHANNEL_PARAMS[] = { &PARAM_CHANNEL_INDEX, &PARAM_FREQUENCY, &PARAM_MIN_DR, &PARAM_MAX_DR };
-
 const COMMAND_PARAM *RXTIMING_PARAMS[] = { &PARAM_RXTIMING };
-
 const COMMAND_PARAM *TXPARAMSETUP_PARAMS[] = { &PARAM_DOWNLINK_DWELLTIME, &PARAM_UPLINK_DWELLTIME, &PARAM_MAXEIRP };
+const COMMAND_PARAM *DLCHANNEL_PARAMS[] = { &PARAM_CHANNEL_INDEX, &PARAM_FREQUENCY };
+const COMMAND_PARAM *ADRPARAMSETUP_PARAMS[] = { &PARAM_LIMIT_EXP, &PARAM_DELAY_EXP };
+const COMMAND_PARAM *FORCE_REJOIN_PARAMS[] = { &PARAM_REJOIN_PERIOD, &PARAM_REJOIN_RETRIES, &PARAM_REJOIN_TYPE, &PARAM_DATARATE };
+const COMMAND_PARAM *REJOIN_SETUP_PARAMS[] = { &PARAM_MAXTIME, &PARAM_MAXCOUNT };
+const COMMAND_PARAM *PINGSLOTCHANNEL_PARAMS[] = { &PARAM_FREQUENCY, &PARAM_DATARATE };
+const COMMAND_PARAM *BEACONTIMING_PARAMS[] = { &PARAM_BEACON_DELAY, &PARAM_BEACON_CHANNEL };
+const COMMAND_PARAM *BEACON_FREAUENCY_PARAMS[] = { &PARAM_FREQUENCY };
+const COMMAND_PARAM *DEVICE_MODE_PARAMS[] = { &PARAM_DEVICE_MODE };
 
 // ------------------------- Commands -------------------------
 
@@ -218,17 +319,17 @@ static COMMAND_DESCRIPTION validCommands[] = {
 	{ NewChannel, 4, "n", "newchannel", "Set channel frequency/ data rate", NEWS_CHANNEL_PARAMS },
 	{ RXTimingSetup, 1, "rx", "rxtiming", "Set delay between TX and RX1", RXTIMING_PARAMS },
 	{ TXParamSetup, 3, "tx", "dwelltime", "Set maximum allowed dwell time", TXPARAMSETUP_PARAMS },
-	{ DLChannel, 0, "dl", "dlchannel", "Set RX1 slot frequency" },
+	{ DLChannel, 2, "dl", "dlchannel", "Set RX1 slot frequency", DLCHANNEL_PARAMS },
 	{ Rekey, 0, "k", "rekey", "Answer security OTA key update" },
-	{ ADRParamSetup, 0, "al", "acklimit", "Set ADR_ACK_LIMIT, ADR_ACK_DELAY" },
+	{ ADRParamSetup, 2, "al", "acklimit", "Set ADR_ACK_LIMIT, ADR_ACK_DELAY", ADRPARAMSETUP_PARAMS },
 	{ DeviceTime, 0, "t", "devicetime", "Answer date/time" },
-	{ ForceRejoin, 0, "j", "forcerejoin", "Request immediately Rejoin-Request" },
-	{ RejoinParamSetup, 0, "js", "rejoinsetup", "Request periodically send Rejoin-Request" },
+	{ ForceRejoin, 3, "j", "forcerejoin", "Request immediately Rejoin-Request", FORCE_REJOIN_PARAMS },
+	{ RejoinParamSetup, 2, "js", "rejoinsetup", "Request periodically send Rejoin-Request", REJOIN_SETUP_PARAMS },
 	{ PingSlotInfo, 0, "p", "ping", "Answer to unicast ping slot" },
-	{ PingSlotChannel, 0, "pc", "pingchannel", "Set ping slot channel" },
-	{ BeaconTiming, 0, "bt", "beacontiming", "Deprecated" },
-	{ BeaconFreq, 0, "bf", "beaconfreq", "Set beacon frequency" },
-	{ DeviceMode, 0, "m", "mode", "Set Set device mode" }
+	{ PingSlotChannel, 2, "pc", "pingchannel", "Set ping slot channel", PINGSLOTCHANNEL_PARAMS },
+	{ BeaconTiming, 2, "bt", "beacontiming", "Deprecated", BEACONTIMING_PARAMS },
+	{ BeaconFreq, 1, "bf", "beaconfreq", "Set beacon frequency", BEACON_FREAUENCY_PARAMS },
+	{ DeviceMode, 1, "m", "mode", "Set device mode", DEVICE_MODE_PARAMS }
 };
 
 MacGwConfig::MacGwConfig() 
@@ -242,15 +343,73 @@ void MacGwConfig::clear() {
 	errcode = 0;
 }
 
+static int commandIndex(
+	const std::string &value
+)
+{
+	for (int i = 0; i < sizeof(validCommands) / sizeof(COMMAND_DESCRIPTION); i++) {
+		COMMAND_DESCRIPTION *c = &validCommands[i];
+		if ((value == c->shortname) || (value == c->fullname)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+static int paramValue(
+	const std::string &value,
+	int paramIndex,
+	const COMMAND_DESCRIPTION &cmd
+)
+{
+	uint64_t v = atoll(value.c_str());
+	if (v == 0) {
+		// check is a number
+
+	}
+	if (cmd.)
+	return v;
+}
+
+/**
+ * states: 0- wait next command, 1- wait next parameters (if exists), 2- eof
+ */ 
 int MacGwConfig::parse() {
 	clear();
 	int state = 0;
+	std::vector<int> paramval;
+
+	std::string v;
+	int cmdIdx;
+	int val;
 	for (std::vector<std::string>::const_iterator it(cmd.begin()); it != cmd.end(); it++) {
+		if (state == 2)
+			break;
+		v = *it;
 		switch (state) {
 			case 0:	// wait command mnemonic
-
+				cmdIdx = commandIndex(v);
+				if (cmdIdx < 0) {
+					state = 2;
+				}
+				if (validCommands[cmdIdx].paramcount) {
+					state = 1;
+					paramval.clear();
+				}
 				break;
-
+			case 1:	// wait parameter
+				val = paramValue(v, paramval.size(), validCommands[cmdIdx]);
+				if (val < 0) {
+					state = 2;
+				}
+				paramval.push_back(val);
+				if (paramval.size() >= validCommands[cmdIdx].paramcount) {
+					// got all parameters, next command
+					state = 0;
+				}
+				break;
+			default:
+				break;
 		}
 	}
 }

@@ -965,8 +965,8 @@ class MacDataBeaconTiming : public MacData {
 		 * @param datarate 0..15
 		 */
 		MacDataBeaconTiming(
-			uint8_t channel,
-			uint16_t delay
+			uint16_t delay,
+			uint8_t channel
 		);
 };
 

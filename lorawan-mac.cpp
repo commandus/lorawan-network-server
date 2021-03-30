@@ -878,8 +878,8 @@ MacDataBeaconTiming::MacDataBeaconTiming()
   * @brief 0x12 has been deprecated in 1.1
   */ 
 MacDataBeaconTiming::MacDataBeaconTiming(
-	uint8_t channel,
-	uint16_t delay
+	uint16_t delay,
+	uint8_t channel
 )
 {
 	errcode = 0;
