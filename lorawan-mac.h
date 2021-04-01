@@ -45,32 +45,32 @@ enum MAC_COMMAND_TYPE {
 
 // macPayloadInfo contains the info about a MAC payload
 typedef struct {
-	uint8_t size_uplink;	// sent by end-device
+	int8_t size_uplink;		// sent by end-device
 	int8_t size_downlink;	// sent by LoraWAN network server
 } MAC_PAYLOAD_SIZE;
 
 static const MAC_PAYLOAD_SIZE macPayloadRegistry[] {
-	{0, 0},	// CID	Request						Response
-	{1, 1},	// 1	MAC_RESET 					MAC_RESET
-	{0, 2},	// 2	MAC_EMPTY					MAC_LINK_CHECK
-	{4, 1},	// 3	MAC_LINK_ADR_REQ			MAC_LINK_ADR_RESP
-	{1, 1},	// 4	MAC_DUTY_CYCLE				MAC_DUTY_CYCLE
-	{4, 1},	// 5	MAC_RXRARAMSETUP_REQ		MAC_RXRARAMSETUP_RESP
-	{5, 2},	// 6	MAC_EMPTY					MAC_DEVSTATUS
-	{1, 1},	// 7	MAC_NEWCHANNEL_REQ			MAC_NEWCHANNEL_RESP
-	{1, 1},	// 8	MAC_TIMINGSETUP				MAC_EMPTY
-	{1, 1},	// 9	MAC_TXPARAMSETUP			MAC_EMPTY
-	{4, 1},	// a	MAC_DLCHANNEL_REQ			MAC_DLCHANNEL_RESP
+	{0, 0},	// CID	Sent by end-device			Sent by gateway
+	{1, 1},	// 1	MAC_RESET 					MAC_RESET (response)
+	{0, 2},	// 2	MAC_EMPTY					MAC_LINK_CHECK (response)
+	{1, 4},	// 3	MAC_LINK_ADR_RESP			MAC_LINK_ADR_REQ
+	{0, 1},	// 4	MAC_EMPTY (response)		MAC_DUTY_CYCLE
+	{1, 4},	// 5	MAC_RXRARAMSETUP_RESP		MAC_RXRARAMSETUP_REQ
+	{2, 0},	// 6	MAC_DEVSTATUS (response)	MAC_EMPTY
+	{1, 5},	// 7	MAC_NEWCHANNEL_RESP			MAC_NEWCHANNEL_REQ
+	{0, 1},	// 8	MAC_EMPTY (response)		MAC_TIMINGSETUP
+	{0, 1},	// 9	MAC_EMPTY (response)		MAC_TXPARAMSETUP
+	{1, 4},	// a	MAC_DLCHANNEL_RESP			MAC_DLCHANNEL_REQ
 	{1, 1},	// b	MAC_REKEY_REQ				MAC_REKEY_RESP
-	{1, 0},	// c	MAC_ADRPARAMSETUP			MAC_EMPTY
-	{0, 3},	// d	MAC_EMPTY					MAC_DEVICETIME
-	{2, -1},// e	MAC_FORCEREJOIN				The command has no answer
-	{2, 1},	// f	MAC_REJOINPARAMSETUP_REQ	MAC_REJOINPARAMSETUP_RESP
-	{1, 1},	// 10	MAC_PINGSLOTINFO			MAC_EMPTY? No decription in spec. The command has no answer?
-	{4, 1}, // 11	MAC_PINGSLOTCHANNEL_REQ		MAC_PINGSLOTCHANNEL_RESP
-	{1, 1},	// 12	MAC_EMPTY					MAC_BEACONTIMING
-	{1, 1}	// 13	MAC_BEACONFREQUENCY_REQ		MAC_BEACONFREQUENCY_RESP
-			// 20	MAC_DEVICEMODE				MAC_DEVICEMODE
+	{0, 1},	// c	MAC_EMPTY (response)		MAC_ADRPARAMSETUP		
+	{0, 3},	// d	MAC_EMPTY					MAC_DEVICETIME (response)
+	{-1, 2},// e	The command has no answer	MAC_FORCEREJOIN
+	{1, 1},	// f	MAC_REJOINPARAMSETUP_RESP	MAC_REJOINPARAMSETUP_REQ
+	{1, 0},	// 10	MAC_PINGSLOTINFO			MAC_EMPTY No decription in spec. The command has no answer?
+	{4, 1}, // 11	MAC_PINGSLOTCHANNEL_RESP	MAC_PINGSLOTCHANNEL_REQ
+	{0, 3},	// 12	MAC_EMPTY					MAC_BEACONTIMING (response)
+	{1, 4}	// 13	MAC_BEACONFREQUENCY_RESP	MAC_BEACONFREQUENCY_REQ
+			// 20	MAC_DEVICEMODE				MAC_DEVICEMODE (response)
 };
 
 // 1) Reset ABP-activated device
@@ -599,6 +599,9 @@ class MacData {
 		MacData(const std::string &command, const bool clientSide = false);
 
 		bool set(enum MAC_CID cid,  const std::vector <int> &values, bool clientSide);
+		std::string toString() const;	///< for debug only 
+		std::string toHexString() const;	///< for debug only 
+
 		// 1) Reset
 		MAC_COMMAND_RESET *getResetReq();
 		void setResetReq(const MAC_COMMAND_RESET &value);
@@ -729,6 +732,7 @@ class MacDataList {
 		MacDataList(const MacDataList &macData);
 		MacDataList(const std::string &command, const bool clientSide = false);
 		size_t size();
+		std::string toHexString() const;
 };
 
 /**
