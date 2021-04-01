@@ -309,12 +309,10 @@ const COMMAND_PARAM *DEVICE_MODE_PARAMS[] = { &PARAM_DEVICE_MODE };
 
 // ------------------------- Commands -------------------------
 
-static COMMAND_DESCRIPTION validCommands[] = {
-	{ Reset , 0, "r", "reset", "Reset end-device request", {}},	
-	{ LinkCheck, 2, "l", "linkcheck", "Check link answer", LINK_CHECK_PARAMS },	 
+static COMMAND_DESCRIPTION gatewayCommands[] = {
 	{ LinkADR, 5, "a", "linkadr", "Rate adaptation", LINK_ADR_PARAMS },
 	{ DutyCycle, 1, "d", "dutycycle", "Limit transmit duty cycle", DUTY_CYCLE_PARAMS },
-	{ RXParamSetup ,3,  "rx", "rxparamsetup", "Change frequency/data RX2", RXPARAMSETUP_PARAMS },
+	{ RXParamSetup, 3,  "rx", "rxparamsetup", "Change frequency/data RX2", RXPARAMSETUP_PARAMS },
 	{ DevStatus, 0, "s", "devstatus", "Request device battery, temperature" },
 	{ NewChannel, 4, "n", "newchannel", "Set channel frequency/ data rate", NEWS_CHANNEL_PARAMS },
 	{ RXTimingSetup, 1, "rx", "rxtiming", "Set delay between TX and RX1", RXTIMING_PARAMS },
@@ -322,13 +320,18 @@ static COMMAND_DESCRIPTION validCommands[] = {
 	{ DLChannel, 2, "dl", "dlchannel", "Set RX1 slot frequency", DLCHANNEL_PARAMS },
 	{ Rekey, 0, "k", "rekey", "Answer security OTA key update" },
 	{ ADRParamSetup, 2, "al", "acklimit", "Set ADR_ACK_LIMIT, ADR_ACK_DELAY", ADRPARAMSETUP_PARAMS },
-	{ DeviceTime, 0, "t", "devicetime", "Answer date/time" },
 	{ ForceRejoin, 3, "j", "forcerejoin", "Request immediately Rejoin-Request", FORCE_REJOIN_PARAMS },
 	{ RejoinParamSetup, 2, "js", "rejoinsetup", "Request periodically send Rejoin-Request", REJOIN_SETUP_PARAMS },
 	{ PingSlotInfo, 0, "p", "ping", "Answer to unicast ping slot" },
 	{ PingSlotChannel, 2, "pc", "pingchannel", "Set ping slot channel", PINGSLOTCHANNEL_PARAMS },
-	{ BeaconTiming, 2, "bt", "beacontiming", "Deprecated", BEACONTIMING_PARAMS },
 	{ BeaconFreq, 1, "bf", "beaconfreq", "Set beacon frequency", BEACON_FREAUENCY_PARAMS },
+};
+
+static COMMAND_DESCRIPTION enDeviceCommands[] = {
+	{ Reset , 0, "r", "reset", "Reset end-device request", {}},	
+	{ LinkCheck, 2, "l", "linkcheck", "Check link answer", LINK_CHECK_PARAMS },	 
+	{ DeviceTime, 0, "t", "devicetime", "Answer date/time" },
+	{ BeaconTiming, 2, "bt", "beacontiming", "Deprecated", BEACONTIMING_PARAMS },
 	{ DeviceMode, 1, "m", "mode", "Set device mode", DEVICE_MODE_PARAMS }
 };
 
@@ -347,8 +350,8 @@ static int commandIndex(
 	const std::string &value
 )
 {
-	for (int i = 0; i < sizeof(validCommands) / sizeof(COMMAND_DESCRIPTION); i++) {
-		COMMAND_DESCRIPTION *c = &validCommands[i];
+	for (int i = 0; i < sizeof(gatewayCommands) / sizeof(COMMAND_DESCRIPTION); i++) {
+		COMMAND_DESCRIPTION *c = &gatewayCommands[i];
 		if ((value == c->shortname) || (value == c->fullname)) {
 			return i;
 		}
@@ -413,10 +416,11 @@ static int paramValue(
 static void putMacCommand(
 	MacData &retval,
 	const COMMAND_DESCRIPTION &command,
-	const std::vector<int> &paramval
+	const std::vector<int> &paramval,
+	bool sentByServerSide
 )
 {
-	retval.set((enum MAC_CID) command.cmd, paramval, false);
+	retval.set((enum MAC_CID) command.cmd, paramval, sentByServerSide);
 }
 
 /**
@@ -424,7 +428,9 @@ static void putMacCommand(
  * @return 0- success, <0- error
  * states: 0- wait next command, 1- wait next parameters (if exists), 2- eof
  */ 
-int MacGwConfig::parse() {
+int MacGwConfig::parse(
+	bool sentByServerSide
+) {
 	clear();
 	int state = 0;
 	std::vector<int> paramval;
@@ -440,45 +446,57 @@ int MacGwConfig::parse() {
 			case 0:	// wait command mnemonic
 				cmdIdx = commandIndex(v);
 				if (cmdIdx < 0) {
-					state = 2;
-					break;
+					errcode = ERR_CODE_MAC_INVALID;
+					errmessage = std::string(ERR_MAC_INVALID) + " '" + v + "'";
+					return ERR_CODE_MAC_INVALID;
 				}
-				if (validCommands[cmdIdx].paramcount) {
+				paramval.clear();
+				if (gatewayCommands[cmdIdx].paramcount) {
 					state = 1;
-					paramval.clear();
 				} else {
 					// got all parameters, next command
 					MacData md;
-					putMacCommand(md, validCommands[cmdIdx], paramval);
+					putMacCommand(md, gatewayCommands[cmdIdx], paramval, sentByServerSide);
 					macCommands.list.push_back(md);
 				}
 				break;
 			case 1:	// wait parameter
-				val = paramValue(v, paramval.size(), validCommands[cmdIdx]);
+				val = paramValue(v, paramval.size(), gatewayCommands[cmdIdx]);
 				if (val < 0) {
-					state = 2;
-					break;
+					errcode = ERR_CODE_PARAM_INVALID;
+					errmessage = std::string(ERR_PARAM_INVALID) + " '" + v + "' of " 
+						+ std::string(gatewayCommands[cmdIdx].fullname);
+					return ERR_CODE_PARAM_INVALID;
 				}
 				paramval.push_back(val);
-				if (paramval.size() >= validCommands[cmdIdx].paramcount) {
+				if (paramval.size() >= gatewayCommands[cmdIdx].paramcount) {
 					// got all parameters, next command
 					MacData md;
-					putMacCommand(md, validCommands[cmdIdx], paramval);
+					putMacCommand(md, gatewayCommands[cmdIdx], paramval, sentByServerSide);
 					macCommands.list.push_back(md);
 					state = 0;
+					paramval.clear();
 				}
 				break;
 			default:
 				break;
 		}
 	}
-	return 0;
+	errcode = paramval.size() ? ERR_CODE_INSUFFICIENT_PARAMS : 0;
+	if (errcode) {
+		std::stringstream ss;
+		ss << ERR_INSUFFICIENT_PARAMS << " for '" 
+			<< gatewayCommands[cmdIdx].fullname << "'. Expected "
+			<< (int) gatewayCommands[cmdIdx].paramcount << ", got " << paramval.size();
+		errmessage = ss.str();
+	}
+	return errcode;
 }
 
 std::string macCommandlist() {
 	std::stringstream ss;
-	for (int i = 0; i < sizeof(validCommands) / sizeof(COMMAND_DESCRIPTION); i++) {
-		COMMAND_DESCRIPTION *c = &validCommands[i];
+	for (int i = 0; i < sizeof(gatewayCommands) / sizeof(COMMAND_DESCRIPTION); i++) {
+		COMMAND_DESCRIPTION *c = &gatewayCommands[i];
 		ss << std::left << std::setw(2) << c->shortname << " "
 			<< std::setw(13) << c->fullname
 			<< c->descpription << std::endl;

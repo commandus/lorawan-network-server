@@ -176,7 +176,7 @@ static void run()
 {
 	if (!macGwConfig)
 		return;
-	macGwConfig->parse();
+	macGwConfig->parse(true);
 	if (macGwConfig->errcode) {
 		std::cerr << "Error " << macGwConfig->errcode << ": " 
 			<< macGwConfig->errmessage << std::endl;

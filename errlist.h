@@ -54,6 +54,8 @@
 #define ERR_CODE_MAC_TOO_SHORT				-540
 #define ERR_CODE_MAC_INVALID				-541
 #define ERR_CODE_MAC_UNKNOWN_EXTENSION		-542
+#define ERR_CODE_PARAM_INVALID				-543
+#define ERR_CODE_INSUFFICIENT_PARAMS		-544
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -105,6 +107,8 @@
 #define ERR_MAC_TOO_SHORT				"MAC is too short"
 #define ERR_MAC_INVALID					"Invalid MAC command"
 #define ERR_MAC_UNKNOWN_EXTENSION		"Unknown MAC command extension"
+#define ERR_PARAM_INVALID				"Invalid paramater"
+#define ERR_INSUFFICIENT_PARAMS			"Insufficient parameters"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "

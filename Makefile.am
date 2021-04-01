@@ -137,8 +137,7 @@ test_packet_queue_CPPFLAGS = $(commoncppflags)
 
 test_mac_gw_SOURCES = \
 	tests/test-mac-gw.cpp \
-	macgw-config-json.cpp \
-	lorawan-mac.cpp \
+	macgw-config-json.cpp lorawan-mac.cpp errlist.cpp \
 	utilstring.cpp utildate.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_mac_gw_LDADD =

@@ -3,6 +3,7 @@
 #include <sys/time.h>
 
 #include "utildate.h"
+#include "utilstring.h"
 
 #include "errlist.h"
 
@@ -34,7 +35,7 @@ MAC_COMMAND_TYPE isMACCommand(uint8_t cmd)
 		memmove(&retval, value, MAC_##cn##_SIZE);
 
 /**
- * Parse transmitted by the server
+ * Parse transmitted by the server client side
  * @return size of first MAC command, if error, return <0
  */
 int parseClientSide(
@@ -51,7 +52,7 @@ int parseClientSide(
 		COPY_MAC(RESET)	// same request and response
 		break;
 	case LinkCheck:
-		COPY_MAC(LINK_CHECK)	// empty request
+		COPY_MAC(LINK_CHECK)
 		break;
 	case LinkADR:
 		COPY_MAC(LINK_ADR_REQ)
@@ -117,7 +118,7 @@ int parseClientSide(
 }
 
 /**
- * Parse transmitted by client (end-device)
+ * Parse MAC command transmitted by end-device (server side)
  * @return size of first MAC command, if error, return <0
  */
 int parseServerSide(
@@ -135,9 +136,12 @@ int parseServerSide(
 		break;
 	case LinkCheck:
 		COPY_MAC(EMPTY)
-		break;	// same request and response
+		break;
+	case LinkADR:
+		COPY_MAC(LINK_ADR_RESP)
+		break;
 	case DutyCycle:
-		COPY_MAC(DUTY_CYCLE)	// same request and response
+		COPY_MAC(EMPTY)
 		break;
 	case RXParamSetup:
 		COPY_MAC(RXRARAMSETUP_RESP)
@@ -207,7 +211,7 @@ MacData::MacData()
 MacData::MacData(
 	const MacData &value
 )
-	: errcode(0), isClientSide(false)
+	: errcode(value.errcode), isClientSide(value.isClientSide)
 {
 	memmove(&command, &value.command, sizeof(MAC_COMMAND));
 }
@@ -222,12 +226,12 @@ MacData::MacData(
 
 MacData::MacData(
 	const std::string &value,
-	const bool clientSide
+	const bool sentByGateway
 )
-	: isClientSide(clientSide)
+	: isClientSide(sentByGateway)
 {
 	int r;
-	if (clientSide)
+	if (isClientSide)
 		r = parseClientSide(command, value.c_str(), value.size());
 	else
 		r = parseServerSide(command, value.c_str(), value.size());
@@ -244,36 +248,10 @@ bool MacData::set(
 	bool clientSide
 ) {
 	command.command = cid;
+	isClientSide = clientSide;
+
 	if (clientSide)	{
-		switch (cid) {
-		case Reset:	// req
-		case LinkCheck:
-		case LinkADR:
-		case DutyCycle:
-		case RXParamSetup:
-		case DevStatus:
-		case NewChannel:
-		case RXTimingSetup:
-		case TXParamSetup:
-		case DLChannel:
-		case Rekey:
-		case ADRParamSetup:
-		case DeviceTime:
-		case ForceRejoin:
-		case RejoinParamSetup:
-		// Class-B Section 14
-		case PingSlotInfo:
-		case PingSlotChannel:
-		// 0x12 has been deprecated in 1.1
-		case BeaconTiming:
-		case BeaconFreq:
-		// Class-C
-		case DeviceMode:
-			break;
-		default:
-			break;
-		}
-	} else {
+		// end device side (sent by gateway)
 		switch (cid) {
 			case Reset:	// req
 				command.data.reset.rfu = 0;			// not used
@@ -317,7 +295,7 @@ bool MacData::set(
 				command.data.newchacnnelreq.chindex = values[0];
 				SET_FREQUENCY(command.data.newchacnnelreq.frequency, values[1]);
 				command.data.newchacnnelreq.mindr = values[2];
-				command.data.newchacnnelreq.maxdr = values[2];
+				command.data.newchacnnelreq.maxdr = values[3];
 				break;
 			case RXTimingSetup:
 				if (values.size() < 1)
@@ -402,8 +380,119 @@ bool MacData::set(
 				break;
 			default:
 				break;
+		}
+	} else {
+		// server-side (sent by end-device)
+		switch (cid) {
+			case Reset:	// req
+				command.data.reset.rfu = 0;			// not used
+				command.data.reset.minor = 1;		// LoRaWAN x.1
+				break;
+			case LinkCheck:
+				break;
+			case LinkADR:
+				if (values.size() < 3)
+					break;
+				command.data.linkadrresp.powerack = values[0];
+				command.data.linkadrresp.datarateack = values[1];
+				command.data.linkadrresp.channelmaskack = values[2];
+				command.data.linkadrresp.rfu = 0;
+				break;
+			case DutyCycle:
+				break;
+			case RXParamSetup:
+				if (values.size() < 3)
+					break;
+				command.data.rxparamsetupresp.rx1droffsetack = values[0];
+				command.data.rxparamsetupresp.rx2datatrateack = values[1];
+				command.data.rxparamsetupresp.channelack = values[2];
+				command.data.rxparamsetupresp.rfu = 0;
+				break;
+			case DevStatus:
+				if (values.size() < 2)
+					break;
+				command.data.devstatus.battery = values[0];
+				command.data.devstatus.margin = values[1];
+				break;
+			case NewChannel:
+				if (values.size() < 2)
+					break;
+				command.data.newchacnnelresp.channelfrequencyack = values[0];
+				command.data.newchacnnelresp.datarateack = values[1];
+				command.data.newchacnnelresp.rfu = 0;
+				break;
+			case RXTimingSetup:
+				break;
+			case TXParamSetup:
+				break;
+			case DLChannel:
+				if (values.size() < 2)
+					break;
+				command.data.dlcchannelresp.channelfrequencyack = values[0];
+				command.data.dlcchannelresp.uplinkfrequencyexistsack = values[1];
+				command.data.dlcchannelresp.rfu = 0;
+				break;
+			case Rekey:
+				command.data.rekeyreq.minor = 1;		// LoRaWAN x.1
+				command.data.rekeyreq.rfu = 0;			// not used
+				break;
+			case ADRParamSetup:
+				break;
+			case DeviceTime:
+				break;
+			case ForceRejoin:
+				break;
+			case RejoinParamSetup:
+				if (values.size() < 1)
+					break;
+				command.data.rejoinparamsetupresp.timeack = values[0];
+				command.data.rejoinparamsetupresp.rfu = 0;
+				break;
+			// Class-B Section 14
+			case PingSlotInfo:
+				if (values.size() < 1)
+					break;
+				command.data.pinginfoslot.periodicity = values[0];
+				command.data.pinginfoslot.rfu = 0;
+				break;
+			case PingSlotChannel:
+				if (values.size() < 2)
+					break;
+				command.data.pingslotchannelresp.drack = values[0];
+				command.data.pingslotchannelresp.frequencyack = values[1];
+				command.data.pingslotchannelresp.fru = 0;
+				break;
+			// 0x12 has been deprecated in 1.1
+			case BeaconTiming:
+				break;
+			case BeaconFreq:
+				if (values.size() < 1)
+					break;
+				command.data.beaconfrequencyresp.frequencyack = values[0];
+				command.data.beaconfrequencyresp.rfu = 0;
+				break;
+			// Class-C
+			case DeviceMode:
+				if (values.size() < 1)
+					break;
+				command.data.devicemode.cl = values[0];
+				break;
+			default:
+				break;
 			}
 	}
+	return true;
+}
+
+std::string MacData::toString() const
+{
+	return std::string((const char *) &this->command, size());
+}
+
+std::string MacData::toHexString() const
+{
+	std::string r((const char *) &this->command, size());
+	return hexString(r);
 }
 
 size_t commandSize(
@@ -412,6 +501,7 @@ size_t commandSize(
 )
 {
 	if (clientSide)	{
+		// sent by gateway
 		switch (value.command) {
 		case Reset:	// req
 			return MAC_RESET_SIZE;
@@ -456,10 +546,12 @@ size_t commandSize(
 		// Class-C
 		case DeviceMode:
 			return MAC_DEVICEMODE_SIZE;
+
 		default:
 			return 0;
 		}
 	} else {
+		// server-side (sent by end-device)
 		switch (value.command) {
 			case Reset:	// req
 				return MAC_RESET_SIZE;
@@ -468,7 +560,7 @@ size_t commandSize(
 			case LinkADR:
 				return MAC_LINK_ADR_RESP_SIZE;
 			case DutyCycle:
-				return MAC_DUTY_CYCLE_SIZE;
+				return MAC_EMPTY_SIZE;
 			case RXParamSetup:
 				return MAC_RXRARAMSETUP_RESP_SIZE;
 			case DevStatus:
@@ -482,7 +574,7 @@ size_t commandSize(
 			case DLChannel:
 				return MAC_DLCHANNEL_RESP_SIZE;
 			case Rekey:
-				return MAC_REKEY_REQ_SIZE;
+				return MAC_REKEY_REQ_SIZE;			
 			case ADRParamSetup:
 				return MAC_EMPTY_SIZE;
 			case DeviceTime:
@@ -566,6 +658,15 @@ size_t MacDataList::size()
 	return sz;
 }
 
+std::string MacDataList::toHexString() const
+{
+	std::stringstream ss;
+	for (std::vector<MacData>::const_iterator it(list.begin()); it != list.end(); it++) {
+		ss << it->toHexString();
+	}
+	return ss. str();
+}
+
 /**
  * Build server -> to end-device request
  */
@@ -593,7 +694,7 @@ MacDataClientLinkCheck::MacDataClientLinkCheck()
 	MAC_COMMAND_LINK_CHECK *v = (MAC_COMMAND_LINK_CHECK*) &command;
 	v->command = LinkCheck;
 	v->data.gwcnt = 1;			// at least 1
-	v->data.margin = 20;		// dB 255 reserverd
+	v->data.margin = 20;		// dB 255 reserved
 }
 
 /**
@@ -682,8 +783,7 @@ MacDataClientDutyCycle::MacDataClientDutyCycle(
 /**
  * @brief Network server change frequency/data rate for the second receive window RX2
  */
-MacDataClientRXParamSetup::MacDataClientRXParamSetup(
-)
+MacDataClientRXParamSetup::MacDataClientRXParamSetup()
 {
 	errcode = 0;
 	isClientSide = false;
