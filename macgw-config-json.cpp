@@ -64,7 +64,7 @@ static const COMMAND_PARAM_CHOICE CHOICE_DUTY_CYCLE_LIMIT = {
 };
 
 static const COMMAND_PARAM_CHOICE CHOICE_FREQUENCY = {
-	7999999, 9999999, " * 100Hz"
+	0, 9999999, " * 100Hz"
 };
 
 static const COMMAND_PARAM_CHOICE CHOICE_RX1_DR_OFFSET = {
@@ -368,7 +368,7 @@ static int64_t paramValNum(
 	int choiceCount = p->count;
 	for (int c = 0; c < choiceCount; c++) {
 		const COMMAND_PARAM_CHOICE *choice = p->list[c];
-		if (v >= choice->minvalue && c <= choice->maxvalue) {
+		if ((v >= choice->minvalue) && (c <= choice->maxvalue)) {
 			return v;
 		}
 	}
@@ -391,7 +391,7 @@ static int64_t paramValAlias(
 	return  0;
 }
 
-static int paramValue(
+static int64_t paramValue(
 	const std::string &value,
 	int paramIndex,
 	const COMMAND_DESCRIPTION &cmd
@@ -400,11 +400,11 @@ static int paramValue(
 	if (paramIndex >= cmd.paramcount)
 		return ERR_CODE_MAC_INVALID;
 	
-	uint64_t v = atoll(value.c_str());
+	int64_t v = strtoll(value.c_str(), NULL, 0);
 	if (v == 0) {
 		// check is a number
 		std::string cc(value + "1");
-		uint64_t c = atoll(cc.c_str());
+		int64_t c = strtoll(cc.c_str(), NULL, 0);
 		if (c == 0) {
 			// NaN, return alias value if exists
 			return paramValAlias(value, paramIndex, cmd);
@@ -437,7 +437,7 @@ int MacGwConfig::parse(
 
 	std::string v;
 	int cmdIdx;
-	int val;
+	int64_t val;
 	for (std::vector<std::string>::const_iterator it(cmd.begin()); it != cmd.end(); it++) {
 		if (state == 2)
 			break;

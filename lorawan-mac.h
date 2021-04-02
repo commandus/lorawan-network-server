@@ -298,7 +298,7 @@ typedef ALIGN struct {
 typedef ALIGN struct {
 	uint8_t frequencyack: 1;		// channel frequency ok
 	uint8_t drack: 1;				// data rate ok
-	uint8_t fru: 6;					// not used
+	uint8_t rfu: 6;					// not used
 } PACKED MAC_PINGSLOTCHANNEL_RESP;	// 1 byte
 
 // 12) Deprecated.
@@ -601,6 +601,7 @@ class MacData {
 		bool set(enum MAC_CID cid,  const std::vector <int> &values, bool clientSide);
 		std::string toString() const;	///< for debug only 
 		std::string toHexString() const;	///< for debug only 
+		std::string toJSONString() const;
 
 		// 1) Reset
 		MAC_COMMAND_RESET *getResetReq();
@@ -733,6 +734,7 @@ class MacDataList {
 		MacDataList(const std::string &command, const bool clientSide = false);
 		size_t size();
 		std::string toHexString() const;
+		std::string toJSONString() const;
 };
 
 /**

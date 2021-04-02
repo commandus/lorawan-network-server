@@ -2,6 +2,9 @@
 #include <cstring>
 #include <sys/time.h>
 
+#include <iostream>
+#include <iomanip>
+
 #include "utildate.h"
 #include "utilstring.h"
 
@@ -10,9 +13,12 @@
 #define DEF_FREQUENCY_100 868900
 
 #define SET_FREQUENCY(arr, value) \
-	arr[0] = value && 0xff; \
-	arr[1] = (value >> 8) && 0xff; \
-	arr[2] = (value >> 16) && 0xff;
+	std::cerr << "set frequency: " << value << std::endl; \
+	arr[0] = value & 0xff; \
+	arr[1] = (value >> 8) & 0xff; \
+	arr[2] = (value >> 16) & 0xff; \
+	std::cerr << "== " << std::hex << std::setw(2) << std::setfill('0') \
+		<< (int) arr[0] << ":" << (int) arr[1] << ":" << (int) arr[2] << std::endl; \
 
 /**
  * @param cmd MAC command code
@@ -300,7 +306,7 @@ bool MacData::set(
 			case RXTimingSetup:
 				if (values.size() < 1)
 					break;
-				command.data.timingsetup.rfu = values[0];
+				command.data.timingsetup.delay = values[0];
 				command.data.timingsetup.rfu = 0;
 				break;
 			case TXParamSetup:
@@ -325,7 +331,7 @@ bool MacData::set(
 				if (values.size() < 2)
 					break;
 				command.data.adrparamsetup.limitexp = values[0];
-				command.data.adrparamsetup.limitexp = values[1];
+				command.data.adrparamsetup.delayexp = values[1];
 				break;
 			case DeviceTime:
 				{
@@ -460,7 +466,7 @@ bool MacData::set(
 					break;
 				command.data.pingslotchannelresp.drack = values[0];
 				command.data.pingslotchannelresp.frequencyack = values[1];
-				command.data.pingslotchannelresp.fru = 0;
+				command.data.pingslotchannelresp.rfu = 0;
 				break;
 			// 0x12 has been deprecated in 1.1
 			case BeaconTiming:
@@ -493,6 +499,282 @@ std::string MacData::toHexString() const
 {
 	std::string r((const char *) &this->command, size());
 	return hexString(r);
+}
+
+#define MDPREFIX(CMD) \
+	ss << "\""#CMD"\": {";
+#define MDSUFFIX(CMD) \
+	ss << "}";
+#define MD2JSONSS(CMD, FLD) \
+	ss << "\""#FLD"\": " << (int) command.data.CMD.FLD;
+#define MD2JSONSSCOMMA(CMD, FLD) \
+	ss << "\""#FLD"\": " << (int) command.data.CMD.FLD << ", ";
+#define MD2JSONSS_FREQUENCY(CMD) \
+	ss << "\"frequency\": " << (int) (\
+		command.data.CMD.frequency[0] + \
+		(command.data.CMD.frequency[1] << 8) + \
+		(command.data.CMD.frequency[2] << 16));
+#define MD2JSONSS_COMMA() \
+	ss << ", ";
+
+std::string MacData::toJSONString() const
+{
+	std::stringstream ss;
+	if (isClientSide)	{
+		// end device side (sent by gateway)
+		switch (command.command) {
+			case Reset:	// req
+				MDPREFIX(reset)
+				MD2JSONSSCOMMA(reset, rfu)
+				MD2JSONSS(reset, minor)
+				MDSUFFIX(reset)
+				break;
+			case LinkCheck:
+				MDPREFIX(linkcheck)
+				MD2JSONSSCOMMA(linkcheck, margin)
+				MD2JSONSS(linkcheck, gwcnt)
+				MDSUFFIX(linkcheck)
+				break;
+			case LinkADR:
+				MDPREFIX(linkadrreq)
+				MD2JSONSSCOMMA(linkadrreq, txpower)
+				MD2JSONSSCOMMA(linkadrreq, datarate)
+				MD2JSONSSCOMMA(linkadrreq, chmask)
+				MD2JSONSSCOMMA(linkadrreq, nbtans)
+				MD2JSONSSCOMMA(linkadrreq, chmaskcntl)
+				MD2JSONSS(linkadrreq, rfu)
+				MDSUFFIX(linkadrreq)
+				break;
+			case DutyCycle:
+				MDPREFIX(dutycycle)
+				MD2JSONSSCOMMA(dutycycle, maxdccycle)
+				MD2JSONSS(dutycycle, rfu)
+				MDSUFFIX(dutycycle)
+				break;
+			case RXParamSetup:
+				MDPREFIX(rxparamsetupreq)
+				MD2JSONSS_FREQUENCY(rxparamsetupreq) ss << ", ";
+				MD2JSONSSCOMMA(rxparamsetupreq, rx1droffset)
+				MD2JSONSSCOMMA(rxparamsetupreq, rx2datatrate)
+				MD2JSONSS(rxparamsetupreq, rfu)
+				MDSUFFIX(rxparamsetupreq)
+				break;
+			case DevStatus:
+				MDPREFIX(devstatus)
+				MDSUFFIX(devstatus)
+				break;
+			case NewChannel:
+				MDPREFIX(newchacnnelreq)
+				MD2JSONSSCOMMA(newchacnnelreq, chindex)
+				MD2JSONSS_FREQUENCY(newchacnnelreq) ss << ", ";
+				MD2JSONSSCOMMA(newchacnnelreq, mindr)
+				MD2JSONSS(newchacnnelreq, maxdr)
+				MDSUFFIX(newchacnnelreq)
+				break;
+			case RXTimingSetup:
+				MDPREFIX(timingsetup)
+				MD2JSONSSCOMMA(timingsetup, delay)
+				MD2JSONSS(timingsetup, rfu)
+				MDSUFFIX(timingsetup)
+				break;
+			case TXParamSetup:
+				MDPREFIX(txparamsetup)
+				MD2JSONSSCOMMA(txparamsetup, downlinkdwelltime)
+				MD2JSONSSCOMMA(txparamsetup, uplinkdwelltime)
+				MD2JSONSSCOMMA(txparamsetup, maxeirp)
+				MD2JSONSS(txparamsetup, rfu)
+				MDSUFFIX(txparamsetup)
+				break;
+			case DLChannel:
+				MDPREFIX(dlcchannelreq)
+				MD2JSONSSCOMMA(dlcchannelreq, chindex)
+				MD2JSONSS_FREQUENCY(dlcchannelreq) ss << ", ";
+				MDSUFFIX(dlcchannelreq)
+				break;
+			case Rekey:
+				MDPREFIX(rekeyreq)
+				MD2JSONSSCOMMA(rekeyreq, minor)
+				MD2JSONSS(rekeyreq, rfu)
+				MDSUFFIX(rekeyreq)
+				break;
+			case ADRParamSetup:
+				MDPREFIX(adrparamsetup)
+				MD2JSONSSCOMMA(adrparamsetup, limitexp)
+				MD2JSONSS(adrparamsetup, delayexp)
+				MDSUFFIX(adrparamsetup)
+				break;
+			case DeviceTime:
+				MDPREFIX(devicetime)
+				MD2JSONSSCOMMA(devicetime, gpstime)
+				MD2JSONSS(devicetime, frac)
+				MDSUFFIX(devicetime)
+				break;
+			case ForceRejoin:
+				MDPREFIX(forcerejoin)
+				MD2JSONSSCOMMA(forcerejoin, period)
+				MD2JSONSSCOMMA(forcerejoin, maxretries)
+				MD2JSONSSCOMMA(forcerejoin, rejointype)
+				MD2JSONSSCOMMA(forcerejoin, rfu)
+				MD2JSONSS(forcerejoin, rfu2)
+				MDSUFFIX(devicetime)
+				break;
+			case RejoinParamSetup:
+				MDPREFIX(rejoinparamsetupreq)
+				MD2JSONSSCOMMA(rejoinparamsetupreq, maxtime)
+				MD2JSONSS(rejoinparamsetupreq, maxccount)
+				MDSUFFIX(rejoinparamsetupreq)
+				break;
+			// Class-B Section 14
+			case PingSlotInfo:
+				break;
+			case PingSlotChannel:
+				MDPREFIX(pingslotchannelreq)
+				MD2JSONSS_FREQUENCY(pingslotchannelreq) ss << ", ";
+				MD2JSONSSCOMMA(pingslotchannelreq, dr)
+				MD2JSONSS(pingslotchannelreq, rfu)
+				MDSUFFIX(pingslotchannelreq)
+				break;
+			// 0x12 has been deprecated in 1.1
+			case BeaconTiming:
+				MDPREFIX(beacontiming)
+				MD2JSONSSCOMMA(beacontiming, delay)
+				MD2JSONSS(beacontiming, channel)
+				MDSUFFIX(beacontiming)
+				break;
+			case BeaconFreq:
+				MDPREFIX(beaconfrequencyreq)
+				MD2JSONSS_FREQUENCY(beaconfrequencyreq)
+				MDSUFFIX(beaconfrequencyreq)
+				break;
+			// Class-C
+			case DeviceMode:
+				MDPREFIX(devicemode)
+				MD2JSONSS(devicemode, cl)
+				MDSUFFIX(devicemode)
+				break;
+			default:
+				break;
+		}
+	} else {
+		// server-side (sent by end-device)
+		switch (command.command) {
+			case Reset:	// req
+				MDPREFIX(reset)
+				MD2JSONSSCOMMA(reset, minor)
+				MD2JSONSS(reset, rfu)
+				MDSUFFIX(reset)
+				break;
+			case LinkCheck:
+				MDPREFIX(linkcheck)
+				MDSUFFIX(linkcheck)
+				break;
+			case LinkADR:
+				MDPREFIX(linkadrresp)
+				MD2JSONSSCOMMA(linkadrresp, powerack)
+				MD2JSONSSCOMMA(linkadrresp, datarateack)
+				MD2JSONSSCOMMA(linkadrresp, channelmaskack)
+				MD2JSONSS(linkadrresp, rfu)
+				MDSUFFIX(linkadrresp)
+				break;
+			case DutyCycle:
+				MDPREFIX(dutycycle)
+				MDSUFFIX(dutycycle)
+				break;
+			case RXParamSetup:
+				MDPREFIX(rxparamsetupresp)
+				MD2JSONSSCOMMA(rxparamsetupresp, rx1droffsetack)
+				MD2JSONSSCOMMA(rxparamsetupresp, rx2datatrateack)
+				MD2JSONSSCOMMA(rxparamsetupresp, channelack)
+				MD2JSONSS(rxparamsetupresp, rfu)
+				MDSUFFIX(rxparamsetupresp)
+				break;
+			case DevStatus:
+				MDPREFIX(devstatus)
+				MD2JSONSSCOMMA(devstatus, battery)
+				MD2JSONSS(devstatus, margin)
+				MDSUFFIX(devstatus)
+				break;
+			case NewChannel:
+				MDPREFIX(newchacnnelresp)
+				MD2JSONSSCOMMA(newchacnnelresp, channelfrequencyack)
+				MD2JSONSSCOMMA(newchacnnelresp, channelfrequencyack)
+				MD2JSONSS(newchacnnelresp, rfu)
+				MDSUFFIX(newchacnnelresp)
+				break;
+			case RXTimingSetup:
+				MDPREFIX(rxtimingsetup)
+				MDSUFFIX(rxtimingsetup)
+				break;
+			case TXParamSetup:
+				MDPREFIX(txtimingsetup)
+				MDSUFFIX(txtimingsetup)
+				break;
+			case DLChannel:
+				MDPREFIX(dlcchannelresp)
+				MD2JSONSSCOMMA(dlcchannelresp, channelfrequencyack)
+				MD2JSONSSCOMMA(dlcchannelresp, uplinkfrequencyexistsack)
+				MD2JSONSS(dlcchannelresp, rfu)
+				MDSUFFIX(dlcchannelresp)
+				break;
+			case Rekey:
+				MDPREFIX(rekeyreq)
+				MD2JSONSSCOMMA(rekeyreq, minor)
+				MD2JSONSS(rekeyreq, rfu)
+				MDSUFFIX(rekeyreq)
+				break;
+			case ADRParamSetup:
+				MDPREFIX(adrparamsetup)
+				MDSUFFIX(adrparamsetup)
+				break;
+			case DeviceTime:
+				MDPREFIX(devicetime)
+				MDSUFFIX(devicetime)
+				break;
+			case ForceRejoin:
+				MDPREFIX(forcerejoin)
+				MDSUFFIX(forcerejoin)
+				break;
+			case RejoinParamSetup:
+				MDPREFIX(rejoinparamsetupresp)
+				MD2JSONSSCOMMA(rejoinparamsetupresp, timeack)
+				MD2JSONSS(rejoinparamsetupresp, rfu)
+				MDSUFFIX(rejoinparamsetupresp)
+				break;
+			// Class-B Section 14
+			case PingSlotInfo:
+				MDPREFIX(pinginfoslot)
+				MD2JSONSSCOMMA(pinginfoslot, periodicity)
+				MD2JSONSS(pinginfoslot, rfu)
+				MDSUFFIX(pinginfoslot)
+				break;
+			case PingSlotChannel:
+				MDPREFIX(pingslotchannelresp)
+				MD2JSONSSCOMMA(pingslotchannelresp, drack)
+				MD2JSONSSCOMMA(pingslotchannelresp, frequencyack)
+				MD2JSONSS(pingslotchannelresp, rfu)
+				MDSUFFIX(pingslotchannelresp)
+				break;
+			// 0x12 has been deprecated in 1.1
+			case BeaconTiming:
+				MDPREFIX(beacontiming)
+				MDSUFFIX(beacontiming)
+				break;
+			case BeaconFreq:
+				MDPREFIX(beaconfrequencyresp)
+				MD2JSONSS(beaconfrequencyresp, frequencyack)
+				MDSUFFIX(beaconfrequencyresp)
+				break;
+			// Class-C
+			case DeviceMode:
+				MDPREFIX(devicemode)
+				MD2JSONSS(devicemode, cl)
+				MDSUFFIX(devicemode)
+				break;
+			default:
+				break;
+			}
+	}
+	return ss.str();
 }
 
 size_t commandSize(
@@ -664,6 +946,21 @@ std::string MacDataList::toHexString() const
 	for (std::vector<MacData>::const_iterator it(list.begin()); it != list.end(); it++) {
 		ss << it->toHexString();
 	}
+	return ss. str();
+}
+
+std::string MacDataList::toJSONString() const
+{
+	std::stringstream ss;
+	ss << "[";
+	bool needComma = false;
+	for (std::vector<MacData>::const_iterator it(list.begin()); it != list.end(); it++) {
+		if (needComma)
+			ss << ", ";
+		ss << it->toJSONString();
+		needComma = true;
+	}
+	ss << "]";
 	return ss. str();
 }
 
