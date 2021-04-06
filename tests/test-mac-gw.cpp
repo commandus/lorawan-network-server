@@ -115,7 +115,7 @@ void checkNewChannel() {
 	MacGwConfig c;
 	c.cmd.push_back("newchannel");
 	c.cmd.push_back("1");
-	c.cmd.push_back("2");
+	c.cmd.push_back("7999999");
 	c.cmd.push_back("3");
 	c.cmd.push_back("4");
 	int r = c.parse(true);
@@ -165,7 +165,7 @@ void checkDLChannel() {
 	MacGwConfig c;
 	c.cmd.push_back("dlchannel");
 	c.cmd.push_back("1");
-	c.cmd.push_back("2");
+	c.cmd.push_back("7999999");
 	int r = c.parse(true);
 	if (r) {
 		std::cerr << "Error " << r << ": " << c.errmessage << std::endl;
@@ -241,7 +241,7 @@ void checkForceRejoin() {
 void checkRejoinParamSetup() {
 	MacGwConfig c;
 	c.cmd.push_back("rejoinsetup");
-	c.cmd.push_back("1");
+	c.cmd.push_back("7999999");
 	c.cmd.push_back("2");
 	int r = c.parse(true);
 	if (r) {
@@ -333,7 +333,7 @@ void checkDeviceMode() {
 int main(int argc, char **argv) {
 	checkBeaconFreq();
 
-	// printSyntax();
+	printSyntax();
 	// checkReset();
 	// checkLinkCheck();
 	checkLinkAdr();
