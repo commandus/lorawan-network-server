@@ -13,7 +13,7 @@ CLEANFILES = $(GEN)
 
 if USEJSON
 LIB_STORAGE=
-C_STORAGE=
+C_STORAGE=identity-service-file-json.cpp 
 H_STORAGE=
 endif
 
@@ -52,7 +52,7 @@ nobase_dist_include_HEADERS = \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
 	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
-	macgw-config-json.h \
+	macgw-config-json.h config-filename.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h
@@ -62,9 +62,9 @@ SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
-	config-json.cpp identity-service-file-json.cpp lora-packet-handler-impl.cpp \
+	config-json.cpp lora-packet-handler-impl.cpp \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
-	utilstring.cpp utildate.cpp strptime.cpp \
+	utilstring.cpp utildate.cpp strptime.cpp config-filename.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -75,9 +75,8 @@ lorawan_network_server_CPPFLAGS = $(commoncppflags)
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp errlist.cpp \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp \
-	config-json.cpp identity-service-file-json.cpp \
-	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
-	lora-packet-handler-impl.cpp \
+	config-json.cpp packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
+	lora-packet-handler-impl.cpp config-filename.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \

@@ -33,6 +33,7 @@
 #include "identity-service-file-json.h"
 
 #include "gateway-list.h"
+#include "config-filename.h"
 
 const std::string progname = "mac-gw";
 #define DEF_CONFIG_FILE_NAME ".mac-gw"
@@ -108,7 +109,7 @@ int parseCmd(
 {
 	// device path
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 8, "see ooc");
-	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ");
+	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", stotage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
 	struct arg_str *a_gatewayid = arg_str0("g", "gateway", "<id>", "gateway identifier");
 	struct arg_str *a_eui = arg_str0("e", "eui", "<id>", "end-devide identifier");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
@@ -133,6 +134,8 @@ int parseCmd(
 
 	if (a_config->count)
 		config->configFileName = *a_config->sval;
+	else
+		config->configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
 
 	config->serverConfig.daemonize = false;
 	config->serverConfig.verbosity = a_verbosity->count;
@@ -203,10 +206,10 @@ int main(
 		}
 	}
 	if (config->serverConfig.identityStorageName.empty()) {
-		config->serverConfig.identityStorageName = DEF_IDENTITY_STORAGE_NAME;
+		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
 	}
 	if (config->gatewaysFileName.empty()) {
-		config->gatewaysFileName = DEF_GATEWAYS_STORAGE_NAME;
+		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
 	std::cerr << config->toString() << std::endl;
 

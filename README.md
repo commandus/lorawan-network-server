@@ -80,21 +80,40 @@ make
 
 ## Configuration files
 
+### server config ~/.lorawan-network-server
+
+- gatewaysFileName Gateways list. Default ~/gateway.json
+- server Network server properties, including end-device list served by the server
+- configFileName Redirect config file to another one
+
+Server config:
+
+- identityStorageName end-device list file. Default is ~/identity.json
+- listenAddressIPv4 IPv4address:port
+- listenAddressIPv6 IPv6address:port
+- readBufferSize UDP buffer size Default 4096.
+- verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
+- daemonize false..true Indicates does network server starts as deamon or not
+
+configFileName can used to load confguration from different location, do not use this paramater.
+
 ### gateway.json
 
-Array of gateways identifier and last statistics
+Gateways list gateways.
+
+Each entry has an gatway identifier and gatway statistics.
 
   - gwid Gateway identifier (hex number string)
   - time UTC time of pkt RX, us precision, ISO 8601 'compact' format
   - lati latitude
   - long longitude
   - alti altitude, meters, integer
-  - rxnb Number of radio packets received (unsigned integer)
+  - rxnb Number of radio packets received
   - rxok Number of radio packets received with a valid PHY CRC
-  - rxfw Number of radio packets forwarded (unsigned integer)
+  - rxfw Number of radio packets forwarded
   - ackr Percentage of upstream datagrams that were acknowledged
-  - dwnb Number of downlink datagrams received (unsigned integer)
-  - txnb Number of packets emitted (unsigned integer)
+  - dwnb Number of downlink datagrams received
+  - txnb Number of packets emitted
 
 Example:
 ```
@@ -114,6 +133,92 @@ Example:
   }
 ]
 ```
+
+Server updates gateway statistics on shutdown.
+
+### identity.json
+
+- addr        network address (hex string, 4 bytes)
+- activation  ABP or OTAA
+- eui         device identifier (hex string, 8 bytes)
+- nwkSKey     shared session key (hex string, 16 bytes)
+- appSKey     private key (hex string, 16 bytes)
+
+Example:
+```
+[
+  {
+    "addr": "xx..",
+    "activation": "ABP",
+    "eui": "xx..:",
+    "nwkSKey": "..",
+    "appSKey": ".."
+  },
+  ..
+]
+
+## mac-gw utility
+
+Send a command to a class C device bypassing the network server directly through the selected gateway.
+
+Parameters:
+
+- -g gateway identifier
+- -e end-device identifier
+
+Configuration file ~/.mac-gw same as server config ~/.lorawan-network-server.
+
+You can use symlink ~/.mac-gw to the ~/.lorawan-network-server.
+
+- server
+- configFileName
+- gatewaysFileName
+
+a  linkadr      Rate adaptation
+     tx power: 0..7, asis(15)
+     data rate: 0..7, asis(15)
+     channel mask: 1..255
+     transmissions per message: 1..15
+     mask control: 0..7
+d  dutycycle    Limit transmit duty cycle
+     limit: 0..15
+rx rxparamsetup Change frequency/data RX2
+     frequency: 0..9999999 * 100Hz
+     RX1 offset: 0..7s
+     data rate: 0..7, asis(15)
+s  devstatus    Request device battery, temperature
+n  newchannel   Set channel frequency/ data rate
+     channel index: 0..15
+     frequency: 0..9999999 * 100Hz
+     min data rate: 0..7
+     max data rate: 0..7
+rx rxtiming     Set delay between TX and RX1
+     TX - RX delay: 0..15 + 1s
+tx dwelltime    Set maximum allowed dwell time
+     downlink dwell time: no-limit(0), 400(1)
+     uplink dwell time: no-limit(0), 400(1)
+     max EIRP: 0..15
+dl dlchannel    Set RX1 slot frequency
+     channel index: 0..15
+     frequency: 0..9999999 * 100Hz
+k  rekey        Answer security OTA key update
+al acklimit     Set ADR_ACK_LIMIT, ADR_ACK_DELAY
+     ADR ACK limit: 0..15
+     ADR ACK delay: 0..15
+j  forcerejoin  Request immediately Rejoin-Request
+     retransmission delay: 0..7
+     max retransmission: 0..7
+     rejoin type : 0(0), 2(2)
+js rejoinsetup  Request periodically send Rejoin-Request
+     max time : 0..15
+     max count : 0..15
+p  ping         Answer to unicast ping slot
+pc pingchannel  Set ping slot channel
+     frequency: 0..9999999 * 100Hz
+     data rate: 0..7, asis(15)
+bf beaconfreq   Set beacon frequency
+     frequency: 0..9999999 * 100Hz
+
 
 ## Packet types sent by Semtech gateway
 

@@ -588,7 +588,7 @@ std::string MacData::toJSONString() const
 			case DLChannel:
 				MDPREFIX(dlcchannelreq)
 				MD2JSONSSCOMMA(dlcchannelreq, chindex)
-				MD2JSONSS_FREQUENCY(dlcchannelreq) ss << ", ";
+				MD2JSONSS_FREQUENCY(dlcchannelreq) ss;
 				MDSUFFIX(dlcchannelreq)
 				break;
 			case Rekey:

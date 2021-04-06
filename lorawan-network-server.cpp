@@ -31,6 +31,7 @@
 #include "identity-service-file-json.h"
 
 #include "gateway-list.h"
+#include "config-filename.h"
 
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
@@ -110,7 +111,7 @@ int parseCmd(
 	// device path
 	struct arg_str *a_address4 = arg_strn(NULL, NULL, "<IPv4 address:port>", 0, 8, "listener IPv4 interface e.g. *:8003");
 	struct arg_str *a_address6 = arg_strn("6", "ipv6", "<IPv6 address:port>", 0, 8, "listener IPv6 interface e.g. :1700");
-	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ");
+	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", stotage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
 
 	struct arg_str *a_logfilename = arg_str0("l", "logfile", "<file>", "log file");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
@@ -136,6 +137,8 @@ int parseCmd(
 
 	if (a_config->count)
 		config->configFileName = *a_config->sval;
+	else
+		config->configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
 
 	config->serverConfig.daemonize = (a_daemonize->count > 0);
 	config->serverConfig.verbosity = a_verbosity->count;
@@ -204,10 +207,10 @@ int main(
 		}
 	}
 	if (config->serverConfig.identityStorageName.empty()) {
-		config->serverConfig.identityStorageName = DEF_IDENTITY_STORAGE_NAME;
+		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
 	}
 	if (config->gatewaysFileName.empty()) {
-		config->gatewaysFileName = DEF_GATEWAYS_STORAGE_NAME;
+		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
 	std::cerr << config->toString() << std::endl;
 
