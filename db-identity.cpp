@@ -21,7 +21,7 @@ static int processMapFull
 	mdb_txn_abort(env->txn);
 	struct MDB_envinfo current_info;
 	int r;
-#ifdef USE_LMDB	
+#ifdef ENABLE_LMDB	
 	r = mdb_env_info(env->env, &current_info);
 #else
 	r = mdb_env_info(env->env, &current_info, sizeof(current_info));

@@ -11,20 +11,20 @@ COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 BUILT_SOURCES = $(GEN)
 CLEANFILES = $(GEN)
 
-if USEJSON
+if ENABLE_JSON
 LIB_STORAGE=
 C_STORAGE=identity-service-file-json.cpp 
 H_STORAGE=
 endif
 
-if USELMDB
-LIB_STORAGE=-l lmdb
+if ENABLE_LMDB
+LIB_STORAGE=-llmdb
 C_STORAGE=identity-service-lmdb.cpp db-identity.cpp
 H_STORAGE=
 endif
 
-if USEMDBX
-LIB_STORAGE=-l mdbx
+if ENABLE_MDBX
+LIB_STORAGE=-lmdbx
 C_STORAGE=identity-service-lmdb.cpp db-identity.cpp
 H_STORAGE=
 endif

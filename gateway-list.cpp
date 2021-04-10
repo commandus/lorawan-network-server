@@ -83,6 +83,18 @@ int GatewayList::parse(
 	return 0;
 }
 
+bool GatewayList::isValid(
+	const std::vector<uint64_t> &list
+ ) const
+{
+	for (std::vector<uint64_t>::const_iterator it(list.begin()); it != list.end(); it++) {
+		if (gateways.find(*it) == gateways.end()) {
+			return false;
+		}
+	}
+	return true;
+}
+
 std::string GatewayList::toJsonString() const
 {
 	rapidjson::Document doc;

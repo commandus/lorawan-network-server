@@ -71,7 +71,7 @@ class ListEnv {
 		}
 };
 
-bool onRecord
+static bool onRecord
 (
 	void *env,
 	DEVADDR *key,
@@ -128,4 +128,44 @@ void LmdbIdentityService::flush()
 void LmdbIdentityService::done()
 {
 	close();
+}
+
+class FindEUIEnv {
+	public:
+		TDEVEUI value;
+
+		FindEUIEnv(
+			const TDEVEUI &val
+		)
+		: value(val) {
+		}
+};
+
+static bool onFindEUIEnv
+(
+	void *env,
+	DEVADDR *key,
+	DEVICEID *data
+) {
+	ListEnv *r = (ListEnv *) env;
+	r->c++;	
+	if (r->c <= r->offset)
+		return false;
+	if (r->c > r->offset + r->size)
+		return true;
+	r->list->push_back(NetworkIdentity(*key, *data));
+	return false;
+}
+
+bool LmdbIdentityService::isValid(
+	const std::vector<TDEVEUI> &list
+)
+{
+	
+	for (std::vector<TDEVEUI>::const_iterator it(list.begin()); it != list.end(); it++) {
+		FindEUIEnv findEUIEnv(*it);
+		lsAddr(env, &onFindEUIEnv, &findEUIEnv);
+	}
+	return true;
+
 }

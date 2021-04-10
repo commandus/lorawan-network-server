@@ -1501,3 +1501,7 @@ uint32_t getMic(const std::string &v)
 	uint32_t r = *((uint32_t *) (v.c_str() + v.size() - 4));
 	return r; //ntoh4(r);
 }
+
+uint64_t str2gatewayId(const char *value) {
+	return strtoull(value, NULL, 16);
+}

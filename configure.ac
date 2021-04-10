@@ -23,32 +23,32 @@ case "${host_os}" in
 esac
 AM_CONDITIONAL([OS_MACH], [test "$build_mac" = "yes"])
 
-AC_ARG_ENABLE([usejson],
-[  --enable-lmdb    Turn on JSON file storage],
+AC_ARG_ENABLE([json],
+[  --enable-json    Turn on JSON file storage],
 [case "${enableval}" in
-  yes) usejson=true ;;
-  no)  usejson=false ;;
+  yes) enable_json=true ;;
+  no)  enable_json=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-json]) ;;
-esac],[usejson=true])
-AM_CONDITIONAL([USEJSON], [test x$usejson = xtrue])
+esac],[enable_json=true])
+AM_CONDITIONAL([ENABLE_JSON], [test x$enable_json = xtrue])
 
-AC_ARG_ENABLE([uselmdb],
+AC_ARG_ENABLE([lmdb],
 [  --enable-lmdb    Turn on LMDB],
 [case "${enableval}" in
-  yes) uselmdb=true ;;
-  no)  uselmdb=false ;;
+  yes) enable_lmdb=true ;;
+  no)  enable_mdb=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-lmdb]) ;;
-esac],[uselmdb=false])
-AM_CONDITIONAL([USELMDB], [test x$uselmdb = xtrue])
+esac],[enable_lmdb=false])
+AM_CONDITIONAL([ENABLE_LMDB], [test x$enable_lmdb = xtrue])
 
-AC_ARG_ENABLE([usemdbx],
-[  --enable-lmdb    Turn on MDBX],
+AC_ARG_ENABLE([mdbx],
+[  --enable-mdbx    Turn on MDBX],
 [case "${enableval}" in
-  yes) usemdbx=true ;;
-  no)  usemdbx=false ;;
+  yes) enable_mdbx=true ;;
+  no)  enable_mdbx=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-mdbx]) ;;
-esac],[usemdbx=false])
-AM_CONDITIONAL([USEMDBX], [test x$usemdbx = xtrue])
+esac],[enable_mdbx=false])
+AM_CONDITIONAL([ENABLE_MDBX], [test x$enable_mdbx = xtrue])
 
 # MacOS: install openssl into /usr/local/lib/opt/openssl@1.1
 # brew install openssl@1.1

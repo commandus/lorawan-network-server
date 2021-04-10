@@ -328,8 +328,16 @@ Sent ACK to 84.237.104.16:54820
 
 ## Thitd-party dependencies
 
+### LMDB
+
+```
+sudo apt install liblmdb-dev 
+```
+
 [Semtech LoRaWAN-lib](https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/) uses
 
 [arduino aes implementation](https://raw.githubusercontent.com/arduino-libraries/LoraNodeShield/master/src/system/crypto/cmac.h)
 
 [Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)
+
+

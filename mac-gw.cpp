@@ -108,17 +108,18 @@ int parseCmd(
 	char *argv[])
 {
 	// device path
-	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 8, "see ooc");
-	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", stotage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
-	struct arg_str *a_gatewayid = arg_str0("g", "gateway", "<id>", "gateway identifier");
-	struct arg_str *a_eui = arg_str0("e", "eui", "<id>", "end-devide identifier");
+	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
+	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
+	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 1, 100, "gateway identifier");
+	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 1, 100, "end-device identifier");
+	struct arg_str *a_payload_hex = arg_str0("p", "payload", "<hex>", "payload bytes, in hex");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
 	struct arg_lit *a_help = arg_lit0("?", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void *argtable[] = {
 		a_config,
-		a_command, a_gatewayid, a_eui, 
+		a_command, a_gatewayid, a_eui, a_payload_hex,
 		a_verbosity, a_help, a_end};
 
 	int nerrors;
@@ -142,15 +143,20 @@ int parseCmd(
 
 	if (!nerrors)
 	{
-		for (int i = 0; i < a_command->count; i++)
-		{
+		for (int i = 0; i < a_command->count; i++) {
 			macGwConfig->cmd.push_back(a_command->sval[i]);
+		}
+		for (int i = 0; i < a_eui->count; i++) {
+			TDEVEUI eui(a_eui->sval[i]);
+			macGwConfig->euis.push_back(eui);
+		}
+		for (int i = 0; i < a_gatewayid->count; i++) {
+			macGwConfig->gatewayIds.push_back(str2gatewayId(a_eui->sval[i]));
 		}
 	}
 
 	// special case: '--help' takes precedence over error reporting
-	if ((a_help->count) || nerrors)
-	{
+	if ((a_help->count) || nerrors) {
 		if (nerrors)
 			arg_print_errors(stderr, a_end, progname.c_str());
 		std::cerr << "Usage: " << progname << std::endl;
@@ -158,7 +164,9 @@ int parseCmd(
 		std::cerr << MSG_PROG_NAME << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-		return 1;
+		// print commands avaliable
+		std::cerr << MSG_MAC_COMMANDS << ": " << std::endl << macCommandlist() << std::endl;
+		return ERR_CODE_COMMAND_LINE;
 	}
 
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
@@ -193,15 +201,12 @@ int main(
 {
 	config = new Configuration("");
 	macGwConfig = new MacGwConfig();
-	if (parseCmd(config, macGwConfig, argc, argv) != 0)
-	{
+	if (parseCmd(config, macGwConfig, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
-	if (!config->configFileName.empty())
-	{
+	if (!config->configFileName.empty()) {
 		std::string js = file2string(config->configFileName.c_str());
-		if (!js.empty())
-		{
+		if (!js.empty()) {
 			config->parse(js.c_str());
 		}
 	}
@@ -216,11 +221,22 @@ int main(
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
 	std::cerr << gatewayList->toJsonString() << std::endl;
-
+	
+	// validate gateway id
+	if (gatewayList->isValid(macGwConfig->gatewayIds)) {
+		std::cerr << ERR_INVALID_GATEWAY_ID << std::endl;
+		exit(ERR_CODE_INVALID_GATEWAY_ID);
+	}
 	LoraPacketProcessor processor;
 	JsonFileIdentityService identityService;
 	identityService.init(config->serverConfig.identityStorageName, NULL);
-	
+
+	// validate device id
+	if (identityService.isValid(macGwConfig->euis)) {
+		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
+		exit(ERR_CODE_INVALID_DEVICE_EUI);
+	}
+
 	processor.setLogger(onLog);
 	processor.setIdentityService(&identityService);
 
