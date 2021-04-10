@@ -18,6 +18,7 @@ class MacGwConfig {
 		std::vector<std::string> cmd;
 		int errcode;
 		std::string errmessage;
+		std::string payload;
 		int parse(bool sentByServerSide);
 		MacGwConfig();
 };
