@@ -3,16 +3,16 @@
 
 #include <string>
 
-#ifdef USE_LMDB
+#ifdef ENABLE_LMDB
 #include <lmdb.h>
 #endif
-#ifdef USE_MDBX
+#ifdef ENABLE_MDBX
 #include <mdbx.h>
 #endif
 
 #include "utillora.h"
 
-#ifdef USE_MDBX
+#ifdef ENABLE_MDBX
 #define MDB_SET_RANGE MDBX_SET_RANGE
 #define MDB_FIRST MDBX_FIRST
 #define MDB_NEXT MDBX_NEXT
@@ -49,7 +49,7 @@
 #define MDB_MAP_FULL MDBX_MAP_FULL
 #endif
 
-#ifdef USE_MDBX or USE_LMDB
+#if defined ENABLE_MDBX or ENABLE_LMDB
 /**
  * @brief LMDB environment(transaction, cursor)
  */

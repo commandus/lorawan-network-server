@@ -5,14 +5,15 @@
 #include <vector>
 
 #include "lorawan-mac.h"
+#include "utillora.h"
 
 class MacGwConfig {
 	private:
 		void clear();
 	public:
 		MacDataList macCommands;
-		std::string gatewayId;
-		std::string eui;
+		std::vector<uint64_t> gatewayIds;
+		std::vector<TDEVEUI> euis;
 		// read from command line
 		std::vector<std::string> cmd;
 		int errcode;

@@ -130,6 +130,7 @@
 #define MSG_SENT_ACK_TO					"Sent ACK to "
 #define MSG_GATEWAY_STAT				"Gateway statistics "
 #define MSG_RXPK						"rxpk "
+#define MSG_MAC_COMMANDS                "MAC commands"
 
 #define ERROR							"Error "
 

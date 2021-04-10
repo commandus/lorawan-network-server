@@ -25,6 +25,8 @@ class IdentityService {
 		virtual int init(const std::string &option, void *data) = 0;
 		// close resources
 		virtual void done() = 0;
+		// validate list
+		virtual bool isValid(const std::vector<TDEVEUI> &ids) = 0;
 };
 
 #endif

@@ -27,6 +27,7 @@ class GatewayList {
 		void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator) const;
 		std::string toJsonString() const;
 		void save();
+		bool isValid(const std::vector<uint64_t> &list ) const;
 };
 
 #endif

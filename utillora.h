@@ -24,6 +24,11 @@ typedef unsigned char DEVEUI[8];
 
 class IdentityService;
 
+void string2DEVADDR(DEVADDR &retval, const std::string &str);
+void string2DEVEUI(DEVEUI &retval, const std::string &str);
+void string2KEY(KEY128 &retval, const std::string &str);
+uint64_t str2gatewayId(const char *value);
+
 class DEVADDRINT
 {
 	public:
@@ -50,6 +55,30 @@ struct DEVADDRINTCompare
 {
 	bool operator() (const DEVADDRINT& lhs, const DEVADDRINT& rhs) const {
 		return lhs.a < rhs.a;
+	}
+};
+
+class TDEVEUI
+{
+	public:
+		DEVEUI eui;
+		TDEVEUI() {
+
+		}
+		
+		TDEVEUI(const std::string &value) {
+			string2DEVEUI(eui, value);
+		}
+
+		TDEVEUI(const TDEVEUI &v) {
+			memmove(&eui, &v, sizeof(DEVEUI));
+		}
+};
+
+struct DEVEUICompare
+{
+	bool operator() (const DEVEUI& lhs, const DEVEUI& rhs) const {
+		return strncmp((const char *) lhs, (const char *) rhs, sizeof(DEVEUI));
 	}
 };
 
@@ -295,10 +324,6 @@ public:
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
 	int16_t getStrongesSignalLevel(int &idx) const;
 };
-
-void string2DEVADDR(DEVADDR &retval, const std::string &str);
-void string2DEVEUI(DEVEUI &retval, const std::string &str);
-void string2KEY(KEY128 &retval, const std::string &str);
 
 uint64_t deveui2int(const DEVEUI &value);
 void int2DEVADDR(DEVADDR &retval, uint32_t value);

@@ -28,6 +28,7 @@ class JsonFileIdentityService: public IdentityService {
 		int init(const std::string &option, void *data);
 		void flush();
 		void done();
+		bool isValid(const std::vector<TDEVEUI> &ids);
 };
 
 #endif
