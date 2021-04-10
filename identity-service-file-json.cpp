@@ -292,10 +292,14 @@ bool JsonFileIdentityService::isValid(
 )
 {
 	for (std::vector<TDEVEUI>::const_iterator it(list.begin()); it != list.end(); it++) {
+		bool f;
 		for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
-			if (memcmp(it->eui, dit->second.deviceEUI, sizeof(DEVEUI)) != 0)
-				return false;
+			f = (memcmp(it->eui, dit->second.deviceEUI, sizeof(DEVEUI)) != 0);
+			if (f)
+				break;
 		}
+		if (!f)
+			return false;
 	}
 	return true;
 }

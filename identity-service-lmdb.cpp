@@ -133,11 +133,12 @@ void LmdbIdentityService::done()
 class FindEUIEnv {
 	public:
 		TDEVEUI value;
+		bool found;
 
 		FindEUIEnv(
 			const TDEVEUI &val
 		)
-		: value(val) {
+		: value(val), found(false) {
 		}
 };
 
@@ -147,24 +148,21 @@ static bool onFindEUIEnv
 	DEVADDR *key,
 	DEVICEID *data
 ) {
-	ListEnv *r = (ListEnv *) env;
-	r->c++;	
-	if (r->c <= r->offset)
-		return false;
-	if (r->c > r->offset + r->size)
-		return true;
-	r->list->push_back(NetworkIdentity(*key, *data));
-	return false;
+	FindEUIEnv *r = (FindEUIEnv *) env;
+	NetworkIdentity nid(*key, *data);
+	r->found = memcmp(&r->value, &nid.deviceEUI, sizeof(DEVEUI)) == 0;
+	return r->found;
 }
 
 bool LmdbIdentityService::isValid(
 	const std::vector<TDEVEUI> &list
 )
 {
-	
 	for (std::vector<TDEVEUI>::const_iterator it(list.begin()); it != list.end(); it++) {
 		FindEUIEnv findEUIEnv(*it);
 		lsAddr(env, &onFindEUIEnv, &findEUIEnv);
+		if (!findEUIEnv.found)
+			return false;
 	}
 	return true;
 
