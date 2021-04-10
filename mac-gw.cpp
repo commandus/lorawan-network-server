@@ -153,6 +153,9 @@ int parseCmd(
 		for (int i = 0; i < a_gatewayid->count; i++) {
 			macGwConfig->gatewayIds.push_back(str2gatewayId(a_eui->sval[i]));
 		}
+		if (a_payload_hex->count) {
+			macGwConfig->payload = hex2string(*a_payload_hex->sval);
+		}
 	}
 
 	// special case: '--help' takes precedence over error reporting
@@ -201,15 +204,19 @@ int main(
 {
 	config = new Configuration("");
 	macGwConfig = new MacGwConfig();
+	// load config file and get macGwConfig from the command line
 	if (parseCmd(config, macGwConfig, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
+	// reload config if required
 	if (!config->configFileName.empty()) {
 		std::string js = file2string(config->configFileName.c_str());
 		if (!js.empty()) {
 			config->parse(js.c_str());
 		}
 	}
+
+	// get gateway and device list storage path from the config file
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
 	}
@@ -218,6 +225,7 @@ int main(
 	}
 	std::cerr << config->toString() << std::endl;
 
+	// load gateway list
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
 	std::cerr << gatewayList->toJsonString() << std::endl;
@@ -227,7 +235,8 @@ int main(
 		std::cerr << ERR_INVALID_GATEWAY_ID << std::endl;
 		exit(ERR_CODE_INVALID_GATEWAY_ID);
 	}
-	LoraPacketProcessor processor;
+
+	// load device list
 	JsonFileIdentityService identityService;
 	identityService.init(config->serverConfig.identityStorageName, NULL);
 
@@ -237,13 +246,31 @@ int main(
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
 	}
 
-	processor.setLogger(onLog);
-	processor.setIdentityService(&identityService);
+	// parse MAC command(s)
+	int r = macGwConfig->parse(true);
+	if (r) {
+		std::cerr << "MAC command error " << r << ": " << macGwConfig->errmessage << std::endl;
+		exit(r);
+	}
+
+	// check MAC commands
+	if ((macGwConfig->macCommands.list.size() == 0) && (macGwConfig->payload.size() == 0)) {
+		std::cerr << ERR_NO_MAC_NO_PAYLOAD << std::endl;
+		exit(ERR_CODE_NO_MAC_NO_PAYLOAD);
+	}
+
+	// form MAC data
+	std::vector<MacData> md;
+	for (int i = 0; i < macGwConfig->macCommands.list.size(); i++) {
+		MacData d(macGwConfig->macCommands.list[i].toString(), true);
+		md.push_back(d);
+	}
 
 #ifdef _MSC_VER
 #else
 	setSignalHandler();
 #endif
+
 	run();
 	done();
 	return 0;

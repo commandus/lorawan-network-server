@@ -336,7 +336,7 @@ static COMMAND_DESCRIPTION enDeviceCommands[] = {
 };
 
 MacGwConfig::MacGwConfig() 
-	: errcode(0), errmessage("")
+	: errcode(0), errmessage(""), payload("")
 {
 
 }
