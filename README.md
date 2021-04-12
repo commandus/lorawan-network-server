@@ -166,6 +166,9 @@ Parameters:
 - -g gateway identifier
 - -e end-device identifier
 
+Options -g, -e can contain "*" sign to include all or other regular expression.
+Regular expressions grammar is similar to that defined in the PERL language but extended with elements found in the POSIX regular expression grammar.
+   
 Configuration file ~/.mac-gw same as server config ~/.lorawan-network-server.
 
 You can use symlink ~/.mac-gw to the ~/.lorawan-network-server.

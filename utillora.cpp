@@ -726,6 +726,16 @@ std::string DEVADDR2string(
 	return hexString(&v, sizeof(v));
 }
 
+std::string uint64_t2string(
+	const uint64_t &value
+) {
+	uint64_t v;
+	memmove(&v, &value, sizeof(v));
+	// hex string is MSB first, swap if need it
+	v = ntoh8(v);
+	return hexString(&v, sizeof(v));
+}
+
 std::string DEVADDRINT2string(
 	const DEVADDRINT &value
 )
@@ -1504,4 +1514,8 @@ uint32_t getMic(const std::string &v)
 
 uint64_t str2gatewayId(const char *value) {
 	return strtoull(value, NULL, 16);
+}
+
+std::string TDEVEUI::toString() {
+	return DEVEUI2string(eui);
 }

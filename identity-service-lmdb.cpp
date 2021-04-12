@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <regex>
 
 #include "rapidjson/reader.h"
 #include "rapidjson/filereadstream.h"
@@ -132,13 +133,14 @@ void LmdbIdentityService::done()
 
 class FindEUIEnv {
 	public:
-		TDEVEUI value;
+		std::string value;
+		std::vector<TDEVEUI> retval;
 		bool found;
 
 		FindEUIEnv(
-			const TDEVEUI &val
+			const std::string &val
 		)
-		: value(val), found(false) {
+			: value(val), found(false) {
 		}
 };
 
@@ -150,15 +152,27 @@ static bool onFindEUIEnv
 ) {
 	FindEUIEnv *r = (FindEUIEnv *) env;
 	NetworkIdentity nid(*key, *data);
-	r->found = memcmp(&r->value, &nid.deviceEUI, sizeof(DEVEUI)) == 0;
-	return r->found;
+	if (isHex(r->value)) {
+		TDEVEUI v(r->value);
+		r->found = memcmp(&v.eui, &nid.deviceEUI, sizeof(DEVEUI)) == 0;
+		if (r->found)
+			r->retval.push_back(v);
+		return r->found;
+	} else {
+		// can contain regex "*"
+		std::regex rex(r->value, std::regex_constants::ECMAScript);
+		std::string s2 = DEVEUI2string(nid.deviceEUI);
+		if (std::regex_search(s2, rex))
+			r->retval.push_back(TDEVEUI(nid.deviceEUI));
+	}
+	return true;
 }
 
-bool LmdbIdentityService::isValid(
-	const std::vector<TDEVEUI> &list
-)
-{
-	for (std::vector<TDEVEUI>::const_iterator it(list.begin()); it != list.end(); it++) {
+bool LmdbIdentityService::parseIdentifiers(
+	std::vector<TDEVEUI> &retval,
+	const std::vector<std::string> &list
+) {
+	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
 		FindEUIEnv findEUIEnv(*it);
 		lsAddr(env, &onFindEUIEnv, &findEUIEnv);
 		if (!findEUIEnv.found)

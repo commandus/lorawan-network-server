@@ -1,5 +1,7 @@
+#include <regex>
 #include "gateway-list.h"
 #include "errlist.h"
+#include "utillora.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -83,13 +85,28 @@ int GatewayList::parse(
 	return 0;
 }
 
-bool GatewayList::isValid(
-	const std::vector<uint64_t> &list
- ) const
+bool GatewayList::parseIdentifiers(
+	std::vector<uint64_t> &retval,
+	const std::vector<std::string> &list
+) const
 {
-	for (std::vector<uint64_t>::const_iterator it(list.begin()); it != list.end(); it++) {
-		if (gateways.find(*it) == gateways.end()) {
-			return false;
+	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
+		if (isHex(*it)) {
+			// identifier itself
+			uint64_t v = str2gatewayId(it->c_str());
+			if (gateways.find(v) == gateways.end()) {
+				return false;
+			} else {
+				retval.push_back(v);
+			}
+		} else {
+			// can contain regex "*"
+			std::regex rex(*it, std::regex_constants::ECMAScript);
+			for (std::map<uint64_t, GatewayStat>::const_iterator itg(gateways.begin()); itg != gateways.end(); itg++) {
+				std::string s2 = uint64_t2string(itg->first);
+				if (std::regex_search(s2, rex))
+					retval.push_back(itg->first);
+			}
 		}
 	}
 	return true;

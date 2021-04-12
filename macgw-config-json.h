@@ -14,6 +14,8 @@ class MacGwConfig {
 		MacDataList macCommands;
 		std::vector<uint64_t> gatewayIds;
 		std::vector<TDEVEUI> euis;
+		std::vector<std::string> gatewayMasks;
+		std::vector<std::string> euiMasks;
 		// read from command line
 		std::vector<std::string> cmd;
 		int errcode;

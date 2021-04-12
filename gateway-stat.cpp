@@ -40,6 +40,12 @@ GatewayStat::GatewayStat(
 	txnb = value.txnb;
 }
 
+bool GatewayStat::operator==(
+	GatewayStat &rhs
+) const {
+	return gatewayId == rhs.gatewayId;
+}
+
 static const char* STAT_NAMES[11] = {
 	"stat",	// 0 array name
 	"time", // 1 string | UTC time of pkt RX, us precision, ISO 8601 'compact' format

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <regex>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -287,19 +288,29 @@ void JsonFileIdentityService::done()
 
 }
 
-bool JsonFileIdentityService::isValid(
-	const std::vector<TDEVEUI> &list
-)
-{
-	for (std::vector<TDEVEUI>::const_iterator it(list.begin()); it != list.end(); it++) {
-		bool f;
-		for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
-			f = (memcmp(it->eui, dit->second.deviceEUI, sizeof(DEVEUI)) != 0);
-			if (f)
-				break;
+bool JsonFileIdentityService::parseIdentifiers(
+	std::vector<TDEVEUI> &retval,
+	const std::vector<std::string> &list
+) {
+	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
+		if (isHex(*it)) {
+			// identifier itself
+			TDEVEUI v(*it);
+			for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
+				if (memcmp(v.eui, dit->second.deviceEUI, sizeof(DEVEUI)) == 0)
+					retval.push_back(v);
+				else
+					return false;
+			}
+		} else {
+			// can contain regex "*"
+			std::regex rex(*it, std::regex_constants::ECMAScript);
+			for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
+				std::string s2 = DEVEUI2string(dit->second.deviceEUI);
+				if (std::regex_search(s2, rex))
+					retval.push_back(TDEVEUI(dit->second.deviceEUI));
+			}
 		}
-		if (!f)
-			return false;
 	}
 	return true;
 }

@@ -150,3 +150,9 @@ static inline std::string &rtrim(std::string &s) {
 std::string &trim(std::string &s) {
     return ltrim(rtrim(s));
 }
+
+bool isHex(
+	const std::string &value
+) {
+	return value.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos;
+}

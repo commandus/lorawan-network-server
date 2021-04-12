@@ -110,8 +110,8 @@ int parseCmd(
 	// device path
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
-	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 1, 100, "gateway identifier");
-	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 1, 100, "end-device identifier");
+	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 1, 100, "gateway identifier, *- all");
+	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 1, 100, "end-device identifier, *- all");
 	struct arg_str *a_payload_hex = arg_str0("p", "payload", "<hex>", "payload bytes, in hex");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
 	struct arg_lit *a_help = arg_lit0("?", "help", "Show this help");
@@ -147,11 +147,10 @@ int parseCmd(
 			macGwConfig->cmd.push_back(a_command->sval[i]);
 		}
 		for (int i = 0; i < a_eui->count; i++) {
-			TDEVEUI eui(a_eui->sval[i]);
-			macGwConfig->euis.push_back(eui);
+			macGwConfig->euiMasks.push_back(a_eui->sval[i]);
 		}
 		for (int i = 0; i < a_gatewayid->count; i++) {
-			macGwConfig->gatewayIds.push_back(str2gatewayId(a_eui->sval[i]));
+			macGwConfig->gatewayMasks.push_back(a_eui->sval[i]);
 		}
 		if (a_payload_hex->count) {
 			macGwConfig->payload = hex2string(*a_payload_hex->sval);
@@ -230,8 +229,8 @@ int main(
 	
 	std::cerr << gatewayList->toJsonString() << std::endl;
 	
-	// validate gateway id
-	if (gatewayList->isValid(macGwConfig->gatewayIds)) {
+	// parse gateway ids, expand regex 
+	if (gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks)) {
 		std::cerr << ERR_INVALID_GATEWAY_ID << std::endl;
 		exit(ERR_CODE_INVALID_GATEWAY_ID);
 	}
@@ -240,8 +239,8 @@ int main(
 	JsonFileIdentityService identityService;
 	identityService.init(config->serverConfig.identityStorageName, NULL);
 
-	// validate device id
-	if (identityService.isValid(macGwConfig->euis)) {
+	// parse device ids, expand regex
+	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks)) {
 		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
 	}
