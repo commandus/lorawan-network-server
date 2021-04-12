@@ -36,7 +36,7 @@
 #include "config-filename.h"
 
 const std::string progname = "mac-gw";
-#define DEF_CONFIG_FILE_NAME ".mac-gw"
+#define DEF_CONFIG_FILE_NAME ".mac-gw.json"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_TIME_FORMAT "%FT%T"
@@ -208,11 +208,17 @@ int main(
 		exit(ERR_CODE_COMMAND_LINE);
 	}
 	// reload config if required
+	bool hasConfig = false;
 	if (!config->configFileName.empty()) {
 		std::string js = file2string(config->configFileName.c_str());
 		if (!js.empty()) {
 			config->parse(js.c_str());
+			hasConfig = true;
 		}
+	}
+	if (!hasConfig) {
+		std::cerr << ERR_NO_CONFIG << std::endl;
+		exit(ERR_CODE_NO_CONFIG);
 	}
 
 	// get gateway and device list storage path from the config file
@@ -222,7 +228,8 @@ int main(
 	if (config->gatewaysFileName.empty()) {
 		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
-	std::cerr << config->toString() << std::endl;
+	
+	// std::cerr << config->toString() << std::endl;
 
 	// load gateway list
 	gatewayList = new GatewayList(config->gatewaysFileName);

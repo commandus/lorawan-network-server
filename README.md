@@ -80,11 +80,11 @@ make
 
 ## Configuration files
 
-### server config ~/.lorawan-network-server
+### server config ~/.lorawan-network-server.json
 
 - gatewaysFileName Gateways list. Default ~/gateway.json
 - server Network server properties, including end-device list served by the server
-- configFileName Redirect config file to another one
+- configFileName (optional) Redirect config file to another one
 
 Server config:
 
@@ -95,13 +95,28 @@ Server config:
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
 - daemonize false..true Indicates does network server starts as deamon or not
 
-configFileName can used to load confguration from different location, do not use this paramater.
+configFileName can used to load configuration from different location. 
+Do not use this parameter except when you really need it.
+
+identityStorageName is property of the server because network server is responsible for end-device.
+In contrast gatewaysFileName property points to the gateways list which send messages to one or more network servers.
+
+Example of lorawan-network-server.json:
+```
+{
+        "gatewaysFileName": "./gateway.json";
+        "server": {
+                "identityStorageName": "./identity.json",
+                "listenAddressIPv4": "*:"
+        }
+}
+```
 
 ### gateway.json
 
 Gateways list gateways.
 
-Each entry has an gatway identifier and gatway statistics.
+Each entry has an gatway identifier and gateway statistics.
 
   - gwid Gateway identifier (hex number string)
   - time UTC time of pkt RX, us precision, ISO 8601 'compact' format
@@ -121,20 +136,20 @@ Example:
   {
     "gwid": "00006cc3743eed46"
    	"time": 0,
-	  "lati": 62.02774,
-    "long": 129.72883,
-    "alti": 348,
-    "rxnb": 0,
-    "rxok": 0,
-    "rxfw": 0,
-    "ackr": 0.0,
-    "dwnb": 0,
-    "txnb": 0
+     "lati": 62.02774,
+     "long": 129.72883,
+     "alti": 348,
+     "rxnb": 0,
+     "rxok": 0,
+     "rxfw": 0,
+     "ackr": 0.0,
+     "dwnb": 0,
+     "txnb": 0
   }
 ]
 ```
 
-Server updates gateway statistics on shutdown.
+Server updates the gateway statistics on shutdown.
 
 ### identity.json
 
@@ -168,10 +183,15 @@ Parameters:
 
 Options -g, -e can contain "*" sign to include all or other regular expression.
 Regular expressions grammar is similar to that defined in the PERL language but extended with elements found in the POSIX regular expression grammar.
-   
-Configuration file ~/.mac-gw same as server config ~/.lorawan-network-server.
 
-You can use symlink ~/.mac-gw to the ~/.lorawan-network-server.
+Example:
+```
+./mac-gw -c mac-gw.json -g "*" -e "*"
+```
+
+Configuration file ~/.mac-gw.json same as server config ~/.lorawan-network-server.json.
+
+You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
 
 - server
 - configFileName

@@ -1,5 +1,7 @@
 #include "config-json.h"
 
+#include <iostream>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/prettywriter.h"
@@ -140,7 +142,8 @@ int Configuration::parse(
 			if (gfn.IsString())
 				gatewaysFileName = gfn.GetString();
 		}
-	}
+	} else
+		return ERR_CODE_INVALID_JSON;
 	return r;
 }
 

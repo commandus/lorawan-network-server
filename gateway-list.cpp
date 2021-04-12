@@ -29,7 +29,7 @@ GatewayList::GatewayList(
 )
 	: filename(afilename)
 {
-	parse(file2string(afilename.c_str()));
+	parse(file2string(filename.c_str()));
 }
 
 void GatewayList::toJSON(

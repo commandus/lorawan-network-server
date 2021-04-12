@@ -198,14 +198,20 @@ int main(
 	{
 		exit(ERR_CODE_COMMAND_LINE);
 	}
-	if (!config->configFileName.empty())
-	{
+	// reload config if required
+	bool hasConfig = false;
+	if (!config->configFileName.empty()) {
 		std::string js = file2string(config->configFileName.c_str());
-		if (!js.empty())
-		{
+		if (!js.empty()) {
 			config->parse(js.c_str());
+			hasConfig = true;
 		}
 	}
+	if (!hasConfig) {
+		std::cerr << ERR_NO_CONFIG << std::endl;
+		exit(ERR_CODE_NO_CONFIG);
+	}
+
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
 	}
