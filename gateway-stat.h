@@ -31,6 +31,7 @@ public:
 
 	GatewayStat();
 	GatewayStat(const GatewayStat &value);
+	bool operator==(GatewayStat &rhs) const;
 
 	void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator) const;
 	int parse(

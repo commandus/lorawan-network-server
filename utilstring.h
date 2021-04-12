@@ -35,4 +35,6 @@ bool string2file(const std::string &filename, const std::string &value);
 
 std::string &trim(std::string &s);
 
+bool isHex(const std::string &value);
+
 #endif

@@ -63,7 +63,6 @@ class TDEVEUI
 	public:
 		DEVEUI eui;
 		TDEVEUI() {
-
 		}
 		
 		TDEVEUI(const std::string &value) {
@@ -71,8 +70,12 @@ class TDEVEUI
 		}
 
 		TDEVEUI(const TDEVEUI &v) {
+			memmove(&eui, &v.eui, sizeof(DEVEUI));
+		}
+		TDEVEUI(const DEVEUI &v) {
 			memmove(&eui, &v, sizeof(DEVEUI));
 		}
+		std::string toString();
 };
 
 struct DEVEUICompare
@@ -329,6 +332,7 @@ uint64_t deveui2int(const DEVEUI &value);
 void int2DEVADDR(DEVADDR &retval, uint32_t value);
 
 std::string DEVADDR2string(const DEVADDR &value);
+std::string uint64_t2string(const uint64_t &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
