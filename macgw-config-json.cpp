@@ -4,6 +4,7 @@
 
 #include "macgw-config-json.h"
 
+#include "utilstring.h"
 #include "errlist.h"
 
 typedef struct {
@@ -336,7 +337,7 @@ static COMMAND_DESCRIPTION enDeviceCommands[] = {
 };
 
 MacGwConfig::MacGwConfig() 
-	: errcode(0), errmessage(""), payload("")
+	: errcode(0), errmessage(""), payload(""), useRegex(false)
 {
 
 }
@@ -491,6 +492,32 @@ int MacGwConfig::parse(
 		errmessage = ss.str();
 	}
 	return errcode;
+}
+
+std::string MacGwConfig::toJsonString() {
+	std::stringstream ss;
+	ss << "{\"gatewayIds\": [";
+	bool needComma = false;
+	for (std::vector<uint64_t>::const_iterator it(gatewayIds.begin()); it != gatewayIds.end(); it++) {
+		if (needComma)
+			ss << ", ";
+		else 
+			needComma = true;
+		ss << "\"" << uint64_t2string(*it) << "\"";
+	}
+	ss << "], \"euis\": [";
+	needComma = false;
+	for (std::vector<TDEVEUI>::const_iterator it(euis.begin()); it != euis.end(); it++) {
+		if (needComma)
+			ss << ", ";
+		else 
+			needComma = true;
+		ss << "\"" << DEVEUI2string(it->eui) << "\"";			
+	}
+	ss << "], \"payload\": \"" << hexString(payload) << "\"}, ";
+
+	ss << "\"macCommands\": " << macCommands.toJSONString() << "}}" << std::endl;	
+	return ss.str();
 }
 
 std::string macCommandlist() {

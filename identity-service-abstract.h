@@ -26,9 +26,10 @@ class IdentityService {
 		// close resources
 		virtual void done() = 0;
 		// validate list, expand regex
-		virtual bool parseIdentifiers(
+		virtual int parseIdentifiers(
 			std::vector<TDEVEUI> &retval,
-			const std::vector<std::string> &list
+			const std::vector<std::string> &list,
+			bool useRegex
 		) = 0;
 };
 

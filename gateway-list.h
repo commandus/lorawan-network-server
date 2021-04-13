@@ -27,10 +27,11 @@ class GatewayList {
 		void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator) const;
 		std::string toJsonString() const;
 		void save();
-		bool validate(const std::vector<uint64_t> &list ) const;
-		bool parseIdentifiers(
+		bool validate(const std::vector<uint64_t> &list) const;
+		int parseIdentifiers(
 			std::vector<uint64_t> &retval,
-			const std::vector<std::string> &value
+			const std::vector<std::string> &value,
+			bool useRegex
 		) const;
 };
 

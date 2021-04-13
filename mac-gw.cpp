@@ -53,7 +53,6 @@ static void done()
 	if (config && config->serverConfig.verbosity > 1)
 		std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
 	if (gatewayList) {
-		gatewayList->save();
 		delete gatewayList;
 		gatewayList = NULL;
 	}
@@ -113,6 +112,8 @@ int parseCmd(
 	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 1, 100, "gateway identifier, *- all");
 	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 1, 100, "end-device identifier, *- all");
 	struct arg_str *a_payload_hex = arg_str0("p", "payload", "<hex>", "payload bytes, in hex");
+	
+	struct arg_lit *a_regex = arg_lit0("x", "regex", "Use regular expression in -g, -e options. By default wildcards (*, ?) can be used.");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
 	struct arg_lit *a_help = arg_lit0("?", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
@@ -120,7 +121,7 @@ int parseCmd(
 	void *argtable[] = {
 		a_config,
 		a_command, a_gatewayid, a_eui, a_payload_hex,
-		a_verbosity, a_help, a_end};
+		a_regex, a_verbosity, a_help, a_end};
 
 	int nerrors;
 
@@ -146,16 +147,18 @@ int parseCmd(
 		for (int i = 0; i < a_command->count; i++) {
 			macGwConfig->cmd.push_back(a_command->sval[i]);
 		}
+		for (int i = 0; i < a_gatewayid->count; i++) {
+			macGwConfig->gatewayMasks.push_back(a_gatewayid->sval[i]);
+		}
 		for (int i = 0; i < a_eui->count; i++) {
 			macGwConfig->euiMasks.push_back(a_eui->sval[i]);
-		}
-		for (int i = 0; i < a_gatewayid->count; i++) {
-			macGwConfig->gatewayMasks.push_back(a_eui->sval[i]);
 		}
 		if (a_payload_hex->count) {
 			macGwConfig->payload = hex2string(*a_payload_hex->sval);
 		}
 	}
+
+	macGwConfig->useRegex = a_regex->count > 0;
 
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
@@ -229,35 +232,41 @@ int main(
 		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
 	
-	// std::cerr << config->toString() << std::endl;
-
 	// load gateway list
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
-	std::cerr << gatewayList->toJsonString() << std::endl;
+	// std::cerr << config->toString() << std::endl;
+	// std::cerr << gatewayList->toJsonString() << std::endl;
 	
 	// parse gateway ids, expand regex 
-	if (gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks)) {
-		std::cerr << ERR_INVALID_GATEWAY_ID << std::endl;
+	
+	int r;	
+	if (r = gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks, macGwConfig->useRegex)) {
+		std::cerr << ERR_INVALID_GATEWAY_ID << " code: " << r << ": " << strerror_client(r) << std::endl;
 		exit(ERR_CODE_INVALID_GATEWAY_ID);
 	}
 
 	// load device list
 	JsonFileIdentityService identityService;
-	identityService.init(config->serverConfig.identityStorageName, NULL);
+	if (identityService.init(config->serverConfig.identityStorageName, NULL) != 0) {
+		std::cerr << ERR_MESSAGE << identityService.errmessage << std::endl;
+	}
+	std::cerr << identityService.toJsonString() << std::endl;
 
 	// parse device ids, expand regex
-	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks)) {
+	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks, macGwConfig->useRegex)) {
 		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
 	}
 
 	// parse MAC command(s)
-	int r = macGwConfig->parse(true);
+	r = macGwConfig->parse(true);
 	if (r) {
 		std::cerr << "MAC command error " << r << ": " << macGwConfig->errmessage << std::endl;
 		exit(r);
 	}
+
+	std::cerr << macGwConfig->toJsonString() << std::endl;
 
 	// check MAC commands
 	if ((macGwConfig->macCommands.list.size() == 0) && (macGwConfig->payload.size() == 0)) {

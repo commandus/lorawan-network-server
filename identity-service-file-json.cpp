@@ -6,6 +6,7 @@
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/reader.h"
 #include "rapidjson/filereadstream.h"
+#include "rapidjson/error/en.h"
 #pragma clang diagnostic pop
  
 #include "identity-service-file-json.h"
@@ -62,7 +63,7 @@ static std::string getActivationName(
 }
 
 JsonFileIdentityService::JsonFileIdentityService() 
-	: filename("")
+	: filename(""), errcode(0), errmessage("")
 {
 
 }
@@ -194,6 +195,15 @@ int JsonFileIdentityService::load()
  	char readBuffer[4096];
 	rapidjson::FileReadStream istrm(fp, readBuffer, sizeof(readBuffer));
     rapidjson::ParseResult r = reader.Parse(istrm, handler);
+	if (r.IsError()) {
+		errcode = r.Code();
+		std::stringstream ss;
+		ss << rapidjson::GetParseError_En(r.Code()) << " at " << r.Offset();
+		errmessage = ss.str();
+	} else {
+		errcode = 0;
+		errmessage = "";
+	}
 	fclose(fp);
 	return r.IsError() ? ERR_CODE_INVALID_JSON : 0;
 } 
@@ -288,9 +298,10 @@ void JsonFileIdentityService::done()
 
 }
 
-bool JsonFileIdentityService::parseIdentifiers(
+int JsonFileIdentityService::parseIdentifiers(
 	std::vector<TDEVEUI> &retval,
-	const std::vector<std::string> &list
+	const std::vector<std::string> &list,
+	bool useRegex
 ) {
 	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
 		if (isHex(*it)) {
@@ -304,13 +315,45 @@ bool JsonFileIdentityService::parseIdentifiers(
 			}
 		} else {
 			// can contain regex "*"
-			std::regex rex(*it, std::regex_constants::ECMAScript);
-			for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
-				std::string s2 = DEVEUI2string(dit->second.deviceEUI);
-				if (std::regex_search(s2, rex))
-					retval.push_back(TDEVEUI(dit->second.deviceEUI));
+			try {
+				std::string re;
+				if (useRegex)
+					re = *it;
+				else
+					re = replaceAll(replaceAll(*it, "*", ".*"), "?", ".");
+				std::regex rex(re, std::regex_constants::grep);
+				for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
+					std::string s2 = DEVEUI2string(dit->second.deviceEUI);
+					std::cerr << s2 << std::endl;
+					if (std::regex_search(s2, rex))
+						retval.push_back(TDEVEUI(dit->second.deviceEUI));
+				}
+		    }
+    		catch (const std::regex_error& e) {
+				return ERR_CODE_INVALID_REGEX;
 			}
 		}
 	}
-	return true;
+	return 0;
+}
+
+std::string JsonFileIdentityService::toJsonString()
+{
+	std::stringstream ss;
+	ss << "[";
+	bool needComma = false;
+	for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
+		if (needComma)
+			ss << ", ";
+		else
+			needComma = true;
+		ss << "{"
+			<< "\"" << ATTR_NAMES[0] << "\":\"" << DEVADDRINT2string(dit->first) << "\", "
+			<< "\"" << ATTR_NAMES[1] << "\":\"" << getActivationName(dit->second.activation) << "\", "
+			<< "\"" << ATTR_NAMES[2] << "\":\"" << DEVEUI2string(dit->second.deviceEUI) << "\", "
+			<< "\"" << ATTR_NAMES[3] << "\":\"" << KEY2string(dit->second.nwkSKey) << "\", "
+			<< "\"" << ATTR_NAMES[4] << "\":\"" << KEY2string(dit->second.appSKey) << "\"}";
+	}
+	ss << "]";
+	return ss.str();
 }

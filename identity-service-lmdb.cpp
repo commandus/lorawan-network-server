@@ -160,24 +160,35 @@ static bool onFindEUIEnv
 		return r->found;
 	} else {
 		// can contain regex "*"
-		std::regex rex(r->value, std::regex_constants::ECMAScript);
-		std::string s2 = DEVEUI2string(nid.deviceEUI);
-		if (std::regex_search(s2, rex))
-			r->retval.push_back(TDEVEUI(nid.deviceEUI));
+		try {
+			std::regex rex(r->value, std::regex_constants::grep);
+			std::string s2 = DEVEUI2string(nid.deviceEUI);
+			if (std::regex_search(s2, rex))
+				r->retval.push_back(TDEVEUI(nid.deviceEUI));
+		}
+		catch (const std::regex_error& e) {
+			return false;
+		}
 	}
 	return true;
 }
 
-bool LmdbIdentityService::parseIdentifiers(
+int LmdbIdentityService::parseIdentifiers(
 	std::vector<TDEVEUI> &retval,
-	const std::vector<std::string> &list
+	const std::vector<std::string> &list,
+	bool useRegex
 ) {
 	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
-		FindEUIEnv findEUIEnv(*it);
+		std::string re;
+		if (useRegex)
+			re = *it;
+		else
+			re = replaceAll(replaceAll(*it, "*", ".*"), "?", ".");
+		FindEUIEnv findEUIEnv(re);
 		lsAddr(env, &onFindEUIEnv, &findEUIEnv);
 		if (!findEUIEnv.found)
-			return false;
+			return ERR_CODE_INVALID_DEVICE_EUI;
 	}
-	return true;
+	return 0;
 
 }

@@ -1,4 +1,6 @@
 #include <regex>
+#include <iostream>
+
 #include "gateway-list.h"
 #include "errlist.h"
 #include "utillora.h"
@@ -85,9 +87,10 @@ int GatewayList::parse(
 	return 0;
 }
 
-bool GatewayList::parseIdentifiers(
+int GatewayList::parseIdentifiers(
 	std::vector<uint64_t> &retval,
-	const std::vector<std::string> &list
+	const std::vector<std::string> &list,
+	bool useRegex
 ) const
 {
 	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
@@ -101,15 +104,27 @@ bool GatewayList::parseIdentifiers(
 			}
 		} else {
 			// can contain regex "*"
-			std::regex rex(*it, std::regex_constants::ECMAScript);
-			for (std::map<uint64_t, GatewayStat>::const_iterator itg(gateways.begin()); itg != gateways.end(); itg++) {
-				std::string s2 = uint64_t2string(itg->first);
-				if (std::regex_search(s2, rex))
-					retval.push_back(itg->first);
+			try {
+				std::string re;
+				if (useRegex)
+					re = *it;
+				else
+					re = replaceAll(replaceAll(*it, "*", ".*"), "?", ".");
+				std::regex rex(re, std::regex_constants::grep);
+				for (std::map<uint64_t, GatewayStat>::const_iterator itg(gateways.begin()); itg != gateways.end(); itg++) {
+					std::string s2 = uint64_t2string(itg->first);
+					if (std::regex_search(s2, rex))
+						retval.push_back(itg->first);
+				}
+		    }
+    		catch (const std::regex_error& e) {
+				std::cerr << e.what() << std::endl;
+				return ERR_CODE_INVALID_REGEX;
+				break;
 			}
 		}
 	}
-	return true;
+	return 0;
 }
 
 std::string GatewayList::toJsonString() const

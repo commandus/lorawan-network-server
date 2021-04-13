@@ -23,6 +23,8 @@ class MacGwConfig {
 		std::string payload;
 		int parse(bool sentByServerSide);
 		MacGwConfig();
+		std::string toJsonString();
+		bool useRegex;
 };
 
 std::string macCommandlist();

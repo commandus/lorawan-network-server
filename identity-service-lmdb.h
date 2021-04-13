@@ -23,9 +23,10 @@ class LmdbIdentityService: public IdentityService {
 		int init(const std::string &option, void *data);
 		void flush();
 		void done();
-		bool parseIdentifiers(
+		int parseIdentifiers(
 			std::vector<TDEVEUI> &retval,
-			const std::vector<std::string> &list
+			const std::vector<std::string> &list,
+			bool useRegex
 		);
 };
 

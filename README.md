@@ -181,8 +181,12 @@ Parameters:
 - -g gateway identifier
 - -e end-device identifier
 
-Options -g, -e can contain "*" sign to include all or other regular expression.
-Regular expressions grammar is similar to that defined in the PERL language but extended with elements found in the POSIX regular expression grammar.
+Options:
+
+-x --regex use regilar expresseion in -g, -e options instead of wildcards ('*', '?').
+
+Options -g, -e can contain "*" and "?" wildcards, or regular expression lile ".*" if -x option is set.
+Regular expressions grammar is similar to the grep.
 
 Example:
 ```
