@@ -16,6 +16,7 @@
 
 class GatewayStat {
 public:
+	std::string name;
 	uint64_t gatewayId;
 	int errcode;
 	time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'expanded' format e.g. 2021-02-24 04:54:01 GMT

@@ -17,6 +17,7 @@ class GatewayList {
 		std::string filename;
 	public:
 		std::map<uint64_t, GatewayStat> gateways;
+		std::string errmessage;
 		GatewayList();
 		GatewayList(const std::string &filename);
 		GatewayList(const GatewayList &value);
@@ -29,6 +30,11 @@ class GatewayList {
 		void save();
 		bool validate(const std::vector<uint64_t> &list) const;
 		int parseIdentifiers(
+			std::vector<uint64_t> &retval,
+			const std::vector<std::string> &value,
+			bool useRegex
+		) const;
+		int parseNames(
 			std::vector<uint64_t> &retval,
 			const std::vector<std::string> &value,
 			bool useRegex

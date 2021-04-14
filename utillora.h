@@ -24,9 +24,13 @@ typedef unsigned char DEVEUI[8];
 
 class IdentityService;
 
+typedef char DEVICENAME[8];
+
 void string2DEVADDR(DEVADDR &retval, const std::string &str);
 void string2DEVEUI(DEVEUI &retval, const std::string &str);
 void string2KEY(KEY128 &retval, const std::string &str);
+void string2DEVICENAME(DEVICENAME &retval, const char *str);
+
 uint64_t str2gatewayId(const char *value);
 
 class DEVADDRINT
@@ -161,7 +165,9 @@ typedef struct {
 	DEVEUI deviceEUI;		///< device identifier 8 bytes (ABP device may not store EUI)
 	KEY128 nwkSKey;			///< shared session key 16 bytes
 	KEY128 appSKey;			///< private key 16 bytes
-} DEVICEID;					// 44 bytes
+	// added for searching
+	DEVICENAME name;
+} DEVICEID;					// 44 bytes + 8 = 52
 
 /**
  * Section 6.3 Activating an end-device by personalization 
@@ -182,6 +188,8 @@ public:
 	DEVEUI deviceEUI;		///< device identifier
 	KEY128 nwkSKey;			///< shared session key
 	KEY128 appSKey;			///< private key
+	// added for searching
+	DEVICENAME name;
 	NetworkIdentity(const DEVADDRINT &a, const DEVICEID &id);
 	std::string toString() const;
 };
@@ -193,7 +201,9 @@ public:
 	DEVEUI deviceEUI;	///< device identifier
 	KEY128 nwkSKey;		///< shared session key
 	KEY128 appSKey;		///< private key
-
+	// added for searching
+	DEVICENAME name;
+	
 	DeviceId();
 	DeviceId(const DeviceId &value);
 	DeviceId(const DEVICEID &value);

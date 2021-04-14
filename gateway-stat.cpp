@@ -7,7 +7,7 @@
 #include "errlist.h"
 
 GatewayStat::GatewayStat()
-: gatewayId(0), errcode(0),
+	: name(""), gatewayId(0), errcode(0),
 	t(0),					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
 	lat(0.0),				// latitude
 	lon(0.0),				// longitude
@@ -26,6 +26,7 @@ GatewayStat::GatewayStat(
 	const GatewayStat &value
 )
 {
+	name = value.name;
 	gatewayId = value.gatewayId;
 	errcode = value.errcode;
 	t = value.t;
@@ -47,7 +48,7 @@ bool GatewayStat::operator==(
 }
 
 static const char* STAT_NAMES[11] = {
-	"stat",	// 0 array name
+	"name",	// 0 name
 	"time", // 1 string | UTC time of pkt RX, us precision, ISO 8601 'compact' format
 	"lati", // 2 number 
 	"long", // 3 number
@@ -71,6 +72,10 @@ void GatewayStat::toJSON(
 	std::string ssr = ss.str();
 	vId.SetString(ssr.c_str(), ssr.length(), allocator);
 	value.AddMember("gwid", vId, allocator);
+
+	rapidjson::Value vname(rapidjson::kStringType);
+	vname.SetString(name.c_str(), name.length(), allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[0])), vname, allocator);
 
 	std::string dt = ltimeString(t, -1, "%F %T %Z");
 	rapidjson::Value v1(rapidjson::kStringType);
@@ -118,13 +123,20 @@ int GatewayStat::parse(
 		} else if (v.IsString()) {
 			gatewayId = strtoull(v.GetString(), NULL, 16);
 		}
+		errcode = 0;
+	}
+
+	if (value.HasMember(STAT_NAMES[0])) {
+		rapidjson::Value &v = value[STAT_NAMES[0]];
+		if (v.IsString()) {
+			name = v.GetString();
+		}
 	}
 
 	if (value.HasMember(STAT_NAMES[1])) {
 		rapidjson::Value &v = value[STAT_NAMES[1]];
 		if (v.IsString()) {
 			t = parseDate(v.GetString());
-			errcode = 0;
 		}
 	}
 
@@ -198,16 +210,17 @@ std::string GatewayStat::toJsonString() const
 		std::stringstream ss;
 		ss << "{"
 			<< "\"gwid\":\"" << std::hex << gatewayId << std::dec
-			<< "\", \"time\":\"" << time2string(t) << "\""
-			<< ",\"lati\":" << std::fixed << std::setprecision(5) << lat
-			<< ",\"long\":" << std::fixed << std::setprecision(5) << lon
-			<< ",\"alti\":" << alt
-			<< ",\"rxnb\":" << rxnb
-			<< ",\"rxok\":" << rxok
-			<< ",\"rxfw\":" << rxfw
-			<< ",\"ackr\":" << std::fixed << std::setprecision(1) << ackr
-			<< ",\"dwnb\":" << dwnb
-			<< ",\"txnb\":" << txnb
+			<< "\", \"name\":\"" << name
+			<< "\", \"time\":\"" << time2string(t)
+			<< "\", \"lati\":" << std::fixed << std::setprecision(5) << lat
+			<< ", \"long\":" << std::fixed << std::setprecision(5) << lon
+			<< ", \"alti\":" << alt
+			<< ", \"rxnb\":" << rxnb
+			<< ", \"rxok\":" << rxok
+			<< ", \"rxfw\":" << rxfw
+			<< ", \"ackr\":" << std::fixed << std::setprecision(1) << ackr
+			<< ", \"dwnb\":" << dwnb
+			<< ", \"txnb\":" << txnb
 			<< "}";
 		return ss.str();
 }
@@ -216,6 +229,7 @@ std::string GatewayStat::toString() const
 {
 		std::stringstream ss;
 		ss << std::hex << gatewayId << std::dec
+			<< " " << name
 			<< " " << time2string(t)
 			<< " (" << std::fixed << std::setprecision(5) << lat
 			<< ", " << std::fixed << std::setprecision(5) << lon

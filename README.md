@@ -180,6 +180,7 @@ Parameters:
 
 - -g gateway identifier
 - -e end-device identifier
+- -p payload (optional)
 
 Options:
 
@@ -188,9 +189,12 @@ Options:
 Options -g, -e can contain "*" and "?" wildcards, or regular expression lile ".*" if -x option is set.
 Regular expressions grammar is similar to the grep.
 
-Example:
+Option -p requires hex string, for instance "0faa0167" is valid parameter value.
+
+Examples:
 ```
-./mac-gw -c mac-gw.json -g "*" -e "*"
+./mac-gw -c mac-gw.json -g "*" -e "*" -p "0fa1cc"
+./mac-gw -c mac-gw.json -g "01*" -g "09*" -e "ff*" -e "aa*" -p "0fa1cc"
 ```
 
 Configuration file ~/.mac-gw.json same as server config ~/.lorawan-network-server.json.

@@ -25,8 +25,14 @@ class IdentityService {
 		virtual int init(const std::string &option, void *data) = 0;
 		// close resources
 		virtual void done() = 0;
-		// validate list, expand regex
+		// parse list of identifiers, wildcards or regexes and copy found EUI into retval
 		virtual int parseIdentifiers(
+			std::vector<TDEVEUI> &retval,
+			const std::vector<std::string> &list,
+			bool useRegex
+		) = 0;
+		// parse list of names, wildcards or regexes and copy found EUI into retval
+		virtual int parseNames(
 			std::vector<TDEVEUI> &retval,
 			const std::vector<std::string> &list,
 			bool useRegex

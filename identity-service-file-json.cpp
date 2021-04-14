@@ -16,12 +16,14 @@
 /**
  * 	JSON attribute names
  */
-static const char *ATTR_NAMES[5] = {
+#define ATTRS_COUNT	6
+static const char *ATTR_NAMES[ATTRS_COUNT] = {
 	"addr", 		// network address (hex string, 4 bytes)
 	"activation",	// ABP or OTAA
 	"eui",			// device identifier (hex string, 8 bytes)
 	"nwkSKey",		// shared session key (hex string, 16 bytes)
-	"appSKey"		// private key (hex string, 16 bytes)
+	"appSKey",		// private key (hex string, 16 bytes)
+	"name"			// added for search
 };
 
 static const char *ACTIVATION_NAMES[2] = {
@@ -34,7 +36,7 @@ static int getAttrByName(
 )
 {
 	int r = -1;
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < ATTRS_COUNT; i++) {
 		if (strcmp(ATTR_NAMES[i], name) == 0)
 			return i;
 	}
@@ -98,6 +100,7 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 			: service(svc), isNetworkIdentity(false), idx(-1)
 		{
 			memset(&k, 0, sizeof(DEVADDR));
+			memset(&v, 0, sizeof(DEVICEID));
 		}
 
 		bool Null() {
@@ -147,6 +150,9 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 				case 4:
 					s = hex2string(str);
 					string2KEY(v.appSKey, s);
+					break;
+				case 5:
+					string2DEVICENAME(v.name, str);
 					break;
 				default:
 					break;
@@ -222,7 +228,8 @@ int JsonFileIdentityService::save()
 			<< ATTR_NAMES[1] << "\":\"" << getActivationName(it->second.activation) << "\",\"" 
 			<< ATTR_NAMES[2] << "\":\"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
 			<< ATTR_NAMES[3] << "\":\"" << KEY2string(it->second.nwkSKey) << "\",\""
-			<< ATTR_NAMES[4] << "\":\"" << KEY2string(it->second.appSKey) << "\"}";
+			<< ATTR_NAMES[4] << "\":\"" << KEY2string(it->second.appSKey) << "\",\""
+			<< ATTR_NAMES[5] << "\":\"" << std::string(it->second.name, sizeof(DEVICENAME)) << "\"}";
 
 		addSeparator = true;
 	}
@@ -337,6 +344,33 @@ int JsonFileIdentityService::parseIdentifiers(
 	return 0;
 }
 
+int JsonFileIdentityService::parseNames(
+	std::vector<TDEVEUI> &retval,
+	const std::vector<std::string> &list,
+	bool useRegex
+) {
+	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
+		try {
+			std::string re;
+			if (useRegex)
+				re = *it;
+			else
+				re = replaceAll(replaceAll(*it, "*", ".*"), "?", ".");
+			std::regex rex(re, std::regex_constants::grep);
+			for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
+				std::string s2 = std::string(dit->second.name, sizeof(DEVICENAME));
+				std::cerr << s2 << std::endl;
+				if (std::regex_search(s2, rex))
+					retval.push_back(TDEVEUI(dit->second.deviceEUI));
+			}
+		}
+		catch (const std::regex_error& e) {
+			return ERR_CODE_INVALID_REGEX;
+		}
+	}
+	return 0;
+}
+
 std::string JsonFileIdentityService::toJsonString()
 {
 	std::stringstream ss;
@@ -352,7 +386,8 @@ std::string JsonFileIdentityService::toJsonString()
 			<< "\"" << ATTR_NAMES[1] << "\":\"" << getActivationName(dit->second.activation) << "\", "
 			<< "\"" << ATTR_NAMES[2] << "\":\"" << DEVEUI2string(dit->second.deviceEUI) << "\", "
 			<< "\"" << ATTR_NAMES[3] << "\":\"" << KEY2string(dit->second.nwkSKey) << "\", "
-			<< "\"" << ATTR_NAMES[4] << "\":\"" << KEY2string(dit->second.appSKey) << "\"}";
+			<< "\"" << ATTR_NAMES[4] << "\":\"" << KEY2string(dit->second.appSKey) << "\", "
+			<< "\"" << ATTR_NAMES[5] << "\":\"" << std::string(dit->second.name, sizeof(DEVICENAME)) << "\"}";
 	}
 	ss << "]";
 	return ss.str();

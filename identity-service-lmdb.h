@@ -28,6 +28,11 @@ class LmdbIdentityService: public IdentityService {
 			const std::vector<std::string> &list,
 			bool useRegex
 		);
+		int parseNames(
+			std::vector<TDEVEUI> &retval,
+			const std::vector<std::string> &list,
+			bool useRegex
+		);
 };
 
 #endif

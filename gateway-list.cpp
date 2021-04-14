@@ -1,5 +1,4 @@
 #include <regex>
-#include <iostream>
 
 #include "gateway-list.h"
 #include "errlist.h"
@@ -14,6 +13,7 @@
 #include "utilstring.h"
 
 GatewayList::GatewayList()
+	: errmessage(""), filename("")
 {
 
 }
@@ -22,6 +22,7 @@ GatewayList::GatewayList(
 	const GatewayList &value
 )
 {
+	errmessage = value.errmessage;
 	filename = value.filename;
 	gateways = value.gateways;
 }
@@ -29,7 +30,7 @@ GatewayList::GatewayList(
 GatewayList::GatewayList(
 	const std::string &afilename
 )
-	: filename(afilename)
+	: errmessage(""), filename(afilename)
 {
 	parse(file2string(filename.c_str()));
 }
@@ -78,7 +79,9 @@ int GatewayList::parse(
 		return ERR_CODE_INVALID_JSON;
 	for (int i = 0; i < value.Size(); i++) {
 		GatewayStat stat;
-		if (stat.parse(value[i])) {
+		if (int r = stat.parse(value[i])) {
+			errmessage = strerror_client(r);
+		} else {
 			if (gatewayId)
 				stat.gatewayId = gatewayId;
 			gateways[stat.gatewayId] = stat;
@@ -118,7 +121,44 @@ int GatewayList::parseIdentifiers(
 				}
 		    }
     		catch (const std::regex_error& e) {
-				std::cerr << e.what() << std::endl;
+				return ERR_CODE_INVALID_REGEX;
+				break;
+			}
+		}
+	}
+	return 0;
+}
+
+int GatewayList::parseNames(
+	std::vector<uint64_t> &retval,
+	const std::vector<std::string> &list,
+	bool useRegex
+) const
+{
+	for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
+		if (isHex(*it)) {
+			// identifier itself
+			uint64_t v = str2gatewayId(it->c_str());
+			if (gateways.find(v) == gateways.end()) {
+				return false;
+			} else {
+				retval.push_back(v);
+			}
+		} else {
+			// can contain regex "*"
+			try {
+				std::string re;
+				if (useRegex)
+					re = *it;
+				else
+					re = replaceAll(replaceAll(*it, "*", ".*"), "?", ".");
+				std::regex rex(re, std::regex_constants::grep);
+				for (std::map<uint64_t, GatewayStat>::const_iterator itg(gateways.begin()); itg != gateways.end(); itg++) {
+					if (std::regex_search(itg->second.name, rex))
+						retval.push_back(itg->first);
+				}
+		    }
+    		catch (const std::regex_error& e) {
 				return ERR_CODE_INVALID_REGEX;
 				break;
 			}

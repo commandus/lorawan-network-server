@@ -14,8 +14,14 @@ class MacGwConfig {
 		MacDataList macCommands;
 		std::vector<uint64_t> gatewayIds;
 		std::vector<TDEVEUI> euis;
+		// gateway identifiers, with wildcards or regexes
 		std::vector<std::string> gatewayMasks;
+		// gateway names, with wildcards or regexes
+		std::vector<std::string> gatewayNames;
+		// end device identifiers, with wildcards or regexes
 		std::vector<std::string> euiMasks;
+		// end device names, with wildcards or regexes
+		std::vector<std::string> deviceNames;
 		// read from command line
 		std::vector<std::string> cmd;
 		int errcode;

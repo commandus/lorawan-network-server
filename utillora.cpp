@@ -295,6 +295,7 @@ NetworkIdentity::NetworkIdentity(
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
 std::string KEY2string(
@@ -313,7 +314,8 @@ std::string NetworkIdentity::toString() const
 		<< " " << (activation == 1 ? "OTAA" : "ABP")
 		<< " " << DEVEUI2string(deviceEUI)
 		<< " " << KEY2string(nwkSKey)
-		<< " " << KEY2string(appSKey);
+		<< " " << KEY2string(appSKey)
+		<< " " << std::string(name, sizeof(DEVICENAME));
 	return ss.str();
 }
 
@@ -321,6 +323,7 @@ DeviceId::DeviceId() {
 	memset(&deviceEUI, 0, sizeof(DEVEUI));
 	memset(&nwkSKey, 0, sizeof(KEY128));
 	memset(&appSKey, 0, sizeof(KEY128));
+	memset(&name, 0, sizeof(DEVICENAME));
 }
 
 DeviceId::DeviceId(
@@ -329,6 +332,7 @@ DeviceId::DeviceId(
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+	memset(&name, 0, sizeof(DEVICENAME));
 }
 
 DeviceId::DeviceId(
@@ -346,6 +350,7 @@ void DeviceId::set(
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
 // const std::string DEF_DATA_RATE = "SF7BW125";
@@ -704,6 +709,14 @@ void string2KEY(
 	memmove(&retval, v.c_str(), len);
 	if (len < sizeof(KEY128))
 		memset(&retval + len, 0, sizeof(KEY128) - len);
+}
+
+void string2DEVICENAME(
+	DEVICENAME &retval,
+	const char *str
+)
+{
+	strncpy(retval, str, sizeof(DEVICENAME));
 }
 
 void int2DEVADDR(

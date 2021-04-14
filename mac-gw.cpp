@@ -109,8 +109,10 @@ int parseCmd(
 	// device path
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
-	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 1, 100, "gateway identifier, *- all");
-	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 1, 100, "end-device identifier, *- all");
+	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 0, 100, "gateway identifier, *- all");
+	struct arg_str *a_gatewayname = arg_strn("G", "gatewayname", "<name>", 0, 100, "gateway name, *- all");
+	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 0, 100, "end-device identifier, *- all");
+	struct arg_str *a_devicename = arg_strn("E", "devicename", "<name>", 0, 100, "end-device name, *- all");
 	struct arg_str *a_payload_hex = arg_str0("p", "payload", "<hex>", "payload bytes, in hex");
 	
 	struct arg_lit *a_regex = arg_lit0("x", "regex", "Use regular expression in -g, -e options. By default wildcards (*, ?) can be used.");
@@ -120,7 +122,7 @@ int parseCmd(
 
 	void *argtable[] = {
 		a_config,
-		a_command, a_gatewayid, a_eui, a_payload_hex,
+		a_command, a_gatewayid, a_gatewayname, a_eui, a_devicename, a_payload_hex,
 		a_regex, a_verbosity, a_help, a_end};
 
 	int nerrors;
@@ -150,8 +152,14 @@ int parseCmd(
 		for (int i = 0; i < a_gatewayid->count; i++) {
 			macGwConfig->gatewayMasks.push_back(a_gatewayid->sval[i]);
 		}
+		for (int i = 0; i < a_gatewayname->count; i++) {
+			macGwConfig->gatewayNames.push_back(a_gatewayname->sval[i]);
+		}
 		for (int i = 0; i < a_eui->count; i++) {
 			macGwConfig->euiMasks.push_back(a_eui->sval[i]);
+		}
+		for (int i = 0; i < a_devicename->count; i++) {
+			macGwConfig->deviceNames.push_back(a_devicename->sval[i]);
 		}
 		if (a_payload_hex->count) {
 			macGwConfig->payload = hex2string(*a_payload_hex->sval);
@@ -242,7 +250,16 @@ int main(
 	
 	int r;	
 	if (r = gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks, macGwConfig->useRegex)) {
-		std::cerr << ERR_INVALID_GATEWAY_ID << " code: " << r << ": " << strerror_client(r) << std::endl;
+		std::cerr << ERR_MESSAGE << r << ": " << strerror_client(r) << std::endl;
+		exit(ERR_CODE_INVALID_GATEWAY_ID);
+	}
+	if (r = gatewayList->parseNames(macGwConfig->gatewayIds, macGwConfig->gatewayNames, macGwConfig->useRegex)) {
+		std::cerr << ERR_MESSAGE << r << ": " << strerror_client(r) << std::endl;
+		exit(ERR_CODE_INVALID_GATEWAY_ID);
+	}
+	if (macGwConfig->gatewayIds.size() == 0) {
+		// At leaast one gateway required
+		std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": " << ERR_INVALID_GATEWAY_ID << std::endl;
 		exit(ERR_CODE_INVALID_GATEWAY_ID);
 	}
 
@@ -255,6 +272,11 @@ int main(
 
 	// parse device ids, expand regex
 	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks, macGwConfig->useRegex)) {
+		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
+		exit(ERR_CODE_INVALID_DEVICE_EUI);
+	}
+	// parse device names, expand regex
+	if (identityService.parseNames(macGwConfig->euis, macGwConfig->deviceNames, macGwConfig->useRegex)) {
 		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
 	}

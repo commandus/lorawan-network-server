@@ -33,6 +33,11 @@ class JsonFileIdentityService: public IdentityService {
 			const std::vector<std::string> &list,
 			bool useRegex
 		);
+		int parseNames(
+			std::vector<TDEVEUI> &retval,
+			const std::vector<std::string> &list,
+			bool useRegex
+		);
 		// debug only
 		std::string toJsonString();
 		int errcode;
