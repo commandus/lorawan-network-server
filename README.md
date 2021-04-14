@@ -158,6 +158,7 @@ Server updates the gateway statistics on shutdown.
 - eui         device identifier (hex string, 8 bytes)
 - nwkSKey     shared session key (hex string, 16 bytes)
 - appSKey     private key (hex string, 16 bytes)
+- name         optional device name (max 8 chars)
 
 Example:
 ```
@@ -165,9 +166,10 @@ Example:
   {
     "addr": "xx..",
     "activation": "ABP",
-    "eui": "xx..:",
+    "eui": "xx..:",./mac-gw -c mac-gw.json -G "*"  -E "dev*"  -p "0fa1cc" al 1 2 d 3
     "nwkSKey": "..",
-    "appSKey": ".."
+    "appSKey": "..",
+    "name": "dev01"
   },
   ..
 ]
@@ -178,8 +180,8 @@ Send a command to a class C device bypassing the network server directly through
 
 Parameters:
 
-- -g gateway identifier
-- -e end-device identifier
+- -g gateway identifier or -G gateway name
+- -e end-device identifier or -E dev-device name
 - -p payload (optional)
 
 Options:
@@ -191,20 +193,27 @@ Regular expressions grammar is similar to the grep.
 
 Option -p requires hex string, for instance "0faa0167" is valid parameter value.
 
-Examples:
+MAC commands has short and long names.
+For example, "a" is a short name of "linkadr" command.
+Most commands have one or more parameteres.
+For example, "linkadr" command has 5 parameters:
+
 ```
-./mac-gw -c mac-gw.json -g "*" -e "*" -p "0fa1cc"
-./mac-gw -c mac-gw.json -g "01*" -g "09*" -e "ff*" -e "aa*" -p "0fa1cc"
+linkadr 2 7 255 1 0
+```
+where 2 is tx power, 7- data rate, 255- channel mask, 1-  transmissions per messege, 0- mask control.
+
+There are special parameter value "asis" for the first two parameters of the "linkadr" command , you can use it as shown:
+
+```
+linkadr asis asis 255 1 0
 ```
 
-Configuration file ~/.mac-gw.json same as server config ~/.lorawan-network-server.json.
-
-You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
-
-- server
-- configFileName
-- gatewaysFileName
-
+List MAC commands:
+```
+./mac-gw -?
+...
+MAC commands:
 a  linkadr      Rate adaptation
      tx power: 0..7, asis(15)
      data rate: 0..7, asis(15)
@@ -249,6 +258,23 @@ pc pingchannel  Set ping slot channel
      data rate: 0..7, asis(15)
 bf beaconfreq   Set beacon frequency
      frequency: 0..9999999 * 100Hz
+```
+
+Examples:
+```
+./mac-gw -c mac-gw.json -g "*" -e "*" -p "0fa1cc"
+./mac-gw -c mac-gw.json -g "01*" -g "09*" -e "ff*" -e "aa*" -p "0fa1cc"
+./mac-gw -c mac-gw.json -G "gw-sub*"  -E "dev*"  -p "0fa1cc" al 1 2 d 3
+```
+
+Configuration file ~/.mac-gw.json same as server config ~/.lorawan-network-server.json.
+
+You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
+
+- server
+- configFileName
+- gatewaysFileName
+
 
 
 ## Packet types sent by Semtech gateway
