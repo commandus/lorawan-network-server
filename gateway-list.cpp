@@ -59,6 +59,16 @@ int GatewayList::put(
 	return parse(gatewayId, doc);
 }
 
+std::string GatewayList::getAddress(
+	uint64_t gatewayId
+) {
+	std::map<uint64_t, GatewayStat>::iterator it(gateways.find(gatewayId));
+	if (it != gateways.end())
+		return it->second.addr;
+	else
+		return "";
+}
+
 bool GatewayList::update(
 	const GatewayStat &value
 )

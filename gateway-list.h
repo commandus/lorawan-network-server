@@ -22,6 +22,7 @@ class GatewayList {
 		GatewayList(const std::string &filename);
 		GatewayList(const GatewayList &value);
 		int put(uint64_t gatewayId, const std::string &value);
+		std::string getAddress(uint64_t gatewayId);
 		bool update(const GatewayStat &value);
 		int parse(uint64_t gatewayId, rapidjson::Value &value);
 		void parse(const std::string &value);

@@ -288,19 +288,29 @@ int main(
 		exit(r);
 	}
 
-	std::cerr << macGwConfig->toJsonString() << std::endl;
-
 	// check MAC commands
 	if ((macGwConfig->macCommands.list.size() == 0) && (macGwConfig->payload.size() == 0)) {
 		std::cerr << ERR_NO_MAC_NO_PAYLOAD << std::endl;
 		exit(ERR_CODE_NO_MAC_NO_PAYLOAD);
 	}
+	std::cerr << macGwConfig->toJsonString() << std::endl;
 
 	// form MAC data
 	std::vector<MacData> md;
 	for (int i = 0; i < macGwConfig->macCommands.list.size(); i++) {
 		MacData d(macGwConfig->macCommands.list[i].toString(), true);
 		md.push_back(d);
+	}
+
+	for (int i = 0; i < macGwConfig->gatewayIds.size(); i++) {
+		std::string address = gatewayList->getAddress(macGwConfig->gatewayIds[i]);
+		MODE_FAMILY familyHint = MODE_FAMILY_HINT_UNSPEC;
+		UDPSocket socket(address, MODE_OPEN_SOCKET_CONNECT, familyHint);
+		semtechUDPPacket packet;
+		if (socket.errcode) {
+			std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_client(socket.errcode) << std::endl;
+			exit(socket.errcode);
+		}
 	}
 
 #ifdef _MSC_VER

@@ -84,6 +84,13 @@ bool UDPSocket::isIPv6() const {
 	return addr.ai_family == AF_INET6;
 }
 
+static bool isAddrStringIPv6(
+	const char * value
+) {
+	struct in6_addr result;
+	return inet_pton(AF_INET6, value, &result) == 1;
+}
+
 static int addressFamily(
 	struct addrinfo *retAddrInfo,
 	struct sockaddr *addrStorage,
@@ -93,6 +100,12 @@ static int addressFamily(
 ) {
 	if (addr.empty() || (addr.length() == 1 && addr[0] == '*') ) {
 		memset(addrStorage, 0, sizeof(struct sockaddr));
+		if (familyHint == MODE_FAMILY_HINT_UNSPEC) {
+			if (isAddrStringIPv6(addr.c_str()))
+				familyHint = MODE_FAMILY_HINT_IPV6;
+			else
+				familyHint = MODE_FAMILY_HINT_IPV4;
+		}
 		addrStorage->sa_family = (familyHint == MODE_FAMILY_HINT_IPV6) ? AF_INET6 : AF_INET;
 		if (addrStorage->sa_family == AF_INET) {
 			struct sockaddr_in *a = (struct sockaddr_in *) addrStorage;
