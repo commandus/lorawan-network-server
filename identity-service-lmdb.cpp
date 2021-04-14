@@ -184,7 +184,7 @@ static bool onFindName
 	// can contain regex "*"
 	try {
 		std::regex rex(r->value, std::regex_constants::grep);
-		std::string s2 = DEVEUI2string(nid.deviceEUI);
+		std::string s2 = std::string(nid.name, sizeof(DEVICENAME));
 		if (std::regex_search(s2, rex))
 			r->retval.push_back(TDEVEUI(nid.deviceEUI));
 	}

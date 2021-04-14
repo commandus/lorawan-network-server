@@ -116,9 +116,11 @@ Example of lorawan-network-server.json:
 
 Gateways list gateways.
 
-Each entry has an gatway identifier and gateway statistics.
+Each entry has an gateway identifier, address, name and gateway statistics.
 
   - gwid Gateway identifier (hex number string)
+  - addr gateway address:port (IPv4 or IPv6)
+  - name gateway name
   - time UTC time of pkt RX, us precision, ISO 8601 'compact' format
   - lati latitude
   - long longitude
@@ -134,7 +136,9 @@ Example:
 ```
 [
   {
-    "gwid": "00006cc3743eed46"
+     "gwid": "00006cc3743eed46"
+     "addr": "127.0.0.1:6000",
+     "name": "gw01",
    	"time": 0,
      "lati": 62.02774,
      "long": 129.72883,
