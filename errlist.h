@@ -135,6 +135,7 @@
 #define MSG_GATEWAY_STAT				"Gateway statistics "
 #define MSG_RXPK						"rxpk "
 #define MSG_MAC_COMMANDS                "MAC commands"
+#define MSG_SEND_TO                     "Send to "
 
 #define ERROR							"Error "
 

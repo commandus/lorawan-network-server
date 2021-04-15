@@ -119,7 +119,7 @@ Gateways list gateways.
 Each entry has an gateway identifier, address, name and gateway statistics.
 
   - gwid Gateway identifier (hex number string)
-  - addr gateway address:port (IPv4 or IPv6)
+  - addr gateway address:port (IPv4 or IPv6).
   - name gateway name
   - time UTC time of pkt RX, us precision, ISO 8601 'compact' format
   - lati latitude
@@ -131,6 +131,8 @@ Each entry has an gateway identifier, address, name and gateway statistics.
   - ackr Percentage of upstream datagrams that were acknowledged
   - dwnb Number of downlink datagrams received
   - txnb Number of packets emitted
+
+Instead of an host address, you can use host name (domain name). 
 
 Example:
 ```
@@ -170,7 +172,7 @@ Example:
   {
     "addr": "xx..",
     "activation": "ABP",
-    "eui": "xx..:",./mac-gw -c mac-gw.json -G "*"  -E "dev*"  -p "0fa1cc" al 1 2 d 3
+    "eui": "xx..:",
     "nwkSKey": "..",
     "appSKey": "..",
     "name": "dev01"

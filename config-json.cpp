@@ -29,7 +29,6 @@ ServerConfig::ServerConfig()
 int ServerConfig::parse(
 	rapidjson::Value &value
 ) {
-	clear();
 	if (value.HasMember("listenAddressIPv4")) {
 		rapidjson::Value &addresses = value["listenAddressIPv4"];
 		if (addresses.IsArray()) {
@@ -154,7 +153,9 @@ Configuration::Configuration()
 
 Configuration::Configuration(
 	const char* value
-) {
+)
+	: configFileName(""), gatewaysFileName("")
+{
 	parse(value);
 }
 

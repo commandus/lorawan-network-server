@@ -144,8 +144,7 @@ int parseCmd(
 	config->serverConfig.daemonize = false;
 	config->serverConfig.verbosity = a_verbosity->count;
 
-	if (!nerrors)
-	{
+	if (!nerrors) {
 		for (int i = 0; i < a_command->count; i++) {
 			macGwConfig->cmd.push_back(a_command->sval[i]);
 		}
@@ -243,8 +242,10 @@ int main(
 	// load gateway list
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
-	// std::cerr << config->toString() << std::endl;
-	// std::cerr << gatewayList->toJsonString() << std::endl;
+	if (config->serverConfig.verbosity > 2)
+		std::cerr << config->toString() << std::endl;
+	if (config->serverConfig.verbosity > 2)
+		std::cerr << gatewayList->toJsonString() << std::endl;
 	
 	// parse gateway ids, expand regex 
 	
@@ -268,7 +269,8 @@ int main(
 	if (identityService.init(config->serverConfig.identityStorageName, NULL) != 0) {
 		std::cerr << ERR_MESSAGE << identityService.errmessage << std::endl;
 	}
-	std::cerr << identityService.toJsonString() << std::endl;
+	if (config->serverConfig.verbosity > 2)
+		std::cerr << identityService.toJsonString() << std::endl;
 
 	// parse device ids, expand regex
 	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks, macGwConfig->useRegex)) {
@@ -293,7 +295,8 @@ int main(
 		std::cerr << ERR_NO_MAC_NO_PAYLOAD << std::endl;
 		exit(ERR_CODE_NO_MAC_NO_PAYLOAD);
 	}
-	std::cerr << macGwConfig->toJsonString() << std::endl;
+	if (config->serverConfig.verbosity > 2)
+		std::cerr << macGwConfig->toJsonString() << std::endl;
 
 	// form MAC data
 	std::vector<MacData> md;
@@ -306,6 +309,8 @@ int main(
 		std::string address = gatewayList->getAddress(macGwConfig->gatewayIds[i]);
 		MODE_FAMILY familyHint = MODE_FAMILY_HINT_UNSPEC;
 		UDPSocket socket(address, MODE_OPEN_SOCKET_CONNECT, familyHint);
+		if (config->serverConfig.verbosity > 0)
+			std::cerr << MSG_SEND_TO << UDPSocket::addrString(&socket.addrStorage) << std::endl;
 		semtechUDPPacket packet;
 		if (socket.errcode) {
 			std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_client(socket.errcode) << std::endl;
