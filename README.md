@@ -51,6 +51,9 @@ Gateways
 +---------------------+
 ```
 
+[Basic communication protocol between Lora gateway and server UDP "JSON" protocol](https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT)
+
+
 ## Run
 
 ```

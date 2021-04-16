@@ -20,6 +20,7 @@ class JsonFileIdentityService: public IdentityService {
 		JsonFileIdentityService();
 		~JsonFileIdentityService();
 		int get(DEVADDR &devaddr, DeviceId &retval);
+		int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui);
 		// List entries
 		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size);
 		void put(DEVADDR &devaddr, DEVICEID &id);

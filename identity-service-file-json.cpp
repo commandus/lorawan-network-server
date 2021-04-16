@@ -1,4 +1,3 @@
-#include <iostream>
 #include <fstream>
 #include <regex>
 
@@ -251,6 +250,19 @@ int JsonFileIdentityService::get(
 	return 0;
 }
 
+int JsonFileIdentityService::getNetworkIdentity(
+	NetworkIdentity &retval,
+	const DEVEUI &eui
+) {
+	for (std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.begin()); it != storage.end(); it++) {
+		if (memcmp(it->second.deviceEUI, eui, sizeof(DEVEUI) == 0)) {
+			retval.set(it->first, it->second);
+			return 0;
+		}
+	}
+	return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
+}
+
 // List entries
 void JsonFileIdentityService::list(
 	std::vector<NetworkIdentity> &retval,
@@ -331,7 +343,6 @@ int JsonFileIdentityService::parseIdentifiers(
 				std::regex rex(re, std::regex_constants::grep);
 				for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
 					std::string s2 = DEVEUI2string(dit->second.deviceEUI);
-					std::cerr << s2 << std::endl;
 					if (std::regex_search(s2, rex))
 						retval.push_back(TDEVEUI(dit->second.deviceEUI));
 				}
@@ -359,7 +370,6 @@ int JsonFileIdentityService::parseNames(
 			std::regex rex(re, std::regex_constants::grep);
 			for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
 				std::string s2 = std::string(dit->second.name, sizeof(DEVICENAME));
-				std::cerr << s2 << std::endl;
 				if (std::regex_search(s2, rex))
 					retval.push_back(TDEVEUI(dit->second.deviceEUI));
 			}

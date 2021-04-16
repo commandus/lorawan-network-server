@@ -47,12 +47,12 @@ rapid_headers = \
 
 nobase_dist_include_HEADERS = \
 	platform.h utilstring.h utildate.h strptime.h lora-radio.h \
-	utillora.h udp-socket.h udp-emitter.h udp-listener.h \
+	utillora.h udp-socket.h udp-emitter.h udp-listener.h lora-encrypt.h \
 	config-json.h identity-service-abstract.h identity-service-file-json.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
 	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
-	macgw-config-json.h config-filename.h \
+	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h
@@ -65,6 +65,7 @@ lorawan_network_server_SOURCES = \
 	config-json.cpp lora-packet-handler-impl.cpp \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp config-filename.cpp \
+	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -76,8 +77,8 @@ mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp errlist.cpp \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp \
 	config-json.cpp packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
-	lora-packet-handler-impl.cpp config-filename.cpp \
-	utilstring.cpp utildate.cpp strptime.cpp \
+	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
+	utilstring.cpp utildate.cpp strptime.cpp semtech-pull-resp-packet.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)

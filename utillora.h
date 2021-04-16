@@ -190,7 +190,12 @@ public:
 	KEY128 appSKey;			///< private key
 	// added for searching
 	DEVICENAME name;
+	NetworkIdentity();
 	NetworkIdentity(const DEVADDRINT &a, const DEVICEID &id);
+	void set(
+		const DEVADDRINT &addr,
+		const DEVICEID &value
+	);
 	std::string toString() const;
 };
 

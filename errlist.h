@@ -115,8 +115,8 @@
 #define ERR_INVALID_REGEX               "Invalid regular expression"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
-#define MSG_INTERRUPTED 				MSG_PROG_NAME " interrupted "
-#define MSG_GRACEFULLY_STOPPED			MSG_PROG_NAME " closed gracefully"
+#define MSG_INTERRUPTED 				"Interrupted "
+#define MSG_GRACEFULLY_STOPPED			"Stopped gracefully"
 #define MSG_PG_CONNECTED        		"Connected"
 #define MSG_PG_CONNECTING       		"Connecting..."
 #define MSG_DAEMON_STARTED      		"Start daemon "

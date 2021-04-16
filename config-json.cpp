@@ -87,7 +87,6 @@ void ServerConfig::toJson(
 		rapidjson::Value address;
 		address.SetString(it->c_str(), it->size(), allocator);
 		addressesIPv4.PushBack(address, allocator);
-
 	}
 	value.AddMember("listenAddressIPv4", addressesIPv4, allocator);
 

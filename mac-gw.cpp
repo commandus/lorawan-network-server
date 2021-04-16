@@ -243,12 +243,11 @@ int main(
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
 	if (config->serverConfig.verbosity > 2)
-		std::cerr << config->toString() << std::endl;
+		std::cerr << "Config: " << std::endl << config->toString() << std::endl;
 	if (config->serverConfig.verbosity > 2)
-		std::cerr << gatewayList->toJsonString() << std::endl;
+		std::cerr << "Gateways: " << std::endl <<gatewayList->toJsonString() << std::endl;
 	
 	// parse gateway ids, expand regex 
-	
 	int r;	
 	if (r = gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks, macGwConfig->useRegex)) {
 		std::cerr << ERR_MESSAGE << r << ": " << strerror_client(r) << std::endl;
@@ -270,7 +269,7 @@ int main(
 		std::cerr << ERR_MESSAGE << identityService.errmessage << std::endl;
 	}
 	if (config->serverConfig.verbosity > 2)
-		std::cerr << identityService.toJsonString() << std::endl;
+		std::cerr << "Devices: " << std::endl <<identityService.toJsonString() << std::endl;
 
 	// parse device ids, expand regex
 	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks, macGwConfig->useRegex)) {
@@ -296,7 +295,7 @@ int main(
 		exit(ERR_CODE_NO_MAC_NO_PAYLOAD);
 	}
 	if (config->serverConfig.verbosity > 2)
-		std::cerr << macGwConfig->toJsonString() << std::endl;
+		std::cerr << "command line parameters: " << std::endl << macGwConfig->toJsonString() << std::endl;
 
 	// form MAC data
 	std::vector<MacData> md;
@@ -306,15 +305,27 @@ int main(
 	}
 
 	for (int i = 0; i < macGwConfig->gatewayIds.size(); i++) {
-		std::string address = gatewayList->getAddress(macGwConfig->gatewayIds[i]);
-		MODE_FAMILY familyHint = MODE_FAMILY_HINT_UNSPEC;
-		UDPSocket socket(address, MODE_OPEN_SOCKET_CONNECT, familyHint);
-		if (config->serverConfig.verbosity > 0)
-			std::cerr << MSG_SEND_TO << UDPSocket::addrString(&socket.addrStorage) << std::endl;
-		semtechUDPPacket packet;
+		// open socket
+		UDPSocket socket(gatewayList->getAddress(macGwConfig->gatewayIds[i]), MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
 		if (socket.errcode) {
 			std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_client(socket.errcode) << std::endl;
 			exit(socket.errcode);
+		}
+		for (int d = 0; d < macGwConfig->euis.size(); d++) {
+			NetworkIdentity netId;
+			if (identityService.getNetworkIdentity(netId, macGwConfig->euis[i].eui) != 0) {
+				std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
+				exit(ERR_CODE_INVALID_DEVICE_EUI);
+			}
+			// compose packet
+			semtechUDPPacket packet;
+			std::string s = packet.toString();
+			if (config->serverConfig.verbosity > 0)
+				std::cerr << MSG_SEND_TO 
+					<< UDPSocket::addrString(&socket.addrStorage)
+					<< s.size() << " bytes, "
+					<< "packet: " << hexString(s)
+					<< std::endl;
 		}
 	}
 
