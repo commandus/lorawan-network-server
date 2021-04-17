@@ -476,7 +476,7 @@ std::string rfmMetaData::snrratio() const
 /**
  * 	Section 3.3	 
  */
-const char* METADATA_NAMES[15] = {
+const char* METADATA_RX_NAMES[15] = {
 	"rxpk",	// 0 array name
 	"time", // 1 string | UTC time of pkt RX, us precision, ISO 8601 'compact' format
 	"tmms", // 2 number | GPS time of pkt RX, number of milliseconds since 06.Jan.1980
@@ -500,7 +500,7 @@ int getMetadataName(
 {
 	int r = -1;
 	for (int i = 0; i < 15; i++) {
-		if (strcmp(METADATA_NAMES[i], name) == 0)
+		if (strcmp(METADATA_RX_NAMES[i], name) == 0)
 			return i;
 	}
 	return r;
@@ -624,55 +624,55 @@ void rfmMetaData::toJSON(
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 	rapidjson::Value v1(rapidjson::kStringType);
 	v1.SetString(dt.c_str(), dt.length());
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[1])), v1, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[1])), v1, allocator);
 
 	rapidjson::Value v2(tmms());
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[2])), v2, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[2])), v2, allocator);
 
 	rapidjson::Value v3(tmst);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[3])), v3, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[3])), v3, allocator);
 
 	rapidjson::Value v4(freq);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[4])), v4, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[4])), v4, allocator);
 
 	rapidjson::Value v5(chan);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[5])), v5, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[5])), v5, allocator);
 
 	rapidjson::Value v6(rfch);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[6])), v6, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[6])), v6, allocator);
 
 	rapidjson::Value v7(stat);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[7])), v7, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[7])), v7, allocator);
 
 	rapidjson::Value v8(rapidjson::kStringType);
 	std::string s8(modulation());
 	v8.SetString(s8.c_str(), s8.length());
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[8])), v8, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[8])), v8, allocator);
 
 	rapidjson::Value v9(rapidjson::kStringType);
 	std::string dr = datr();
 	v9.SetString(dr.c_str(), dr.length());
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[9])), v9, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[9])), v9, allocator);
 
 	rapidjson::Value v10(rapidjson::kStringType);
 	std::string cr = codr();
 	v10.SetString(cr.c_str(), cr.length());
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[10])), v10, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[10])), v10, allocator);
 
 	rapidjson::Value v11(rssi);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[11])), v11, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[11])), v11, allocator);
 
 	rapidjson::Value v12(lsnr);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[12])), v12, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[12])), v12, allocator);
 
 	rapidjson::Value v13(data.size());
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[13])), v13, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[13])), v13, allocator);
 
 	rapidjson::Value v14(rapidjson::kStringType);
 	std::string d(base64_encode(data));	// base64
 
 	v14.SetString(d.c_str(), d.size());
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_NAMES[14])), v14, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[14])), v14, allocator);
 }
 
 int rfmMetaData::parse(
@@ -680,92 +680,92 @@ int rfmMetaData::parse(
 	std::string &retData,
 	rapidjson::Value &value
 ) {
-	if (value.HasMember(METADATA_NAMES[1])) {
-		rapidjson::Value &v = value[METADATA_NAMES[1]];
+	if (value.HasMember(METADATA_RX_NAMES[1])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[1]];
 		if (v.IsString()) {
 			t = parseDate(v.GetString());
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[3])) {
-		rapidjson::Value &v = value[METADATA_NAMES[3]];
+	if (value.HasMember(METADATA_RX_NAMES[3])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[3]];
 		if (v.IsInt()) {
 			tmst = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[4])) {
-		rapidjson::Value &v = value[METADATA_NAMES[4]];
+	if (value.HasMember(METADATA_RX_NAMES[4])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[4]];
 		if (v.IsDouble()) {
 			freq = v.GetDouble() * 1000000;
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[5])) {
-		rapidjson::Value &v = value[METADATA_NAMES[5]];
+	if (value.HasMember(METADATA_RX_NAMES[5])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[5]];
 		if (v.IsInt()) {
 			chan = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[6])) {
-		rapidjson::Value &v = value[METADATA_NAMES[6]];
+	if (value.HasMember(METADATA_RX_NAMES[6])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[6]];
 		if (v.IsInt()) {
 			rfch = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[7])) {
-		rapidjson::Value &v = value[METADATA_NAMES[7]];
+	if (value.HasMember(METADATA_RX_NAMES[7])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[7]];
 		if (v.IsInt()) {
 			stat = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[8])) {
-		rapidjson::Value &v = value[METADATA_NAMES[8]];
+	if (value.HasMember(METADATA_RX_NAMES[8])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[8]];
 		if (v.IsString()) {
 			setModulation(v.GetString());
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[9])) {
-		rapidjson::Value &v = value[METADATA_NAMES[9]];
+	if (value.HasMember(METADATA_RX_NAMES[9])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[9]];
 		if (v.IsString()) {
 			setDatr(v.GetString());
 		}
 	}
 	
-	if (value.HasMember(METADATA_NAMES[10])) {
-		rapidjson::Value &v = value[METADATA_NAMES[10]];
+	if (value.HasMember(METADATA_RX_NAMES[10])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[10]];
 		if (v.IsString()) {
 			setCodr(v.GetString());
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[11])) {
-		rapidjson::Value &v = value[METADATA_NAMES[11]];
+	if (value.HasMember(METADATA_RX_NAMES[11])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[11]];
 		if (v.IsInt()) {
 			rssi = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[12])) {
-		rapidjson::Value &v = value[METADATA_NAMES[12]];
+	if (value.HasMember(METADATA_RX_NAMES[12])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[12]];
 		if (v.IsInt()) {
 			lsnr = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[13])) {
-		rapidjson::Value &v = value[METADATA_NAMES[13]];
+	if (value.HasMember(METADATA_RX_NAMES[13])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[13]];
 		if (v.IsInt()) {
 			retSize = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_NAMES[14])) {
-		rapidjson::Value &v = value[METADATA_NAMES[14]];
+	if (value.HasMember(METADATA_RX_NAMES[14])) {
+		rapidjson::Value &v = value[METADATA_RX_NAMES[14]];
 		if (v.IsString()) {
 			retData = base64_decode(v.GetString());
 		}
@@ -782,20 +782,20 @@ std::string rfmMetaData::toJsonString(
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 
 	ss << "{" 
-		<< "\"" << METADATA_NAMES[1] << "\":\"" << dt
-		<< "\",\"" << METADATA_NAMES[2] << "\":" << tmms()
-		<< ",\"" << METADATA_NAMES[3] << "\":" << tmst
-		<< ",\"" << METADATA_NAMES[4] << "\":" << frequency()
-		<< ",\"" << METADATA_NAMES[5] << "\":" << (int) chan
-		<< ",\"" << METADATA_NAMES[6] << "\":" << (int) rfch
-		<< ",\"" << METADATA_NAMES[7] << "\":" << (int) stat
-		<< ",\"" << METADATA_NAMES[8] << "\":\"" << modulation()
-		<< "\",\"" << METADATA_NAMES[9] << "\":\"" << datr()
-		<< "\",\"" << METADATA_NAMES[10] << "\":\"" << codr()
-		<< "\",\"" << METADATA_NAMES[11] << "\":" << rssi
-		<< ",\"" << METADATA_NAMES[12] << "\":" << lsnr
-		<< ",\"" << METADATA_NAMES[13] << "\":" << data.size()
-		<< ",\"" << METADATA_NAMES[14] << "\":\"" << base64_encode(data) << "\"}";
+		<< "\"" << METADATA_RX_NAMES[1] << "\":\"" << dt
+		<< "\",\"" << METADATA_RX_NAMES[2] << "\":" << tmms()
+		<< ",\"" << METADATA_RX_NAMES[3] << "\":" << tmst
+		<< ",\"" << METADATA_RX_NAMES[4] << "\":" << frequency()
+		<< ",\"" << METADATA_RX_NAMES[5] << "\":" << (int) chan
+		<< ",\"" << METADATA_RX_NAMES[6] << "\":" << (int) rfch
+		<< ",\"" << METADATA_RX_NAMES[7] << "\":" << (int) stat
+		<< ",\"" << METADATA_RX_NAMES[8] << "\":\"" << modulation()
+		<< "\",\"" << METADATA_RX_NAMES[9] << "\":\"" << datr()
+		<< "\",\"" << METADATA_RX_NAMES[10] << "\":\"" << codr()
+		<< "\",\"" << METADATA_RX_NAMES[11] << "\":" << rssi
+		<< ",\"" << METADATA_RX_NAMES[12] << "\":" << lsnr
+		<< ",\"" << METADATA_RX_NAMES[13] << "\":" << data.size()
+		<< ",\"" << METADATA_RX_NAMES[14] << "\":\"" << base64_encode(data) << "\"}";
 	return ss.str();
 }
 
@@ -925,7 +925,7 @@ int semtechUDPPacket::parse(
 
 	int r = 0;
 
-	// rapidjson::StringRef(METADATA_NAMES[1]))
+	// rapidjson::StringRef(METADATA_RX_NAMES[1]))
 
 	if (doc.HasMember("stat")) {
 		rapidjson::Value &jstat = doc["stat"];
@@ -937,10 +937,10 @@ int semtechUDPPacket::parse(
 		retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 	}
 
-	if (!doc.HasMember(METADATA_NAMES[0]))
+	if (!doc.HasMember(METADATA_RX_NAMES[0]))
 		return 0;	// that's ok
 
-	rapidjson::Value &rxpk = doc[METADATA_NAMES[0]];
+	rapidjson::Value &rxpk = doc[METADATA_RX_NAMES[0]];
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
 	for (int i = 0; i < rxpk.Size(); i++) {

@@ -53,6 +53,7 @@ nobase_dist_include_HEADERS = \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
 	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
+	semtech-metadata-tx.h \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h
@@ -66,6 +67,7 @@ lorawan_network_server_SOURCES = \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp config-filename.cpp \
 	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
+	semtech-metadata-tx.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -79,6 +81,7 @@ mac_gw_SOURCES = \
 	config-json.cpp packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp semtech-pull-resp-packet.cpp \
+	semtech-metadata-tx.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
