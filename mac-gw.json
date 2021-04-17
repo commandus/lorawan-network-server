@@ -1,0 +1,9 @@
+{
+	"gatewaysFileName": "./gateway.json",
+	"server": {
+		"identityStorageName": "./identity.json",
+		"listenAddressIPv4": [
+			"127.0.0.1:5000"
+		]
+	}
+}
