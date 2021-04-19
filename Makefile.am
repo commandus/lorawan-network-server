@@ -53,7 +53,8 @@ nobase_dist_include_HEADERS = \
 	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
 	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
-	semtech-metadata-tx.h \
+	semtech-metadata-tx.h identity-service-dir-txt.h \
+	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h
@@ -67,7 +68,7 @@ lorawan_network_server_SOURCES = \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp strptime.cpp config-filename.cpp \
 	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
-	semtech-metadata-tx.cpp \
+	semtech-metadata-tx.cpp identity-service-dir-txt.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -146,7 +147,13 @@ test_mac_gw_SOURCES = \
 test_mac_gw_LDADD =
 test_mac_gw_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-mac-gw
+test_file_watch_SOURCES = \
+	tests/test-file-watch.cpp
+test_file_watch_LDADD = -lpthread
+test_file_watch_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-file-watch
+# test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 
 TESTS = $(check_PROGRAMS)

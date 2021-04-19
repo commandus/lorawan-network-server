@@ -63,8 +63,22 @@ Gateways
 
 ## Build
 
-automake:
+Automake, autoconf, libtool, gcc or cmake must be installed first.
 
+```
+apt install autoconf build-essential libtool
+```
+
+You can use
+
+- autoconf or
+- cmake
+
+build system.
+
+### autoconf
+
+Generate auttomake files, configure and make:
 ```
 autogen.sh
 ./configure
@@ -72,7 +86,9 @@ make
 sudo make install
 ```
 
-cmake (Clang):
+### cmake
+
+For instance, you can use Clang instead of gcc:
 
 ```
 mkdir build
@@ -393,6 +409,9 @@ Sent ACK to 84.237.104.16:54820
 
 
 ## Thitd-party dependencies
+
+- lmdb
+- [Filewatch](https://github.com/ThomasMonkman/filewatch)
 
 ### LMDB
 

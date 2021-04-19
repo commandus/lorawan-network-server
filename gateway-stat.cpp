@@ -147,70 +147,70 @@ int GatewayStat::parse(
 	}
 
 	if (value.HasMember(STAT_NAMES[3])) {
-		rapidjson::Value &v = value[STAT_NAMES[1]];
+		rapidjson::Value &v = value[STAT_NAMES[3]];
 		if (v.IsString()) {
 			t = parseDate(v.GetString());
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[4])) {
-		rapidjson::Value &v = value[STAT_NAMES[2]];
+		rapidjson::Value &v = value[STAT_NAMES[4]];
 		if (v.IsDouble()) {
 			lat = v.GetDouble();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[5])) {
-		rapidjson::Value &v = value[STAT_NAMES[3]];
+		rapidjson::Value &v = value[STAT_NAMES[5]];
 		if (v.IsDouble()) {
 			lon = v.GetDouble();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[6])) {
-		rapidjson::Value &v = value[STAT_NAMES[4]];
+		rapidjson::Value &v = value[STAT_NAMES[6]];
 		if (v.IsInt()) {
 			alt = v.GetInt();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[7])) {
-		rapidjson::Value &v = value[STAT_NAMES[5]];
+		rapidjson::Value &v = value[STAT_NAMES[7]];
 		if (v.IsInt()) {
 			rxnb = v.GetInt();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[8])) {
-		rapidjson::Value &v = value[STAT_NAMES[6]];
+		rapidjson::Value &v = value[STAT_NAMES[8]];
 		if (v.IsInt()) {
 			rxok = v.GetInt();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[9])) {
-		rapidjson::Value &v = value[STAT_NAMES[7]];
+		rapidjson::Value &v = value[STAT_NAMES[9]];
 		if (v.IsInt()) {
 			rxfw = v.GetInt();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[10])) {
-		rapidjson::Value &v = value[STAT_NAMES[8]];
+		rapidjson::Value &v = value[STAT_NAMES[10]];
 		if (v.IsInt()) {
 			ackr = v.GetInt();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[11])) {
-		rapidjson::Value &v = value[STAT_NAMES[9]];
+		rapidjson::Value &v = value[STAT_NAMES[11]];
 		if (v.IsInt()) {
 			dwnb = v.GetInt();
 		}
 	}
 
 	if (value.HasMember(STAT_NAMES[12])) {
-		rapidjson::Value &v = value[STAT_NAMES[10]];
+		rapidjson::Value &v = value[STAT_NAMES[12]];
 		if (v.IsInt()) {
 			txnb = v.GetInt();
 		}

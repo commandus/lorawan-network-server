@@ -64,7 +64,7 @@ static std::string getActivationName(
 }
 
 JsonFileIdentityService::JsonFileIdentityService() 
-	: filename(""), errcode(0), errmessage("")
+	: path(""), errcode(0), errmessage("")
 {
 
 }
@@ -194,7 +194,7 @@ int JsonFileIdentityService::load()
 	clear();
     IdentityJsonHandler handler(this);
     rapidjson::Reader reader;
-	FILE* fp = fopen(filename.c_str(), "rb");
+	FILE* fp = fopen(path.c_str(), "rb");
 	if (!fp)
 		return ERR_CODE_INVALID_JSON;
  	char readBuffer[4096];
@@ -216,7 +216,7 @@ int JsonFileIdentityService::load()
 int JsonFileIdentityService::save()
 {
 	std::fstream os;
-	os.open(filename, std::ios::out);
+	os.open(path, std::ios::out);
 	os << "[";
 	bool addSeparator(false);
 	for (std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.begin(); it != storage.end(); it++) {
@@ -303,7 +303,7 @@ int JsonFileIdentityService::init(
 	void *data
 )
 {
-	filename = option;
+	path = option;
 	return load();
 }
 

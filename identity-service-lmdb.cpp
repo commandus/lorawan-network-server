@@ -48,8 +48,19 @@ int LmdbIdentityService::get(
 ) 
 {
 	DEVICEID v;
-	return getAddr(env, devaddr, v);
+	int r = getAddr(env, devaddr, v);
 	retval.set(v);
+	return r;
+}
+
+int LmdbIdentityService::getNetworkIdentity(
+	NetworkIdentity &retval,
+	const DEVEUI &eui
+) {
+	DEVICEID v;
+	int r = getAddr(env, devaddr, v);
+	retval.set(devaddr, v);
+	return r;
 }
 
 class ListEnv {
