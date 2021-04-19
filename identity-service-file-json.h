@@ -1,5 +1,5 @@
-#ifndef IDENTITY_FILE_JSON_LMDB_H_
-#define IDENTITY_FILE_JSON_LMDB_H_ 1
+#ifndef IDENTITY_SERVICE_FILE_JSON_H_
+#define IDENTITY_SERVICE_FILE_JSON_H_ 1
 
 #include <vector>
 #include "identity-service-abstract.h"
@@ -11,11 +11,12 @@
 
 class JsonFileIdentityService: public IdentityService {
 	private:
+		virtual int load();
+		virtual int save();
+	protected:
 		std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare> storage;
-		std::string filename;
-		void clear();
-		int load();
-		int save();
+		std::string path;
+		void clear();		
 	public:
 		JsonFileIdentityService();
 		~JsonFileIdentityService();

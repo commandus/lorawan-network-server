@@ -13,6 +13,7 @@ class IdentityService {
 	public:
 		// Return 0, retval = EUI and keys
 		virtual int get(DEVADDR &devaddr, DeviceId &retval) = 0;
+		virtual int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui) = 0;
 		// Add or replace Address = EUI and keys pair
 		virtual void put(DEVADDR &devaddr, DEVICEID &id) = 0;
 		// Remove entry
