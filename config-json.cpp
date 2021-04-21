@@ -12,6 +12,27 @@
 
 #define DEF_BUFFER_SIZE	4096
 
+static std::string storageType2String(IDENTITY_STORAGE value) {
+	switch(value) {
+		case IDENTITY_STORAGE_DIR_TEXT:
+			return "txt";
+		case IDENTITY_STORAGE_LMDB:
+			return "lmdb";
+		default:
+			return "json";
+	}
+}
+
+static IDENTITY_STORAGE string2storageType(
+	const std::string &value
+) {
+	if (value == "txt")
+		return IDENTITY_STORAGE_DIR_TEXT;
+	if (value == "lmdb")
+		return IDENTITY_STORAGE_LMDB;
+	return IDENTITY_STORAGE_FILE_JSON;
+}
+
 void ServerConfig::clear() {
 	listenAddressIPv4.clear();
 	listenAddressIPv6.clear();
@@ -21,7 +42,8 @@ void ServerConfig::clear() {
 }
 
 ServerConfig::ServerConfig() 
-	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false), identityStorageName("")
+	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false),
+	identityStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON)
 {
 
 }
@@ -72,6 +94,11 @@ int ServerConfig::parse(
 		if (daemon.IsBool())
 			daemonize = daemon.GetBool();
 	}
+	if (value.HasMember("storageType")) {
+		rapidjson::Value &vstorageType =  value["storageType"];
+		if (vstorageType.IsString())
+			storageType = string2storageType(vstorageType.GetString());
+	}
 	return 0;
 }
 
@@ -115,6 +142,11 @@ void ServerConfig::toJson(
 	rapidjson::Value deamon;
 	deamon.SetBool(daemonize);
 	value.AddMember("daemonize", deamon, allocator);
+
+	rapidjson::Value vstorageType;
+	std::string s(storageType2String(storageType));
+	vstorageType.SetString(s.c_str(), s.size(), allocator);
+	value.AddMember("storageType", vstorageType, allocator);
 }
 
 int Configuration::parse(

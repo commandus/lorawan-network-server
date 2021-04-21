@@ -46,14 +46,14 @@ rapid_headers = \
 	third_party/rapidjson/msinttypes/inttypes.h third_party/rapidjson/msinttypes/stdint.h
 
 nobase_dist_include_HEADERS = \
-	platform.h utilstring.h utildate.h strptime.h lora-radio.h \
+	platform.h utilstring.h utildate.h utilfile.h strptime.h lora-radio.h \
 	utillora.h udp-socket.h udp-emitter.h udp-listener.h lora-encrypt.h \
-	config-json.h identity-service-abstract.h identity-service-file-json.h \
+	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
-	db-identity.h identity-service-lmdb.h packet-handler-abstract.h \
 	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
-	semtech-metadata-tx.h identity-service-dir-txt.h \
+	identity-service-abstract.h identity-service-file-json.h \
+	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -66,7 +66,7 @@ lorawan_network_server_SOURCES = \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
 	config-json.cpp lora-packet-handler-impl.cpp \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
-	utilstring.cpp utildate.cpp strptime.cpp config-filename.cpp \
+	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp config-filename.cpp \
 	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
 	semtech-metadata-tx.cpp identity-service-dir-txt.cpp \
 	$(C_STORAGE) \
@@ -81,7 +81,7 @@ mac_gw_SOURCES = \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp \
 	config-json.cpp packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
-	utilstring.cpp utildate.cpp strptime.cpp semtech-pull-resp-packet.cpp \
+	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
 	semtech-metadata-tx.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
@@ -152,8 +152,18 @@ test_file_watch_SOURCES = \
 test_file_watch_LDADD = -lpthread
 test_file_watch_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-file-watch
-# test-mac-gw
+test_dir_txt_SOURCES = \
+	tests/test-dir-txt.cpp \
+	identity-service-file-json.cpp identity-service-dir-txt.cpp \
+	utilstring.cpp utildate.cpp utillora.cpp utilfile.cpp \
+	lora-encrypt.cpp \
+	gateway-stat.cpp \
+	third_party/base64/base64.cpp $(SRC_AES)
+test_dir_txt_LDADD = -lpthread
+test_dir_txt_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-dir-txt
+# test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 
 TESTS = $(check_PROGRAMS)

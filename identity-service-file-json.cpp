@@ -15,13 +15,14 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_COUNT	6
+#define ATTRS_COUNT	7
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
 	"addr", 		// network address (hex string, 4 bytes)
 	"activation",	// ABP or OTAA
 	"eui",			// device identifier (hex string, 8 bytes)
 	"nwkSKey",		// shared session key (hex string, 16 bytes)
 	"appSKey",		// private key (hex string, 16 bytes)
+	"class", 		// A, B or C
 	"name"			// added for search
 };
 
@@ -58,7 +59,7 @@ static std::string getActivationName(
 	ACTIVATION value
 )
 {
-	if (value >= OTAA)
+	if (value > OTAA)
 		value = ABP;
 	return ACTIVATION_NAMES[value];
 }
@@ -228,7 +229,8 @@ int JsonFileIdentityService::save()
 			<< ATTR_NAMES[2] << "\":\"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
 			<< ATTR_NAMES[3] << "\":\"" << KEY2string(it->second.nwkSKey) << "\",\""
 			<< ATTR_NAMES[4] << "\":\"" << KEY2string(it->second.appSKey) << "\",\""
-			<< ATTR_NAMES[5] << "\":\"" << std::string(it->second.name, sizeof(DEVICENAME)) << "\"}";
+			<< ATTR_NAMES[5] << "\":\"" << deviceclass2string(it->second.deviceclass) << "\",\""
+			<< ATTR_NAMES[6] << "\":\"" << std::string(it->second.name, sizeof(DEVICENAME)) << "\"}";
 
 		addSeparator = true;
 	}
@@ -243,10 +245,14 @@ int JsonFileIdentityService::get(
 	DeviceId &retval
 ) 
 {
+	mutexMap.lock();
 	std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.find(DEVADDRINT(devaddr)));
-    if (it == storage.end())
+    if (it == storage.end()) {
+		mutexMap.unlock();
 		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
+	}
 	retval.set(it->second);
+	mutexMap.unlock();
 	return 0;
 }
 
@@ -254,12 +260,15 @@ int JsonFileIdentityService::getNetworkIdentity(
 	NetworkIdentity &retval,
 	const DEVEUI &eui
 ) {
+	mutexMap.lock();
 	for (std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.begin()); it != storage.end(); it++) {
 		if (memcmp(it->second.deviceEUI, eui, sizeof(DEVEUI) == 0)) {
 			retval.set(it->first, it->second);
+			mutexMap.unlock();
 			return 0;
 		}
 	}
+	mutexMap.unlock();
 	return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 }
 
@@ -288,14 +297,18 @@ void JsonFileIdentityService::put(
 	DEVICEID &id
 )
 {
+	mutexMap.lock();
 	storage[devaddr] = id;
+	mutexMap.unlock();
 }
 
 void JsonFileIdentityService::rm(
 	DEVADDR &addr
 )
 {
+	mutexMap.lock();
 	storage.erase(addr);
+	mutexMap.unlock();
 }
 
 int JsonFileIdentityService::init(
@@ -397,7 +410,8 @@ std::string JsonFileIdentityService::toJsonString()
 			<< "\"" << ATTR_NAMES[2] << "\":\"" << DEVEUI2string(dit->second.deviceEUI) << "\", "
 			<< "\"" << ATTR_NAMES[3] << "\":\"" << KEY2string(dit->second.nwkSKey) << "\", "
 			<< "\"" << ATTR_NAMES[4] << "\":\"" << KEY2string(dit->second.appSKey) << "\", "
-			<< "\"" << ATTR_NAMES[5] << "\":\"" << std::string(dit->second.name, sizeof(DEVICENAME)) << "\"}";
+			<< "\"" << ATTR_NAMES[5] << "\":\"" << deviceclass2string(dit->second.deviceclass) << "\", "
+			<< "\"" << ATTR_NAMES[6] << "\":\"" << std::string(dit->second.name, sizeof(DEVICENAME)) << "\"}";
 	}
 	ss << "]";
 	return ss.str();

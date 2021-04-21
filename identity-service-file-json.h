@@ -2,6 +2,7 @@
 #define IDENTITY_SERVICE_FILE_JSON_H_ 1
 
 #include <vector>
+#include <mutex>
 #include "identity-service-abstract.h"
 
 #pragma clang diagnostic push
@@ -14,6 +15,7 @@ class JsonFileIdentityService: public IdentityService {
 		virtual int load();
 		virtual int save();
 	protected:
+		std::mutex mutexMap;
 		std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare> storage;
 		std::string path;
 		void clear();		

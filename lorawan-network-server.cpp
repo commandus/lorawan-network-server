@@ -29,6 +29,10 @@
 #include "config-json.h"
 #include "lora-packet-handler-impl.h"
 #include "identity-service-file-json.h"
+#include "identity-service-dir-txt.h"
+#ifdef ENABLE_LMDB
+#include "identity-service-lmdb.h"
+#endif			
 
 #include "gateway-list.h"
 #include "config-filename.h"
@@ -225,14 +229,27 @@ int main(
 	std::cerr << gatewayList->toJsonString() << std::endl;
 
 	LoraPacketProcessor processor;
-	JsonFileIdentityService identityService;
-	identityService.init(config->serverConfig.identityStorageName, NULL);
+	IdentityService *identityService;
+
+	switch (config->serverConfig.storageType) {
+		case IDENTITY_STORAGE_LMDB:
+#ifdef ENABLE_LMDB
+			identityService = new LmdbIdentityService();
+#endif			
+			break;
+		case IDENTITY_STORAGE_DIR_TEXT:
+			identityService = new DirTxtIdentityService();
+			break;
+		default:
+			identityService = new JsonFileIdentityService();
+	}
+	identityService->init(config->serverConfig.identityStorageName, NULL);
 	
 	processor.setLogger(onLog);
-	processor.setIdentityService(&identityService);
+	processor.setIdentityService(identityService);
 	listener.setGatewayList(gatewayList);
 	listener.setHandler(&processor);
-	listener.setIdentityService(&identityService);
+	listener.setIdentityService(identityService);
 
 	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;

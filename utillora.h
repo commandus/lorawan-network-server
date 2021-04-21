@@ -159,9 +159,16 @@ typedef enum {
 	OTAA = 1
 } ACTIVATION;
 
+typedef enum {
+	CLASS_A = 0,
+	CLASS_B = 1,
+	CLASS_C = 2
+} DEVICECLASS;
+
 typedef struct {
 	// value, no key
 	ACTIVATION activation;	///< activation type: ABP or OTAA
+	DEVICECLASS deviceclass;
 	DEVEUI deviceEUI;		///< device identifier 8 bytes (ABP device may not store EUI)
 	KEY128 nwkSKey;			///< shared session key 16 bytes
 	KEY128 appSKey;			///< private key 16 bytes
@@ -185,6 +192,7 @@ public:
 	DEVADDR devaddr;		///< network address
 	// value
 	ACTIVATION activation;	///< activation type: ABP or OTAA
+	DEVICECLASS deviceclass;
 	DEVEUI deviceEUI;		///< device identifier
 	KEY128 nwkSKey;			///< shared session key
 	KEY128 appSKey;			///< private key
@@ -203,6 +211,7 @@ class DeviceId {
 private:
 public:
 	ACTIVATION activation;	///< activation type: ABP or OTAA
+	DEVICECLASS deviceclass;
 	DEVEUI deviceEUI;	///< device identifier
 	KEY128 nwkSKey;		///< shared session key
 	KEY128 appSKey;		///< private key
@@ -371,5 +380,14 @@ uint32_t calculateMIC(
 );
 
 uint32_t getMic(const std::string &v);
+
+std::string deviceclass2string(
+	DEVICECLASS value
+);
+
+DEVICECLASS string2deviceclass
+(
+	const std::string &value
+);
 
 #endif

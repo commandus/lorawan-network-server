@@ -43,6 +43,33 @@ void swapBytes(void *pv, size_t n)
 #define swap16(x) swapBytes(x, 16);
 #endif
 
+std::string deviceclass2string(
+	DEVICECLASS value
+) {
+	switch(value) {
+		case CLASS_A:
+			return "A";
+		case CLASS_B:
+			return "B";
+		default:
+			return "C";
+	};
+}
+
+DEVICECLASS string2deviceclass
+(
+	const std::string &value
+)
+{
+	if (value == "A")
+		return CLASS_A;
+	else
+		if (value == "B")
+			return CLASS_B;
+		else
+			return CLASS_C;
+}
+
 /**
  * 4.3.3 MAC Frame Payload Encryption (FRMPayload)
  * message integrity code
@@ -123,6 +150,7 @@ NetworkIdentity::NetworkIdentity(
 {
 	memmove(&devaddr, &a.a, sizeof(DEVADDR));
 	memmove(&activation, &value.activation, sizeof(activation));
+	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
@@ -143,6 +171,7 @@ std::string NetworkIdentity::toString() const
 	std::stringstream ss;
 	ss << DEVADDR2string(devaddr) 
 		<< " " << (activation == 1 ? "OTAA" : "ABP")
+		<< " " << deviceclass2string(deviceclass)
 		<< " " << DEVEUI2string(deviceEUI)
 		<< " " << KEY2string(nwkSKey)
 		<< " " << KEY2string(appSKey)
@@ -178,6 +207,7 @@ void DeviceId::set(
 )
 {
 	memmove(&activation, &value.activation, sizeof(activation));
+	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
@@ -191,6 +221,7 @@ void NetworkIdentity::set(
 {
 	memmove(&devaddr, &addr.a, sizeof(DEVADDR));
 	memmove(&activation, &value.activation, sizeof(activation));
+	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
