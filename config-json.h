@@ -9,6 +9,12 @@
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
 
+typedef enum {
+	IDENTITY_STORAGE_FILE_JSON = 1,
+	IDENTITY_STORAGE_DIR_TEXT = 2,
+	IDENTITY_STORAGE_LMDB = 3
+} IDENTITY_STORAGE;
+
 class ServerConfig {
 	public:
 		std::vector<std::string> listenAddressIPv4;
@@ -17,6 +23,7 @@ class ServerConfig {
 		int verbosity;
 		bool daemonize;
 		std::string identityStorageName;
+		IDENTITY_STORAGE storageType;
 		void clear();
 		ServerConfig();
 		int parse(
