@@ -54,6 +54,7 @@ nobase_dist_include_HEADERS = \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
 	identity-service-abstract.h identity-service-file-json.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
+	lora-rejoin.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -68,7 +69,7 @@ lorawan_network_server_SOURCES = \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp config-filename.cpp \
 	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
-	semtech-metadata-tx.cpp identity-service-dir-txt.cpp \
+	semtech-metadata-tx.cpp identity-service-dir-txt.cpp lora-rejoin.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -82,7 +83,7 @@ mac_gw_SOURCES = \
 	config-json.cpp packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
-	semtech-metadata-tx.cpp \
+	semtech-metadata-tx.cpp lora-rejoin.cpp \
 	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -112,7 +113,7 @@ test_identity_file_json_SOURCES = \
 	tests/test-identity-file-json.cpp \
 	identity-service-file-json.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp \
-	gateway-stat.cpp \
+	gateway-stat.cpp lora-encrypt.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_identity_file_json_LDADD = 
 test_identity_file_json_CPPFLAGS = $(commoncppflags)
@@ -156,13 +157,12 @@ test_dir_txt_SOURCES = \
 	tests/test-dir-txt.cpp \
 	identity-service-file-json.cpp identity-service-dir-txt.cpp \
 	utilstring.cpp utildate.cpp utillora.cpp utilfile.cpp \
-	lora-encrypt.cpp \
-	gateway-stat.cpp \
+	lora-encrypt.cpp gateway-stat.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_dir_txt_LDADD = -lpthread
 test_dir_txt_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-dir-txt
+check_PROGRAMS = test-dir-txt test-identity-file-json
 # test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 

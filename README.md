@@ -198,6 +198,7 @@ Example:
   },
   ..
 ]
+```
 
 ## mac-gw utility
 
@@ -300,8 +301,6 @@ You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
 - configFileName
 - gatewaysFileName
 
-
-
 ## Packet types sent by Semtech gateway
 
 Tag values:
@@ -345,7 +344,6 @@ PV      GatewayIdentifie
 02e3460000006cc3743eed46
 
 
-
 ### rxpk
 
 0269730000006cc3743eed467b227278706b223a5b7b22746d7374223a31303334343430332c2274696d65223a22323032312d30322d32345432313a31363a34322e3930363737345a222c22746d6d73223a313239383233363632313930362c226368616e223a332c2272666368223a302c2266726571223a3836372e3130303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a225346374257313235222c22636f6472223a22342f35222c226c736e72223a362e322c2272737369223a2d3130382c2273697a65223a35332c2264617461223a225141514241414b414b51414335594947664d654b7455354a70546975365551783161516b6977485743686c373162517878764d6c4f3271696c6e494562764737346849526a32593d227d5d7d
@@ -387,6 +385,39 @@ Error -535 84.237.104.16:55288: Send ACK error
 
 449f387f3b305cdb049d
 
+### txpk
+
+JSON down:
+```
+{
+	"txpk": {
+		"codr": "4/5",
+		"data": "0J7Qm9Cv0KDQnCEg0JPQntCb0JDQmtCi0JXQmtCeINCe0J/QkNCh0J3QntCh0KLQmCEhMQ==",
+		"datr": "SF12BW125",
+		"freq": 868,
+		"ipol": true,
+		"modu": "LORA",
+		"ncrc": false,
+		"powe": 0,
+		"rfch": 1,
+		"size": 52,
+		"tmst": 1
+	}
+}
+```
+
+data:
+d09ed09bd0afd0a0d09c2120d093d09ed09bd090d09ad0a2d095d09ad09e20d09ed09fd090d0a1d09dd09ed0a1d0a2d098212131
+
+### 
+```
+JSON down: {"txpk":{"codr":"4/5","data":"0J7Qm9Cv0KDQnCEg0JPQntCb0JDQmtCi0JXQmtCeINCe0J/QkNCh0J3QntCh0KLQmCEhMQ==","datr":"SF12BW125","freq":868,"ipol":true,"modu":"LORA","ncrc":false,"powe":0,"rfch":1,"size":52,"tmst":1}}
+ERROR: Packet REJECTED, unsupported frequency - 868000000 (min:0,max:0)
+INFO: [down] PULL_ACK received in 1 ms
+INFO: [down] PULL_ACK received in 0 ms
+INFO: [down] PULL_ACK received in 1 ms
+```
+
 ### Log format
 
 Extract payload
@@ -408,7 +439,7 @@ Message received 84.237.104.16:54820: 02f2fb0200006cc3743eed46
 Sent ACK to 84.237.104.16:54820
 
 
-## Thitd-party dependencies
+## Third-party dependencies
 
 - lmdb
 - [Filewatch](https://github.com/ThomasMonkman/filewatch)
@@ -426,3 +457,12 @@ sudo apt install liblmdb-dev
 [Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)
 
 
+
+
+Device 	DevEUI
+pak811-1	3231323549304C0A
+SI-13-232	3434383566378112
+sh-2-1	323934344A386D0C
+
+52 bytes
+d09ed09bd0afd0a0d09c2120d093d09ed09bd090d09ad0a2d095d09ad09e20d09ed09fd090d0a1d09dd09ed0a1d0a2d098212131

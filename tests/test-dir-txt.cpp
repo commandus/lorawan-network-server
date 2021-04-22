@@ -3,8 +3,9 @@
 #include <sstream>
 #include <regex>
 
-
 #include "utilstring.h"
+#include "lora-rejoin.h"
+
 #include "base64/base64.h"
 
 #include <identity-service-dir-txt.h>
@@ -63,6 +64,9 @@ void decodeTest(
 			<< " nwkSKey: " << KEY2string(id.nwkSKey)
 			<< std::endl;
 		std::cout 
+			<< " mtype: " << mtype2string( (MTYPE) hdr.header.macheader.f.mtype)
+			<< " mtype int: " << (int) hdr.header.macheader.f.mtype
+			<< " major: " << (int) hdr.header.macheader.f.major
 			<< " hdr.header.fcnt: " << hdr.header.fcnt 
 			<< " hdr.header.fctrl: " << (int) hdr.header.fctrl.i 
 			<< " hdr.header.fctrl.f.foptslen: " << (int) hdr.header.fctrl.f.foptslen 
@@ -71,9 +75,14 @@ void decodeTest(
 			<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
 			<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
 			<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
-			<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+			<< " hdr.header.macheader: " << (int) hdr.header.macheader.i 
 			<< std::endl;
 
+		std::cout 
+			<< LoraWANRejoinRequest::toJSONString(v.c_str(), v.size()) << std::endl;
+		std::cout 
+			<< LoraWANJoinAccept::toJSONString(v.c_str(), v.size()) << std::endl;
+	
 		uint32_t mico = getMic(v);
 		std::cout 
 			<< " MIC: " << std::hex << mico
@@ -143,7 +152,7 @@ void decodeTest2()
 		<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
 		<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
 		<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
-		<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+		<< " hdr.header.macheader: " << (int) hdr.header.macheader.i 
 		<< std::endl;
 	int direction = 0;
 
@@ -202,7 +211,7 @@ void decodeTest3(
 			<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
 			<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
 			<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
-			<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+			<< " hdr.header.macheader: " << (int) hdr.header.macheader.i 
 			<< std::endl;
 
 		uint32_t mico = getMic(v);
@@ -302,9 +311,13 @@ int main(int argc, char **argv) {
 	std::cerr << "Check regex.." << std::endl;
 	checkGrep();
 	std::cerr << "Identity check.." << std::endl;
-	getIdentityTest(s, 0x01450330);
+	getIdentityTest(s, 0x00000A15);
 	std::cerr << "Decoding.." << std::endl;
-	decodeTest(s, 0x01450330, "QDADRQGAvQYCr/WbeIJ/+r95BvZus+xszlkT4Lrr6d91/KnQ5Q=="); // "ADMxaXNhZzIwEoE3ZjU4NDSS9yoDlRQ="
+	// "QDADRQGAvQYCr/WbeIJ/+r95BvZus+xszlkT4Lrr6d91/KnQ5Q==" "ADMxaXNhZzIwEoE3ZjU4NDSS9yoDlRQ="
+	decodeTest(s, 0x00000A15, "0J7Qm9Cv0KDQnCEg0JPQntCb0JDQmtCi0JXQmtCeINCe0J/QkNCh0J3QntCh0KLQmCEhMQ=="); 
+	decodeTest(s, 0x34313235, "0J7Qm9Cv0KDQnCEg0JPQntCb0JDQmtCi0JXQmtCeINCe0J/QkNCh0J3QntCh0KLQmCEhMQ=="); 
+	decodeTest(s, 0x01450330, "0J7Qm9Cv0KDQnCEg0JPQntCb0JDQmtCi0JXQmtCeINCe0J/QkNCh0J3QntCh0KLQmCEhMQ=="); 
+	decodeTest(s, 0x00550116, "0J7Qm9Cv0KDQnCEg0JPQntCb0JDQmtCi0JXQmtCeINCe0J/QkNCh0J3QntCh0KLQmCEhMQ=="); 
 	// must 01002124f13e601e000000004a0000000000000000000000
 	//      01002124f13e601e000000004a0000008582e9b18f284ecf
 

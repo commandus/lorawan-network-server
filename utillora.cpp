@@ -161,9 +161,25 @@ std::string KEY2string(
 	const KEY128 &value
 )
 {
-	KEY128 v;
-	memmove(&v, &value, sizeof(v));
-	return hexString(&v, sizeof(v));
+	return hexString(&value, sizeof(value));
+}
+
+std::string NETID2string(
+	const NETID &value
+) {
+	return hexString(&value, sizeof(value));
+}
+
+int FREQUENCY2int(
+	const FREQUENCY &frequency
+) {
+	return frequency[0] + (frequency[1] << 8) + (frequency[2] << 16);
+}
+
+std::string JOINNONCE2string(
+	const JOINNONCE &value
+) {
+	return hexString(&value, sizeof(value));
 }
 
 std::string NetworkIdentity::toString() const
@@ -838,7 +854,7 @@ rfmHeader::rfmHeader(
 	const RFM_HEADER &hdr
 ) {
 	memmove(&header, &hdr, sizeof(RFM_HEADER));
-	header.macheader = 0x40;
+	header.macheader.i = 0x40;
 }
 
 rfmHeader::rfmHeader(
@@ -846,7 +862,7 @@ rfmHeader::rfmHeader(
 ) {
 	memset(&header, 0, sizeof(RFM_HEADER));
 	memcpy(&header.devaddr, &addr, sizeof(DEVADDR));
-	header.macheader = 0x40;
+	header.macheader.i = 0x40;
 }
 
 rfmHeader::rfmHeader(
@@ -857,7 +873,7 @@ rfmHeader::rfmHeader(
 	header.fcnt = fcnt;
 	fport = 0;
 	header.fctrl.i = 0;
-	header.macheader = 0x40;
+	header.macheader.i = 0x40;
 }
 
 rfmHeader::rfmHeader(
@@ -865,7 +881,7 @@ rfmHeader::rfmHeader(
 	uint16_t frameCounter,
 	uint8_t framePort
 ) {
-	header.macheader = 0x40;
+	header.macheader.i = 0x40;
 	memcpy(&header.devaddr, &addr, sizeof(DEVADDR));
 	header.fcnt = frameCounter;
 	fport = framePort;
@@ -907,7 +923,7 @@ semtechUDPPacket::semtechUDPPacket()
 	prefix.token = 0;
 	prefix.tag = 0;
 
-	header.header.macheader = 0x40;
+	header.header.macheader.i = 0x40;
 	memset(&header.header.devaddr, 0, sizeof(DEVADDR));			// MAC address
 
 	header.header.fctrl.i = 0;
@@ -915,8 +931,6 @@ semtechUDPPacket::semtechUDPPacket()
 	header.fport = 0;
 
 	memset(&header.header.devaddr, 0, sizeof(DEVADDR));
-	
-
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
 }
 
@@ -1119,7 +1133,7 @@ semtechUDPPacket::semtechUDPPacket(
 
 	// initialize header ?!!
 	memset(&header.header, 0, sizeof(RFM_HEADER));
-	header.header.macheader = 0x40;
+	header.header.macheader.i = 0x40;
 	setAddr(header.header.devaddr, devaddr);
 
 	// autentication keys
@@ -1202,7 +1216,7 @@ std::string semtechUDPPacket::serialize2RfmPacket() const
 	// direction of frame is up
 	unsigned char direction = 0x00;
 
-	// build radio packet, unconfirmed data up macHeader = 0x40;
+	// build radio packet, unconfirmed data up macHeader.i = 0x40;
 	// RFM header 8 bytes
 	ss << header.toString() << header.fport;
 
@@ -1404,4 +1418,89 @@ uint64_t str2gatewayId(const char *value) {
 
 std::string TDEVEUI::toString() {
 	return DEVEUI2string(eui);
+}
+
+std::string mtype2string(
+	MTYPE value
+) {
+	switch (value) {
+		case MTYPE_JOIN_REQUEST:
+			return "join-request";
+		case MTYPE_JOIN_ACCEPT:
+			return "join-accept";
+		case MTYPE_UNCONFIRMED_DATA_UP:
+			return "unconfirmed-data-up";
+		case MTYPE_UNCONFIRMED_DATA_DOWN:
+			return "unconfirmed-data-down";
+		case MTYPE_CONFIRMED_DATA_UP:
+			return "confirmed-data-up";
+		case MTYPE_CONFIRMED_DATA_DOWN:
+			return "confirmed-data-up";
+		case MTYPE_REJOIN_REQUEST:
+			return "rejoin-request";
+		case MTYPE_PROPRIETARYRADIO:
+			return "proprietary-radio";
+		default:
+			return "";
+	};
+}
+
+MTYPE string2mtype(
+	const std::string &value
+) {
+	if (value == "join-request")
+		return MTYPE_JOIN_REQUEST;
+ 	if (value == "join-accept")
+	 	return MTYPE_JOIN_ACCEPT;
+ 	if (value == "unconfirmed-data-up")
+	 	return MTYPE_UNCONFIRMED_DATA_UP;
+ 	if (value == "unconfirmed-data-down")
+	 	return MTYPE_UNCONFIRMED_DATA_DOWN;
+	if (value == "confirmed-data-up")
+		return MTYPE_CONFIRMED_DATA_UP;
+ 	if (value == "confirmed-data-up")
+	 	return MTYPE_CONFIRMED_DATA_DOWN;
+ 	if (value == "rejoin-request")
+		return MTYPE_REJOIN_REQUEST;
+ 	if (value == "proprietary-radio")
+	 	return MTYPE_PROPRIETARYRADIO;
+}
+
+void string2NETID(
+	NETID &retval,
+	const char *value
+) {
+	std::string str = hex2string(value);
+	int len = str.size();
+	if (len > sizeof(NETID))
+		len = sizeof(NETID);
+	memmove(&retval, str.c_str(), len);
+	if (len < sizeof(NETID))
+		memset(&retval + len, 0, sizeof(NETID) - len);
+}
+
+void string2FREQUENCY(
+	FREQUENCY &retval,
+	const char *value
+) {
+	std::string str = hex2string(value);
+	int len = str.size();
+	if (len > sizeof(FREQUENCY))
+		len = sizeof(FREQUENCY);
+	memmove(&retval, str.c_str(), len);
+	if (len < sizeof(FREQUENCY))
+		memset(&retval + len, 0, sizeof(FREQUENCY) - len);
+}
+
+void string2JOINNONCE(
+	JOINNONCE &retval,
+	const char *value
+) {
+	std::string str = hex2string(value);
+	int len = str.size();
+	if (len > sizeof(JOINNONCE))
+		len = sizeof(JOINNONCE);
+	memmove(&retval, str.c_str(), len);
+	if (len < sizeof(JOINNONCE))
+		memset(&retval + len, 0, sizeof(JOINNONCE) - len);
 }

@@ -18,9 +18,16 @@
 
 #include "gateway-stat.h"
 
+typedef unsigned char NETID[3];
+
 typedef unsigned char KEY128[16];
 typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
+
+typedef unsigned char JOIN_NONCE[3];
+
+typedef uint8_t FREQUENCY[3];
+typedef uint8_t JOINNONCE[3];
 
 class IdentityService;
 
@@ -131,9 +138,32 @@ typedef ALIGN struct {
  * 11000000 C0   Rejoin-request
  * 11100000 E0   ProprietaryRADIO
 */
+
+typedef enum {
+	MTYPE_JOIN_REQUEST = 0,
+ 	MTYPE_JOIN_ACCEPT = 1,
+ 	MTYPE_UNCONFIRMED_DATA_UP = 2,
+ 	MTYPE_UNCONFIRMED_DATA_DOWN = 3,
+ 	MTYPE_CONFIRMED_DATA_UP = 4,
+ 	MTYPE_CONFIRMED_DATA_DOWN = 5,
+ 	MTYPE_REJOIN_REQUEST = 6,
+ 	MTYPE_PROPRIETARYRADIO = 7
+} MTYPE;
+
+typedef ALIGN struct {
+	union {
+		uint8_t i;
+		struct {
+			uint8_t major: 2;
+			uint8_t rfu: 3;
+			uint8_t mtype: 3;
+		} f;
+	};
+} PACKED MHDR;			// 1 byte
+
 typedef ALIGN struct {
 	// MAC heaader byte: message type, RFU, Major
-	uint8_t macheader;			// 0x40 unconfirmed uplink
+	MHDR macheader;			// 0x40 unconfirmed uplink
 	// Frame header (FHDR)
 	DEVADDR devaddr;			// MAC address
 	union {
@@ -149,6 +179,12 @@ typedef ALIGN struct {
 	uint16_t fcnt;	// frame counter 0..15
 	// FOpts 0..15
 } PACKED RFM_HEADER;			// 8 bytes, +1
+
+// Channel frequency list
+typedef ALIGN struct {
+	FREQUENCY frequency[5];	// frequency, 100 * Hz ch 4..8
+	uint8_t cflisttype;		// always 0
+} PACKED CFLIST;			// 16 bytes
 
 typedef ALIGN struct {
 	uint8_t fopts[15];
@@ -360,6 +396,9 @@ std::string uint64_t2string(const uint64_t &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
+std::string NETID2string(const NETID &value);
+std::string JOINNONCE2string(const JOINNONCE &value);
+int FREQUENCY2int(const FREQUENCY &frequency);
 
 // Debug onlyRADIO
 
@@ -389,5 +428,17 @@ DEVICECLASS string2deviceclass
 (
 	const std::string &value
 );
+
+std::string mtype2string(
+	MTYPE value
+);
+
+MTYPE string2mtype(
+	const std::string &value
+);
+
+void string2NETID(NETID &retval, const char *str);
+void string2FREQUENCY(FREQUENCY &retval, const char *value);
+void string2JOINNONCE(JOINNONCE &retval, const char *value);
 
 #endif

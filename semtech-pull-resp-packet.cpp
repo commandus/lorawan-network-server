@@ -24,7 +24,7 @@ std::string SemtechPullRespPacket::toString() {
 
 	// MAC header byte: message type, RFU, Major
     RFM_HEADER h;
-    h.macheader = 0x60; // unconfirmed downlink
+    h.macheader.i = 0x60; // unconfirmed downlink
     memmove(&h.devaddr, identity.devaddr, sizeof(DEVADDR));
     // frame control
     h.fctrl.f.foptslen = 0;
