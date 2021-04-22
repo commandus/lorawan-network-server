@@ -149,6 +149,10 @@ void decodeTest(
 			<< " nwkSKey: " << KEY2string(id.nwkSKey)
 			<< std::endl;
 		std::cout 
+			<< " mtype: " << mtype2string( (MTYPE) hdr.header.macheader.f.mtype)
+			<< " mtype int: " << (int) hdr.header.macheader.f.mtype
+			<< " major: " << (int) hdr.header.macheader.f.major
+
 			<< " hdr.header.fcnt: " << hdr.header.fcnt 
 			<< " hdr.header.fctrl: " << (int) hdr.header.fctrl.i 
 			<< " hdr.header.fctrl.f.foptslen: " << (int) hdr.header.fctrl.f.foptslen 
@@ -157,7 +161,7 @@ void decodeTest(
 			<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
 			<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
 			<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
-			<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+			<< " hdr.header.macheader: " << (int) hdr.header.macheader.i 
 			<< std::endl;
 
 		uint32_t mico = getMic(v);
@@ -229,7 +233,7 @@ void decodeTest2()
 		<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
 		<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
 		<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
-		<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+		<< " hdr.header.macheader: " << (int) hdr.header.macheader.i 
 		<< std::endl;
 	int direction = 0;
 
@@ -288,7 +292,7 @@ void decodeTest3(
 			<< " hdr.header.fctrl.f.fpending: " << (int) hdr.header.fctrl.f.fpending
 			<< " hdr.header.fctrl.f.rfu: " << (int) hdr.header.fctrl.f.rfu
 			<< " hdr.header.devaddr: " << DEVADDR2string(hdr.header.devaddr) 
-			<< " hdr.header.macheader: " << (int) hdr.header.macheader 
+			<< " hdr.header.macheader: " << (int) hdr.header.macheader.i 
 			<< std::endl;
 
 		uint32_t mico = getMic(v);
