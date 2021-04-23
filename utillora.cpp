@@ -1464,6 +1464,7 @@ MTYPE string2mtype(
 		return MTYPE_REJOIN_REQUEST;
  	if (value == "proprietary-radio")
 	 	return MTYPE_PROPRIETARYRADIO;
+	return MTYPE_JOIN_REQUEST;	//?!!
 }
 
 void string2NETID(

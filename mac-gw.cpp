@@ -249,11 +249,11 @@ int main(
 	
 	// parse gateway ids, expand regex 
 	int r;	
-	if (r = gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks, macGwConfig->useRegex)) {
+	if ((r = gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks, macGwConfig->useRegex))) {
 		std::cerr << ERR_MESSAGE << r << ": " << strerror_client(r) << std::endl;
 		exit(ERR_CODE_INVALID_GATEWAY_ID);
 	}
-	if (r = gatewayList->parseNames(macGwConfig->gatewayIds, macGwConfig->gatewayNames, macGwConfig->useRegex)) {
+	if ((r = gatewayList->parseNames(macGwConfig->gatewayIds, macGwConfig->gatewayNames, macGwConfig->useRegex))) {
 		std::cerr << ERR_MESSAGE << r << ": " << strerror_client(r) << std::endl;
 		exit(ERR_CODE_INVALID_GATEWAY_ID);
 	}

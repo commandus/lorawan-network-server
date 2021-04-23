@@ -73,6 +73,7 @@ int DirTxtIdentityService::startListen(
 			load();
 			onIdentitiesUpdate(this, path, event);
 	});
+	return 0;
 }
 
 int DirTxtIdentityService::stopListen() {
