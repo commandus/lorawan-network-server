@@ -26,6 +26,7 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp utilstring.cpp utillora.cpp utildate.cpp
 	strptime.cpp gateway-stat.cpp lora-packet-handler-impl.cpp packet-queue.cpp udp-listener.cpp
 	config-json.cpp lorawan-mac.cpp udp-socket.cpp gateway-list.cpp udp-emitter.cpp config-filename.cpp
+	lora-encrypt.cpp lora-rejoin.cpp identity-service-dir-txt.cpp utilfile.cpp
 	${SRC_STORAGE} ${SRC_AES}
 	third_party/argtable3/argtable3.c
 	third_party/base64/base64.cpp
@@ -38,6 +39,7 @@ set(SRC_MAC_GW
 	config-json.cpp identity-service-file-json.cpp
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp
 	lora-packet-handler-impl.cpp config-filename.cpp
+	lora-encrypt.cpp lora-rejoin.cpp
 	utilstring.cpp utildate.cpp strptime.cpp
 	${SRC_STORAGE} ${SRC_AES}
 	third_party/argtable3/argtable3.c
