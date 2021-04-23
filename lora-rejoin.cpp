@@ -91,15 +91,15 @@ std::string LoraWANJoinAccept::toJSONString() const
 		<< "\"devaddr\": \"" << DEVADDR2string(data.devaddr) << "\", "
 		<< "\"optneg\": " << (int) (data.optneg) << ", "
 		<< "\"rx1droffset\": " << (int) (data.rx1droffset) << ", "
-		<< "\"rx2datarate: " << (int) (data.rx2datarate) << ", "
+		<< "\"rx2datarate\": " << (int) (data.rx2datarate) << ", "
 		<< "\"rxdelay\": " << (int) data.rxdelay << "";
 	if (FREQUENCY2int(data.cflist.frequency[0]) != 0) {
-		ss << ", \"freqCh4\": " << FREQUENCY2int(data.cflist.frequency[0]) << ", "
-			<< ", \"freqCh5\": " << FREQUENCY2int(data.cflist.frequency[1]) << ", "
-			<< ", \"freqCh6\": " << FREQUENCY2int(data.cflist.frequency[2]) << ", "		
-			<< ", \"freqCh7\": " << FREQUENCY2int(data.cflist.frequency[3]) << ", "		
-			<< ", \"freqCh8\": " << FREQUENCY2int(data.cflist.frequency[4]) << ", "		
-			<< "\"cflisttype\": \"" << (int) (data.cflist.cflisttype);
+		ss << ", \"freqCh4\": " << FREQUENCY2int(data.cflist.frequency[0])
+			<< ", \"freqCh5\": " << FREQUENCY2int(data.cflist.frequency[1])
+			<< ", \"freqCh6\": " << FREQUENCY2int(data.cflist.frequency[2])
+			<< ", \"freqCh7\": " << FREQUENCY2int(data.cflist.frequency[3])
+			<< ", \"freqCh8\": " << FREQUENCY2int(data.cflist.frequency[4])
+			<< ", \"cflisttype\": \"" << (int) (data.cflist.cflisttype);
 	}
 	ss << "}";
 	return ss.str();
@@ -113,20 +113,20 @@ std::string LoraWANJoinAccept::toJSONString(
 	if (size < sizeof(LORAWAN_JOIN_ACCEPT) - sizeof(CFLIST))
 		return "";
 	std::stringstream ss;
-		ss << "{\"joinnonce\": \"" << JOINNONCE2string(r->joinNonce) << "\", "
-		<< "\"netid\": \"" << NETID2string(r->netid) << "\", "
-		<< "\"devaddr\": \"" << DEVADDR2string(r->devaddr) << "\", "
+		ss << "{\"joinNonce\": \"" << JOINNONCE2string(r->joinNonce) << "\", "
+		<< "\"homeNetID\": \"" << NETID2string(r->netid) << "\", "
+		<< "\"devAddr\": \"" << DEVADDR2string(r->devaddr) << "\", "
 		<< "\"optneg\": " << (int) (r->optneg) << ", "
 		<< "\"rx1droffset\": " << (int) (r->rx1droffset) << ", "
-		<< "\"rx2datarate: " << (int) (r->rx2datarate) << ", "
+		<< "\"rx2datarate\": " << (int) (r->rx2datarate) << ", "
 		<< "\"rxdelay\": " << (int) r->rxdelay << "";
 	if (size >= sizeof(LORAWAN_JOIN_ACCEPT)) {
-		ss << ", \"freqCh4\": " << FREQUENCY2int(r->cflist.frequency[0]) << ", "
-			<< ", \"freqCh5\": " << FREQUENCY2int(r->cflist.frequency[1]) << ", "
-			<< ", \"freqCh6\": " << FREQUENCY2int(r->cflist.frequency[2]) << ", "		
-			<< ", \"freqCh7\": " << FREQUENCY2int(r->cflist.frequency[3]) << ", "		
-			<< ", \"freqCh8\": " << FREQUENCY2int(r->cflist.frequency[4]) << ", "		
-			<< "\"cflisttype\": \"" << (int) (r->cflist.cflisttype);
+		ss << ", \"freqCh4\": " << FREQUENCY2int(r->cflist.frequency[0])
+			<< ", \"freqCh5\": " << FREQUENCY2int(r->cflist.frequency[1])
+			<< ", \"freqCh6\": " << FREQUENCY2int(r->cflist.frequency[2])
+			<< ", \"freqCh7\": " << FREQUENCY2int(r->cflist.frequency[3])
+			<< ", \"freqCh8\": " << FREQUENCY2int(r->cflist.frequency[4])
+			<< ", \"cflisttype\": \"" << (int) (r->cflist.cflisttype);
 	}
 	ss << "}";
 	return ss.str();

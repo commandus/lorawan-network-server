@@ -162,7 +162,17 @@ test_dir_txt_SOURCES = \
 test_dir_txt_LDADD = -lpthread
 test_dir_txt_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-dir-txt test-identity-file-json
+test_join_accept_decrypt_SOURCES = \
+	tests/test-join-accept-decrypt.cpp \
+	identity-service-file-json.cpp identity-service-dir-txt.cpp \
+	utilstring.cpp utildate.cpp utillora.cpp utilfile.cpp \
+	lora-encrypt.cpp gateway-stat.cpp lora-rejoin.cpp \
+	third_party/base64/base64.cpp $(SRC_AES)
+test_join_accept_decrypt_LDADD = -lpthread
+test_join_accept_decrypt_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-join-accept-decrypt
+# test-dir-txt test-identity-file-json
 # test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 

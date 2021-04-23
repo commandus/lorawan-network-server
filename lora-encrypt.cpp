@@ -174,3 +174,78 @@ void decryptPayload(
 {
 	encryptPayload(payload, frameCounter, direction, devAddr,appSKey);
 }
+
+/**
+ * Encrypt Join Accept LoRaWAN message
+ * @see 6.2.3 Join-accept message
+ */
+std::string encryptJoinAccept(
+	const std::string &payload,
+	const KEY128 &key
+) {
+	/*
+	aes_context aesContext;
+	memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+ 
+ 	uint8_t a[16];
+	memset(a, 0, sizeof(s));
+	uint8_t s[16];
+	memset(s, 0, sizeof(s));
+
+	int size = payload.size();
+	uint8_t bufferIndex = 0;
+	std::string encBuffer(payload);
+	while (size >= 16) {
+        aes_encrypt(a, s, &aesContext);
+        for(int i = 0; i < 16; i++) {
+            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
+        }
+        size -= 16;
+        bufferIndex += 16;
+    }
+ 
+    if (size > 0)
+    {
+        aes_encrypt(a, s, &aesContext);
+        for(int i = 0; i < size; i++) {
+            encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
+        }
+    }
+	payload = encBuffer;
+	*/
+	return "";
+}
+
+/**
+ * Decrypt Join Accept LoRaWAN message
+ * @see 6.2.3 Join-accept message
+ */
+std::string decryptJoinAccept(
+	const std::string &payload,
+	const KEY128 &key
+) {
+	aes_context aesContext;
+	memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+ 
+ 	uint8_t a[16];
+	memset(a, 0, sizeof(a));
+	uint8_t s[16];
+	memset(s, 0, sizeof(s));
+
+	int size = payload.size();
+	uint8_t bufferIndex = 0;
+	std::string encBuffer(payload);
+	
+	// aes_cbc_encrypt((const uint8_t*) payload.c_str(), (uint8_t*) encBuffer.c_str(), 3, a, &aesContext);
+	
+	while (size >= 16) {
+		aes_encrypt((const uint8_t*) payload.c_str() + bufferIndex,
+			(uint8_t*) encBuffer.c_str() + bufferIndex, &aesContext);
+	    size -= 16;
+        bufferIndex += 16;
+    }
+	
+ 	return encBuffer;
+}
