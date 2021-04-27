@@ -234,11 +234,9 @@ std::string decryptJoinAccept(
 	uint8_t s[16];
 	memset(s, 0, sizeof(s));
 
-	int size = payload.size();
-	uint8_t bufferIndex = 0;
+	int size = payload.size() - 1;
+	uint8_t bufferIndex = 1;
 	std::string encBuffer(payload);
-	
-	// aes_cbc_encrypt((const uint8_t*) payload.c_str(), (uint8_t*) encBuffer.c_str(), 3, a, &aesContext);
 	
 	while (size >= 16) {
 		aes_encrypt((const uint8_t*) payload.c_str() + bufferIndex,

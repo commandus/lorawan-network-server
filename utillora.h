@@ -150,6 +150,14 @@ typedef enum {
  	MTYPE_PROPRIETARYRADIO = 7
 } MTYPE;
 
+// Join-request types.
+typedef enum {
+	JOINREQUEST = 0xff,
+	REJOINREQUEST0 = 0,
+	REJOINREQUEST1 = 1,
+	REJOINREQUEST2 = 2
+ } JOINREQUESTTYPE;
+
 typedef ALIGN struct {
 	union {
 		uint8_t i;
@@ -396,8 +404,8 @@ std::string uint64_t2string(const uint64_t &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
-std::string NETID2string(const NETID &value);
-std::string JOINNONCE2string(const JOINNONCE &value);
+uint32_t NETID2int(const NETID &value);
+uint32_t JOINNONCE2int(const JOINNONCE &value);
 int FREQUENCY2int(const FREQUENCY &frequency);
 
 // Debug onlyRADIO

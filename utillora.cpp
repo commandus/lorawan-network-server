@@ -164,10 +164,10 @@ std::string KEY2string(
 	return hexString(&value, sizeof(value));
 }
 
-std::string NETID2string(
+uint32_t NETID2int(
 	const NETID &value
 ) {
-	return hexString(&value, sizeof(value));
+	return value[0] + (value[1] << 8) + (value[2] << 16);
 }
 
 int FREQUENCY2int(
@@ -176,10 +176,10 @@ int FREQUENCY2int(
 	return frequency[0] + (frequency[1] << 8) + (frequency[2] << 16);
 }
 
-std::string JOINNONCE2string(
+uint32_t JOINNONCE2int(
 	const JOINNONCE &value
 ) {
-	return hexString(&value, sizeof(value));
+	return value[0] + (value[1] << 8) + (value[2] << 16);
 }
 
 std::string NetworkIdentity::toString() const

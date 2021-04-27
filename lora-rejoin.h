@@ -52,27 +52,45 @@ public:
 };
 
 typedef ALIGN struct {
-	MHDR macheader;				// 1 MAC header message type 6
-	JOIN_NONCE joinNonce;		// 3
-	NETID netid;				// 3
-	DEVADDR devaddr;			// 4
-								// 1 dlsettings
-	uint8_t optneg: 1;			// dlsettings OptNeg bit 7
-	uint8_t rx1droffset: 3;		// dlsettings RX1DRoffset 
-	uint8_t rx2datarate: 4;		// dlsettings RX2 Data rate bits 0..3
+	MHDR macheader;						// 1 MAC header message type 6
+	JOIN_NONCE joinNonce;				// 3
+	NETID netid;						// 3
+	DEVADDR devaddr;					// 4
+										// 1 dlsettings
+	uint8_t optneg: 1;					// dlsettings OptNeg bit 7
+	uint8_t rx1droffset: 3;				// dlsettings RX1DRoffset 
+	uint8_t rx2datarate: 4;				// dlsettings RX2 Data rate bits 0..3
 
-	uint8_t rxdelay;			// 1
-	// optional list of network parameters (CFList)
-	CFLIST cflist;				// 16
-} PACKED LORAWAN_JOIN_ACCEPT;	// 13 or 29 bytes
+	uint8_t rxdelay;					// 1
+} PACKED LORAWAN_JOIN_ACCEPT_HEADER;	// 13 bytes
+
+typedef ALIGN struct {
+	LORAWAN_JOIN_ACCEPT_HEADER header;	// 13
+	CFLIST cflist;						// 16
+	uint32_t mic;						// 4
+} PACKED LORAWAN_JOIN_ACCEPT_LONG;		// 23 bytes
+
+typedef ALIGN struct {
+	LORAWAN_JOIN_ACCEPT_HEADER header;	// 13
+	uint32_t mic;						// 4
+} PACKED LORAWAN_JOIN_ACCEPT_SHORT;		// 17 bytes
+
+typedef ALIGN struct {
+	union {
+		LORAWAN_JOIN_ACCEPT_SHORT s;	// 13
+		LORAWAN_JOIN_ACCEPT_LONG l;		// 17
+	};
+} PACKED LORAWAN_JOIN_ACCEPT;			// 17 bytes
 
 class LoraWANJoinAccept {
 private:
 	LORAWAN_JOIN_ACCEPT data;
+	bool hasCFList;
 public:
 	LoraWANJoinAccept(const void *buffer, size_t size);
 	std::string toJSONString() const;
 	static std::string toJSONString(const void *buffer, size_t size);
+	uint32_t mic();
 };
 
 #endif
