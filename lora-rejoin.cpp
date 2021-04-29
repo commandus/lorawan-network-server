@@ -1,5 +1,7 @@
 #include "lora-rejoin.h"
 
+#include <iostream>
+
 #include <sstream>
 #include "system/crypto/aes.h"
 #include "system/crypto/cmac.h"
@@ -72,17 +74,15 @@ LoraWANJoinAccept::LoraWANJoinAccept(
 	const void *buffer,
 	size_t size
 ) {
-	hasCFList = false;
 	if (size < sizeof(LORAWAN_JOIN_ACCEPT_SHORT))
 		return;
+	hasCFList = size >= sizeof(LORAWAN_JOIN_ACCEPT_LONG);
 	LORAWAN_JOIN_ACCEPT *r = (LORAWAN_JOIN_ACCEPT*) buffer;
-	if (size >= sizeof(LORAWAN_JOIN_ACCEPT)) {
-		memmove(&data, buffer, sizeof(LORAWAN_JOIN_ACCEPT));
-		hasCFList = true;
+	if (size >= sizeof(LORAWAN_JOIN_ACCEPT_LONG)) {
+		memmove(&data, buffer, sizeof(LORAWAN_JOIN_ACCEPT_LONG));
 	} else {
 		if (size >= sizeof(LORAWAN_JOIN_ACCEPT_SHORT)) {
 			memmove(&data, buffer, sizeof(LORAWAN_JOIN_ACCEPT_SHORT));
-			memset(&data.l.cflist, 0, sizeof(CFLIST));
 		}
 	}
 }
@@ -116,15 +116,14 @@ std::string LoraWANJoinAccept::toJSONString(
 	const void *buffer,
 	size_t size
 ) {
-	LORAWAN_JOIN_ACCEPT *r = (LORAWAN_JOIN_ACCEPT*) buffer;
-	
-	if (size < sizeof(LORAWAN_JOIN_ACCEPT) - sizeof(CFLIST))
+	if (size < sizeof(LORAWAN_JOIN_ACCEPT_SHORT))
 		return "";
-	bool hasCFList = size >= sizeof(LORAWAN_JOIN_ACCEPT);
+	LORAWAN_JOIN_ACCEPT *r = (LORAWAN_JOIN_ACCEPT*) buffer;
+	bool hasCFList = size >= sizeof(LORAWAN_JOIN_ACCEPT_LONG);
 	std::stringstream ss;
-		ss << "{\"joinNonce\": " << JOINNONCE2int(r->s.header.joinNonce) << ", "
-		<< "\"homeNetID\": \"" << std::hex << NETID2int(r->s.header.netid) << "\", "
-		<< "\"devAddr\": \"" << DEVADDR2string(r->s.header.devaddr) << "\", "
+		ss << "{\"joinnonce\": " << JOINNONCE2int(r->s.header.joinNonce) << ", "
+		<< "\"netid\": \"" << std::hex << NETID2int(r->s.header.netid) << "\", "
+		<< "\"devaddr\": \"" << DEVADDR2string(r->s.header.devaddr) << "\", "
 		<< "\"optneg\": " << std::dec << (int) (r->s.header.optneg) << ", "
 		<< "\"rx1droffset\": " << (int) (r->s.header.rx1droffset) << ", "
 		<< "\"rx2datarate\": " << (int) (r->s.header.rx2datarate) << ", "
@@ -145,10 +144,10 @@ std::string LoraWANJoinAccept::toJSONString(
 }
 
 typedef ALIGN struct {
-	uint8_t joinType;
-	DEVEUI eui;
-	JOIN_NONCE devnonce;
-} PACKED JOINACCEPT4MIC_NEG1_HEADER;
+	uint8_t joinType;					// 1
+	DEVEUI eui;							// 8
+	JOIN_NONCE devnonce;				// 3
+} PACKED JOINACCEPT4MIC_NEG1_HEADER;	// 12 bytes
 
 typedef ALIGN struct {
 	MHDR macheader;
@@ -166,25 +165,28 @@ typedef ALIGN struct {
 } PACKED JOINACCEPT4MIC_NEG1;
 
 uint32_t calcJoinAcceptMIC(
-	DEVEUI &joinEUI,
-	JOIN_NONCE &devNonce,
-	KEY128 &key,
-	LORAWAN_JOIN_ACCEPT *data,
+	const DEVEUI &joinEUI,
+	const JOIN_NONCE &devNonce,
+	const KEY128 &key,
+	const LORAWAN_JOIN_ACCEPT *data,
 	bool hasCFList
 ) {
 	uint32_t r;
 	JOINACCEPT4MIC_NEG1 a;
+	size_t sz = 0;
 	if (data->s.header.optneg) {
-		// JoinReqType | JoinEUI | DevNonce 
+		// JoinReqType | JoinEUI | DevNonce 12 bytes
 		a.n.joinType = (uint8_t) JOINREQUEST;
 		memmove(a.n.eui, joinEUI, sizeof(DEVEUI));
 		memmove(a.n.devnonce, devNonce, sizeof(JOIN_NONCE));
+		sz += sizeof(JOINACCEPT4MIC_NEG1_HEADER);
 	}
-	//  MHDR | JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList
+	//  MHDR | JoinNonce | NetID | DevAddr | DLSettings | RxDelay: 13 bytes | CFList: 16 bytes
 	a.v.macheader = data->s.header.macheader;
-	size_t sz = sizeof(JOIN_NONCE) + sizeof(NETID) + sizeof(DEVADDR) + sizeof(NETID) + 1 + 1;
+	sz += sizeof(LORAWAN_JOIN_ACCEPT_HEADER);
 	if (hasCFList)
 		sz += sizeof(CFLIST);
+	std::cerr << "size of " << sz << std::endl;		
 	memmove(a.v.joinnonce, data->s.header.joinNonce, sz);
 
 	unsigned char blockB[16];
@@ -196,16 +198,27 @@ uint32_t calcJoinAcceptMIC(
 	AES_CMAC_Init(&aesCmacCtx);
 	AES_CMAC_SetKey(&aesCmacCtx, key);
 	AES_CMAC_Update(&aesCmacCtx, blockB, sizeof(blockB));
-	AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &a, sz);
+	void *p;
+	if (data->s.header.optneg) {
+		p = &a.n;
+	} else {
+		p = &a.v;
+	}
+	std::cerr << "size of " << sz << std::endl;
+
+	AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) p, sz);
 	uint8_t mic[16];
 	AES_CMAC_Final(mic, &aesCmacCtx);
     r = (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
 	return r;
 }
 
-/**
- * ok, err := p.ValidateDownlinkJoinMIC(JoinRequestType, EUI64{}, 0, appKey)
- */
-uint32_t LoraWANJoinAccept::mic() {
-	return 0;
+uint32_t LoraWANJoinAccept::mic(
+	const DEVEUI &joinEUI,
+	const JOIN_NONCE &devNonce,
+	const KEY128 &key
+
+) {
+	return calcJoinAcceptMIC(
+		joinEUI, devNonce, key, &data, hasCFList);
 }

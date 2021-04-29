@@ -3,22 +3,22 @@
 
 #include "utillora.h"
 
-typedef ALIGN struct {
-	MHDR macheader;				// MAC header message type 6
-	uint8_t rrtype;				// 0- reset a device context including all radio parameters, 2- rekey a device or change its DevAdd
+typedef ALIGN struct {					// Bytes
+	MHDR macheader;						// 1 MAC header 
+	uint8_t rrtype;						// 1 0- reset a device context including all radio parameters, 2- rekey a device or change its DevAdd
 	// 0- reset a device context including all radio parameters
 	// 2- restore a lost session context (
-	NETID netid;		// 3
-	DEVEUI deveui;		// 8
-	uint16_t rjcount0;	// 2
-} PACKED LORAWAN_REJOIN_REQUEST_0_2;			// 15 bytes
+	NETID netid;						// 3
+	DEVEUI deveui;						// 8
+	uint16_t rjcount0;					// 2
+} PACKED LORAWAN_REJOIN_REQUEST_0_2;	// 15 bytes
 
-typedef ALIGN struct {
-	MHDR macheader;		// MAC header message type 6
-	uint8_t rrtype;		// 1- restore a lost session context (
-	DEVEUI joineui;		// 8
-	DEVEUI deveui;		// 8
-	uint16_t rjcount1;	// 2
+typedef ALIGN struct {					// Bytes
+	MHDR macheader;						// 1 MAC header message type 6
+	uint8_t rrtype;						// 1 1- restore a lost session context (
+	DEVEUI joineui;						// 8
+	DEVEUI deveui;						// 8
+	uint16_t rjcount1;					// 2
 } PACKED LORAWAN_REJOIN_REQUEST_1;			// 20 bytes
 
 typedef ALIGN struct {
@@ -51,6 +51,7 @@ public:
 	static std::string toJSONString(const void *buffer, size_t size);
 };
 
+//  MHDR | JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList
 typedef ALIGN struct {
 	MHDR macheader;						// 1 MAC header message type 6
 	JOIN_NONCE joinNonce;				// 3
@@ -68,7 +69,7 @@ typedef ALIGN struct {
 	LORAWAN_JOIN_ACCEPT_HEADER header;	// 13
 	CFLIST cflist;						// 16
 	uint32_t mic;						// 4
-} PACKED LORAWAN_JOIN_ACCEPT_LONG;		// 23 bytes
+} PACKED LORAWAN_JOIN_ACCEPT_LONG;		// 33 bytes
 
 typedef ALIGN struct {
 	LORAWAN_JOIN_ACCEPT_HEADER header;	// 13
@@ -90,7 +91,11 @@ public:
 	LoraWANJoinAccept(const void *buffer, size_t size);
 	std::string toJSONString() const;
 	static std::string toJSONString(const void *buffer, size_t size);
-	uint32_t mic();
+	uint32_t mic(
+		const DEVEUI &joinEUI,
+		const JOIN_NONCE &devNonce,
+		const KEY128 &key
+	);
 };
 
 #endif
