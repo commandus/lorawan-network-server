@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package hlogger;
+
+option cc_enable_arenas = true;
+
+import "pkt2.proto";
+
+/*
+ * MO Location data IE_LOCATION 0x03 11 bytes long + 3 bytes header = 14
+ * Dir byte
+ * Bits 0-3 reserved
+ * Bits 4 5 format code
+ * Bit 6 0- North, 1- South
+ * Bit 7 0- East, 1- West
+typedef ALIGN struct {
+        uint8_t direwi : 1;
+        uint8_t dirnsi : 1;
+        uint8_t dirformat : 2;
+        uint8_t dirreserved : 4;
+        uint8_t lat;            //< 1 Latitude
+        uint16_t lat1000;       //< 2 1/1000 latitude
+        uint8_t lon;            //< 4 Longitude
+        uint16_t lon1000;       //< 5 1/1000 longitude
+        uint32_t cepradius;     //< 7 CEP radius: 80% probability radius
+} PACKED IELocation;
+*/
+
+message IE_Location
+{
+    // input packet description
+    option(pkt2.packet) = { 
+        name: "iolocation"
+        short_name: "Iridium IO header"
+        full_name: "Iridium message IO header"
+        fields: [
+        {
+            name: "ie_id"
+            type: INPUT_UINT
+            size: 1
+            offset: 0
+            tag: 3			      ///< tag 3- Iridium location
+        },
+        {
+            name: "ie_size"
+            type: INPUT_UINT
+            size: 2
+            offset: 1
+            endian: ENDIAN_BIG_ENDIAN
+            tag: 11               ///< tag, 11 bytes long
+        },
+        {
+            name: "dir"           ///< direction flags
+            type: INPUT_UINT
+            size: 1
+            offset: 3
+        },
+        {
+            name: "lat"
+            type: INPUT_UINT
+            size: 1
+            offset: 4
+        },
+        {
+            name: "lat1000"
+            type: INPUT_UINT
+            size: 2
+            offset: 5
+        },
+        {
+            name: "lon"
+            type: INPUT_UINT
+            size: 1
+            offset: 7
+        },
+        {
+            name: "lon1000"
+            type: INPUT_UINT
+            size: 2
+            offset: 8
+        },
+        {
+            name: "cepradius"
+            type: INPUT_UINT
+            size: 4
+            offset: 10
+        }
+        ]
+    };
+
+	double iridium_latitude = 1 [(pkt2.variable) = {
+        get: "((field.location.dir & (1 << 1)) ? -1. : 1.) * (field.location.lat + (field.location.lat1000 / 60000.))"
+    }];
+
+	double iridium_longitude = 2 [(pkt2.variable) = {
+        get: "((field.location.dir & (1 << 0)) ? -1. : 1.) * (field.location.lon + (field.location.lon1000 / 60000.))"
+    }];
+
+	uint32 cepradius = 3 [(pkt2.variable) = {
+        get: "field.location.cepradius"
+    }];
+}

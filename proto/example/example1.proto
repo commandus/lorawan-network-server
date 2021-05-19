@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package example1;
+
+import "pkt2.proto";
+
+/// Temperature
+message TemperaturePkt
+{
+    // backend database
+    option(pkt2.output) = {
+    	sql {
+    		dialect: SQL_POSTGRESQL
+    	}
+    };
+
+    // input packet description
+    option(pkt2.packet) = {
+        id: 5001 
+        name: "temperature"
+        short_name: "Температура"
+        full_name: "DEVICE TEMP"
+        // set: "device = message.device; unix_time = message.time; value = (message.degrees_c / 2) / 1.22);"
+        source: {
+            proto: PROTO_TCP
+            address: "84.237.104.57"
+            port: 50052 // 0- any port
+        }
+        fields: [
+        {
+            name: "device"
+            type: INPUT_UINT
+            size: 1
+            offset: 0
+        },
+        {
+            name: "unix_time"
+            type: INPUT_UINT
+            size: 4
+            offset: 1
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "value"
+            type: INPUT_UINT
+            size: 2
+            offset: 5
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "tag"
+            type: INPUT_UINT
+            size: 1
+            offset: 7
+            tag: 255
+        }
+        ]
+    };
+
+    // output 
+    uint32 device = 1 [(pkt2.variable) = {
+        name: "device_id"
+        short_name: "Устройство"
+        full_name: "Номер устройства"
+        get: "field.device"
+        priority: 0                                 // required
+        index: 2
+    }];
+
+    uint32 time = 2 [(pkt2.variable) = {
+        name: "time"
+        short_name: "Время"
+        full_name: "секунд после 1970 г."
+        measure_unit: "s"
+        get: "field.unix_time"
+        priority: 0                                 // required
+        index: 1
+        format: ["var d = new Date(value.time * 1000); ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)"]
+    }];
+
+    double degrees_c = 3 [(pkt2.variable) = {
+        name: "degrees_c"
+        short_name: "Температура"
+        full_name: "Температура"
+        measure_unit: "C"
+        get: "1.22 * field.value"
+        priority: 0                                 // required
+        format: ["value.degrees_c.toFixed(2).replace('.', ',')"]
+    }];
+}

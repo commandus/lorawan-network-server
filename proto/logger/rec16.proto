@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+// DO NOT USE!
+// TODO array does not supported
+
+package logger60;
+
+import "pkt2.proto";
+
+/// Temperature & angles
+message TNA
+{
+    // input packet description
+    option(pkt2.packet) = {
+        name: "tna"
+        short_name: "Температура и углы"
+        full_name: "Температура и углы"
+        
+        fields: [
+        {
+            name: "fx"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 0
+        },
+        {
+            name: "fy"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 2
+        },
+        {
+            name: "fz"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 4
+        },
+        {
+            name: "ft"
+            type: INPUT_INT
+            size: 2
+            offset: 6
+        },
+        {
+            name: "t1f"
+            type: INPUT_UINT
+            size: 1
+            offset: 8
+        }
+        ]
+
+    };
+
+    // output 
+
+    double x = 1 [(pkt2.variable) = {
+        name: "x"
+        short_name: "X"
+        full_name: "Угол X"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.r1.fx >> 2)"
+        priority: 0                                 // required
+        format: ["value.r1.x.toFixed(8)"]
+    }];
+    double y = 2 [(pkt2.variable) = {
+        name: "y"
+        short_name: "Y"
+        full_name: "Угол Y"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.r1.fy >> 2)"
+        priority: 0                                 // required
+        format: ["value.r1.y.toFixed(8)"]
+    }];
+    double z = 3 [(pkt2.variable) = {
+        name: "z"
+        short_name: "Z"
+        full_name: "Угол Z"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.r1.fz >> 2)"
+        priority: 0                                 // required
+        format: ["value.r1.z.toFixed(8)"]
+    }];
+
+    double t = 4 [(pkt2.variable) = {
+        name: "T"
+        short_name: "Температура"
+        full_name: "Температура"
+        measure_unit: "C"
+        get: "field.r1.ft + (field.r1.ft / 256)"
+        priority: 0                                 // required
+        format: ["value.r1.t.toFixed(4)"]
+    }];
+
+}

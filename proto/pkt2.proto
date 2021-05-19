@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package pkt2;
+
+option cc_enable_arenas = true;
+
+import "google/protobuf/descriptor.proto";
+
+enum InputType {
+    INPUT_NONE                = 0;
+    INPUT_MESSAGE             = 1;
+    INPUT_DOUBLE              = 2;
+    INPUT_INT                 = 3;
+    INPUT_UINT                = 4;
+    INPUT_BYTES               = 5;
+    INPUT_CHAR                = 6;
+    INPUT_STRING              = 7;
+};
+
+// Not used.
+enum OutputType {
+    // 0 is reserved for errors.
+    OUTPUT_NONE               = 0;
+    OUTPUT_DOUBLE             = 1;
+    OUTPUT_FLOAT              = 2;
+    OUTPUT_INT64              = 3;
+    OUTPUT_UINT64             = 4;
+    OUTPUT_INT32              = 5;
+    OUTPUT_FIXED64            = 6;
+    OUTPUT_FIXED32            = 7;
+    OUTPUT_BOOL               = 8;
+    OUTPUT_STRING             = 9;
+    OUTPUT_GROUP              = 10;  // Tag-delimited aggregate.
+    OUTPUT_MESSAGE            = 11;  // Length-delimited aggregate.
+    OUTPUT_BYTES              = 12;
+    OUTPUT_UINT32             = 13;
+    OUTPUT_ENUM               = 14;
+    OUTPUT_SFIXED32           = 15;
+    OUTPUT_SFIXED64           = 16;
+    OUTPUT_SINT32             = 17;  // Uses ZigZag encoding.
+    OUTPUT_SINT64             = 18;  // Uses ZigZag encoding.
+};
+
+// Default ENDIAN_NO_MATTER
+// x86 is ENDIAN_LITTLE_ENDIAN, ARM is ENDIAN_BIG_ENDIAN architecture
+enum Endian {
+    ENDIAN_NO_MATTER          = 0;   // no order at all  
+    ENDIAN_LITTLE_ENDIAN      = 1;
+    ENDIAN_BIG_ENDIAN         = 2;
+};
+
+message Field {
+    string name               = 1;
+    InputType type            = 2;
+    Endian endian             = 3;	///<   порядок байт в слове. Если область состоит из 1 байта, или является массивом байт,Ю строкой, не имеет значения.
+    uint32 offset             = 4;	///<   смещение непрерывной области памяти в байтах. Начинается с 0 каждого сообщения(велючая вложенные)
+    uint32 size               = 5;	///<   число байт занимаемого непрерывного пространства. Все биты должны быть в области, задаваеимой offset и size
+    uint64 tag                = 6;  ///<   тег. Значение должно быть равно указанному. Для значения 0 укажите -1 (18446744073709551616). Если 0, то не тег
+}
+
+/// Выходные данные- "переменная"
+message Variable {
+    string field              = 1;  ///<   Только для вложенных message. Field задает смещение, где находится структура в родительском пакете. 
+    string name               = 2;	///<   Зарезервировано. Сейчас имя совпадает с именем field Protobuf.
+    OutputType type           = 3;	///<   Зарезервировано. Сейчас тип совпадает с типом field Protobuf.
+    string short_name         = 4;  ///<   отображаемое имя
+    string full_name          = 5;  ///<   описание
+    string measure_unit       = 6;  ///<   название единицы измерения (если не задан values)
+    // map<string,string> get
+    string get                = 7;  ///<   формула на заданном языке для приведения значения к единице измерения (если не задан values). Применяются name в вычислениях. Приравнивается все выражение слева)
+    string set                = 8;  ///<   формула на заданном языке для установки значений в field
+    repeated string values    = 9;  ///<   строки для флагов или перечислений по порядку. Если задан, measure_unit и get не действуют.
+    uint32 priority           = 10;  ///<   уровень детализации отображения. 0 (высший)- отображать всегда (по умолчанию), 1- не отображать (не записывать в БД)
+    repeated string format    = 11; ///<   выражения для преобразования в строку. По умолчанию с индексом 0. RETURN_VALUE если выражение нельзя сразу приравнять
+    uint32 index              = 12; ///<   включить переменную в индекс: 1, 2. В индекс должны входить время (1), идентфикатор устройства (2). Идентификатор пакета (0) формируется из имени сообщения хеш-функцией.
+    bool sql_string           = 13; ///<   Может применяться для индекса даты, когда значение преоброахуется в строку даты
+}
+
+/// Используемый протокол для приема пакета
+enum Proto {
+    PROTO_NONE                = 0;   // unknown
+    PROTO_TCP                 = 1;
+    PROTO_UDP                 = 2;
+};
+
+/// IP Адрес и номер порта, откуда пришел пакет, и на какой интерфейс и порт (адрес назначения)
+message Address {
+    Proto proto               = 1;
+    string address            = 2;
+    uint32 port               = 3;
+}
+
+/// Описание пакета
+message Packet {
+    repeated Address source   = 1;   ///<   для фильтрации по источнику. Маска  адресов.
+    repeated Address destination
+                              = 2;   ///<   для фильтрации по адресу получателя. Маска  адресов.
+    string name               = 3;   ///<   лат. имя. Может использоваться для расширения файлов, имен таблиц БД и т.д.
+    uint64 id                 = 4;   ///<   Численный идентификатор (для ключей LMDB, например). Если 0, то хеш строки name
+    string short_name         = 5;   ///<   отображаемое имя
+    string full_name          = 6;   ///<   описание
+    repeated Field fields     = 7;   ///<   поля пакета
+    // string set             = 8;   ///<   формула на заданном языке для установки в пакете из переменных сообщения. Зарезервировано.
+    // int32 priority         = 9;   ///<   приоритет 0- высший. Пакеты с высшим приоритетом проверяются первыми.
+    repeated string head      = 10;  ///<   Если задан(пустой и непустой)- начальный пакет. Если не задан, он не будет искаться. Содержит (опционально) список сообщений, которые могут следовать за ним в одном пакете (тогла они будут парсироваться).   
+}
+
+/// SQL dialects. Not used.
+enum Dialect {
+    SQL_POSTGRESQL            = 0;     
+    SQL_MYSQL                 = 1;
+    SQL_FIREBIRD              = 2;
+};
+
+/// SQL options. Reserved.
+message Sql {
+    Dialect dialect           = 1;
+}
+
+/// Output options
+message Output {
+	uint32	id                = 1;
+    Sql     sql               = 2;
+}
+
+/// User defined numbers region start at 50000.
+extend google.protobuf.MessageOptions {
+    pkt2.Packet packet = 50501;
+}
+
+extend google.protobuf.MessageOptions {
+    pkt2.Output output = 50502;
+}
+
+extend google.protobuf.FieldOptions {
+    pkt2.Variable variable = 50503;
+}

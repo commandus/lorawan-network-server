@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package hlogger;
+
+option cc_enable_arenas = true;
+
+import "pkt2.proto";
+import "hlogger/ie_ioheader.proto";
+import "hlogger/ie_location.proto";
+import "hlogger/packet46420.proto";
+
+/*
+ typedef ALIGN struct {
+        uint8_t id;     // Iridium version
+        uint16_t size;  // full packet length
+} PACKED InfoElementHeader;
+*/
+
+message IE_Packet
+{
+    // input packet description
+    option(pkt2.packet) = { 
+        id: 3008 
+        name: "iepacketheader"
+        short_name: "Iridium packet header"
+        full_name: "Iridium message full packet header"
+        head: [
+                "IE_Location",
+                "Packet8"
+        ]
+        fields: [
+        {
+            name: "ie_id"
+            type: INPUT_UINT
+            size: 1
+            offset: 0
+            tag: 1                 ///< tag 1- Iridium version 1.
+        },
+        {
+            name: "ie_size"
+            type: INPUT_UINT
+            size: 2
+            offset: 1
+            endian: ENDIAN_BIG_ENDIAN
+            tag: 78               ///< tag, 78 bytes long with payload
+        },
+        {
+            name: "ioheader"
+            type: INPUT_MESSAGE
+            size: 31
+            offset: 3
+        },
+        {
+            name: "location"
+            type: INPUT_MESSAGE
+            size: 14
+            offset: 34
+        },
+        {
+            name: "packet46420"
+            type: INPUT_MESSAGE
+            size: 33
+            offset: 48
+        }
+        ]
+    };
+
+    uint32 iridium_version = 1 [(pkt2.variable) = {
+        get: "field.ie_id"
+        short_name: "Размер сообщения Iridium"
+        full_name: "Размер всего сообщения Iridium"
+    }];
+
+    uint32 iridium_size = 2 [(pkt2.variable) = {
+        get: "field.ie_size"
+        short_name: "Размер сообщения Iridium"
+        full_name: "Размер всего сообщения Iridium"
+        measure_unit: "bytes"
+    }];
+
+    IE_IOHeader ioheader = 3 [(pkt2.variable) = {
+        get: "field.ioheader"
+        short_name: "I/O заголовок"
+        full_name: "I/O заголовок Iridium"
+    }];
+
+    IE_Location location = 4 [(pkt2.variable) = {
+        get: "field.location"
+        short_name: "Iridium координаты"
+        full_name: "Iridium координаты"
+    }];
+
+    Packet46420 packet46420 = 5 [(pkt2.variable) = {
+        get: "field.packet46420"
+        short_name: "Температура"
+        full_name: "Температура"
+    }];
+}

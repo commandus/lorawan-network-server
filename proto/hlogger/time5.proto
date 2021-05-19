@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package hlogger;
+
+option cc_enable_arenas = true;
+
+import "pkt2.proto";
+
+/*
+// 5 bytes time
+// 2 байта год/месяц/день
+//	7 бит год           0b xxxx xxx0
+//	4 бита месяц        0b x xxx0 0000
+//	5 бит день          0b 000x xxxx
+typedef ALIGN struct {
+	uint16_t day: 5;
+	uint16_t month: 4;
+	uint16_t year: 7;
+
+	uint8_t hour;
+	uint8_t minute;
+	uint8_t second;
+} PACKED time5;
+*/
+message Time5
+{
+	// input packet
+	option(pkt2.packet) = { 
+		name: "time5"
+		short_name: "Время"
+		full_name: "Дата и время"
+		// set: "1"
+		fields: [
+		{
+			name: "day_month_year"
+			type: INPUT_UINT
+			endian: ENDIAN_BIG_ENDIAN
+			size: 2
+			offset: 0
+		},
+		{
+			name: "hour"
+			type: INPUT_UINT
+			size: 1
+			offset: 2
+		},
+		{
+			name: "minute"
+			type: INPUT_UINT
+			size: 1
+			offset: 3
+			
+		},
+		{
+			name: "second"
+			type: INPUT_UINT
+			size: 1
+			offset: 4
+		}]
+	};
+	
+	// output
+	uint32 time5 = 1 [(pkt2.variable) = {
+		index: 1
+		sql_string: true
+		short_name: "Время"
+		full_name: "Время, Unix epoch"
+		measure_unit: "s"
+		get: "new Date(((field.packet46420.time5.day_month_year >> 9) & 0x7f) + 2000, ((field.packet46420.time5.day_month_year >> 5) & 0xf) - 1, (field.packet46420.time5.day_month_year & 0x1f), field.packet46420.time5.hour, field.packet46420.time5.minute, field.packet46420.time5.second, 00).getTime() / 1000" 
+		priority: 0
+		format: ["var d = new Date(value.packet46420.time5.time5 * 1000); ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)"]
+	}];
+}
+

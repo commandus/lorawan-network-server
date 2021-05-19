@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package vega;
+
+import "pkt2.proto";
+
+message SI13
+{
+    // backend database
+    option(pkt2.output) = {
+    	sql {
+    		dialect: SQL_POSTGRESQL
+    	}
+    };
+    // Вега SI-13 Port 2
+    option(pkt2.packet) = {
+        id: 13001 
+        name: "si13_1"
+        short_name: "Вега SI-13-232"
+        full_name: "Два счетчика и температура"
+        // set: "device = message.device; unix_time = message.time; value = (message.degrees_c / 2) / 1.22);"
+        fields: [
+            {
+                name: "tag1"
+                type: INPUT_INT
+                size: 1
+                offset: 0,
+                tag: 1
+            },
+            {
+                name: "flags"
+                type: INPUT_INT
+                size: 1
+                offset: 2
+            },
+            {
+                name: "temperature"
+                type: INPUT_INT
+                size: 1
+                offset: 7
+            },
+            {
+                name: "counter1"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 8
+            },
+            {
+                name: "counter2"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 12
+            },
+            {
+                name: "reserved3"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 20
+            }
+        ]
+    };
+
+    // output 
+    int32 temperature = 1 [(pkt2.variable) = {
+        name: "temperature"
+        short_name: "Температура"
+        full_name: "Температура"
+        measure_unit: "C"
+        get: "field.temperature"
+        priority: 0                                 // required
+    }];
+    int32 counter1 = 2 [(pkt2.variable) = {
+        name: "counter1"
+        short_name: "Счетчик 1"
+        full_name: "Счетчик 1"
+        measure_unit: "импульсов"
+        get: "field.counter1"
+        priority: 0                                 // required
+    }];
+    int32 counter2 = 3 [(pkt2.variable) = {
+        name: "counter2"
+        short_name: "Счетчик 2"
+        full_name: "Счетчик 2"
+        measure_unit: "импульсов"
+        get: "field.counter2"
+        priority: 0                                 // required
+    }];
+
+    bool activation = 4 [(pkt2.variable) = {
+        name: "activation"
+        short_name: "Способ активации"
+        full_name: "0- OTAA, 1- ABP"
+        get: "field.flags & 1"
+        priority: 0                                 // required
+    }];
+    bool ackrequest = 5 [(pkt2.variable) = {
+        name: "ackrequest"
+        short_name: "ACK request"
+        full_name: "0- off, 1- on"
+        get: "field.flags & 2"
+        priority: 0                                 // required
+    }];
+    int32 timeout = 6 [(pkt2.variable) = {
+        name: "timeout"
+        short_name: "timeout"
+        full_name: "0- 1h, 1- 6h, 2- 12h, 3- 24h"
+        get: "(field.flags >> 2) & 3"
+        priority: 0                                 // required
+    }];
+    bool input1 = 7 [(pkt2.variable) = {
+        name: "input1"
+        short_name: "Input configuration 1"
+        full_name: "0- impulse, 1- alarm"
+        get: "field.flags & 16"
+        priority: 0                                 // required
+    }];
+    bool input2 = 8 [(pkt2.variable) = {
+        name: "input2"
+        short_name: "Input configuration 1"
+        full_name: "0- impulse, 1- alarm"
+        get: "field.flags & 32"
+        priority: 0                                 // required
+    }];
+}

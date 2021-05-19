@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package hlogger;
+
+option cc_enable_arenas = true;
+
+import "pkt2.proto";
+
+/*
+typedef ALIGN struct
+{
+	uint8_t latitude_g;	    // 0	    [3](0-90)	добавить бит N or S 0х80 (0х80 - данные корректны)
+	uint8_t latitude_m;	    // 1        [4](0-60)	или добавить бит N or S 0х80, E or W (East or West) 0х40
+	//unsigned long int latitude_s;       //3  (6 bytes (48 bit) число до 281 474 976 710 656) size=32
+	uint16_t latitude_s;	// 2-3      [5-6] 2 байта
+	//   unsigned long ?? size =   long int 32 -2147483648 to 2147483647    unsigned long int size=32 0 to 4 294 967 295
+	uint16_t latitude_s1;	// 4-5      [7-8]7 reserved
+	uint8_t latitude_ns;	// 6 N/S    [9]   0x4E или 0x53
+	uint8_t longitude_g;	// 7(0-180) [10]
+	uint8_t longitude_m;	// 8(0-60)  [11]
+	//unsigned long int longitude_s;     //11  (6 bytes (48 bit) число до 281 474 976 710 656) unsigned long int size=32
+	uint16_t longitude_s;	// 9-10      [12-13]
+	uint16_t longitude_s1;	// 11-12     [14-15]
+	uint8_t longitude_ew;	// 13 E or W    0x45 или 0x57
+	uint8_t hdop;		    // 14 HDOP, m, 0-99
+	uint8_t pdop;	        // 15 PDOP, m, 0-99
+} PACKED gps_coord_t;
+*/
+message GPS_Coordinates
+{
+    // input packet
+    option(pkt2.packet) = { 
+        name: "gpc_coord"
+        short_name: "Координаты GPS"
+        full_name: "Координаты GPS приемника"
+        // set: "        double g = abs(latitude);        latitude_g = g;        double m = (g - latitude_g) * 60;        latitude_m = m;        double s = (m - latitude_m) * 60;        latitude_s = s;        latitude_s1 = 0;        latitude_ns = latitude >= 0 ? 'N' : 'S';        g = abs(longitude);        longitude_g = = g;        m = (g - longitude_g) * 60;        longitude_m = m;        s = (m - longitude_m) * 60;        longitude_s = s;        longitude_s = 0;        longitude_ew = longitude >= 0 ? 'E' : 'W';        h_dop = hdop;        p_dop = pdop;        "
+        fields: [
+        {
+            name: "latitude_g"
+            type: INPUT_UINT
+            size: 1
+            offset: 0
+        },
+        {
+            name: "latitude_m"
+            type: INPUT_UINT
+            size: 1
+            offset: 1
+        },
+        {
+            name: "latitude_s"
+            type: INPUT_UINT
+            size: 2
+            offset: 2
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "latitude_s1"
+            type: INPUT_UINT
+            size: 2
+            offset: 4
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "latitude_ew"
+            type: INPUT_UINT
+            size: 1
+            offset: 6
+        },
+        
+        {
+            name: "longitude_g"
+            type: INPUT_UINT
+            size: 1
+            offset: 7
+        },
+        {
+            name: "longitude_m"
+            type: INPUT_UINT
+            size: 1
+            offset: 8
+        },
+        {
+            name: "longitude_s"
+            type: INPUT_UINT
+            size: 2
+            offset: 9
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "longitude_s1"
+            type: INPUT_UINT
+            size: 2
+            offset: 11
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "longitude_ns"
+            type: INPUT_UINT
+            size: 1
+            offset: 13
+        },
+
+        {
+            name: "h_dop"
+            type: INPUT_UINT
+            size: 1
+            offset: 14
+        },
+        {
+            name: "p_dop"
+            type: INPUT_UINT
+            size: 1
+            offset: 15
+        }]
+    };
+    
+    // output
+    double latitude = 1 [(pkt2.variable) = {
+        short_name: "Широта"
+        full_name: "Широта, градус"
+        measure_unit: "°"
+        get: "(field.packet46420.gps_coordinates.latitude_ns == 'S' ? -1. : 1.) * (field.packet46420.gps_coordinates.latitude_g + ((field.packet46420.gps_coordinates.latitude_m + ((field.packet46420.gps_coordinates.latitude_s > 9999 ? 9999 : field.packet46420.gps_coordinates.latitude_s) * 0.0001)) / 60.))"
+        priority: 0
+        format: ["value.packet46420.gps_coordinates.latitude.toFixed(10)"]
+    }];
+    
+    double longitude = 2 [(pkt2.variable) = {
+        short_name: "Долгота"
+        full_name: "Долгота, градус"
+        measure_unit: "°"
+        get: "(field.packet46420.gps_coordinates.longitude_ns == 'W' ? -1. : 1.) * (field.packet46420.gps_coordinates.longitude_g + ((field.packet46420.gps_coordinates.longitude_m + ((field.packet46420.gps_coordinates.longitude_s > 9999 ? 9999 : field.packet46420.gps_coordinates.longitude_s) * 0.0001)) / 60.))"
+        priority: 0
+        format: ["value.packet46420.gps_coordinates.longitude.toFixed(10)"]
+    }];
+
+    uint32 hdop = 3 [(pkt2.variable) = {
+        name: "HDOP"
+        short_name: "HDOP"
+        full_name: "HDOP, m"
+        measure_unit: "m"
+        get: "field.packet46420.gps_coordinates.h_dop"
+        priority: 0
+    }];
+    
+    uint32 pdop = 4 [(pkt2.variable) = {
+        name: "PDOP"
+        short_name: "PDOP"
+        full_name: "PDOP, m"
+        measure_unit: "m"
+        get: "field.packet46420.gps_coordinates.p_dop"
+        priority: 0
+    }];
+}

@@ -1,0 +1,120 @@
+syntax = "proto3";
+package hlogger;
+
+option cc_enable_arenas = true;
+
+import "pkt2.proto";
+
+/*
+// IE_IO 0x01, 28 + 3(header)
+typedef ALIGN struct {
+        uint32_t cdrref;        //< Iridium message identifier                                  4
+        IMEI imei;              //< see IMEI                                                    15
+        uint8_t status;         //< see IOStatus                                                1
+        uint16_t sentno;        //< momsn modem sent out packet number                          2
+        uint16_t recvno;        //< mtmsn modem received out packet number. Not used            2
+        uint32_t recvtime;      //< stime Unix epoch time, seconds since 1970                   4
+} PACKED IEIOHeader;
+*/
+
+message IE_IOHeader
+{
+    // input packet description
+    option(pkt2.packet) = { 
+        name: "ioheader"
+        short_name: "Iridium IO header"
+        full_name: "Iridium message IO header"
+        // set: "packet_type = 8; gps_flags = SET_BIT(gpsolddata, 0) | SET_BIT(gpsencoded, 1) | SET_BIT(gpsfrommemory, 2) | SET_BIT(gpsnoformat, 3) | SET_BIT(gpsnosats, 4) | SET_BIT(gpsbadhdop, 5) | SET_BIT(gpstime, 6) | SET_BIT(gpsnavdata, 7); sats = satellite_visible_count; battery = ((battery_voltage * 10) & 0x3f) | SET_BIT(battery_low, 6) | SET_BIT(battery_high, 7); packet_key = 0; r2 = 0; temperature = temperature_c; SET(gps_coords, coordinates); SET(time5, measure_time);" 
+        fields: [
+        {
+            name: "ie_id"
+            type: INPUT_UINT
+            size: 1
+            offset: 0
+            tag: 1                ///< tag 1- I/O header
+        },
+        {
+            name: "ie_size"
+            type: INPUT_UINT
+            size: 2
+            offset: 1
+            endian: ENDIAN_BIG_ENDIAN
+            tag: 28               ///< tag, 28 bytes long
+        },
+        {
+            name: "cdrref"        ///< Iridium message identifier                                  4
+            type: INPUT_UINT
+            size: 4
+            offset: 3
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "imei"
+            type: INPUT_STRING
+            size: 15
+            offset: 7
+        },
+        {
+            name: "status"
+            type: INPUT_UINT
+            size: 1
+            offset: 22
+        },
+        {
+            name: "momsn"         ///< sentno
+            type: INPUT_UINT
+            size: 2
+            offset: 23
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "mtmsn"         ///< recvno
+            type: INPUT_INT
+            size: 2
+            offset: 25
+            endian: ENDIAN_BIG_ENDIAN
+        },
+        {
+            name: "recvtime"
+            type: INPUT_UINT
+            size: 4
+            offset: 27
+            endian: ENDIAN_BIG_ENDIAN
+        }
+        ]
+    };
+
+	uint32 cdrref = 1 [(pkt2.variable) = {
+		name: "cdrref"
+        field: "cdrref"
+        get: "field.ioheader.cdrref"
+    }];
+
+	string imei = 2 [(pkt2.variable) = {
+	    name: "imei"
+        field: "imei"
+        get: "field.ioheader.imei"
+        index: 2
+    }];
+
+	int32 status = 3 [(pkt2.variable) = {
+        name: "status"
+        short_name: "Статус"
+        get: "field.ioheader.status"
+    }];
+	
+	int32 recvno = 4 [(pkt2.variable) = {
+        name: "recvno"
+        get: "field.ioheader.momsn"
+    }];
+
+	int32 sentno = 5 [(pkt2.variable) = {
+        get: "field.ioheader.mtmsn"
+    }];
+
+	uint32 recvtime = 6 [(pkt2.variable) = {
+        sql_string: true
+        get: "field.ioheader.recvtime"
+        format: ["var d = new Date(value.ioheader.recvtime * 1000); ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)"]
+    }];
+}

@@ -1,0 +1,248 @@
+syntax = "proto3";
+
+package logger60;
+
+import "pkt2.proto";
+
+/// Temperature & angles
+message TemperatureNAngles
+{
+    // backend database
+    option(pkt2.output) = {
+    	sql {
+    		dialect: SQL_POSTGRESQL
+    	}
+    };
+
+    // input packet description
+    option(pkt2.packet) = {
+        id: 6000 
+        name: "temperature_n_angles"
+        short_name: "Температура и углы"
+        full_name: "Температура и углы"
+        // set: "device = message.device; unix_time = message.time; value = (message.degrees_c / 2) / 1.22);"
+        source: {
+            proto: PROTO_TCP
+            address: "84.237.104.57"
+            port: 50052 // 0- any port
+        }
+        fields: [
+        {
+            name: "fx1"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 18
+        },
+        {
+            name: "fy1"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 20
+        },
+        {
+            name: "fz1"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 22
+        },
+        {
+            name: "fx2"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 34
+        },
+        {
+            name: "fy2"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 36
+        },
+        {
+            name: "fz2"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 38
+        },
+        {
+            name: "fx3"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 50
+        },
+        {
+            name: "fy3"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 52
+        },
+        {
+            name: "fz3"
+            type: INPUT_INT
+            size: 2
+            endian: ENDIAN_LITTLE_ENDIAN
+            offset: 54
+        },
+        {
+            name: "ft1"
+            type: INPUT_INT
+            size: 1
+            offset: 24
+        },
+        {
+            name: "ft1f"
+            type: INPUT_UINT
+            size: 1
+            offset: 25
+        },
+        {
+            name: "ft2"
+            type: INPUT_INT
+            size: 1
+            offset: 40
+        },
+        {
+            name: "ft2f"
+            type: INPUT_UINT
+            size: 1
+            offset: 41
+        },
+        {
+            name: "ft3"
+            type: INPUT_INT
+            size: 1
+            offset: 56
+        },
+        {
+            name: "ft3f"
+            type: INPUT_UINT
+            size: 1
+            offset: 57
+        },
+        {
+            name: "tag0"
+            type: INPUT_UINT
+            size: 1
+            offset: 63
+            tag: 0
+        }
+        ]
+    };
+
+    // output 
+    double t1 = 1 [(pkt2.variable) = {
+        name: "T1"
+        short_name: "Температура 1"
+        full_name: "Температура 1"
+        measure_unit: "C"
+        get: "field.ft1 + (field.ft1f / 256)"
+        priority: 0                                 // required
+        format: ["value.t1.toFixed(4)"]
+    }];
+    double t2 = 2 [(pkt2.variable) = {
+        name: "T2"
+        short_name: "Температура 2"
+        full_name: "Температура 2"
+        measure_unit: "C"
+        get: "field.ft2 + (field.ft2f / 256)"
+        priority: 0                                 // required
+        format: ["value.t2.toFixed(8)"]
+    }];
+    double t3 = 3 [(pkt2.variable) = {
+        name: "T3"
+        short_name: "Температура 3"
+        full_name: "Температура 3"
+        measure_unit: "C"
+        get: "field.ft3 + (field.ft3f / 256)"
+        priority: 0                                 // required
+        format: ["value.t3.toFixed(8)"]
+    }];
+    double x1 = 4 [(pkt2.variable) = {
+        name: "x1"
+        short_name: "X 1"
+        full_name: "Угол X 1"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fx1 >> 2)"
+        priority: 0                                 // required
+        format: ["value.x1.toFixed(8)"]
+    }];
+    double y1 = 5 [(pkt2.variable) = {
+        name: "y1"
+        short_name: "Y 1"
+        full_name: "Угол Y 1"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fy1 >> 2)"
+        priority: 0                                 // required
+        format: ["value.y1.toFixed(8)"]
+    }];
+    double z1 = 6 [(pkt2.variable) = {
+        name: "z1"
+        short_name: "Z 1"
+        full_name: "Угол Z 1"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fz1 >> 2)"
+        priority: 0                                 // required
+        format: ["value.z1.toFixed(8)"]
+    }];
+    double x2 = 7 [(pkt2.variable) = {
+        name: "x2"
+        short_name: "X 2"
+        full_name: "Угол X 2"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fx2 >> 2)"
+        priority: 0                                 // required
+        format: ["value.x2.toFixed(8)"]
+    }];
+    double y2 = 8 [(pkt2.variable) = {
+        name: "y2"
+        short_name: "Y 2"
+        full_name: "Угол Y 2"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fy2 >> 2)"
+        priority: 0                                 // required
+        format: ["value.y2.toFixed(8)"]
+    }];
+    double z2 = 9 [(pkt2.variable) = {
+        name: "z2"
+        short_name: "Z 2"
+        full_name: "Угол Z 2"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fz2 >> 2)"
+        priority: 0                                 // required
+        format: ["value.z2.toFixed(8)"]
+    }];
+    double x3 = 10 [(pkt2.variable) = {
+        name: "x3"
+        short_name: "X 3"
+        full_name: "Угол X 3"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fx3 >> 2)"
+        priority: 0                                 // required
+        format: ["value.x3.toFixed(8)"]
+    }];
+    double y3 = 11 [(pkt2.variable) = {
+        name: "y[3]"
+        short_name: "Y 3"
+        full_name: "Угол Y 3"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fy3 >> 2)"
+        priority: 0                                 // required
+        format: ["value.y3.toFixed(8)"]
+    }];
+    double z3 = 12 [(pkt2.variable) = {
+        name: "z3"
+        short_name: "Z 3"
+        full_name: "Угол Z 3"
+        measure_unit: "°"
+        get: "0.02197265625 * (field.fz3 >> 2)"
+        priority: 0                                 // required
+        format: ["value.z3.toFixed(8)"]
+    }];
+}

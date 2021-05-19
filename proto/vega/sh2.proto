@@ -1,0 +1,320 @@
+syntax = "proto3";
+
+package vega;
+
+import "pkt2.proto";
+
+message SH2
+{
+    // backend database
+    option(pkt2.output) = {
+    	sql {
+    		dialect: SQL_POSTGRESQL
+    	}
+    };
+    // Вега SH-2 Port 2
+    option(pkt2.packet) = {
+        id: 13002 
+        name: "sh2_1"
+        short_name: "Вега SH-2 wire"
+        full_name: "Однопроводная шина, до 10 датчиков температуры, 2 счетчика и 2 аналоговых входа"
+        // set: "device = message.device; unix_time = message.time; value = (message.degrees_c / 2) / 1.22);"
+        fields: [
+            {
+                ///< 0  1- wire, 9- modbus
+                name: "bus"
+                type: INPUT_INT
+                size: 1
+                offset: 0,
+                tag: 1
+            },
+            {
+                ///< 1  1- time, 2- alarm, 3- alarm 2, 4- manual (configurator)
+                name: "event"
+                type: INPUT_INT
+                size: 1
+                offset: 1
+            },
+            {
+                ///< 2  0%- 100%
+                name: "battery"
+                type: INPUT_INT
+                size: 1
+                offset: 2
+            },
+            {
+                ///< 3  UTC seconds since Unix epoch 
+                name: "time"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 3
+            },
+            {
+                ///< 7  processor temperature, C
+                name: "proctemp"
+                type: INPUT_INT
+                size: 1
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 7
+            },
+            {
+                ///< 8  1-wire temperature, C
+                name: "t0"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 8
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t1"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 10
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t2"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 12
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t3"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 14
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t4"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 16
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t5"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 18
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t6"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 20
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t7"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 22
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t8"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 24
+            },
+            {
+                ///< 1-wire temperature, C
+                name: "t9"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 26
+            },
+            {
+                ///< 28 digital counter port 1, 2
+                name: "counter1"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 28
+            },
+            {
+                ///< 32 digital counter port 1, 2
+                name: "counter2"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 32
+            },
+            {
+                ///< 36 analog, mV
+                name: "analog1"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 36
+            },
+            {
+                ///< 38 analog, mV
+                name: "analog2"
+                type: INPUT_INT
+                size: 2
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 38
+            }
+        ]
+    };
+
+    // output 
+    int32 event = 1 [(pkt2.variable) = {
+        name: "event"
+        short_name: "Событие"
+        full_name: "1- time, 2- alarm, 3- alarm 2, 4- manual (configurator)"
+        get: "field.event"
+        priority: 0                                 // required
+    }];
+    int32 battery = 2 [(pkt2.variable) = {
+        name: "battery"
+        short_name: "Заряд батареи"
+        full_name: "Заряд батареи 0..100"
+        measure_unit: "%"
+        get: "field.battery"
+        priority: 0                                 // required
+    }];
+    int32 time = 3 [(pkt2.variable) = {
+        name: "time"
+        short_name: "Время"
+        full_name: "Время UTC в секундах с 1970г."
+        measure_unit: "s"
+        get: "field.temperature"
+        priority: 0                                 // required
+    }];
+    int32 proctemp = 4 [(pkt2.variable) = {
+        name: "proctemp"
+        short_name: "Температура процессора"
+        full_name: "Температура процессора"
+        measure_unit: "C"
+        get: "field.proctemp"
+        priority: 0                                 // required
+    }];
+    int32 t0 = 5 [(pkt2.variable) = {
+        name: "t0"
+        short_name: "Температура 0"
+        full_name: "Температура 0"
+        measure_unit: "C"
+        get: "field.t0"
+        priority: 0                                 // required
+    }];
+    int32 t1 = 6 [(pkt2.variable) = {
+        name: "t1"
+        short_name: "Температура 1"
+        full_name: "Температура 1"
+        measure_unit: "C"
+        get: "field.t1"
+        priority: 0                                 // required
+    }];
+    int32 t2 = 7 [(pkt2.variable) = {
+        name: "t2"
+        short_name: "Температура 2"
+        full_name: "Температура 2"
+        measure_unit: "C"
+        get: "field.t2"
+        priority: 0                                 // required
+    }];
+    int32 t3 = 8 [(pkt2.variable) = {
+        name: "t3"
+        short_name: "Температура 3"
+        full_name: "Температура 3"
+        measure_unit: "C"
+        get: "field.t3"
+        priority: 0                                 // required
+    }];
+    int32 t4 = 9 [(pkt2.variable) = {
+        name: "t4"
+        short_name: "Температура 4"
+        full_name: "Температура 4"
+        measure_unit: "C"
+        get: "field.t4"
+        priority: 0                                 // required
+    }];
+    int32 t5 = 10 [(pkt2.variable) = {
+        name: "t5"
+        short_name: "Температура 5"
+        full_name: "Температура 5"
+        measure_unit: "C"
+        get: "field.t5"
+        priority: 0                                 // required
+    }];
+    int32 t6 = 11 [(pkt2.variable) = {
+        name: "t6"
+        short_name: "Температура 6"
+        full_name: "Температура 6"
+        measure_unit: "C"
+        get: "field.t6"
+        priority: 0                                 // required
+    }];
+    int32 t7 = 12 [(pkt2.variable) = {
+        name: "t7"
+        short_name: "Температура 7"
+        full_name: "Температура 7"
+        measure_unit: "C"
+        get: "field.t7"
+        priority: 0                                 // required
+    }];
+    int32 t8 = 13 [(pkt2.variable) = {
+        name: "t8"
+        short_name: "Температура 8"
+        full_name: "Температура 8"
+        measure_unit: "C"
+        get: "field.t8"
+        priority: 0                                 // required
+    }];
+    int32 t9 = 14 [(pkt2.variable) = {
+        name: "t9"
+        short_name: "Температура 9"
+        full_name: "Температура 9"
+        measure_unit: "C"
+        get: "field.t9"
+        priority: 0                                 // required
+    }];
+    int32 counter1 = 15 [(pkt2.variable) = {
+        name: "counter1"
+        short_name: "Счетчик 1"
+        full_name: "Счетчик 1"
+        measure_unit: "импульсов"
+        get: "field.counter1"
+        priority: 0                                 // required
+    }];
+    int32 counter2 = 16 [(pkt2.variable) = {
+        name: "counter2"
+        short_name: "Счетчик 2"
+        full_name: "Счетчик 2"
+        measure_unit: "импульсов"
+        get: "field.counter2"
+        priority: 0                                 // required
+    }];
+    int32 analog = 17 [(pkt2.variable) = {
+        name: "counter1"
+        short_name: "Аналоговый вход 1"
+        full_name: "Напряжение"
+        measure_unit: "mV"
+        get: "field.analog1"
+        priority: 0                                 // required
+    }];
+    int32 analog2 = 18 [(pkt2.variable) = {
+        name: "counter2"
+        short_name: "Аналоговый вход 2"
+        full_name: "Напряжение"
+        measure_unit: "mV"
+        get: "field.analog2"
+        priority: 0                                 // required
+    }];
+}
