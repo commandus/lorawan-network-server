@@ -35,5 +35,5 @@ SemtechMetadataTX::SemtechMetadataTX()
 }
 
 std::string SemtechMetadataTX::toString() {
-
+	return "";
 }

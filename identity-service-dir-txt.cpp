@@ -82,4 +82,5 @@ int DirTxtIdentityService::stopListen() {
 		delete fileWatcher;
 		fileWatcher = NULL;
 	}
+	return 0;
 }

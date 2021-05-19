@@ -171,8 +171,13 @@ test_join_accept_decrypt_SOURCES = \
 test_join_accept_decrypt_LDADD = -lpthread
 test_join_accept_decrypt_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-join-accept-decrypt
-# test-dir-txt test-identity-file-json
+test_pkt2_parse_SOURCES = \
+	tests/test-pkt2-parse.cpp
+test_pkt2_parse_LDADD = -L./libs/ -lpkt2 -lprotobuf -lpthread
+test_pkt2_parse_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-pkt2-parse
+# test-join-accept-decrypt test-dir-txt test-identity-file-json
 # test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 

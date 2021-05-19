@@ -79,11 +79,18 @@ build system.
 ### autoconf
 
 Generate auttomake files, configure and make:
+
 ```
 autogen.sh
 ./configure
 make
 sudo make install
+```
+
+For clang:
+
+```
+./configure CC=clang CXX=clang++
 ```
 
 ### cmake
