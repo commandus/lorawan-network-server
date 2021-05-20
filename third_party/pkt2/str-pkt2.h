@@ -3,6 +3,19 @@
 
 #include <string>
 
+#define INPUT_FORMAT_BINARY		0
+#define INPUT_FORMAT_HEX		1
+
+#define OUTPUT_FORMAT_JSON		0
+#define OUTPUT_FORMAT_CSV		1
+#define OUTPUT_FORMAT_TAB		2
+#define OUTPUT_FORMAT_SQL		3
+#define OUTPUT_FORMAT_SQL2		4
+#define OUTPUT_FORMAT_PBTEXT	5
+#define OUTPUT_FORMAT_DEBUG		6
+#define OUTPUT_FORMAT_HEX		7
+#define OUTPUT_FORMAT_BIN		8
+
 /**
  * Initialize packet declarations
  * @param proto_path path to the catalog with protobuf decraration files
@@ -33,6 +46,23 @@ std::string parsePacket(
 	void *env, 
 	int inputFormat,
 	int outputFormat,
+	const std::string &packet,
+	const std::string &forceMessage
+);
+
+/**
+ * Parse packet by declaration
+ * @param retMessage return message of google::protobuf::Message type
+ * @param env packet declaratuions
+ * @param inputFormat 0- binary, 1- hex string
+ * @param packet data
+ * @param forceMessage "" If specifed, try only message type
+ * @return empty string if fails
+ */
+bool parsePacket2ProtobufMessage(
+	void **retMessage,
+	void *env, 
+	int inputFormat,
 	const std::string &packet,
 	const std::string &forceMessage
 );

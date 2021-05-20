@@ -5,6 +5,9 @@ commoncppflags = -Ithird_party
 
 GEN = 
 
+# LIB_PKT2 = -L./libs/ -lpkt2
+LIB_PKT2 = -L/home/andrei/src/pkt2/ -lpkt2
+
 AM_CXXFLAGS=-std=c++11 -O0
 COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
@@ -173,7 +176,7 @@ test_join_accept_decrypt_CPPFLAGS = $(commoncppflags)
 
 test_pkt2_parse_SOURCES = \
 	tests/test-pkt2-parse.cpp
-test_pkt2_parse_LDADD = -L./libs/ -lpkt2 -lprotobuf -lpthread
+test_pkt2_parse_LDADD = $(LIB_PKT2) -lprotobuf -lpthread
 test_pkt2_parse_CPPFLAGS = $(commoncppflags)
 
 check_PROGRAMS = test-pkt2-parse
