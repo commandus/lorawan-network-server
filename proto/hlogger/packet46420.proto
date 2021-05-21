@@ -144,7 +144,7 @@ message Packet46420
         ]
     };
 	// structure 16 bytes long (bytes 3..18) 
-    GPS_Coordinates gps_coordinates = 1 [(pkt2.variable) = {
+    GPSCoordinates gps_coordinates = 1 [(pkt2.variable) = {
         get: "field.gps_coordinates"
     }];
 
@@ -233,8 +233,8 @@ message Packet46420
         measure_unit: "C"
     }];
 	
-	int32 reserved_2 = 16 [(pkt2.variable) = {
-        name: "reserved_2"
+	int32 reserved2 = 16 [(pkt2.variable) = {
+        name: "reserved2"
         get: "field.packet46420.r2"
     }];
 

@@ -26,7 +26,7 @@ typedef ALIGN struct
 	uint8_t pdop;	        // 15 PDOP, m, 0-99
 } PACKED gps_coord_t;
 */
-message GPS_Coordinates
+message GPSCoordinates
 {
     // input packet
     option(pkt2.packet) = { 

@@ -16,7 +16,7 @@ import "iridium/packet8.proto";
 } PACKED InfoElementHeader;
 */
 
-message IE_Packet
+message IEPacket
 {
     // input packet description
     option(pkt2.packet) = { 
@@ -25,7 +25,7 @@ message IE_Packet
         short_name: "Iridium packet header"
         full_name: "Iridium message full packet header"
         head: [
-                "IE_Location",
+                "IELocation",
                 "Packet8"
         ]
         fields: [
@@ -78,13 +78,13 @@ message IE_Packet
         measure_unit: "bytes"
     }];
 
-    IE_IOHeader ioheader = 3 [(pkt2.variable) = {
+    IEIOHeader ioheader = 3 [(pkt2.variable) = {
         get: "field.ioheader"
         short_name: "I/O заголовок"
         full_name: "I/O заголовок Iridium"
     }];
 
-    IE_Location location = 4 [(pkt2.variable) = {
+    IELocation location = 4 [(pkt2.variable) = {
         get: "field.location"
         short_name: "Iridium координаты"
         full_name: "Iridium координаты"

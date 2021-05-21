@@ -7,7 +7,7 @@ option cc_enable_arenas = true;
 import "pkt2.proto";
 
 /*
- * MO Location data IE_LOCATION 0x03 11 bytes long + 3 bytes header = 14
+ * MO Location data IELOCATION 0x03 11 bytes long + 3 bytes header = 14
  * Dir byte
  * Bits 0-3 reserved
  * Bits 4 5 format code
@@ -26,7 +26,7 @@ typedef ALIGN struct {
 } PACKED IELocation;
 */
 
-message IE_Location
+message IELocation
 {
     // input packet description
     option(pkt2.packet) = { 

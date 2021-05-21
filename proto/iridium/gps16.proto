@@ -26,7 +26,7 @@ typedef ALIGN struct
 	uint8_t pdop;	        // 15 PDOP, m, 0-99
 } PACKED gps_coord_t;
 */
-message GPS_Coordinates
+message GPSCoordinates
 {
     // input packet
     option(pkt2.packet) = { 
@@ -122,7 +122,7 @@ message GPS_Coordinates
         measure_unit: "°"
         get: "(field.packet8.gps_coordinates.latitude_ns == 'S' ? -1. : 1.) * (field.packet8.gps_coordinates.latitude_g + ((field.packet8.gps_coordinates.latitude_m + ((field.packet8.gps_coordinates.latitude_s > 9999 ? 9999 : field.packet8.gps_coordinates.latitude_s) * 0.0001)) / 60.))"
         priority: 0
-        format: ["value.packet8.gps_coordinates.latitude.toFixed(10)"]
+        format: ["value.packet8.gps_coordinates.latitude.toFixed(10).replace(',', '.')"]
     }];
     
     double longitude = 2 [(pkt2.variable) = {
@@ -131,7 +131,7 @@ message GPS_Coordinates
         measure_unit: "°"
         get: "(field.packet8.gps_coordinates.longitude_ns == 'W' ? -1. : 1.) * (field.packet8.gps_coordinates.longitude_g + ((field.packet8.gps_coordinates.longitude_m + ((field.packet8.gps_coordinates.longitude_s > 9999 ? 9999 : field.packet8.gps_coordinates.longitude_s) * 0.0001)) / 60.))"
         priority: 0
-        format: ["value.packet8.gps_coordinates.longitude.toFixed(10)"]
+        format: ["value.packet8.gps_coordinates.longitude.toFixed(10).replace(',', '.')"]
     }];
 
     uint32 hdop = 3 [(pkt2.variable) = {

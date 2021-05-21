@@ -7,7 +7,7 @@ option cc_enable_arenas = true;
 import "pkt2.proto";
 
 /*
- * MO Location data IE_LOCATION 0x03 11 bytes long + 3 bytes header = 14
+ * MO Location data IELOCATION 0x03 11 bytes long + 3 bytes header = 14
  * Dir byte
  * Bits 0-3 reserved
  * Bits 4 5 format code
@@ -26,7 +26,7 @@ typedef ALIGN struct {
 } PACKED IELocation;
 */
 
-message IE_Location
+message IELocation
 {
     // input packet description
     option(pkt2.packet) = { 
@@ -90,10 +90,14 @@ message IE_Location
 
 	double iridium_latitude = 1 [(pkt2.variable) = {
         get: "((field.location.dir & (1 << 1)) ? -1. : 1.) * (field.location.lat + (field.location.lat1000 / 60000.))"
+        priority: 0
+        format: ["value.location.iridium_latitude.toFixed(10).replace(',', '.')"]
     }];
 
 	double iridium_longitude = 2 [(pkt2.variable) = {
         get: "((field.location.dir & (1 << 0)) ? -1. : 1.) * (field.location.lon + (field.location.lon1000 / 60000.))"
+        priority: 0
+        format: ["value.location.iridium_longitude.toFixed(10).replace(',', '.')"]
     }];
 
 	uint32 cepradius = 3 [(pkt2.variable) = {

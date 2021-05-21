@@ -6,7 +6,7 @@ option cc_enable_arenas = true;
 import "pkt2.proto";
 
 /*
-// IE_IO 0x01, 28 + 3(header)
+// IEIO 0x01, 28 + 3(header)
 typedef ALIGN struct {
         uint32_t cdrref;        //< Iridium message identifier                                  4
         IMEI imei;              //< see IMEI                                                    15
@@ -17,7 +17,7 @@ typedef ALIGN struct {
 } PACKED IEIOHeader;
 */
 
-message IE_IOHeader
+message IEIOHeader
 {
     // input packet description
     option(pkt2.packet) = { 
@@ -115,6 +115,6 @@ message IE_IOHeader
 	uint32 recvtime = 6 [(pkt2.variable) = {
         sql_string: true
         get: "field.ioheader.recvtime"
-        format: ["var d = new Date(value.ioheader.recvtime * 1000); ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)"]
+        format: ["var d = new Date(value.ioheader.recvtime * 1000); ('\\'' + ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + '\\'')"]
     }];
 }
