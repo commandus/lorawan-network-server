@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 	}
 
 	std::string hexData = "01004e01001c9a0ba5f633303032333430363032333533343000011900005ab8f59303000b003e68a68143d40000000502001e0810003e01b21200004e812b4e160000390000221400829486247a0d1c09";
-	std::string mt = "iridium.IE_Packet"; // iridium.IE_Packet
+	std::string mt = "iridium.IEPacket"; // iridium.IE_Packet
 
 	for (int i = OUTPUT_FORMAT_JSON; i < OUTPUT_FORMAT_BIN; i++) {
 		std::string s = parsePacket(env, INPUT_FORMAT_HEX, i, hexData, mt);
@@ -35,5 +35,5 @@ int main(int argc, char **argv) {
 	std::cout << flds << std::endl;
 	*/
 	donePkt2(env);
-	
+
 }
