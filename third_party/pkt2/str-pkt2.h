@@ -2,6 +2,7 @@
 #define STR_PKT2_H     1
 
 #include <string>
+#include <map>
 
 #define INPUT_FORMAT_BINARY		0
 #define INPUT_FORMAT_HEX		1
@@ -47,7 +48,9 @@ std::string parsePacket(
 	int inputFormat,
 	int outputFormat,
 	const std::string &packet,
-	const std::string &forceMessage
+	const std::string &forceMessage,
+	const std::map<std::string, std::string> *tableAliases = NULL,
+	const std::map<std::string, std::string> *fieldAliases = NULL
 );
 
 /**
@@ -64,7 +67,9 @@ bool parsePacket2ProtobufMessage(
 	void *env, 
 	int inputFormat,
 	const std::string &packet,
-	const std::string &forceMessage
+	const std::string &forceMessage,
+	const std::map<std::string, std::string> *tableAliases = NULL,
+	const std::map<std::string, std::string> *fieldAliases = NULL
 );
 
 /**
