@@ -39,6 +39,7 @@ void donePkt2(void *env);
  * @param env packet declaratuions
  * @param inputFormat 0- binary, 1- hex string
  * @param outputFormat 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin 
+ * @param sqlDialect 0- PostgeSQL, 1- MySQL, 1- Firebird
  * @param packet data
  * @param forceMessage "" If specifed, try only message type
  * @return empty string if fails
@@ -47,6 +48,7 @@ std::string parsePacket(
 	void *env, 
 	int inputFormat,
 	int outputFormat,
+	int sqlDialect,
 	const std::string &packet,
 	const std::string &forceMessage,
 	const std::map<std::string, std::string> *tableAliases = NULL,
