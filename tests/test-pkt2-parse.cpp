@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 	fieldAliases["iridium.Packet8.key"] = "";
 
 	for (int i = OUTPUT_FORMAT_JSON; i < OUTPUT_FORMAT_BIN; i++) {
-		std::string s = parsePacket(env, INPUT_FORMAT_HEX, i, hexData, mt, &tableAliases, &fieldAliases);
+		std::string s = parsePacket(env, INPUT_FORMAT_HEX, i, 0, hexData, mt, &tableAliases, &fieldAliases);
 		std::cout << i << ": " << s << std::endl;
 	}
 
@@ -79,5 +79,4 @@ int main(int argc, char **argv) {
 	std::cout << flds << std::endl;
 	*/
 	donePkt2(env);
-	
 }
