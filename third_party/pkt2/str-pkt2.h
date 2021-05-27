@@ -87,4 +87,23 @@ std::string headerFields(
 	const std::string &delimiter
 );
 
+/**
+ * Return CREATE table SQL clause
+ * @param env packet declaratuions
+ * @param messageName Protobuf full type name (including packet)
+ * @param outputFormat 3- sql, 4- Sql
+ * @param sqlDialect 0- PostgeSQL, 1- MySQL, 1- Firebird
+ * @param tableAliases <Protobuf full type name>=<alias (SQL table name)>
+ * @param fieldAliases <Protobuf message fiekd name>=<alias (SQL column name)>
+ * @return empty string if fails
+ */
+std::string createTableSQLClause(
+	void *env, 
+	const std::string &messageName,
+	int outputFormat,
+	int sqlDialect,
+	const std::map<std::string, std::string> *tableAliases = NULL,
+	const std::map<std::string, std::string> *fieldAliases = NULL
+);
+
 #endif
