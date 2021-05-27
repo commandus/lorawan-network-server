@@ -61,6 +61,9 @@ int main(int argc, char **argv) {
 	fieldAliases["iridium.Packet8.failureworking"] = "";
 	fieldAliases["iridium.Packet8.key"] = "";
 
+	std::string createClause = createTableSQLClause(env, mt, OUTPUT_FORMAT_SQL, 0, &tableAliases, &fieldAliases);
+	std::cout << "create statement: " << createClause << std::endl;
+
 	for (int i = OUTPUT_FORMAT_JSON; i < OUTPUT_FORMAT_BIN; i++) {
 		std::string s = parsePacket(env, INPUT_FORMAT_HEX, i, 0, hexData, mt, &tableAliases, &fieldAliases);
 		std::cout << i << ": " << s << std::endl;
@@ -79,4 +82,5 @@ int main(int argc, char **argv) {
 	std::cout << flds << std::endl;
 	*/
 	donePkt2(env);
+	
 }
