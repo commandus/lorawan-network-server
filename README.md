@@ -450,6 +450,11 @@ Sent ACK to 84.237.104.16:54820
 
 - lmdb
 - [Filewatch](https://github.com/ThomasMonkman/filewatch)
+- sqlite3
+
+```
+sudo apt-get install sqlite3 libsqlite3-dev"
+```
 
 ### LMDB
 

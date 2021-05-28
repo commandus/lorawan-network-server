@@ -179,8 +179,13 @@ test_pkt2_parse_SOURCES = \
 test_pkt2_parse_LDADD = $(LIB_PKT2) -lprotobuf -lpthread
 test_pkt2_parse_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-pkt2-parse
-# test-join-accept-decrypt test-dir-txt test-identity-file-json
+test_sqlite_SOURCES = \
+	tests/test-sqlite.cpp
+test_sqlite_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3
+test_sqlite_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-sqlite
+# test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json
 # test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 

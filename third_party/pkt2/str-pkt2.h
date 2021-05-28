@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 
+#include "database-config.h"
+
 #define INPUT_FORMAT_BINARY		0
 #define INPUT_FORMAT_HEX		1
 
