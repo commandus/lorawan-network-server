@@ -49,6 +49,7 @@ sqlite_field_aliases = [
 
 databases = [
 	{
+		name: "sqlite",
 		connection: "lns.data.sqlite.db",
 		login: "",
 		password: "",
