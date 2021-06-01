@@ -350,6 +350,78 @@ PV      GatewayIdentifie
 021be80200006cc3743eed46
 02e3460000006cc3743eed46
 
+## Database backend
+
+Database configuration file dbs.js is Javascript declaration of "databases" array.
+
+Each element is object with members
+
+- name
+- type
+- connection
+- table_aliases
+- field_aliases
+
+Name is used to find out appropriate database.
+
+Valid values for "type" are "sqlite3", "postgresql".
+
+Connection for database type "sqlite3" is file name of SQLite database.
+
+Connection for database type "postgresql" looks like:
+
+host=localhost;database=irthermometer;username=irthermometer;password=**************
+
+table_aliases is an array of array of two elements. First element is protobuf package.message.
+Second element is an alias used in the database for table name.
+
+field_aliases is an array of array of two elements. First element is protobuf package.message.field
+Second element is an alias used in the database for table column.
+
+If second element is empty string, this message or field does not put to the database.
+
+Optional parameters:
+
+- login (reserved)
+- password (reserved)
+
+Example of dbs.js file:
+
+```
+/*
+ * It's Javascipt not JSON.
+ * You can use any evaluatation to produce "databases" array.
+ */
+sqlite_table_aliases = [
+	["iridium.IEPacket", "iridium_packet"]
+];
+
+sqlite_field_aliases = [
+	["iridium.IEPacket.iridium_version", "version"],
+	["iridium.IEPacket.iridium_size", ""],
+     ...
+];
+
+/*
+ * var databases must be declared in the config file.
+ */
+databases = [
+	{
+		name: "sqlite",
+		type: "sqlite3",
+		connection: "lns.data.sqlite.db",
+		table_aliases: sqlite_table_aliases,
+		field_aliases: sqlite_field_aliases
+	},
+	{
+		name: "postgres",
+		type: "postgresql",
+		connection: "host=localhost;database=irthermometer;username=irthermometer;password=**************",
+		table_aliases: sqlite_table_aliases,
+		field_aliases: sqlite_field_aliases
+	}
+];
+```
 
 ### rxpk
 

@@ -62,7 +62,7 @@ nobase_dist_include_HEADERS = \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
-	db-intf.h db-sqlite.h  db-pg.h \
+	db-intf.h db-any.h db-sqlite.h db-pg.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -181,7 +181,7 @@ test_pkt2_parse_LDADD = $(LIB_PKT2) -lprotobuf -lpthread
 test_pkt2_parse_CPPFLAGS = $(commoncppflags)
 
 test_sqlite_SOURCES = \
-	tests/test-sqlite.cpp db-sqlite.cpp db-pg.cpp
+	tests/test-sqlite.cpp db-any.cpp db-sqlite.cpp db-pg.cpp
 test_sqlite_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq
 test_sqlite_CPPFLAGS = $(commoncppflags)
 

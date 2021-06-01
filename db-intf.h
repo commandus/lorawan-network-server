@@ -9,6 +9,7 @@
 class DatabaseIntf
 {
 public:
+	std::string type;
 	std::string errmsg;
 	virtual int open(
 		const std::string &connection,

@@ -3,7 +3,8 @@
 DatabasePostgreSQL::DatabasePostgreSQL()
 	: conn(NULL)
 {
-	
+	errmsg = "";
+	type = "postgresql";
 }
 
 DatabasePostgreSQL::~DatabasePostgreSQL()

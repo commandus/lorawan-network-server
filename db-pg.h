@@ -1,5 +1,5 @@
-#ifndef DB_SQLITE_H
-#define DB_SQLITE_H	1
+#ifndef DB_PG_H
+#define DB_PG_H	1
 
 #include "db-intf.h"
 

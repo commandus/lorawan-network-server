@@ -3,7 +3,8 @@
 DatabaseSQLite::DatabaseSQLite()
 	: db(NULL)
 {
-	
+	errmsg = "";
+	type = "sqlite3";
 }
 
 DatabaseSQLite::~DatabaseSQLite()

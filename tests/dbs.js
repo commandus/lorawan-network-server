@@ -1,8 +1,8 @@
-sqlite_table_aliases = [
+db_table_aliases = [
 	["iridium.IEPacket", "iridium_packet"]
 ];
 
-sqlite_field_aliases = [
+db_field_aliases = [
 	["iridium.IEPacket", "iridium_packet"],
 	["iridium.IEPacket.iridium_version", "version"],
 	["iridium.IEPacket.iridium_size", ""],
@@ -50,10 +50,16 @@ sqlite_field_aliases = [
 databases = [
 	{
 		name: "sqlite",
+		type: "sqlite3",
 		connection: "lns.data.sqlite.db",
-		login: "",
-		password: "",
-		table_aliases: sqlite_table_aliases,
-		field_aliases: sqlite_field_aliases
+		table_aliases: db_table_aliases,
+		field_aliases: db_field_aliases
+	},
+	{
+		name: "postgres",
+		type: "postgresql",
+		connection: "host=localhost;database=irthermometer;username=irthermometer;password=Rfhnjirf20",
+		table_aliases: db_table_aliases,
+		field_aliases: db_field_aliases
 	}
 ];

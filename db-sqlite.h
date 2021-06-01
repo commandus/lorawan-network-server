@@ -14,7 +14,7 @@ public:
 
 	DatabaseSQLite();
 	~DatabaseSQLite();
-	
+
 	int open(
 		const std::string &connection,
 		const std::string &login,

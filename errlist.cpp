@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 47
+#define ERR_COUNT 48
 
 static const char *errlist[ERR_COUNT] = {
 	ERR_COMMAND_LINE,
@@ -50,7 +50,8 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_PARAM_INVALID,
 	ERR_INSUFFICIENT_PARAMS,
 	ERR_NO_MAC_NO_PAYLOAD,
-	ERR_INVALID_REGEX
+	ERR_INVALID_REGEX,
+	ERR_NO_DATABASE
 };
 
 const char *strerror_client(

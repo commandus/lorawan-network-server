@@ -1,3 +1,6 @@
+#ifndef DATABASE_CONFIG_H_
+#define DATABASE_CONFIG_H_	1
+
 #include <map>
 #include <vector>
 #include <string>
@@ -6,6 +9,7 @@ class ConfigDatabase
 {
 public:
 	std::string name;
+	std::string type;
 	std::string connectionString;
 	std::string login;
 	std::string password;
@@ -13,7 +17,7 @@ public:
 	std::map<std::string, std::string> fieldAliases;
 
 	ConfigDatabase();
-	std::string toString();
+	std::string toString() const;
 };
 
 class ConfigDatabases
@@ -23,6 +27,8 @@ public:
 	
 	ConfigDatabases(const std::string &filename);
 	void load(const std::string &value);
-	std::string toString();
-	ConfigDatabase *findByName(const std::string &name);
+	std::string toString() const;
+	const ConfigDatabase *findByName(const std::string &name) const;
 };
+
+#endif
