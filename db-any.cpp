@@ -41,7 +41,9 @@ std::string DatabaseNConfig::createClause
 	const std::string &message
 )
 {
-	return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, 0, 
+	std::cerr << "Type:  " << config->type << std::endl;
+	std::cerr << "Dialect:  " << config->getDialect() << std::endl;
+	return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, config->getDialect(), 
 		&config->tableAliases, &config->fieldAliases);
 }
 

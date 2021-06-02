@@ -1,5 +1,7 @@
 #include "db-pg.h"
 
+#include <iostream>
+
 DatabasePostgreSQL::DatabasePostgreSQL()
 	: conn(NULL)
 {
@@ -25,12 +27,13 @@ int DatabasePostgreSQL::open(
 	const std::string &password
 )
 {
+	std::cerr << connection << std::endl;
 	conn = PQconnectdb(connection.c_str());
 	ConnStatusType r = PQstatus(conn);
 	if (r != CONNECTION_OK)
 	{
 		conn = NULL;
-		errmsg = "";
+		errmsg = std::string(PQerrorMessage(conn));
 	}
 	return r;
 }
