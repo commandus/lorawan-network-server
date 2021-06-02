@@ -370,7 +370,9 @@ Connection for database type "sqlite3" is file name of SQLite database.
 
 Connection for database type "postgresql" looks like:
 
-host=localhost;database=irthermometer;username=irthermometer;password=**************
+postgresql://irthermometer:************@localhost:5432/irthermometer",
+
+See [Connection URIs](https://www.postgresql.org/docs/10/libpq-connect.html)
 
 table_aliases is an array of array of two elements. First element is protobuf package.message.
 Second element is an alias used in the database for table name.
@@ -416,11 +418,22 @@ databases = [
 	{
 		name: "postgres",
 		type: "postgresql",
-		connection: "host=localhost;database=irthermometer;username=irthermometer;password=**************",
+		connection: "postgresql://irthermometer:************@localhost:5432/irthermometer",
 		table_aliases: sqlite_table_aliases,
 		field_aliases: sqlite_field_aliases
 	}
 ];
+```
+
+In the Protobuf there are no date or time types, but it can return formatted date and time stamp as text.
+
+This field may have integer type not text.
+
+If proto defines some fields as timestamp, change rable's field type in the dstabase like this:
+
+```
+ALTER TABLE iridium_packet drop column recvtime;
+ALTER TABLE iridium_packet add COLUMN recvtime timestamp with time zone; 
 ```
 
 ### rxpk
@@ -539,8 +552,6 @@ sudo apt install liblmdb-dev
 [arduino aes implementation](https://raw.githubusercontent.com/arduino-libraries/LoraNodeShield/master/src/system/crypto/cmac.h)
 
 [Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)
-
-
 
 
 Device 	DevEUI           NwkSKey                          AppSKey                          devAddr

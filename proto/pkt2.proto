@@ -110,6 +110,7 @@ enum Dialect {
     SQL_POSTGRESQL            = 0;     
     SQL_MYSQL                 = 1;
     SQL_FIREBIRD              = 2;
+    SQL_SQLITE                = 3;
 };
 
 /// SQL options. Reserved.
