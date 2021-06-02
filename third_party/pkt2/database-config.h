@@ -18,6 +18,7 @@ public:
 
 	ConfigDatabase();
 	std::string toString() const;
+	int getDialect() const;
 };
 
 class ConfigDatabases

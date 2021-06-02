@@ -58,6 +58,7 @@
 #define ERR_CODE_INSUFFICIENT_PARAMS		-544
 #define ERR_CODE_NO_MAC_NO_PAYLOAD          -545
 #define ERR_CODE_INVALID_REGEX              -546
+#define ERR_CODE_NO_DATABASE               	-547
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -113,6 +114,7 @@
 #define ERR_INSUFFICIENT_PARAMS			"Insufficient parameters"
 #define ERR_NO_MAC_NO_PAYLOAD           "No MAC command(s) and/or payload"
 #define ERR_INVALID_REGEX               "Invalid regular expression"
+#define ERR_NO_DATABASE               	"No database"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_INTERRUPTED 				"Interrupted "

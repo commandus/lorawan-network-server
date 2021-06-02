@@ -28,11 +28,11 @@ int main(int argc, char **argv) {
 		"postgres"
 	};
 
-	for (int d = 0; d < 2; d++)
+	for (int d = 1; d < 2; d++)
 	{
 		DatabaseNConfig *db = dbAny.find(dbs[d]);
 		if (!db) {
-			std::cerr << "Can not fimd db sqlite " << std::endl;
+			std::cerr << "Can not fimd db " << dbs[d] << std::endl;
 			exit(2);
 		}
 
@@ -45,11 +45,13 @@ int main(int argc, char **argv) {
 		r = db->createTable(env, mt);
 		if (r) {
 			std::cerr << "Error CREATE table " << r << ": " << db->db->errmsg << std::endl;
+			std::cerr << "Clause " << db->createClause(env, mt) << std::endl;
 		}
 
 		r = db->insert(env, mt, INPUT_FORMAT_HEX, hexData);
 		if (r) {
 			std::cerr << "Error INSERT " << r << ": " << db->db->errmsg << std::endl;
+			std::cerr << "Clause " << db->insertClause(env, mt, INPUT_FORMAT_HEX, hexData) << std::endl;
 		}
 
 		std::string selectClause = "SELECT * FROM iridium_packet";
@@ -75,4 +77,5 @@ int main(int argc, char **argv) {
 	}
 
 	donePkt2(env);
+
 }
