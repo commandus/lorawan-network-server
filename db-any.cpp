@@ -35,14 +35,24 @@ DatabaseNConfig::~DatabaseNConfig()
 	}
 }
 
+std::string DatabaseNConfig::tableName(
+	void *env,
+	const std::string &message
+)
+{
+	std::map<std::string, std::string>::const_iterator it(config->tableAliases.find(message));
+	if (it == config->tableAliases.end())
+		return "";
+	else
+		return it->second;
+}
+
 std::string DatabaseNConfig::createClause
 (
 	void *env,
 	const std::string &message
 )
 {
-	std::cerr << "Type:  " << config->type << std::endl;
-	std::cerr << "Dialect:  " << config->getDialect() << std::endl;
 	return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, config->getDialect(), 
 		&config->tableAliases, &config->fieldAliases);
 }

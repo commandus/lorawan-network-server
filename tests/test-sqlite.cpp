@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 	{
 		DatabaseNConfig *db = dbAny.find(dbs[d]);
 		if (!db) {
-			std::cerr << "Can not fimd db " << dbs[d] << std::endl;
+			std::cerr << "Can not find db " << dbs[d] << std::endl;
 			exit(2);
 		}
 

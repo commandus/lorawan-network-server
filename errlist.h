@@ -59,6 +59,13 @@
 #define ERR_CODE_NO_MAC_NO_PAYLOAD          -545
 #define ERR_CODE_INVALID_REGEX              -546
 #define ERR_CODE_NO_DATABASE               	-547
+#define ERR_CODE_LOAD_PROTO					-548
+#define ERR_CODE_LOAD_DATABASE_CONFIG		-549
+#define ERR_CODE_DB_SELECT					-550
+#define ERR_CODE_DB_DATABASE_NOT_FOUND		-551
+#define ERR_CODE_DB_DATABASE_OPEN			-552
+#define ERR_CODE_DB_DATABASE_CLOSE			-553
+#define ERR_CODE_DB_CREATE					-554
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -104,7 +111,7 @@
 #define ERR_NO_CONFIG					"No config is provided"
 #define ERR_SEND_ACK					"Send ACK error "
 #define ERR_NO_GATEWAY_STAT				"No gateway statistics provided"
-#define ERR_INVALID_PROTOCOL_VERSION	"Invalie protocol version"
+#define ERR_INVALID_PROTOCOL_VERSION	"Invalid protocol version"
 #define ERR_PACKET_TOO_SHORT			"Protocol packet is too short"
 #define ERR_PARAM_NO_INTERFACE			"No interface specified"
 #define ERR_MAC_TOO_SHORT				"MAC is too short"
@@ -115,8 +122,16 @@
 #define ERR_NO_MAC_NO_PAYLOAD           "No MAC command(s) and/or payload"
 #define ERR_INVALID_REGEX               "Invalid regular expression"
 #define ERR_NO_DATABASE               	"No database"
+#define ERR_LOAD_PROTO					"Error loading proto files"
+#define ERR_LOAD_DATABASE_CONFIG		"Error loading database config file"
+#define ERR_DB_SELECT					"Error SQL select from table "
+#define ERR_DB_DATABASE_NOT_FOUND		"Database not found "
+#define ERR_DB_DATABASE_OPEN			"Error open database "
+#define ERR_DB_DATABASE_CLOSE			"Error close database "
+#define ERR_DB_CREATE					"Error create SQL tanle "
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
+#define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
 #define MSG_INTERRUPTED 				"Interrupted "
 #define MSG_GRACEFULLY_STOPPED			"Stopped gracefully"
 #define MSG_PG_CONNECTED        		"Connected"

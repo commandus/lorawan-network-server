@@ -12,6 +12,7 @@ public:
 
 	DatabaseNConfig(const ConfigDatabase *cd);
 	~DatabaseNConfig();
+	std::string tableName(void *env, const std::string &message);
 	std::string selectClause(void *env, const std::string &message);
 	std::string createClause(void *env, const std::string &message);
 	std::string insertClause(void *env, const std::string &message, int inputFormat, const std::string &data);

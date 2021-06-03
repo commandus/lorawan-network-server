@@ -35,7 +35,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server mac-gw
+bin_PROGRAMS = lorawan-network-server mac-gw proto-db
 
 commonlibs =
 
@@ -95,6 +95,13 @@ mac_gw_SOURCES = \
 mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
 mac_gw_CPPFLAGS = $(commoncppflags)
 
+proto_db_SOURCES = \
+	proto-db.cpp  db-any.cpp db-sqlite.cpp db-pg.cpp \
+	third_party/argtable3/argtable3.c \
+	third_party/base64/base64.cpp $(SRC_AES)
+
+proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq
+proto_db_CPPFLAGS = $(commoncppflags)
 #
 # Configs, readme, CMake etc.
 #
