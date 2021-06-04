@@ -13,6 +13,9 @@ public:
 	std::string connectionString;
 	std::string login;
 	std::string password;
+	std::string db;
+	int port;
+
 	std::map<std::string, std::string> tableAliases;
 	std::map<std::string, std::string> fieldAliases;
 

@@ -1,19 +1,19 @@
-#ifndef DB_SQLITE_H
-#define DB_SQLITE_H	1
+#ifndef DB_MYSQL_H
+#define DB_MYSQL_H	1
 
 #include "db-intf.h"
 
-#include <sqlite3.h>
+#include <mysql/mysql.h>
 
 /**
  */
-class DatabaseSQLite : public DatabaseIntf
+class DatabaseMySQL : public DatabaseIntf
 {
 public:
-	sqlite3 *db;
+	MYSQL *db;
 
-	DatabaseSQLite();
-	~DatabaseSQLite();
+	DatabaseMySQL();
+	~DatabaseMySQL();
 
 	int open(
 		const std::string &connection,

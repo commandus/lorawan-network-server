@@ -23,7 +23,9 @@ public:
 	int open(
 		const std::string &connection,
 		const std::string &login,
-		const std::string &password
+		const std::string &password,
+		const std::string &db,
+		int port
 	);
 	int close();
 
