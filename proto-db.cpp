@@ -32,8 +32,8 @@ class Configuration {
 public:
 	std::string command;				// print|create|insert|select
 	std::string proto_path;				// proto files directory. Default 'proto
-	std::string dbconfig;				// Default 'dbs.jks'
-	std::vector<std::string> dbname;	// database name, *- all
+	std::string dbconfig;				// Default dbs.js'
+	std::vector<std::string> dbname;	// database names
 
 	std::string payload;				// hex-string
 
@@ -107,7 +107,7 @@ int parseCmd(
 	void *argtable[] = {
 		a_command = arg_str0(NULL, NULL, "<command>", "list|create|insert. Default list"),
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
-		a_dbconfig = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.jks'"),
+		a_dbconfig = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.js'"),
 		a_dbname = arg_strn("d", "dbname", "<database-name>", 0, 100, "database name, Default all"),
 
 		a_message_type = arg_str1("m", "message", "<packet.message>", "Message type packet and name"),
@@ -149,7 +149,7 @@ int parseCmd(
 		if (a_dbconfig->count)
 			config->dbconfig = *a_dbconfig->sval;
 		else
-			config->dbconfig = "dbs.jks";
+			config->dbconfig = "dbs.js";
 
 		if (a_message_type->count)
 			config->message_type = *a_message_type->sval;
@@ -229,7 +229,29 @@ void doList
 
 		std::string t(db->tableName(env, messageType));
 		std::stringstream ss;
+
 		ss << "SELECT * FROM \"" << t << "\"";
+
+		if (config->sort_asc.size() || config->sort_desc.size()) {
+			ss << " ORDER BY ";
+		}
+		bool isFirst = true;
+		for (std::vector<std::string>::const_iterator it(config->sort_asc.begin()); it != config->sort_asc.end(); it++)  {
+			if (isFirst)
+				isFirst = false;
+			else
+				ss << ", ";
+			ss << *it;
+		}
+
+		for (std::vector<std::string>::const_iterator it(config->sort_desc.begin()); it != config->sort_desc.end(); it++)  {
+			if (isFirst)
+				isFirst = false;
+			else
+				ss << ", ";
+			ss << *it << " DESC";
+		}
+
 		if (db->db->type == "firebird") {
 			if (config->limit) {
 				ss << " FIRST " << config->limit;
