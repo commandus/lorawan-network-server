@@ -3,6 +3,7 @@
 #include "db-any.h"
 #include "db-sqlite.h"
 #include "db-pg.h"
+#include "db-mysql.h"
 
 #include "errlist.h"
 
@@ -21,8 +22,11 @@ DatabaseNConfig::DatabaseNConfig
 		if (config->type == "postgresql")
 			db = new DatabasePostgreSQL();
 		else
-			// unknown database type
-			db = NULL;
+			if (config->type == "mysql")
+				db = new DatabaseMySQL();
+			else
+				// unknown database type
+				db = NULL;
 }
 
 DatabaseNConfig::~DatabaseNConfig()
@@ -106,7 +110,8 @@ int DatabaseNConfig::open()
 {
 	if (!db)
 		return ERR_CODE_NO_DATABASE;
-	return db->open(config->connectionString, config->login, config->password);
+	return db->open(config->connectionString, config->login, config->password,
+		config->db, config->port);
 }
 
 int DatabaseNConfig::close()

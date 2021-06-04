@@ -223,14 +223,21 @@ void doList
 
 		int r = db->open();
 		if (r) {
-			std::cerr << ERR_DB_DATABASE_OPEN << r << ": " << db->db->errmsg << std::endl;
+			std::cerr << ERR_DB_DATABASE_OPEN << r << std::endl;
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
 
 		std::string t(db->tableName(env, messageType));
 		std::stringstream ss;
 
-		ss << "SELECT * FROM \"" << t << "\"";
+		std::string quote;
+		if (db->db->type == "mysql")
+			quote = "`";
+		else
+			quote = "\"";
+
+		ss << "SELECT * FROM " << quote << t << quote;
+		
 
 		if (config->sort_asc.size() || config->sort_desc.size()) {
 			ss << " ORDER BY ";
@@ -274,6 +281,7 @@ void doList
 		r = db->select(vals, selectClause);
 		if (r) {
 			std::cerr << ERR_DB_SELECT << r << " database " << *it << ": " << db->db->errmsg << std::endl;
+			std::cerr << "SQL statement: " << selectClause << std::endl;
 		}
 
 		for (std::vector<std::vector<std::string>>::const_iterator it(vals.begin()); it != vals.end(); it++)
@@ -306,7 +314,7 @@ void doCreate
 
 		int r = db->open();
 		if (r) {
-			std::cerr << ERR_DB_DATABASE_OPEN << r << ": " << db->db->errmsg << std::endl;
+			std::cerr << ERR_DB_DATABASE_OPEN << r << std::endl;
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
 
@@ -337,7 +345,7 @@ void doInsert
 
 		int r = db->open();
 		if (r) {
-			std::cerr << ERR_DB_DATABASE_OPEN << r << ": " << db->db->errmsg << std::endl;
+			std::cerr << ERR_DB_DATABASE_OPEN << r << std::endl;
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
 

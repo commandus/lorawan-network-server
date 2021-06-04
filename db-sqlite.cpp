@@ -17,7 +17,9 @@ DatabaseSQLite::~DatabaseSQLite()
 int DatabaseSQLite::open(
 	const std::string &connection,
 	const std::string &login,
-	const std::string &password
+	const std::string &password,
+	const std::string &dbname,
+	int port
 )
 {
 	int r = sqlite3_open(connection.c_str(), &db);

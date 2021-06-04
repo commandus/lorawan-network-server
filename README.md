@@ -421,7 +421,18 @@ databases = [
 		connection: "postgresql://irthermometer:************@localhost:5432/irthermometer",
 		table_aliases: sqlite_table_aliases,
 		field_aliases: sqlite_field_aliases
+	},
+    	{
+		name: "mysql",
+		type: "mysql",
+		connection: "localhost",
+		db: "irthermometer",
+		login: 'irthermometer',
+		password: "*******",
+		table_aliases: db_table_aliases,
+		field_aliases: db_field_aliases
 	}
+
 ];
 ```
 
@@ -434,6 +445,53 @@ If proto defines some fields as timestamp, change rable's field type in the dsta
 ```
 ALTER TABLE iridium_packet drop column recvtime;
 ALTER TABLE iridium_packet add COLUMN recvtime timestamp with time zone; 
+```
+
+### proto-db utility
+
+print "iridium.IEPacket" messages stored in the "mysql_1" database:
+
+```
+./proto-db -d mysql_1 -m iridium.IEPacket list
+```
+
+proto-db helper utility
+  <command>                 list|create|insert. Default list
+  -p, --proto=<path>        proto files directory. Default 'proto'
+  -c, --dbconfig=<file>     database config file name. Default 'dbs.js'
+  -d, --dbname=<database-name> database name, Default all
+  -m, --message=<packet.message> Message type packet and name
+  -x, --hex=<hex-string>    insert command, payload data.
+  -o, --offset=<number>     list command, offset. Default 0.
+  -l, --limit=<number>      list command, limit size. Default 10.
+  -s, --asc=<field-name>    list command, sort by field ascending.
+  -S, --desc=<field-name>   list command, sort by field descending.
+  -v, --verbose             Set verbosity level
+  -?, --help                Show this help
+
+
+### MySQL
+
+Install
+```
+sudp apt install mysql-server
+```
+
+Create user and give priveleges using root account:
+
+```
+sudo mysql -u root -p
+CREATE USER 'irthermometer'@'localhost' IDENTIFIED BY '********';
+GRANT ALL PRIVILEGES ON * . * TO 'irthermometer'@'localhost';
+\q
+```
+
+Login as SQL user and create database:
+
+```
+mysql -u irthermometer -p
+CREATE DATABASE irthermometer;
+\q
 ```
 
 ### rxpk
@@ -489,9 +547,7 @@ JSON down:
 		"freq": 868,
 		"ipol": true,
 		"modu": "LORA",
-		"ncrc": false,
-		"powe": 0,
-		"rfch": 1,
+		"ncrc": false, 300234069204980 
 		"size": 52,
 		"tmst": 1
 	}
@@ -536,9 +592,11 @@ Sent ACK to 84.237.104.16:54820
 - lmdb
 - [Filewatch](https://github.com/ThomasMonkman/filewatch)
 - sqlite3
+- mysql
 
 ```
-sudo apt-get install sqlite3 libsqlite3-dev"
+sudo apt install sqlite3 libsqlite3-dev"
+sudo apt install libmysqlclient-dev
 ```
 
 ### LMDB

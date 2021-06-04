@@ -33,6 +33,16 @@ H_STORAGE=
 endif
 
 #
+# mysql_config --cflags
+# -I/usr/include/mysql
+#
+
+#
+# mysql_config --libs
+# -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -lssl -lcrypto -ldl
+#
+
+#
 # Binaries
 #
 bin_PROGRAMS = lorawan-network-server mac-gw proto-db
@@ -62,7 +72,7 @@ nobase_dist_include_HEADERS = \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
-	db-intf.h db-any.h db-sqlite.h db-pg.h \
+	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -96,11 +106,12 @@ mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
 mac_gw_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
-	proto-db.cpp  db-any.cpp db-sqlite.cpp db-pg.cpp \
+	proto-db.cpp \
+	db-any.cpp db-sqlite.cpp db-pg.cpp db-mysql.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
-proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq
+proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq -lmysqlclient
 proto_db_CPPFLAGS = $(commoncppflags)
 #
 # Configs, readme, CMake etc.

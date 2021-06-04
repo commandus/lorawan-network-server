@@ -1,6 +1,6 @@
 #include "db-pg.h"
 
-#include <iostream>
+#include "errlist.h"
 
 DatabasePostgreSQL::DatabasePostgreSQL()
 	: conn(NULL)
@@ -24,10 +24,11 @@ DatabasePostgreSQL::~DatabasePostgreSQL()
 int DatabasePostgreSQL::open(
 	const std::string &connection,
 	const std::string &login,
-	const std::string &password
+	const std::string &password,
+	const std::string &db,
+	int port
 )
 {
-	std::cerr << connection << std::endl;
 	conn = PQconnectdb(connection.c_str());
 	ConnStatusType r = PQstatus(conn);
 	if (r != CONNECTION_OK)
@@ -51,12 +52,15 @@ int DatabasePostgreSQL::exec(
 {
 	PGresult *r = PQexec(conn, statement.c_str());
 	ExecStatusType status = PQresultStatus(r);
+	int rc;
 	if (status == PGRES_TUPLES_OK || status == PGRES_COMMAND_OK ) {
+		rc = 0;
 	} else {
 		errmsg = std::string(PQerrorMessage(conn));
+		rc = ERR_CODE_DB_SELECT;
 	}
 	PQclear(r);
-	return status;
+	return rc;
 }
 
 int DatabasePostgreSQL::select(
@@ -66,8 +70,11 @@ int DatabasePostgreSQL::select(
 {
 	PGresult *r = PQexec(conn, statement.c_str());
 	ExecStatusType status = PQresultStatus(r);
+	int rc;
 	if (status == PGRES_TUPLES_OK || status == PGRES_COMMAND_OK ) {
+		rc = 0;
 	} else {
+		rc = ERR_CODE_DB_SELECT;
 		errmsg = std::string(PQerrorMessage(conn));
 	}
 
@@ -83,5 +90,5 @@ int DatabasePostgreSQL::select(
 	}
 
 	PQclear(r);
-	return status;
+	return rc;
 }
