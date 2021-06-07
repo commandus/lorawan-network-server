@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 53
+#define ERR_COUNT 54
 
 static const char *errlist[ERR_COUNT] = {
 	ERR_COMMAND_LINE,
@@ -41,7 +41,7 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_NO_CONFIG,
 	ERR_SEND_ACK,
 	ERR_NO_GATEWAY_STAT,
-	ERR_INVALID_PROTOCOL_VERSION,
+	ERR_INVALID_PROTOCOL_VERSION,ERR_DB_INSERT
 	ERR_PACKET_TOO_SHORT,
 	ERR_PARAM_NO_INTERFACE,
 	ERR_MAC_TOO_SHORT,
@@ -56,7 +56,8 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_LOAD_DATABASE_CONFIG,
 	ERR_DB_SELECT,
 	ERR_DB_DATABASE_NOT_FOUND,
-	ERR_DB_CREATE
+	ERR_DB_CREATE,
+	ERR_DB_INSERT
 };
 
 const char *strerror_client(

@@ -352,7 +352,8 @@ void doInsert
 		r = db->insert(env, messageType, INPUT_FORMAT_HEX, hexData);
 
 		if (r) {
-			std::cerr << ERR_DB_CREATE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
+			std::cerr << ERR_DB_INSERT << r << " database " << *it << ": " << db->db->errmsg << std::endl;
+			std::cerr << "SQL statement: " << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData) << std::endl;
 		}
 		r = db->close();
 	}
@@ -405,5 +406,5 @@ int main(
 	}
 	donePkt2(env);
 	return 0;
-	
+
 }

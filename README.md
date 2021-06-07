@@ -440,7 +440,14 @@ In the Protobuf there are no date or time types, but it can return formatted dat
 
 This field may have integer type not text.
 
-If proto defines some fields as timestamp, change rable's field type in the dstabase like this:
+
+If proto defines some fields as timestamp, proto-db utility return MySQL error
+
+```
+Error insert record into SQL table 1 database mysql: Data truncated for column 'recvtime' at row 1
+```
+
+Change rable's field type in the dstabase like this:
 
 ```
 ALTER TABLE iridium_packet drop column recvtime;
@@ -449,12 +456,7 @@ ALTER TABLE iridium_packet add COLUMN recvtime timestamp with time zone;
 
 ### proto-db utility
 
-print "iridium.IEPacket" messages stored in the "mysql_1" database:
-
 ```
-./proto-db -d mysql_1 -m iridium.IEPacket list
-```
-
 proto-db helper utility
   <command>                 list|create|insert. Default list
   -p, --proto=<path>        proto files directory. Default 'proto'
@@ -468,7 +470,25 @@ proto-db helper utility
   -S, --desc=<field-name>   list command, sort by field descending.
   -v, --verbose             Set verbosity level
   -?, --help                Show this help
+```
 
+Create table for iridium.IEPacket packet in the "mysql_1" database:
+
+```
+./proto-db -d mysql_1 -m iridium.IEPacket create
+```
+
+Print "iridium.IEPacket" messages stored in the "mysql_1" database:
+
+```
+./proto-db -d mysql_1 -m iridium.IEPacket list
+```
+
+Insert data from payload
+
+```
+./proto-db -d mysql -m iridium.IEPacket insert -x 014c00011c00e8444601333030323334303639323030383530001a070000e199205e030b00003eea3781fbcc05000000021c00c068b50328f1bd078999205e07050000009f1be60ca313f432000000
+```
 
 ### MySQL
 
