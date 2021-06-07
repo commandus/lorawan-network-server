@@ -237,7 +237,6 @@ void doList
 			quote = "\"";
 
 		ss << "SELECT * FROM " << quote << t << quote;
-		
 
 		if (config->sort_asc.size() || config->sort_desc.size()) {
 			ss << " ORDER BY ";
@@ -321,6 +320,7 @@ void doCreate
 		r = db->createTable(env, messageType);
 		if (r) {
 			std::cerr << ERR_DB_CREATE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
+			std::cerr << "SQL statement: " << db->createClause(env, messageType) << std::endl;
 		}
 		r = db->close();
 	}
@@ -405,4 +405,5 @@ int main(
 	}
 	donePkt2(env);
 	return 0;
+	
 }

@@ -24,6 +24,7 @@ int DatabaseMySQL::open(
 )
 {
 	db = mysql_init(NULL);
+	// std::cerr << "open db: " << connection.c_str() << ", " << login.c_str() << ", " << password.c_str() << ", " << dbname.c_str() << std::endl;
 	if (mysql_real_connect(db, connection.c_str(), login.c_str(), password.c_str(), dbname.c_str(), 0, NULL, 0) == NULL) {
 		errmsg = std::string(mysql_error(db));
 		return ERR_CODE_DB_DATABASE_OPEN;
