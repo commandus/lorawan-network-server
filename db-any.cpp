@@ -72,7 +72,7 @@ std::string DatabaseNConfig::insertClause(
 	const std::string &data
 )
 {
-	return parsePacket(env, inputFormat, OUTPUT_FORMAT_SQL, 0, data, message,
+	return parsePacket(env, inputFormat, OUTPUT_FORMAT_SQL, config->getDialect(), data, message,
 		&config->tableAliases, &config->fieldAliases);
 }
 

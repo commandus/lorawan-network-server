@@ -236,7 +236,19 @@ void doList
 		else
 			quote = "\"";
 
-		ss << "SELECT * FROM " << quote << t << quote;
+		if (db->db->type == "firebird") {
+			ss << "SELECT ";
+			if (config->limit) {
+				ss << " FIRST " << config->limit;
+			}
+			if (config->offset) {
+				ss << " SKIP " << config->offset;
+			}
+			ss << " \"recvno\" ";
+		} else {
+			ss << "SELECT * ";
+		}
+		ss << " FROM " << quote << t << quote;
 
 		if (config->sort_asc.size() || config->sort_desc.size()) {
 			ss << " ORDER BY ";
@@ -258,14 +270,7 @@ void doList
 			ss << *it << " DESC";
 		}
 
-		if (db->db->type == "firebird") {
-			if (config->limit) {
-				ss << " FIRST " << config->limit;
-			}
-			if (config->offset) {
-				ss << " SKIP " << config->offset;
-			}
-		} else {
+		if (db->db->type != "firebird") {
 			if (config->limit) {
 				ss << " LIMIT " << config->limit;
 			}

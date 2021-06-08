@@ -452,6 +452,17 @@ Change rable's field type in the dstabase like this:
 ```
 ALTER TABLE iridium_packet drop column recvtime;
 ALTER TABLE iridium_packet add COLUMN recvtime timestamp with time zone; 
+
+-- firebird
+ALTER TABLE "iridium_packet" drop "recvtime";
+ALTER TABLE "iridium_packet" add "recvtime" VARCHAR(32); 
+
+ALTER TABLE "iridium_packet" drop "recvtime";
+ALTER TABLE "iridium_packet" add "recvtime" VARCHAR(32); 
+
+ALTER TABLE "iridium_packet" drop "gps_time";
+ALTER TABLE "iridium_packet" add "gps_time" VARCHAR(32); 
+
 ```
 
 ### proto-db utility
