@@ -4,6 +4,7 @@
 #include "db-sqlite.h"
 #include "db-pg.h"
 #include "db-mysql.h"
+#include "db-fb.h"
 
 #include "errlist.h"
 
@@ -25,8 +26,11 @@ DatabaseNConfig::DatabaseNConfig
 			if (config->type == "mysql")
 				db = new DatabaseMySQL();
 			else
-				// unknown database type
-				db = NULL;
+				if (config->type == "firebird")
+					db = new DatabaseFirebird();
+				else
+					// unknown database type
+					db = NULL;
 }
 
 DatabaseNConfig::~DatabaseNConfig()

@@ -72,7 +72,7 @@ nobase_dist_include_HEADERS = \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
-	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h \
+	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -107,11 +107,11 @@ mac_gw_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
 	proto-db.cpp \
-	db-any.cpp db-sqlite.cpp db-pg.cpp db-mysql.cpp \
+	db-any.cpp db-sqlite.cpp db-pg.cpp db-mysql.cpp db-fb.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
-proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq -lmysqlclient
+proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq -lmysqlclient -lfbclient
 proto_db_CPPFLAGS = $(commoncppflags)
 #
 # Configs, readme, CMake etc.
