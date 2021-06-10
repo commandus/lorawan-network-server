@@ -142,7 +142,7 @@ int DatabaseFirebird::select
 		return ERR_CODE_DB_SELECT;
     }
     
-    /* Prepare the statement. */
+    // Prepare the statement.
     if (isc_dsql_prepare(status, &trans, &stmt, 0, statement.c_str(), dialect, sqlda))
     {
     	errmsg = errstr();
@@ -152,7 +152,7 @@ int DatabaseFirebird::select
 		return ERR_CODE_DB_SELECT;
     }
 
-	 /* Describe the statement. */
+	 // Describe the statement
     if (isc_dsql_describe(status, &stmt, 1, sqlda))
     {
     	errmsg = errstr();
@@ -188,18 +188,16 @@ int DatabaseFirebird::select
         printf("Column length:  %d\n", sqlda->sqlvar[i].sqllen);
     }
 
-	short flag;
 	std::vector<std::string> t;
-	
-	char d[32];
+	std::vector<short> flags;
 	
 	for (int i = 0; i < sqlda->sqld; i++)
 	{
 		t.push_back(std::string(33, '\0'));
-		sqlda->sqlvar[i].sqldata = (char *) &d;// t[i].c_str();
+		flags.push_back(0);
+		sqlda->sqlvar[i].sqldata = (char *) t[i].c_str();
 		sqlda->sqlvar[i].sqltype = SQL_TEXT + 1;
-		// sqlda->sqlvar[0].sqltype = SQL_TEXT + 1;
-		// sqlda->sqlvar[0].sqlind = &flag;
+		sqlda->sqlvar[i].sqlind = &flags[i];
 	}
 
  	if (isc_dsql_execute(status, &trans, &stmt, 1, NULL))
@@ -212,17 +210,16 @@ int DatabaseFirebird::select
 	}
 
 	long fetch_stat;
-	int num_fields = 1;
  	while ((fetch_stat = isc_dsql_fetch(status, &stmt, 1, sqlda)) == 0)
     {
 		std::vector<std::string> line;
-    	for(int i = 0; i < num_fields; i++)
+    	for(int i = 0; i < sqlda->sqld; i++)
 		{
-			// std::string s(t[i]);
-			std::string s = "--";
+			std::string s(sqlda->sqlvar[i].sqldata, sqlda->sqlvar[i].sqllen);
+			std::cerr << s << std::endl;
 			line.push_back(s);
 		}
-		retval.push_back(line);
+		// retval.push_back(line);
     }
 
     if (fetch_stat != 100L)

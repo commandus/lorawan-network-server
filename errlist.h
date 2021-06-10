@@ -70,6 +70,8 @@
 #define ERR_CODE_DB_START_TRANSACTION		-556
 #define ERR_CODE_DB_COMMIT_TRANSACTION		-557
 #define ERR_CODE_DB_EXEC					-558
+#define ERR_CODE_PING						-559
+#define ERR_CODE_INVALID_STAT				-560
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -137,7 +139,8 @@
 #define ERR_DB_START_TRANSACTION		"Error start SQL transaction"
 #define ERR_DB_COMMIT_TRANSACTION		"Error commit SQL transaction"
 #define ERR_DB_EXEC						"Error exec SQL statement"
-
+#define ERR_PING						"Ping"
+#define ERR_INVALID_STAT				"Invalid stat"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"

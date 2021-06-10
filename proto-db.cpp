@@ -30,7 +30,7 @@ const std::string progname = "proto-db";
 
 class Configuration {
 public:
-	std::string command;				// print|create|insert|select
+	std::string command;				// print|list|create|insert
 	std::string proto_path;				// proto files directory. Default 'proto
 	std::string dbconfig;				// Default dbs.js'
 	std::vector<std::string> dbname;	// database names
@@ -105,14 +105,14 @@ int parseCmd(
 	struct arg_end *a_end;
 
 	void *argtable[] = {
-		a_command = arg_str0(NULL, NULL, "<command>", "list|create|insert. Default list"),
+		a_command = arg_str0(NULL, NULL, "<command>", "print|list|create|insert. Default print"),
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
 		a_dbconfig = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.js'"),
 		a_dbname = arg_strn("d", "dbname", "<database-name>", 0, 100, "database name, Default all"),
 
-		a_message_type = arg_str1("m", "message", "<packet.message>", "Message type packet and name"),
+		a_message_type = arg_str0("m", "message", "<packet.message>", "Message type packet and name"),
 		
-		a_payload_hex = arg_str0("x", "hex", "<hex-string>", "insert command, payload data."),
+		a_payload_hex = arg_str0("x", "hex", "<hex-string>", "print, insert command, payload data."),
 
 		a_offset = arg_int0("o", "offset", "<number>", "list command, offset. Default 0."),
 		a_limit = arg_int0("l", "limit", "<number>", "list command, limit size. Default 10."),
@@ -139,7 +139,7 @@ int parseCmd(
 		if (a_command->count)
 			config->command = *a_command->sval;
 		else
-			config->command = "list";
+			config->command = "print";
 
 		if (a_proto_path->count)
 			config->proto_path = *a_proto_path->sval;
@@ -153,6 +153,8 @@ int parseCmd(
 
 		if (a_message_type->count)
 			config->message_type = *a_message_type->sval;
+		else
+			config->message_type = "";
 
 		for (int i = 0; i < a_dbname->count; i++) {
 			config->dbname.push_back(a_dbname->sval[i]);
@@ -244,7 +246,7 @@ void doList
 			if (config->offset) {
 				ss << " SKIP " << config->offset;
 			}
-			ss << " \"recvno\" ";
+			ss << " \"imei\", \"version\", \"status\",  \"status\", \"recvno\",  \"sentno\", \"recvtime\", \"gps_time\", \"iridium_latitude\", \"iridium_longitude\", \"gps_latitude\", \"gps_longitude\" ";
 		} else {
 			ss << "SELECT * ";
 		}
@@ -364,6 +366,18 @@ void doInsert
 	}
 }
 
+void doPrint
+(
+	void* env,
+	Configuration *config,
+	DatabaseByConfig *dbAny,
+	const std::string &forceMessageType,
+	const std::string &hexData
+)
+{
+	std::cout << parsePacket(env, 1, 0, 0, hexData, forceMessageType, NULL, NULL) << std::endl;
+}
+
 int main(
 	int argc,
 	char *argv[])
@@ -400,16 +414,14 @@ int main(
 
 	DatabaseByConfig dbAny(&configDatabases);
 
-	if (config.command == "list") {
+	if (config.command == "print")
+		doPrint(env, &config, &dbAny, config.message_type, config.payload);
+	if (config.command == "list")
 		doList(env, &config, &dbAny, config.message_type);
-	}
-	if (config.command == "create") {
+	if (config.command == "create")
 		doCreate(env, &config, &dbAny, config.message_type);
-	}
-	if (config.command == "insert") {
+	if (config.command == "insert")
 		doInsert(env, &config, &dbAny, config.message_type, config.payload);
-	}
 	donePkt2(env);
 	return 0;
-
 }

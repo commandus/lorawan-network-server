@@ -32,7 +32,7 @@ int LoraPacketProcessor::put
 		if (onLog) {
 			std::stringstream ss;
 			ss << "Request identity service r: " << r << ", device id: " << DEVEUI2string(id.deviceEUI);
-			onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+			onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 		}
 
 		if (r) {
@@ -42,14 +42,14 @@ int LoraPacketProcessor::put
 				<< strerror_client(r) << " " 
 				<< ", device " << DEVADDR2string(packet.getHeader()->header.devaddr)
 				<< ", remote " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
-			onLog(LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
+			onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 			return r;
 		}
 	} else {
 		if (onLog) {
 			std::stringstream ss;
 			ss << " " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
-			onLog(LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+			onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 		}
 	}
 	return 0;
@@ -65,6 +65,7 @@ void LoraPacketProcessor::setIdentityService
 
 void LoraPacketProcessor::setLogger(
 	std::function<void(
+		void *env,
 		int level,
 		int modulecode,
 		int errorcode,

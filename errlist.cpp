@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 57
+#define ERR_COUNT 58
 
 static const char *errlist[ERR_COUNT] = {
 	ERR_COMMAND_LINE,
@@ -61,7 +61,7 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_DB_START_TRANSACTION,
 	ERR_DB_COMMIT_TRANSACTION,
 	ERR_DB_EXEC
-
+	ERR_PING
 };
 
 const char *strerror_client(

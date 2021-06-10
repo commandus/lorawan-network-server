@@ -13,7 +13,7 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	stopped(false), onLog(NULL), handler(NULL), identityService(NULL), gatewayList(NULL)
+	verbosity(0), stopped(false), onLog(NULL), handler(NULL), identityService(NULL), gatewayList(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -32,12 +32,16 @@ void UDPListener::clearLogger() {
 }
 
 void UDPListener::setLogger(
+	int averbosity,
 	std::function<void(
+		void *env,
 		int level,
 		int modulecode,
 		int errorcode,
 		const std::string &message
-)> value) {
+)> value) 
+{
+	verbosity = averbosity;
 	onLog = value;
 }
 
@@ -89,7 +93,7 @@ bool UDPListener::add(
 				<< strerror_client(s.errcode) << " " << address
 				<< ", errno " << s.lasterrno << ": " << strerror(s.lasterrno)
 				;
-			onLog(LOG_ERR, LOG_UDP_LISTENER, s.errcode, ss.str());
+			onLog(this, LOG_ERR, LOG_UDP_LISTENER, s.errcode, ss.str());
 		}
 		return false;
 	}
@@ -144,7 +148,7 @@ int UDPListener::listen() {
 					std::stringstream ss;
 					ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT 
 						<< ", errno " << errno << ": " << strerror(errno);
-					onLog(LOG_WARNING, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
+					onLog(this, LOG_WARNING, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
 					return ERR_CODE_SELECT;
 				}
 				break;
@@ -161,13 +165,15 @@ int UDPListener::listen() {
 					struct sockaddr_in6 clientAddress;
 					int bytesReceived = it->recv((void *) buffer.c_str(), buffer.size() - 1, &clientAddress);	// add extra trailing byte for null-terminated string
 					if (bytesReceived >= 0) {
+						buffer[bytesReceived] = '\0';	// set  string terminator for null-terminatede JSON char* 
 						std::vector<semtechUDPPacket> packets;
 						{
 							std::stringstream ss;
 							ss << MSG_RECEIVED
 								<< UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-								<< ": " << hexString(buffer.c_str(), bytesReceived);
-							onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+								<< " (" << bytesReceived
+								<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+							onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 						}
 						// get packets
 						SEMTECH_DATA_PREFIX dataprefix;
@@ -179,11 +185,78 @@ int UDPListener::listen() {
 
 						// send ACK immediately
 						switch (pr) {
+							case ERR_CODE_PING:
+								{
+									std::stringstream sse;
+									sse << ERR_PING
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< " (" << bytesReceived
+										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+									onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
+								}
+								break;
+							case ERR_CODE_PACKET_TOO_SHORT:
+								{
+									std::stringstream sse;
+									sse << ERR_PACKET_TOO_SHORT
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< " (" << bytesReceived
+										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
+								}
+								break;
+							case ERR_CODE_INVALID_PROTOCOL_VERSION:
+								{
+									std::stringstream sse;
+									sse << ERR_INVALID_PROTOCOL_VERSION
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< " (" << bytesReceived
+										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
+								}
+								break;
+							case ERR_CODE_NO_GATEWAY_STAT:
+								{
+									std::stringstream sse;
+									sse << ERR_NO_GATEWAY_STAT
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< " (" << bytesReceived
+										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
+								}
+								break;
+							case ERR_CODE_INVALID_STAT:
+								{
+									std::stringstream sse;
+									sse << ERR_INVALID_STAT
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< " (" << bytesReceived
+										<< " bytes): " << semtechUDPPacket::getSemtechJSONCharPtr(buffer.c_str(), bytesReceived);
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
+								}
+								break;
+							case ERR_CODE_INVALID_PACKET:
+								{
+									std::stringstream sse;
+									sse << ERR_INVALID_PACKET
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< " (" << bytesReceived
+										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
+								}
+								break;
 							case ERR_CODE_INVALID_JSON:
 								// it is completely invalid packet, do not response
+								{
+									std::stringstream sse;
+									sse << ERR_INVALID_JSON
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+										<< " (" << bytesReceived
+										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
+								}
 								break;
 							default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue
-
 								// send ACK immediately
 								SEMTECH_ACK response;
 								response.version = 2;
@@ -201,14 +274,30 @@ int UDPListener::listen() {
 										<< UDPSocket::addrString((const struct sockaddr *) &clientAddress)
 										<< " " << ar << ": " << strerror_client(ar)
 										<< ", errno: " << errno << ": " << strerror(errno);
-									onLog(LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
 								} else {
 									std::stringstream ss;
 									ss << MSG_SENT_ACK_TO
 										<< UDPSocket::addrString((const struct sockaddr *) &clientAddress);
-									onLog(LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+									onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 								}
 								break;
+						}
+						// reflect stat
+						std::cerr << "gatewayStat.errcode: " << gatewayStat.errcode << std::endl;
+						if (gatewayStat.errcode == 0) {
+							std::stringstream sss;
+							sss << MSG_GATEWAY_STAT
+								<< " " << gatewayStat.toJsonString();
+							onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, sss.str());
+							if (gatewayList) {
+								gatewayList->update(gatewayStat);
+								// gatewayList->save();
+							}
+							std::stringstream ss;
+							ss << MSG_GATEWAY_STAT
+								<< gatewayStat.toString();
+							onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 						}
 						// process PULL data if exists
 						switch (dataprefix.tag) {
@@ -223,14 +312,14 @@ int UDPListener::listen() {
 										ss << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << " "
 											<< UDPSocket::addrString((const struct sockaddr *) &clientAddress)
 											<< ": " << ERR_INVALID_PACKET << ", " << hexString(v);
-										onLog(LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
+										onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
 										break;
 									} else {
 										if (onLog) {
 											std::stringstream ss;
 											ss << MSG_RXPK
 												<< itp->toDebugString();
-											onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+											onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 										}
 									}
 									if (handler) {
@@ -241,20 +330,9 @@ int UDPListener::listen() {
 											ss << MSG_READ_BYTES 
 												<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ": "
 												<< itp->toString();
-											onLog(LOG_INFO, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
+											onLog(this, LOG_INFO, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
 										}
 									}
-								}
-								// reflect stat
-								if (gatewayStat.errcode == 0) {
-									if (gatewayList) {
-										gatewayList->update(gatewayStat);
-										// gatewayList->save();
-									}
-									std::stringstream ss;
-									ss << MSG_GATEWAY_STAT
-										<< gatewayStat.toString();
-									onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 								}
 								break;
 							case 1:
@@ -271,7 +349,7 @@ int UDPListener::listen() {
 							ss << ERR_MESSAGE << ERR_CODE_SOCKET_READ << " "
 								<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ", errno "
 								<< errno << ": " << strerror(errno);
-							onLog(LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
+							onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
 						}
 					}
 				}

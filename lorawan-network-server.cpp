@@ -119,7 +119,7 @@ int parseCmd(
 
 	struct arg_str *a_logfilename = arg_str0("l", "logfile", "<file>", "log file");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
-	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
+	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 7, "Set verbosity level 1- alert, 2-critical error, 3- error, 4- warning, 5- siginicant info, 6- info, 7- debug");
 	struct arg_lit *a_help = arg_lit0("?", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
@@ -177,12 +177,18 @@ int parseCmd(
 }
 
 void onLog(
+	void *env,
 	int level,
 	int modulecode,
 	int errorcode,
 	const std::string &message
 )
 {
+	UDPListener *listener = (UDPListener *) env;
+	if (listener) {
+		if (listener->verbosity < level)
+			return;
+	}
 	std::cerr << message << std::endl;
 }
 
@@ -195,8 +201,6 @@ int main(
 	int argc,
 	char *argv[])
 {
-	listener.setLogger(onLog);
-	
 	config = new Configuration("");
 	if (parseCmd(config, argc, argv) != 0)
 	{
@@ -215,6 +219,7 @@ int main(
 		std::cerr << ERR_NO_CONFIG << std::endl;
 		exit(ERR_CODE_NO_CONFIG);
 	}
+	listener.setLogger(config->serverConfig.verbosity, onLog);
 
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);

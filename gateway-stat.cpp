@@ -120,7 +120,7 @@ int GatewayStat::parse(
 	rapidjson::Value &value
 )
 {
-	errcode = ERR_CODE_NO_GATEWAY_STAT;	// means no "stat" object is recognized
+	int cnt = 0;
 
 	if (value.HasMember(STAT_NAMES[0])) {
 		rapidjson::Value &v = value[STAT_NAMES[0]];
@@ -129,13 +129,14 @@ int GatewayStat::parse(
 		} else if (v.IsString()) {
 			gatewayId = strtoull(v.GetString(), NULL, 16);
 		}
-		errcode = 0;
+		cnt++;
 	}
 
 	if (value.HasMember(STAT_NAMES[1])) {
 		rapidjson::Value &v = value[STAT_NAMES[1]];
 		if (v.IsString()) {
 			addr = v.GetString();
+			cnt++;
 		}
 	}
 
@@ -143,6 +144,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[2]];
 		if (v.IsString()) {
 			name = v.GetString();
+			cnt++;
 		}
 	}
 
@@ -150,6 +152,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[3]];
 		if (v.IsString()) {
 			t = parseDate(v.GetString());
+			cnt++;
 		}
 	}
 
@@ -157,6 +160,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[4]];
 		if (v.IsDouble()) {
 			lat = v.GetDouble();
+			cnt++;
 		}
 	}
 
@@ -164,6 +168,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[5]];
 		if (v.IsDouble()) {
 			lon = v.GetDouble();
+			cnt++;
 		}
 	}
 
@@ -171,6 +176,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[6]];
 		if (v.IsInt()) {
 			alt = v.GetInt();
+			cnt++;
 		}
 	}
 
@@ -178,6 +184,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[7]];
 		if (v.IsInt()) {
 			rxnb = v.GetInt();
+			cnt++;
 		}
 	}
 
@@ -185,6 +192,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[8]];
 		if (v.IsInt()) {
 			rxok = v.GetInt();
+			cnt++;
 		}
 	}
 
@@ -192,6 +200,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[9]];
 		if (v.IsInt()) {
 			rxfw = v.GetInt();
+			cnt++;
 		}
 	}
 
@@ -199,6 +208,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[10]];
 		if (v.IsInt()) {
 			ackr = v.GetInt();
+			cnt++;
 		}
 	}
 
@@ -206,6 +216,7 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[11]];
 		if (v.IsInt()) {
 			dwnb = v.GetInt();
+			cnt++;
 		}
 	}
 
@@ -213,9 +224,11 @@ int GatewayStat::parse(
 		rapidjson::Value &v = value[STAT_NAMES[12]];
 		if (v.IsInt()) {
 			txnb = v.GetInt();
+			cnt++;
 		}
 	}
-	return errcode;
+	return (cnt > 0 ? 0 : ERR_CODE_NO_GATEWAY_STAT);	// means no any properties found
+
 }
 
 std::string GatewayStat::toJsonString() const

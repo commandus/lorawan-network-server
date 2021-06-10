@@ -722,6 +722,9 @@ void rfmMetaData::toJSON(
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[14])), v14, allocator);
 }
 
+/**
+ * @return 0
+ */ 
 int rfmMetaData::parse(
 	int &retSize,
 	std::string &retData,
@@ -934,9 +937,19 @@ semtechUDPPacket::semtechUDPPacket()
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
 }
 
+char *semtechUDPPacket::getSemtechJSONCharPtr
+(
+	const void *packet,
+	size_t size
+
+)
+{
+	return (char *) packet + sizeof(SEMTECH_DATA_PREFIX);
+}
+
 /**
  * Parse Semtech UDP packet
- * @return 0, ERR_CODE_INVALID_PACKET or ERR_CODE_INVALID_JSON
+ * @return 0, ERR_CODE_PACKET_TOO_SHORT, ERR_CODE_INVALID_PROTOCOL_VERSION, ERR_CODE_NO_GATEWAY_STAT, ERR_CODE_INVALID_PACKET or ERR_CODE_INVALID_JSON
  */ 
 int semtechUDPPacket::parse(
 	SEMTECH_DATA_PREFIX &retprefix,
@@ -957,9 +970,9 @@ int semtechUDPPacket::parse(
 	if (retprefix.version != 2) {
 		return ERR_CODE_INVALID_PROTOCOL_VERSION;
 	}
-	char *json = (char *) packetForwarderPacket + sizeof(SEMTECH_DATA_PREFIX);
+	char *json = getSemtechJSONCharPtr(packetForwarderPacket, size);
 	if (size == sizeof(SEMTECH_DATA_PREFIX)) {
-		return 0;	// that's ok
+		return ERR_CODE_PING;	// that's ok
 	}
 
 	rapidjson::Document doc;
@@ -968,8 +981,6 @@ int semtechUDPPacket::parse(
 	if (!doc.IsObject())
 		return ERR_CODE_INVALID_JSON;
 
-	int r = 0;
-
 	// rapidjson::StringRef(METADATA_RX_NAMES[1]))
 
 	if (doc.HasMember("stat")) {
@@ -977,9 +988,10 @@ int semtechUDPPacket::parse(
 		if (retgwstat.parse(jstat) == 0) {
 			// set gateway identifier
 			retgwstat.gatewayId = deveui2int(retprefix.mac);
+			retgwstat.errcode = 0;
+		} else {
+			return ERR_CODE_INVALID_STAT;
 		}
-	} else {
-		retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 	}
 
 	if (!doc.HasMember(METADATA_RX_NAMES[0]))
@@ -1001,7 +1013,7 @@ int semtechUDPPacket::parse(
 		semtechUDPPacket packet(&retprefix, &m, data, identityService);
 		retPackets.push_back(packet);
 	}
-	return r;
+	return 0;
 }
 
 /**
