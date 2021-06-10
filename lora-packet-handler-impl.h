@@ -16,6 +16,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		IdentityService* identityService;
 		PacketQueue packetQueue;
 		std::function<void(
+			void *env,
 			int level,
 			int modulecode,
 			int errorcode,
@@ -31,6 +32,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		int put(semtechUDPPacket &packet);
 		void setLogger(
 			std::function<void(
+				void *env,
 				int level,
 				int modulecode,
 				int errorcode,

@@ -4,7 +4,8 @@
 		"identityStorageName": "doc",
 		"storageType": "txt",
 		"listenAddressIPv4": [
-			"127.0.0.1:5000"
+			"127.0.0.1:5000",
+			"84.237.104.128:5000"
 		]
 	}
 }

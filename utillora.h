@@ -394,6 +394,8 @@ public:
 	// Create ACK response to be send to the BS 
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
 	int16_t getStrongesSignalLevel(int &idx) const;
+
+	static char *getSemtechJSONCharPtr(const void *packet, size_t size);
 };
 
 uint64_t deveui2int(const DEVEUI &value);

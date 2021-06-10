@@ -17,12 +17,14 @@ private:
 	int largestSocket();
 	GatewayList *gatewayList;
 public:
+	int verbosity;
 	IdentityService* identityService;
 	std::vector<UDPSocket> sockets;
 	bool stopped;
 	struct sockaddr_in6 remotePeerAddress;
 
 	std::function<void(
+		void *env,
 		int level,
 		int modulecode,
 		int errorcode,
@@ -61,7 +63,9 @@ public:
 	);
 
 	void setLogger(
+		int verbosity,
 		std::function<void(
+			void *env,
 			int level,
 			int modulecode,
 			int errorcode,
