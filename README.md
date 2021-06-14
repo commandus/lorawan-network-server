@@ -636,9 +636,7 @@ Sent ACK to 84.237.104.16:54820
 - firebird
 
 ```
-sudo apt install sqlite3 libsqlite3-dev"
-sudo apt install libmysqlclient-dev
-sudo apt install firebird-dev
+sudo apt install sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev
 ```
 
 Firebird can use different library name. Check files in package:
