@@ -485,8 +485,16 @@ proto-db helper utility
 
 Create table for iridium.IEPacket packet in the "mysql_1" database:
 
+Pass message type in the -m option:
+
 ```
 ./proto-db -d mysql_1 -m iridium.IEPacket create
+```
+
+Detremine message type by the payload using -x <payload-hex>
+
+```
+./proto-db -d mysql_1 -x 0100213887c1601c000000004a0000000000000000000000
 ```
 
 Print "iridium.IEPacket" messages stored in the "mysql_1" database:

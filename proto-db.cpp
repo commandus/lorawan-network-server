@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <vector>
 
+#include <google/protobuf/message.h>
+
 #include "argtable3/argtable3.h"
 
 #include "platform.h"
@@ -195,6 +197,18 @@ int parseCmd(
 		if ((config->command == "print") || (config->command == "insert")) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_NO_PAYLOAD << ": " << ERR_NO_PAYLOAD << std::endl;
 			nerrors++;
+		}
+	}
+
+	if (config->message_type.empty()) {
+		if (config->command == "create") {
+			// try to get message_type from the payload
+			if (config->payload.empty()) {
+				nerrors++;
+				std::cerr << ERR_MESSAGE << ERR_CODE_NO_MESSAGE_TYPE << ": " << ERR_NO_MESSAGE_TYPE << std::endl;
+				std::cerr << ERR_MESSAGE << ERR_CODE_NO_PAYLOAD << ": " << ERR_NO_PAYLOAD << std::endl;
+			}
+
 		}
 	}
 
@@ -425,8 +439,15 @@ int main(
 		doPrint(env, &config, &dbAny, config.message_type, config.payload);
 	if (config.command == "list")
 		doList(env, &config, &dbAny, config.message_type);
-	if (config.command == "create")
-		doCreate(env, &config, &dbAny, config.message_type);
+	if (config.command == "create") {
+		if (config.message_type.empty()) {
+			google::protobuf::Message *m;
+			parsePacket2ProtobufMessage((void**) &m, env, 1, config.payload, "", NULL, NULL);
+			if (m)
+				config.message_type = m->GetTypeName();
+			doCreate(env, &config, &dbAny, config.message_type);
+		}
+	}
 	if (config.command == "insert")
 		doInsert(env, &config, &dbAny, config.message_type, config.payload);
 	donePkt2(env);

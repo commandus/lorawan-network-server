@@ -111,6 +111,11 @@ int DatabaseFirebird::exec(
 	return 0;
 }
 
+typedef struct vary {
+	unsigned short vary_length;
+	char vary_string[1];
+} VARY;
+
 int DatabaseFirebird::select
 (
 	std::vector<std::vector<std::string>> &retval,
@@ -125,8 +130,7 @@ int DatabaseFirebird::select
 		return ERR_CODE_DB_START_TRANSACTION;
     }
 
-	XSQLDA *sqlda;
-	sqlda = (XSQLDA *) malloc(XSQLDA_LENGTH(max_columns));
+	XSQLDA *sqlda = (XSQLDA *) malloc(XSQLDA_LENGTH(max_columns));
     sqlda->sqln = max_columns;
     sqlda->sqld = max_columns;
     sqlda->version = 1;
@@ -141,9 +145,9 @@ int DatabaseFirebird::select
         free(sqlda);
 		return ERR_CODE_DB_SELECT;
     }
-    
+
     // Prepare the statement.
-    if (isc_dsql_prepare(status, &trans, &stmt, 0, statement.c_str(), dialect, sqlda))
+    if (isc_dsql_prepare(status, &trans, &stmt, 0, "SELECT \"status\" FROM \"iridium_packet\"", dialect, sqlda)) // statement.c_str()
     {
     	errmsg = errstr();
 		isc_dsql_free_statement(status, &stmt, DSQL_close);
@@ -165,6 +169,7 @@ int DatabaseFirebird::select
 	// Reallocate SQLDA if necessary.
     if (sqlda->sqln < sqlda->sqld)
     {
+		free(sqlda);
         sqlda = (XSQLDA *) malloc(XSQLDA_LENGTH(sqlda->sqld));
         sqlda->sqln = sqlda->sqld;
         sqlda->version = 1;
@@ -180,26 +185,6 @@ int DatabaseFirebird::select
         }
     }
 
-	// List column names, types, and lengths.
-    for (int i = 0; i < sqlda->sqld; i++)
-    {
-        printf("\nColumn name:    %s\n", sqlda->sqlvar[i].sqlname);
-        printf("Column type:    %d\n", sqlda->sqlvar[i].sqltype);
-        printf("Column length:  %d\n", sqlda->sqlvar[i].sqllen);
-    }
-
-	std::vector<std::string> t;
-	std::vector<short> flags;
-	
-	for (int i = 0; i < sqlda->sqld; i++)
-	{
-		t.push_back(std::string(33, '\0'));
-		flags.push_back(0);
-		sqlda->sqlvar[i].sqldata = (char *) t[i].c_str();
-		sqlda->sqlvar[i].sqltype = SQL_TEXT + 1;
-		sqlda->sqlvar[i].sqlind = &flags[i];
-	}
-
  	if (isc_dsql_execute(status, &trans, &stmt, 1, NULL))
 	{
     	errmsg = errstr();
@@ -209,20 +194,39 @@ int DatabaseFirebird::select
 		return ERR_CODE_DB_SELECT;
 	}
 
-	long fetch_stat;
- 	while ((fetch_stat = isc_dsql_fetch(status, &stmt, 1, sqlda)) == 0)
+
+	std::vector<std::string> t;
+	std::vector<short> flags;
+
+	for (int i = 0; i < sqlda->sqld; i++)
+	{
+		if ((sqlda->sqlvar[i].sqltype == SQL_TEXT) || (sqlda->sqlvar[i].sqltype == SQL_VARYING)) {
+		} else {
+			sqlda->sqlvar[i].sqllen = 32 - sizeof(unsigned short);
+		}
+
+		t.push_back(std::string(sqlda->sqlvar[i].sqllen, '\0'));
+		flags.push_back(0);
+		sqlda->sqlvar[i].sqldata = (char *) t[i].c_str();
+		sqlda->sqlvar[i].sqltype = SQL_VARYING + 1;
+		sqlda->sqlvar[i].sqlind = &flags[i];
+	}
+
+	ISC_STATUS fetch_stat;
+	while (fetch_stat = isc_dsql_fetch(status, &stmt, 1, sqlda) == 0)
     {
 		std::vector<std::string> line;
     	for(int i = 0; i < sqlda->sqld; i++)
 		{
-			std::string s(sqlda->sqlvar[i].sqldata, sqlda->sqlvar[i].sqllen);
-			std::cerr << s << std::endl;
+			VARY *v = (VARY *) sqlda->sqlvar[i].sqldata;
+			std::string s(v->vary_string, v->vary_length);	//
+			// std::cerr << s << " len: " << s.size() << std::endl;
 			line.push_back(s);
 		}
-		// retval.push_back(line);
+		retval.push_back(line);
     }
 
-    if (fetch_stat != 100L)
+    if (!(fetch_stat == 100L || fetch_stat == 0))
     {
     	errmsg = errstr();
 		isc_dsql_free_statement(status, &stmt, DSQL_close);
@@ -248,5 +252,6 @@ int DatabaseFirebird::select
     }
 
 	free(sqlda);
+
 	return 0;
 }
