@@ -72,6 +72,7 @@
 #define ERR_CODE_DB_EXEC					-558
 #define ERR_CODE_PING						-559
 #define ERR_CODE_INVALID_STAT				-560
+#define ERR_CODE_NO_PAYLOAD          		-561
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -141,6 +142,7 @@
 #define ERR_DB_EXEC						"Error exec SQL statement"
 #define ERR_PING						"Ping"
 #define ERR_INVALID_STAT				"Invalid stat"
+#define ERR_NO_PAYLOAD          		"No payload"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"

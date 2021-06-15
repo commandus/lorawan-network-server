@@ -1,6 +1,7 @@
 #ifndef PACKET_HANDLER_ABSTRACT_H_
 #define PACKET_HANDLER_ABSTRACT_H_ 1
 
+#include <sys/time.h>
 #include "utillora.h"
 
 /**
@@ -9,7 +10,11 @@
 class PacketHandler {
 	public:
 		// Return 0, retval = EUI and keys
-		virtual int onPacket(semtechUDPPacket &value) = 0;
+		virtual int onPacket(
+			struct timeval &time,
+			DeviceId id,
+			semtechUDPPacket &value
+		) = 0;
 };
 
 #endif

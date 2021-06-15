@@ -29,7 +29,10 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		/**
 		 * Add packet to be processed
 		 */
-		int put(semtechUDPPacket &packet);
+		int put(
+			struct timeval &time,
+			semtechUDPPacket &packet
+		);
 		void setLogger(
 			std::function<void(
 				void *env,
@@ -38,7 +41,11 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 				int errorcode,
 				const std::string &message
 		)> value);
-		int onPacket(semtechUDPPacket &value);
+		int onPacket(
+			struct timeval &time,
+			DeviceId id,
+			semtechUDPPacket &value
+		);
 };
 
 #endif
