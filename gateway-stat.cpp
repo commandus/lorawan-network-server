@@ -228,7 +228,6 @@ int GatewayStat::parse(
 		}
 	}
 	return (cnt > 0 ? 0 : ERR_CODE_NO_GATEWAY_STAT);	// means no any properties found
-
 }
 
 std::string GatewayStat::toJsonString() const

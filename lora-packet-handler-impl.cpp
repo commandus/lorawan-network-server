@@ -1,10 +1,20 @@
 #include "lora-packet-handler-impl.h"
 #include "udp-socket.h"
 #include "utilstring.h"
+#include "utildate.h"
 #include "errlist.h"
 
-int LoraPacketProcessor::onPacket(semtechUDPPacket &value)
+int LoraPacketProcessor::onPacket(
+	struct timeval &time,
+	DeviceId id,
+	semtechUDPPacket &value
+)
 {
+	std::stringstream ss;
+	
+	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress);
+	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+
 	return 0;
 }
 
@@ -21,6 +31,7 @@ LoraPacketProcessor::~LoraPacketProcessor()
 
 int LoraPacketProcessor::put
 (
+	struct timeval &time,
 	semtechUDPPacket &packet
 )
 {
@@ -28,31 +39,22 @@ int LoraPacketProcessor::put
 	if (identityService) {
 		DeviceId id;
 		r = identityService->get(packet.getHeader()->header.devaddr, id);
-
-		if (onLog) {
-			std::stringstream ss;
-			ss << "Request identity service r: " << r << ", device id: " << DEVEUI2string(id.deviceEUI);
-			onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
-		}
-
 		if (r) {
-			// report error
-			std::stringstream ss;
-			ss << ERR_MESSAGE << r << ": " 
-				<< strerror_client(r) << " " 
-				<< ", device " << DEVADDR2string(packet.getHeader()->header.devaddr)
-				<< ", remote " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
-			onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
-			return r;
+			if (onLog) {
+				// report error
+				std::stringstream ss;
+				ss << ERR_DEVICE_ADDRESS_NOTFOUND << r << ": " 
+					<< strerror_client(r) << " " 
+					<< ", " << MSG_DEVICE_EUI << DEVADDR2string(packet.getHeader()->header.devaddr)
+					<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
+				onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
+			}
 		}
-	} else {
-		if (onLog) {
-			std::stringstream ss;
-			ss << " " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
-			onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+		if (r == 0) {
+			onPacket(time, id, packet);
 		}
 	}
-	return 0;
+	return r;
 }
 
 void LoraPacketProcessor::setIdentityService

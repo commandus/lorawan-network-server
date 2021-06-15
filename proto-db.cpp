@@ -135,12 +135,10 @@ int parseCmd(
 	// Parse the command line as defined by argtable[]
 	nerrors = arg_parse(argc, argv, argtable);
 
+	config->command = "";
 	if (!nerrors) {
 		if (a_command->count)
 			config->command = *a_command->sval;
-		else
-			config->command = "print";
-
 		if (a_proto_path->count)
 			config->proto_path = *a_proto_path->sval;
 		else
@@ -190,6 +188,16 @@ int parseCmd(
 		config->verbosity = a_verbosity->count;
 	}
 
+	if (config->command.empty())
+		config->command = "print";
+
+	if (config->payload.empty()) {
+		if ((config->command == "print") || (config->command == "insert")) {
+			std::cerr << ERR_MESSAGE << ERR_CODE_NO_PAYLOAD << ": " << ERR_NO_PAYLOAD << std::endl;
+			nerrors++;
+		}
+	}
+
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
 		if (nerrors)
@@ -199,7 +207,6 @@ int parseCmd(
 		std::cerr << MSG_PROTO_DB_PROG_NAME << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-		std::cerr << ERR_COMMAND_LINE << std::endl;
 		return ERR_CODE_COMMAND_LINE;
 	}
 
@@ -424,4 +431,5 @@ int main(
 		doInsert(env, &config, &dbAny, config.message_type, config.payload);
 	donePkt2(env);
 	return 0;
+
 }

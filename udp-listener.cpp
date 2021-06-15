@@ -158,6 +158,9 @@ int UDPListener::listen() {
 				break;
         	default:
 			{
+				struct timeval recievedTime;
+				gettimeofday(&recievedTime, NULL);
+				
 				// By default two sockets: one for IPv4, second for IPv6
 				for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
 					if (!FD_ISSET(it->sock, &readHandles))
@@ -284,16 +287,7 @@ int UDPListener::listen() {
 								break;
 						}
 						// reflect stat
-						std::cerr << "gatewayStat.errcode: " << gatewayStat.errcode << std::endl;
 						if (gatewayStat.errcode == 0) {
-							std::stringstream sss;
-							sss << MSG_GATEWAY_STAT
-								<< " " << gatewayStat.toJsonString();
-							onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, sss.str());
-							if (gatewayList) {
-								gatewayList->update(gatewayStat);
-								// gatewayList->save();
-							}
 							std::stringstream ss;
 							ss << MSG_GATEWAY_STAT
 								<< gatewayStat.toString();
@@ -323,14 +317,14 @@ int UDPListener::listen() {
 										}
 									}
 									if (handler) {
-										handler->put(*itp);
+										handler->put(recievedTime, *itp);
 									} else {
 										if (onLog) {
 											std::stringstream ss;
 											ss << MSG_READ_BYTES 
 												<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ": "
 												<< itp->toString();
-											onLog(this, LOG_INFO, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
+											onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 										}
 									}
 								}
