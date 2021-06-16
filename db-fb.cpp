@@ -147,7 +147,7 @@ int DatabaseFirebird::select
     }
 
     // Prepare the statement.
-    if (isc_dsql_prepare(status, &trans, &stmt, 0, "SELECT \"status\" FROM \"iridium_packet\"", dialect, sqlda)) // statement.c_str()
+    if (isc_dsql_prepare(status, &trans, &stmt, 0, statement.c_str(), dialect, sqlda))
     {
     	errmsg = errstr();
 		isc_dsql_free_statement(status, &stmt, DSQL_close);
@@ -194,9 +194,8 @@ int DatabaseFirebird::select
 		return ERR_CODE_DB_SELECT;
 	}
 
-
 	std::vector<std::string> t;
-	std::vector<short> flags;
+	short *flags = new short[sqlda->sqld];
 
 	for (int i = 0; i < sqlda->sqld; i++)
 	{
@@ -204,9 +203,7 @@ int DatabaseFirebird::select
 		} else {
 			sqlda->sqlvar[i].sqllen = 32 - sizeof(unsigned short);
 		}
-
 		t.push_back(std::string(sqlda->sqlvar[i].sqllen, '\0'));
-		flags.push_back(0);
 		sqlda->sqlvar[i].sqldata = (char *) t[i].c_str();
 		sqlda->sqlvar[i].sqltype = SQL_VARYING + 1;
 		sqlda->sqlvar[i].sqlind = &flags[i];
@@ -219,9 +216,7 @@ int DatabaseFirebird::select
     	for(int i = 0; i < sqlda->sqld; i++)
 		{
 			VARY *v = (VARY *) sqlda->sqlvar[i].sqldata;
-			std::string s(v->vary_string, v->vary_length);	//
-			// std::cerr << s << " len: " << s.size() << std::endl;
-			line.push_back(s);
+			line.push_back(std::string(v->vary_string, v->vary_length));
 		}
 		retval.push_back(line);
     }
@@ -231,6 +226,7 @@ int DatabaseFirebird::select
     	errmsg = errstr();
 		isc_dsql_free_statement(status, &stmt, DSQL_close);
         isc_rollback_transaction(status, &trans);
+		free(flags);
         free(sqlda);
 		return ERR_CODE_DB_SELECT;
     }
@@ -239,6 +235,7 @@ int DatabaseFirebird::select
     {
         errmsg = errstr();
         isc_rollback_transaction(status, &trans);
+		free(flags);
         free(sqlda);
 		return ERR_CODE_DB_SELECT;
     }
@@ -247,10 +244,12 @@ int DatabaseFirebird::select
     {
         errmsg = errstr();
         isc_rollback_transaction(status, &trans);
+		free(flags);
         free(sqlda);
 		return ERR_CODE_DB_COMMIT_TRANSACTION;
     }
 
+	free(flags);
 	free(sqlda);
 
 	return 0;
