@@ -203,8 +203,13 @@ test_sqlite_SOURCES = \
 test_sqlite_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq
 test_sqlite_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-sqlite
-# test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json
+test_fb_SOURCES = \
+	tests/test-fb.cpp
+test_fb_LDADD = -lfbclient
+test_fb_CPPFLAGS = 
+
+check_PROGRAMS = test-fb
+# test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json
 # test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 
