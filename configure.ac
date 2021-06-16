@@ -36,7 +36,7 @@ AC_ARG_ENABLE([lmdb],
 [  --enable-lmdb    Turn on LMDB],
 [case "${enableval}" in
   yes) enable_lmdb=true ;;
-  no)  enable_mdb=false ;;
+  no)  enable_lmdb=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-lmdb]) ;;
 esac],[enable_lmdb=false])
 AM_CONDITIONAL([ENABLE_LMDB], [test x$enable_lmdb = xtrue])
@@ -49,6 +49,45 @@ AC_ARG_ENABLE([mdbx],
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-mdbx]) ;;
 esac],[enable_mdbx=false])
 AM_CONDITIONAL([ENABLE_MDBX], [test x$enable_mdbx = xtrue])
+
+# backend databases
+
+# by default SQLite is on
+AC_ARG_ENABLE([db-sqlite],
+[  --enable-db-sqlite    Turn on SQLite backend],
+[case "${enableval}" in
+  yes) enable_db_sqlite=true ;;
+  no)  enable_db_sqlite=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-sqlite]) ;;
+esac],[enable_db_sqlite=true])
+AM_CONDITIONAL([ENABLE_DB_SQLITE], [test x$enable_db_sqlite = xtrue])
+
+AC_ARG_ENABLE([db-postgres],
+[  --enable-db-postgres    Turn on PostgreSQL backend],
+[case "${enableval}" in
+  yes) enable_db_postgres=true ;;
+  no)  enable_db_postgres=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-postgres]) ;;
+esac],[enable_db_postgres=false])
+AM_CONDITIONAL([ENABLE_DB_POSTGRES], [test x$enable_db_postgres = xtrue])
+
+AC_ARG_ENABLE([db-mysql],
+[  --enable-db-mysql    Turn on MySQL backend],
+[case "${enableval}" in
+  yes) enable_db_mysql=true ;;
+  no)  enable_db_mysql=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-mysql]) ;;
+esac],[enable_db_mysql=false])
+AM_CONDITIONAL([ENABLE_DB_MYSQL], [test x$enable_db_mysql = xtrue])
+
+AC_ARG_ENABLE([db-firebird],
+[  --enable-db-firebird    Turn on FirebirdSQL backend],
+[case "${enableval}" in
+  yes) enable_db_firebird=true ;;
+  no)  enable_db_firebird=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-firebird]) ;;
+esac],[enable_db_firebird=false])
+AM_CONDITIONAL([ENABLE_DB_FIREBIRD], [test x$enable_db_firebird = xtrue])
 
 # MacOS: install openssl into /usr/local/lib/opt/openssl@1.1
 # brew install openssl@1.1
