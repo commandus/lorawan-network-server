@@ -63,18 +63,25 @@ Gateways
 
 ## Build
 
+You can use
+
+- Automake
+- CMake
+
+build system.
+
 Automake, autoconf, libtool, gcc or cmake must be installed first.
+
+To do automake installed first, run:
 
 ```
 apt install autoconf build-essential libtool
 ```
 
-You can use
-
-- autoconf or
-- cmake
-
-build system.
+To do cmake installed first, run:
+```
+apt install cmake
+```
 
 ### autoconf
 
@@ -86,6 +93,28 @@ autogen.sh
 make
 sudo make install
 ```
+
+./configure has several options to enable backend database support:
+
+- --enable-db-sqlite=true (on by default)
+- --enable-db-postgres
+- --enable-db-mysql
+- --enable-db-firebird
+
+You must have database client and developer's tools (include files and libraries at least) installed on the computer.
+
+lorawan-network-server uses internal database to keep device's authentication information.
+
+By default this database keep in memory and flushes to the disk as JSON file.
+
+In some scenarios it is better store device's authentication information on the disk not in memory.
+
+lorawan-network-server can store device's authentication information in the LMDB or MDBX (clne of the LMDB) database.
+
+./configure has options to choose how to store device's authentication information:
+
+- --enable-json=true (by default in memory)
+- --enable-lmdb or --enable-mdbx (on the disk file)
 
 For clang:
 

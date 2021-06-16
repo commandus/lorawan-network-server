@@ -452,5 +452,4 @@ int main(
 		doInsert(env, &config, &dbAny, config.message_type, config.payload);
 	donePkt2(env);
 	return 0;
-
 }

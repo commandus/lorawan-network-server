@@ -32,6 +32,40 @@ C_STORAGE=identity-service-lmdb.cpp db-identity.cpp
 H_STORAGE=
 endif
 
+BACKEND_DB_SRC = 
+BACKEND_DB_LIB =
+BACKEND_DB_C =
+BACKEND_DB_DEF = 
+
+if ENABLE_DB_SQLITE
+BACKEND_DB_SRC += db-sqlite.cpp 
+BACKEND_DB_LIB += -lsqlite3 
+BACKEND_DB_C += 
+BACKEND_DB_DEF += -DENABLE_DB_SQLITE 
+endif
+
+if ENABLE_DB_POSTGRES
+BACKEND_DB_SRC += db-pg.cpp 
+BACKEND_DB_LIB += -lpq 
+BACKEND_DB_C += 
+BACKEND_DB_DEF += -DENABLE_DB_POSTGRESQL 
+endif
+
+if ENABLE_DB_MYSQL
+BACKEND_DB_SRC += db-mysql.cpp 
+BACKEND_DB_LIB += -lmysqlclient 
+BACKEND_DB_C += 
+BACKEND_DB_DEF += -DENABLE_DB_MYSQL 
+endif
+
+if ENABLE_DB_FIREBIRD
+BACKEND_DB_SRC += db-fb.cpp 
+BACKEND_DB_LIB += -lfbclient 
+BACKEND_DB_C += 
+BACKEND_DB_DEF += -DENABLE_DB_FIREBIRD 
+endif
+
+
 #
 # mysql_config --cflags
 # -I/usr/include/mysql
@@ -89,7 +123,7 @@ lorawan_network_server_SOURCES = \
 	third_party/base64/base64.cpp $(SRC_AES)
 
 lorawan_network_server_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
-lorawan_network_server_CPPFLAGS = $(commoncppflags)
+lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp errlist.cpp \
@@ -107,12 +141,12 @@ mac_gw_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
 	proto-db.cpp \
-	db-any.cpp db-sqlite.cpp db-pg.cpp db-mysql.cpp db-fb.cpp \
+	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
-proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq -lmysqlclient -lfbclient
-proto_db_CPPFLAGS = $(commoncppflags)
+proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 #
 # Configs, readme, CMake etc.
 #
@@ -200,13 +234,13 @@ test_pkt2_parse_CPPFLAGS = $(commoncppflags)
 
 test_sqlite_SOURCES = \
 	tests/test-sqlite.cpp db-any.cpp db-sqlite.cpp db-pg.cpp
-test_sqlite_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lsqlite3 -lpq
-test_sqlite_CPPFLAGS = $(commoncppflags)
+test_sqlite_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+test_sqlite_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 test_fb_SOURCES = \
 	tests/test-fb.cpp
-test_fb_LDADD = -lfbclient
-test_fb_CPPFLAGS = 
+test_fb_LDADD = $(BACKEND_DB_LIB)
+test_fb_CPPFLAGS = $(BACKEND_DB_DEF)
 
 check_PROGRAMS = test-fb
 # test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json

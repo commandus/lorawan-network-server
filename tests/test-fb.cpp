@@ -1,3 +1,7 @@
+#ifndef ENABLE_DB_FIREBIRD
+#error "No firebird support is on. Enable it by ./configure --enable-db-firebird=yes"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

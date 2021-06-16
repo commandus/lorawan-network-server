@@ -1,10 +1,18 @@
 #include <iostream>
 
 #include "db-any.h"
+#ifdef ENABLE_DB_SQLITE
 #include "db-sqlite.h"
+#endif
+#ifdef ENABLE_DB_POSTGRES
 #include "db-pg.h"
+#endif
+#ifdef ENABLE_DB_MYSQL
 #include "db-mysql.h"
+#endif
+#ifdef ENABLE_DB_FIREBIRD
 #include "db-fb.h"
+#endif
 
 #include "errlist.h"
 
@@ -18,16 +26,32 @@ DatabaseNConfig::DatabaseNConfig
 	config = aconfig;
 
 	if (config->type == "sqlite3")
+#ifdef ENABLE_DB_SQLITE	
 		db = new DatabaseSQLite();
+#else
+	;		
+#endif
 	else
 		if (config->type == "postgresql")
+#ifdef ENABLE_DB_POSTGRES			
 			db = new DatabasePostgreSQL();
+#else
+	;		
+#endif
 		else
 			if (config->type == "mysql")
+#ifdef ENABLE_DB_MYSQL				
 				db = new DatabaseMySQL();
+#else
+	;		
+#endif
 			else
 				if (config->type == "firebird")
+#ifdef ENABLE_DB_FIREBIRD					
 					db = new DatabaseFirebird();
+#else
+	;		
+#endif
 				else
 					// unknown database type
 					db = NULL;
@@ -147,10 +171,30 @@ DatabaseIntf* DatabaseByConfig::open
 ) const
 {
 	if (dbc->type == "sqlite3")
+#ifdef ENABLE_DB_SQLITE	
 		return new DatabaseSQLite();
-	if (dbc->type == "postgresql")
-		return new DatabasePostgreSQL();
-	// unknown database type
+#else
+	;		
+#endif
+	else
+		if (dbc->type == "postgresql")
+#ifdef ENABLE_DB_POSTGRES			
+			return new DatabasePostgreSQL();
+#else
+	;		
+#endif
+		else
+			if (dbc->type == "mysql")
+#ifdef ENABLE_DB_MYSQL				
+				return new DatabaseMySQL();
+#else
+	;		
+#endif
+			else
+				if (dbc->type == "firebird")
+#ifdef ENABLE_DB_FIREBIRD					
+					return new DatabaseFirebird();
+#endif					
 	return NULL;
 }
 
