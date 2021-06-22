@@ -1,7 +1,6 @@
 #ifndef RECEIVER_QUEUE_SERVICE_H_
 #define RECEIVER_QUEUE_SERVICE_H_ 1
 
-#include <map>
 #include <vector>
 #include <string>
 #include <sys/time.h>
@@ -52,10 +51,11 @@ class ReceiverQueueEntry {
 class ReceiverQueueService {
 	protected:
 		int cnt;
+		std::vector<int> dbs;
 		int next();
 	public:
 		ReceiverQueueService();
-		virtual void setDbs(const std::vector<int> &values) = 0;
+		void setDbs(const std::vector<int> &values);
 		// return messages in queue
 		virtual int count() = 0;
 		// Return 0 if success
@@ -63,12 +63,16 @@ class ReceiverQueueService {
 		// Force remove entry
 		virtual void remove(int onum) = 0;
 		// Remove all entries older than parameter, if 0- remove all
-		void clear(time_t olderthan);
+		virtual void clear(time_t olderthan) = 0;
 		// Remove all entries
-		void clear();
-
+		virtual void clear() = 0;
+		// Remove all entries with databases
+		virtual void clearDbs(const std::vector <int> &dbs) = 0;
+		
 		// Add entry
-		virtual void push(ReceiverQueueEntry &value) = 0;
+		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
+		void push(const std::string &payload, const timeval &time);
+		
 		// Return 0 if success
 		virtual int pop(const int &dbid, ReceiverQueueEntry &retval) = 0;
 		// List entries

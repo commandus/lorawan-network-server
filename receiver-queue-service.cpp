@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "receiver-queue-service.h"
 #include "base64/base64.h"
 
@@ -107,11 +109,40 @@ void ReceiverQueueEntry:: set(
 ReceiverQueueService::ReceiverQueueService()
 	: cnt(0)
 {
-
 }
 
 int ReceiverQueueService::next()
 {
 	cnt++;
 	return cnt;
+}
+
+void ReceiverQueueService::setDbs
+(
+	const std::vector<int> &values
+)
+{
+	std::vector<int> d = dbs;
+	for (std::vector<int>::iterator it(d.begin()); it != d.end(); it++) {
+		if (std::find(values.begin(), values.end(), *it) != values.end()) {
+			d.erase(it);
+		}
+	}
+	// delete old ids not in new one
+	clearDbs(d);
+	dbs = values;
+}
+
+void ReceiverQueueService::push
+(
+	const std::string &payload,
+	const timeval &time
+)
+{
+	ReceiverQueueEntry e;
+	e.key.id = next();
+	e.key.time = time;
+	e.value.payload = payload;
+	e.value.dbids = dbs;
+	pushEntry(e);
 }

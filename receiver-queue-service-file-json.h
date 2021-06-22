@@ -1,6 +1,7 @@
 #ifndef RECEIVER_QUEUE_SERVICE_FILE_JSON_H_
 #define RECEIVER_QUEUE_SERVICE_FILE_JSON_H_ 1
 
+#include <map>
 #include <vector>
 #include <mutex>
 #include "receiver-queue-service.h"
@@ -17,7 +18,6 @@ class JsonFileReceiverQueueService: public ReceiverQueueService {
 	protected:
 		std::mutex mutexMap;
 		std::map<ReceiverQueueKey, ReceiverQueueValue, ReceiverQueueKeyCompare> storage;
-		std::vector<int> dbs;
 		std::string path;
 	public:
 		int errcode;
@@ -26,7 +26,6 @@ class JsonFileReceiverQueueService: public ReceiverQueueService {
 		JsonFileReceiverQueueService();
 		virtual ~JsonFileReceiverQueueService();
 
-		void setDbs(const std::vector<int> &values);
 		// return messages in queue
 		int count();
 		// Return 0 if success
@@ -37,9 +36,11 @@ class JsonFileReceiverQueueService: public ReceiverQueueService {
 		void clear(time_t olderthan);
 		// Remove all entries
 		void clear();
+		// Remove all entries with databases
+		void clearDbs(const std::vector <int> &dbs);
 
 		// Add entry
-		void push(ReceiverQueueEntry &value);
+		void pushEntry(ReceiverQueueEntry &value);
 		// Return 0 if success
 		int pop(const int &dbid, ReceiverQueueEntry &value);
 		// List entries

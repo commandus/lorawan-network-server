@@ -246,8 +246,15 @@ test_fb_SOURCES = \
 test_fb_LDADD = $(BACKEND_DB_LIB)
 test_fb_CPPFLAGS = $(BACKEND_DB_DEF)
 
-check_PROGRAMS = test-fb
-# test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json
+test_message_queue_SOURCES = \
+	tests/test-message-queue.cpp \
+	receiver-queue-service.cpp receiver-queue-service-file-json.cpp \
+	third_party/base64/base64.cpp
+test_message_queue_LDADD = 
+test_message_queue_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = test-message-queue
+# test-fb test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json
 # test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 

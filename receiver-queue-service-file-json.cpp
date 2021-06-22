@@ -1,6 +1,7 @@
 #include <fstream>
 #include <regex>
 #include <iostream>
+#include <base64/base64.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -79,86 +80,65 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 			return true;
 		}
 
-		bool Int(int value) {
+		void putUInt(unsigned int value) {
 			switch(idx) {
 				case 0:	// time
 					std::cerr << "int time: " << value << std::endl;
+					entry.key.time.tv_sec = value;
+					entry.key.time.tv_usec = 0;
 					break;
 				case 1:	// id
 					std::cerr << "int id: " << value << std::endl;
+					entry.key.id = value;
 					break;
 				case 3:	// db id
 					std::cerr << "int db id: " << value << std::endl;
+					entry.value.dbids.push_back(value);
 					break;
 			};
+		}
+
+		bool Int(int value) {
+			putUInt(value);
 			return true;
 		}
 
 		bool Uint(unsigned value) {
-			switch(idx) {
-				case 0:	// time
-					std::cerr << "uint time: " << value << std::endl;
-					break;
-				case 1:	// id
-					std::cerr << "uint id: " << value << std::endl;
-					break;
-				case 3:	// db id
-					std::cerr << "uint db id: " << value << std::endl;
-					break;
-			};
+			putUInt(value);
 			return true;
 		}
 
 		bool Int64(int64_t value) {
-			switch(idx) {
-				case 0:	// time
-					std::cerr << "int64 time: " << value << std::endl;
-					break;
-				case 1:	// id
-					std::cerr << "int64 id: " << value << std::endl;
-					break;
-				case 3:	// db id
-					std::cerr << "int64 db id: " << value << std::endl;
-					break;
-			};
+			putUInt(value);
 			return true;
 		}
 
 		bool Uint64(uint64_t value) {
-			switch(idx) {
-				case 0:	// time
-					std::cerr << "uint64 time: " << value << std::endl;
-					break;
-				case 1:	// id
-					std::cerr << "uint64 id: " << value << std::endl;
-					break;
-				case 3:	// db id
-					std::cerr << "uint64 db id: " << value << std::endl;
-					break;
-			};
+			putUInt(value);
 			return true;
 		}
 
-		bool Double(double d) {
+		bool Double(double value) {
+			putUInt(value);
 			return true;
 		}
 
 		bool String(const char* str, rapidjson::SizeType length, bool copy) { 
-			std::string s; 
+			std::string s(str, length); 
 			switch(idx) {
-				case 0:	// time
-					break;
-				case 1:	// id
-					break;
 				case 2:	// payload
-					break;
-				case 3:	// db id
+					entry.value.payload = base64_decode(s, true);
 					break;
 				default:
+					{
+					unsigned long value = atoll(s.c_str());
+					putUInt(value);
+					}
 					break;
 			}
 			return true;
 		}
+
 		bool StartObject() { 
 			return true; 
 		}
@@ -170,7 +150,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 		bool EndObject(rapidjson::SizeType memberCount)
 		{
 			if (true)
-				service->push(entry);
+				service->pushEntry(entry);
 			return true;
 		}
 
@@ -194,6 +174,22 @@ void JsonFileReceiverQueueService::clear(
 void JsonFileReceiverQueueService::clear()
 {
 	storage.clear();
+}
+
+// Remove all entries with databases
+void JsonFileReceiverQueueService::clearDbs(
+	const std::vector <int> &dbs2delete
+)
+{
+	for (std::vector<int>::const_iterator it(dbs2delete.begin()); it != dbs2delete.end(); it++) {
+		for (std::map<ReceiverQueueKey, ReceiverQueueValue, ReceiverQueueKeyCompare>::iterator mit(storage.begin()); mit != storage.end(); mit++) {
+			int remainDbCount = mit->second.popDbId(*it);
+			if (remainDbCount == 0) {
+				// remove itself
+				storage.erase(mit);
+			}
+		}
+	}
 }
 
 int JsonFileReceiverQueueService::load()
@@ -232,15 +228,16 @@ int JsonFileReceiverQueueService::save()
 		os << "{\"" 
 			<< ATTR_NAMES[0] << "\":" << it->first.time.tv_sec << ",\"" 
 			<< ATTR_NAMES[1] << "\":" << it->first.id << ",\"" 
-			<< ATTR_NAMES[2] << "\":\"" << it->second.jsonPayload() << "\",\"" ;
+			<< ATTR_NAMES[2] << "\":\"" << it->second.jsonPayload() << "\"" ;
 		if (it->second.dbids.size()) {
-			os << "\"" << ATTR_NAMES[3] << "\":[";
-			bool isNotFirst = false;
+			os << ",\"" << ATTR_NAMES[3] << "\":[";
+			bool isFirst = true;
 			for (std::vector<int>::const_iterator itd(it->second.dbids.begin()); itd != it->second.dbids.end(); itd++) {
-				if (isNotFirst)
+				if (isFirst)
 				{
+					isFirst = false;
+				} else {
 					os << ", ";
-					isNotFirst = true;
 				}
 				os << *itd;
 			}
@@ -290,7 +287,7 @@ void JsonFileReceiverQueueService::list(
 	}
 }
 
-void JsonFileReceiverQueueService::push(
+void JsonFileReceiverQueueService::pushEntry(
 	ReceiverQueueEntry &value
 )
 {
@@ -342,15 +339,16 @@ std::string JsonFileReceiverQueueService::toJsonString()
 		ss << "{\"" 
 			<< ATTR_NAMES[0] << "\":" << it->first.time.tv_sec << ",\"" 
 			<< ATTR_NAMES[1] << "\":" << it->first.id << ",\"" 
-			<< ATTR_NAMES[2] << "\":\"" << it->second.jsonPayload() << "\",\"" ;
+			<< ATTR_NAMES[2] << "\":\"" << it->second.jsonPayload() << "\"" ;
 		if (it->second.dbids.size()) {
-			ss << "\"" << ATTR_NAMES[3] << "\":[";
-			bool isNotFirst = false;
+			ss << ", \"" << ATTR_NAMES[3] << "\":[";
+			bool isFirst = true;
 			for (std::vector<int>::const_iterator itd(it->second.dbids.begin()); itd != it->second.dbids.end(); itd++) {
-				if (isNotFirst)
+				if (isFirst)
 				{
+					isFirst = false;
+				} else  {
 					ss << ", ";
-					isNotFirst = true;
 				}
 				ss << *itd;
 			}
@@ -359,15 +357,6 @@ std::string JsonFileReceiverQueueService::toJsonString()
 	}
 	ss << "]";
 	return ss.str();
-}
-
-void JsonFileReceiverQueueService::setDbs
-(
-	const std::vector<int> &values
-)
-{
-	clear();
-	dbs = values;
 }
 
 int JsonFileReceiverQueueService::count()
