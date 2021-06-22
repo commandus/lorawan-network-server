@@ -149,6 +149,7 @@ Server config:
 - readBufferSize UDP buffer size Default 4096.
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
 - daemonize false..true Indicates does network server starts as deamon or not
+- storageType
 
 configFileName can used to load configuration from different location. 
 Do not use this parameter except when you really need it.
@@ -166,6 +167,42 @@ Example of lorawan-network-server.json:
         }
 }
 ```
+
+Option "storageType" values are:
+
+- json (default)
+- lmdb (file database)
+- txt (directory with files)
+
+Default value is "json". The identifiers are stored in memory.
+
+Option "lmdb" is a little bit safer and suitable for low-memory installations.
+
+Option "txt" is slow and useful for debug only.
+
+#### Message queue
+
+Received messages are send to the database(s) as soon as possible. In case the database system is not avaliable
+for some reason, received messages stay in the queue until database has up.
+
+There messageQueueStorageType option determines how to keep received messages in the temporary queue.
+
+Option "messageQueueStorageType" values are:
+
+- json (default)
+- lmdb (file database)
+- txt (directory with files)
+
+Default value is "json". Received messages are stored in memory.
+
+If lorawan-network-server is down, queue are stored to the file.
+
+When lorawan-network-server is up, queue loaded from the file.
+
+Option "lmdb" is a little bit safer. You can avoid meory consumption in case of 
+external database is down.
+
+Option "txt" is slow and useful for debug only.
 
 ### gateway.json
 

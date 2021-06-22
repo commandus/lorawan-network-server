@@ -23,6 +23,17 @@ static std::string storageType2String(IDENTITY_STORAGE value) {
 	}
 }
 
+static std::string storageType2String(MESSAGE_QUEUE_STORAGE value) {
+	switch(value) {
+		case MESSAGE_QUEUE_STORAGE_DIR_TEXT:
+			return "txt";
+		case MESSAGE_QUEUE_STORAGE_LMDB:
+			return "lmdb";
+		default:
+			return "json";
+	}
+}
+
 static IDENTITY_STORAGE string2storageType(
 	const std::string &value
 ) {
@@ -31,6 +42,16 @@ static IDENTITY_STORAGE string2storageType(
 	if (value == "lmdb")
 		return IDENTITY_STORAGE_LMDB;
 	return IDENTITY_STORAGE_FILE_JSON;
+}
+
+static MESSAGE_QUEUE_STORAGE string2messageQueueStorageType(
+	const std::string &value
+) {
+	if (value == "txt")
+		return MESSAGE_QUEUE_STORAGE_DIR_TEXT;
+	if (value == "lmdb")
+		return MESSAGE_QUEUE_STORAGE_LMDB;
+	return MESSAGE_QUEUE_STORAGE_JSON;
 }
 
 void ServerConfig::clear() {
@@ -43,7 +64,7 @@ void ServerConfig::clear() {
 
 ServerConfig::ServerConfig() 
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false),
-	identityStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON)
+	identityStorageName(""), queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON), messageQueueType(MESSAGE_QUEUE_STORAGE_JSON)
 {
 
 }
@@ -77,6 +98,14 @@ int ServerConfig::parse(
 			identityStorageName = jn.GetString();
 		}
 	}
+	
+	if (value.HasMember("queueStorageName")) {
+		rapidjson::Value &jn = value["queueStorageName"];
+		if (jn.IsString()) {
+			queueStorageName = jn.GetString();
+		}
+	}
+
 	if (value.HasMember("readBufferSize")) {
 		rapidjson::Value &rbs =  value["readBufferSize"];
 		if (rbs.IsInt())
@@ -98,6 +127,11 @@ int ServerConfig::parse(
 		rapidjson::Value &vstorageType =  value["storageType"];
 		if (vstorageType.IsString())
 			storageType = string2storageType(vstorageType.GetString());
+	}
+	if (value.HasMember("messageQueueStorageType")) {
+		rapidjson::Value &vstorageType =  value["messageQueueStorageType"];
+		if (vstorageType.IsString())
+			messageQueueType = string2messageQueueStorageType(vstorageType.GetString());
 	}
 	return 0;
 }
@@ -130,6 +164,11 @@ void ServerConfig::toJson(
 	rapidjson::Value n;
 	n.SetString(identityStorageName.c_str(), identityStorageName.size(), allocator);
 	value.AddMember("identityStorageName", n, allocator);
+
+	
+	rapidjson::Value nq;
+	nq.SetString(queueStorageName.c_str(), queueStorageName.size(), allocator);
+	value.AddMember("queueStorageName", nq, allocator);
 
 	rapidjson::Value rbs;
 	rbs.SetInt(readBufferSize);

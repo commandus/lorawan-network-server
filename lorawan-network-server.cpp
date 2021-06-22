@@ -30,8 +30,12 @@
 #include "lora-packet-handler-impl.h"
 #include "identity-service-file-json.h"
 #include "identity-service-dir-txt.h"
+#include "receiver-queue-service-file-json.h"
+#include "receiver-queue-service-dir-txt.h"
+
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
+#include "receiver-queue-service-lmdb.h"
 #endif			
 
 #include "gateway-list.h"
@@ -40,6 +44,7 @@
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
+#define DEF_QUEUE_STORAGE_NAME "queue.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_TIME_FORMAT "%FT%T"
 
@@ -115,8 +120,8 @@ int parseCmd(
 	// device path
 	struct arg_str *a_address4 = arg_strn(NULL, NULL, "<IPv4 address:port>", 0, 8, "listener IPv4 interface e.g. *:8003");
 	struct arg_str *a_address6 = arg_strn("6", "ipv6", "<IPv6 address:port>", 0, 8, "listener IPv6 interface e.g. :1700");
-	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", stotage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
-
+	struct arg_str *a_config = arg_str0("c", "config", "<file>",
+	 "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME ", queue storage ~/" DEF_QUEUE_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
 	struct arg_str *a_logfilename = arg_str0("l", "logfile", "<file>", "log file");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 7, "Set verbosity level 1- alert, 2-critical error, 3- error, 4- warning, 5- siginicant info, 6- info, 7- debug");
@@ -224,6 +229,9 @@ int main(
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
 	}
+	if (config->serverConfig.queueStorageName.empty()) {
+		config->serverConfig.queueStorageName = getDefaultConfigFileName(DEF_QUEUE_STORAGE_NAME);
+	}
 	if (config->gatewaysFileName.empty()) {
 		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
@@ -233,7 +241,7 @@ int main(
 	
 	std::cerr << gatewayList->toJsonString() << std::endl;
 
-	LoraPacketProcessor processor;
+	// Start identity service
 	IdentityService *identityService;
 
 	switch (config->serverConfig.storageType) {
@@ -249,9 +257,29 @@ int main(
 			identityService = new JsonFileIdentityService();
 	}
 	identityService->init(config->serverConfig.identityStorageName, NULL);
-	
+
+	// Start recived message queue service
+	ReceiverQueueService *receiverQueueService;
+
+	switch (config->serverConfig.messageQueueType) {
+		case MESSAGE_QUEUE_STORAGE_LMDB:
+#ifdef ENABLE_LMDB
+			//receiverQueueService = new LmdbIdentityService();
+#endif			
+			break;
+		case MESSAGE_QUEUE_STORAGE_DIR_TEXT:
+			//receiverQueueService = new DirTxtIdentityService();
+			break;
+		default:
+			receiverQueueService = new JsonFileReceiverQueueService();
+	}
+	receiverQueueService->init(config->serverConfig.queueStorageName, NULL);
+
+	// Set up processor
+	LoraPacketProcessor processor;
 	processor.setLogger(onLog);
 	processor.setIdentityService(identityService);
+	// Set up listener
 	listener.setGatewayList(gatewayList);
 	listener.setHandler(&processor);
 	listener.setIdentityService(identityService);

@@ -14,22 +14,25 @@ COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 BUILT_SOURCES = $(GEN)
 CLEANFILES = $(GEN)
 
+C_STORAGE = 
+C_QUEUE_STORAGE = 
+LIB_STORAGE = 
+
 if ENABLE_JSON
-LIB_STORAGE=
-C_STORAGE=identity-service-file-json.cpp 
-H_STORAGE=
+C_STORAGE += identity-service-file-json.cpp 
+C_QUEUE_STORAGE += receiver-queue-service-file-json.cpp 
 endif
 
 if ENABLE_LMDB
-LIB_STORAGE=-llmdb
-C_STORAGE=identity-service-lmdb.cpp db-identity.cpp
-H_STORAGE=
+LIB_STORAGE += -llmdb
+C_STORAGE += identity-service-lmdb.cpp db-identity.cpp
+#C_QUEUE_STORAGE=receiver-queue-service-lmdb.cpp 
 endif
 
 if ENABLE_MDBX
-LIB_STORAGE=-lmdbx
-C_STORAGE=identity-service-lmdb.cpp db-identity.cpp
-H_STORAGE=
+LIB_STORAGE += -lmdbx
+C_STORAGE += identity-service-lmdb.cpp db-identity.cpp
+#C_QUEUE_STORAGE=receiver-queue-service-lmdb.cpp 
 endif
 
 BACKEND_DB_SRC = 
@@ -100,6 +103,7 @@ nobase_dist_include_HEADERS = \
 	errlist.h daemonize.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
 	identity-service-abstract.h identity-service-file-json.h \
+	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	lora-rejoin.h \
 	third_party/filewatch.hpp \
@@ -118,7 +122,7 @@ lorawan_network_server_SOURCES = \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp config-filename.cpp \
 	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
 	semtech-metadata-tx.cpp identity-service-dir-txt.cpp lora-rejoin.cpp \
-	$(C_STORAGE) \
+	receiver-queue-service.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 

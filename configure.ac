@@ -89,6 +89,25 @@ AC_ARG_ENABLE([db-firebird],
 esac],[enable_db_firebird=false])
 AM_CONDITIONAL([ENABLE_DB_FIREBIRD], [test x$enable_db_firebird = xtrue])
 
+if test "$ENABLE_DB_SQLITE" == "true"; then
+AC_CHECK_HEADERS(sqlite3.h)
+AC_CHECK_LIB(sqlite3,sqlite3_close)
+fi
+
+if test "$ENABLE_DB_POSTGRES" == "true"; then
+AC_CHECK_HEADERS(libpq-fe.h)
+AC_CHECK_LIB(pq,PQfformat)
+fi
+
+if test "$ENABLE_DB_MYSQL" == "true"; then
+AX_CHECK_MYSQL()
+fi
+
+if test "$ENABLE_DB_FIREBIRD" == "true"; then
+AC_CHECK_HEADERS(ibase.h)
+AC_CHECK_LIB(fbclient,fb_sqlstate)
+fi
+
 # MacOS: install openssl into /usr/local/lib/opt/openssl@1.1
 # brew install openssl@1.1
 LDFLAGS="$LDFLAGS -L/usr/local/lib"

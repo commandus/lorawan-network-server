@@ -24,7 +24,8 @@ DatabaseNConfig::DatabaseNConfig
 )
 {
 	config = aconfig;
-
+	// unknown database type
+	db = NULL;
 	if (config->type == "sqlite3")
 #ifdef ENABLE_DB_SQLITE	
 		db = new DatabaseSQLite();
@@ -52,9 +53,6 @@ DatabaseNConfig::DatabaseNConfig
 #else
 	;		
 #endif
-				else
-					// unknown database type
-					db = NULL;
 }
 
 DatabaseNConfig::~DatabaseNConfig()
@@ -63,7 +61,6 @@ DatabaseNConfig::~DatabaseNConfig()
 	if (db) {
 		db->close();
 		delete db;
-		// db = NULL;
 	}
 }
 

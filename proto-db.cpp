@@ -171,7 +171,7 @@ int parseCmd(
 			config->offset = 0;
 
 		if (a_limit->count)
-			config->limit = *a_offset->ival;
+			config->limit = *a_limit->ival;
 		else
 			config->limit = 10;
 
@@ -181,12 +181,6 @@ int parseCmd(
 		for (int i = 0; i < a_sort_desc->count; i++) {
 			config->sort_desc.push_back(a_sort_desc->sval[i]);
 		}
-
-		if (a_limit->count)
-			config->limit = *a_offset->ival;
-		else
-			config->limit = 10;
-
 		config->verbosity = a_verbosity->count;
 	}
 
@@ -260,18 +254,18 @@ void doList
 			quote = "\"";
 
 		if (db->db->type == "firebird") {
-			ss << "SELECT ";
+			ss << "SELECT";
 			if (config->limit) {
 				ss << " FIRST " << config->limit;
 			}
 			if (config->offset) {
 				ss << " SKIP " << config->offset;
 			}
-			ss << " \"imei\", \"version\", \"status\",  \"status\", \"recvno\",  \"sentno\", \"recvtime\", \"gps_time\", \"iridium_latitude\", \"iridium_longitude\", \"gps_latitude\", \"gps_longitude\" ";
+			ss << " * ";
 		} else {
 			ss << "SELECT * ";
 		}
-		ss << " FROM " << quote << t << quote;
+		ss << "FROM " << quote << t << quote;
 
 		if (config->sort_asc.size() || config->sort_desc.size()) {
 			ss << " ORDER BY ";
@@ -303,6 +297,10 @@ void doList
 		}
 
 		std::string selectClause = ss.str();
+		if (config->verbosity >= 3)
+		{
+			std::cerr << "Clause: " << std::endl << selectClause << std::endl;
+		}
 		std::vector<std::vector<std::string>> vals;
 
 		r = db->select(vals, selectClause);
