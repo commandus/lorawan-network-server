@@ -15,6 +15,12 @@ typedef enum {
 	IDENTITY_STORAGE_LMDB = 3
 } IDENTITY_STORAGE;
 
+typedef enum {
+	MESSAGE_QUEUE_STORAGE_JSON = 1,
+	MESSAGE_QUEUE_STORAGE_DIR_TEXT = 2,
+	MESSAGE_QUEUE_STORAGE_LMDB = 3
+} MESSAGE_QUEUE_STORAGE;
+
 class ServerConfig {
 	public:
 		std::vector<std::string> listenAddressIPv4;
@@ -23,7 +29,9 @@ class ServerConfig {
 		int verbosity;
 		bool daemonize;
 		std::string identityStorageName;
+		std::string queueStorageName;
 		IDENTITY_STORAGE storageType;
+		MESSAGE_QUEUE_STORAGE messageQueueType;
 		void clear();
 		ServerConfig();
 		int parse(

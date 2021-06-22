@@ -8,6 +8,7 @@
 class ConfigDatabase
 {
 public:
+	int id;	// negative id means do not serve. If two database has same id, message stored in one of them
 	std::string name;
 	std::string type;
 	std::string connectionString;

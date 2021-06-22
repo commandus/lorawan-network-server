@@ -1,4 +1,7 @@
 #ifndef PACKET_QUEUE_H_
+/**
+ * PacketQueue class send message to the end-device via gateway at desired time
+ */ 
 #define PACKET_QUEUE_H_ 1
 
 #include <deque>

@@ -146,7 +146,6 @@ int doSelect
 		{
 			VARY *v = (VARY *) sqlda->sqlvar[i].sqldata;
 			std::string s(v->vary_string, v->vary_length);	//
-			std::cerr << s << " len: " << s.size() << std::endl;
 			line.push_back(s);
 		}
 		retval.push_back(line);
@@ -186,15 +185,8 @@ int main(int argc, char** argv)
     if (dbopen(db, "sysdba", "masterkey", "irthermometer")) {
         exit (1);
     }
-	
     std::vector<std::vector<std::string>> vals;
 
-    doSelect(db, vals, "SELECT \"version\", \"version\"  FROM \"iridium_packet\"");
-    doSelect(db, vals, "SELECT \"version\", \"version\"  FROM \"iridium_packet\"");
-    doSelect(db, vals, "SELECT \"version\", \"version\"  FROM \"iridium_packet\"");
-    doSelect(db, vals, "SELECT \"version\", \"version\"  FROM \"iridium_packet\"");
-    doSelect(db, vals, "SELECT \"version\", \"version\"  FROM \"iridium_packet\"");
-    doSelect(db, vals, "SELECT \"version\", \"version\"  FROM \"iridium_packet\"");
     doSelect(db, vals, "SELECT \"version\", \"version\"  FROM \"iridium_packet\"");
 
     for (std::vector<std::vector<std::string>>::const_iterator it(vals.begin()); it != vals.end(); it++)
