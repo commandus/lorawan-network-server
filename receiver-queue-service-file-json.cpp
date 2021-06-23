@@ -1,6 +1,5 @@
 #include <fstream>
 #include <regex>
-#include <iostream>
 #include <base64/base64.h>
 
 #pragma clang diagnostic push
@@ -83,16 +82,13 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 		void putUInt(unsigned int value) {
 			switch(idx) {
 				case 0:	// time
-					std::cerr << "int time: " << value << std::endl;
 					entry.key.time.tv_sec = value;
 					entry.key.time.tv_usec = 0;
 					break;
 				case 1:	// id
-					std::cerr << "int id: " << value << std::endl;
 					entry.key.id = value;
 					break;
 				case 3:	// db id
-					std::cerr << "int db id: " << value << std::endl;
 					entry.value.dbids.push_back(value);
 					break;
 			};
@@ -149,8 +145,10 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 		}
 		bool EndObject(rapidjson::SizeType memberCount)
 		{
-			if (true)
+			{
 				service->pushEntry(entry);
+				entry.clear();
+			}
 			return true;
 		}
 
@@ -167,8 +165,17 @@ void JsonFileReceiverQueueService::clear(
 	time_t olderthan
 )
 {
-	// TODO
-	storage.clear();
+	if (olderthan == 0) {
+		clear();
+		return;
+	}
+
+	for (std::map<ReceiverQueueKey, ReceiverQueueValue, ReceiverQueueKeyCompare>::iterator mit(storage.begin()); mit != storage.end(); ) {
+		if (mit->first.time.tv_sec <= olderthan)
+			mit = storage.erase(mit); // remove itself
+		else
+			mit++;
+	}
 }
 
 void JsonFileReceiverQueueService::clear()
@@ -220,11 +227,11 @@ int JsonFileReceiverQueueService::save()
 {
 	std::fstream os;
 	os.open(path, std::ios::out);
-	os << "[";
+	os << "[" << std::endl;
 	bool addSeparator(false);
 	for (std::map<ReceiverQueueKey, ReceiverQueueValue>::const_iterator it = storage.begin(); it != storage.end(); it++) {
 		if (addSeparator)
-			os << ",";
+			os << "," << std::endl;
 		os << "{\"" 
 			<< ATTR_NAMES[0] << "\":" << it->first.time.tv_sec << ",\"" 
 			<< ATTR_NAMES[1] << "\":" << it->first.id << ",\"" 
@@ -234,11 +241,9 @@ int JsonFileReceiverQueueService::save()
 			bool isFirst = true;
 			for (std::vector<int>::const_iterator itd(it->second.dbids.begin()); itd != it->second.dbids.end(); itd++) {
 				if (isFirst)
-				{
 					isFirst = false;
-				} else {
+				else
 					os << ", ";
-				}
 				os << *itd;
 			}
 			os << "]";
@@ -246,7 +251,7 @@ int JsonFileReceiverQueueService::save()
 		os << "}";
 		addSeparator = true;
 	}
-	os << "]";
+	os << std::endl << "]" << std::endl;
 	int r = os.bad() ? ERR_CODE_OPEN_DEVICE : 0;
 	os.close();
 	return r;
@@ -302,9 +307,18 @@ void JsonFileReceiverQueueService::remove
 	int onum
 )
 {
-	// TODO
 	mutexMap.lock();
-	// storage.erase(onum);
+	// 
+	int c = 0;
+	for (std::map<ReceiverQueueKey, ReceiverQueueValue, ReceiverQueueKeyCompare>::const_iterator it(storage.begin()); it != storage.end();) {
+		if (onum == c) 
+		{
+			storage.erase(it);
+			break;
+		} else
+			it++;
+		c++;
+	}
 	mutexMap.unlock();
 }
 
@@ -324,7 +338,7 @@ void JsonFileReceiverQueueService::flush()
 
 void JsonFileReceiverQueueService::done()
 {
-
+	flush();
 }
 
 std::string JsonFileReceiverQueueService::toJsonString()
@@ -346,11 +360,9 @@ std::string JsonFileReceiverQueueService::toJsonString()
 			bool isFirst = true;
 			for (std::vector<int>::const_iterator itd(it->second.dbids.begin()); itd != it->second.dbids.end(); itd++) {
 				if (isFirst)
-				{
 					isFirst = false;
-				} else  {
+				else
 					ss << ", ";
-				}
 				ss << *itd;
 			}
 			ss << "]";
@@ -375,9 +387,13 @@ int JsonFileReceiverQueueService::pop(
 	if (it == storage.end())
 		return ERR_CODE_QUEUE_EMPTY;
 	value.set(it->first, it->second);
+
+	mutexMap.lock();
 	int remainDbCount = it->second.popDbId(dbid);
 	if (remainDbCount == 0) {
 		// remove itself
 		storage.erase(it);
 	}
+	mutexMap.unlock();
+	return 0;
 }

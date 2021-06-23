@@ -11,17 +11,21 @@ class ReceiverQueueKey {
 		int id;			// key 2
 		ReceiverQueueKey();
 		ReceiverQueueKey(const ReceiverQueueKey &value);
+		void clear();
 };
 
 class ReceiverQueueValue {
 	public:
 		std::string payload;
 		std::string jsonPayload() const;
-		void setJsonPayload(const std::string &jsonValue);
 		std::vector<int> dbids;	/// Database identifiers
+
 		ReceiverQueueValue();
 		ReceiverQueueValue(const ReceiverQueueValue &value);
+
+		void setJsonPayload(const std::string &jsonValue);
 		int popDbId(int dbid);	/// return remaining database count
+		void clear();
 };
 
 struct ReceiverQueueKeyCompare
@@ -32,7 +36,7 @@ struct ReceiverQueueKeyCompare
 class ReceiverQueueEntry {
 	public:
 		ReceiverQueueKey key;
-		ReceiverQueueValue value;\
+		ReceiverQueueValue value;
 		ReceiverQueueEntry();
 		ReceiverQueueEntry(
 			const ReceiverQueueKey &key,
@@ -42,6 +46,8 @@ class ReceiverQueueEntry {
 			const ReceiverQueueKey &key,
 			const ReceiverQueueValue &value
 		);
+		std::string toJsonString() const;
+		void clear();
 };
 
 /**

@@ -249,6 +249,7 @@ test_fb_CPPFLAGS = $(BACKEND_DB_DEF)
 test_message_queue_SOURCES = \
 	tests/test-message-queue.cpp \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp \
+	utilstring.cpp \
 	third_party/base64/base64.cpp
 test_message_queue_LDADD = 
 test_message_queue_CPPFLAGS = $(commoncppflags)

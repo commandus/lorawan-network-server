@@ -475,6 +475,7 @@ sqlite_field_aliases = [
  */
 databases = [
 	{
+          id: 1,
 		name: "sqlite",
 		type: "sqlite3",
 		connection: "lns.data.sqlite.db",
@@ -482,6 +483,7 @@ databases = [
 		field_aliases: sqlite_field_aliases
 	},
 	{
+          id: 2,
 		name: "postgres",
 		type: "postgresql",
 		connection: "postgresql://irthermometer:************@localhost:5432/irthermometer",
@@ -489,6 +491,7 @@ databases = [
 		field_aliases: sqlite_field_aliases
 	},
     	{
+          id: 3,
 		name: "mysql",
 		type: "mysql",
 		connection: "localhost",

@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <iostream>
+#include <sstream>
 
 #include "receiver-queue-service.h"
 #include "base64/base64.h"
@@ -19,13 +19,18 @@ ReceiverQueueKey::ReceiverQueueKey
 
 }
 
+void ReceiverQueueKey::clear()
+{
+	time = {0, 0};
+	id = 0;
+}
+
 ReceiverQueueValue::ReceiverQueueValue
 (
 	const ReceiverQueueValue &value
 )
-	: payload(value.payload)
+	: payload(value.payload), dbids(value.dbids)
 {
-
 }
 
 ReceiverQueueValue::ReceiverQueueValue()
@@ -47,6 +52,12 @@ void ReceiverQueueValue::setJsonPayload
 	payload = base64_decode(jsonValue, true);
 }
 
+void ReceiverQueueValue::clear()
+{
+	payload = "";
+	dbids.clear();
+}
+
 /**
  * @return remaining database count
  */
@@ -55,7 +66,6 @@ int ReceiverQueueValue::popDbId
 	int dbid
 )
 {
-	;
 	for (std::vector<int>::iterator it(dbids.begin()); it != dbids.end(); it++)
 	{
 		if (*it == dbid) {
@@ -99,12 +109,42 @@ ReceiverQueueEntry::ReceiverQueueEntry
 	value = avalue;
 }
 
-void ReceiverQueueEntry:: set(
+void ReceiverQueueEntry::set(
 	const ReceiverQueueKey &akey,
 	const ReceiverQueueValue &avalue
 ) {
 	key = akey;
 	value = avalue;
+}
+
+void ReceiverQueueEntry::clear()
+{
+	key.clear();
+	value.clear();
+}
+
+std::string ReceiverQueueEntry::toJsonString() const
+{
+	std::stringstream ss;
+	ss << "{\"time\":" << key.time.tv_sec
+		<< ",\"id\":" << key.id
+		<< ",\"payload\":\"" << base64_encode(value.payload, false) << "\"";
+	if (value.dbids.size()) {
+		ss << ",\"" << "dbids\":[";
+		bool isFirst = true;
+		for (std::vector<int>::const_iterator itd(value.dbids.begin()); itd != value.dbids.end(); itd++) {
+			if (isFirst)
+			{
+				isFirst = false;
+			} else {
+				ss << ",";
+			}
+			ss << *itd;
+		}
+		ss << "]";
+	}
+	ss << "}";
+	return ss.str();
 }
 
 ReceiverQueueService::ReceiverQueueService()
@@ -123,17 +163,6 @@ void ReceiverQueueService::setDbs
 	const std::vector<int> &values
 )
 {
-	
-	std::cerr << "Old:" << std::endl;
-	for (std::vector<int>::iterator it(dbs.begin()); it != dbs.end(); it++)
-		std::cerr << *it << " ";
-	std::cerr << std::endl;
-
-	std::cerr << "New:" << std::endl;
-	for (std::vector<int>::const_iterator it(values.begin()); it != values.end(); it++)
-		std::cerr << *it << " ";
-	std::cerr << std::endl;
-
 	std::vector<int> d = dbs;
 	for (std::vector<int>::iterator it(d.begin()); it != d.end();) {
 		if (std::find(values.begin(), values.end(), *it) != values.end())
@@ -142,10 +171,6 @@ void ReceiverQueueService::setDbs
 			it++;
 	}
 	// delete old ids not in new one
-	std::cerr << "Old - new:" << std::endl;
-	for (std::vector<int>::iterator it(d.begin()); it != d.end(); it++)
-		std::cerr << *it << " ";
-	std::cerr << std::endl;
 	clearDbs(d);
 	dbs = values;
 }
