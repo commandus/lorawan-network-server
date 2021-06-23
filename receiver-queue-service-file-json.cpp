@@ -21,7 +21,7 @@
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
 	"time", 		// time value
 	"id",			// identifier
-	"packet",		// packet data
+	"payload",		// payload
 	"dbids"			// database identifiers
 };
 
@@ -182,12 +182,12 @@ void JsonFileReceiverQueueService::clearDbs(
 )
 {
 	for (std::vector<int>::const_iterator it(dbs2delete.begin()); it != dbs2delete.end(); it++) {
-		for (std::map<ReceiverQueueKey, ReceiverQueueValue, ReceiverQueueKeyCompare>::iterator mit(storage.begin()); mit != storage.end(); mit++) {
+		for (std::map<ReceiverQueueKey, ReceiverQueueValue, ReceiverQueueKeyCompare>::iterator mit(storage.begin()); mit != storage.end(); ) {
 			int remainDbCount = mit->second.popDbId(*it);
-			if (remainDbCount == 0) {
-				// remove itself
-				storage.erase(mit);
-			}
+			if (remainDbCount == 0)
+				mit = storage.erase(mit); // remove itself
+			else
+				mit++;
 		}
 	}
 }
@@ -243,6 +243,7 @@ int JsonFileReceiverQueueService::save()
 			}
 			os << "]";
 		}
+		os << "}";
 		addSeparator = true;
 	}
 	os << "]";
@@ -354,6 +355,7 @@ std::string JsonFileReceiverQueueService::toJsonString()
 			}
 			ss << "]";
 		}
+		ss << "}";
 	}
 	ss << "]";
 	return ss.str();

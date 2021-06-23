@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 
 #include "receiver-queue-service.h"
 #include "base64/base64.h"
@@ -122,13 +123,29 @@ void ReceiverQueueService::setDbs
 	const std::vector<int> &values
 )
 {
+	
+	std::cerr << "Old:" << std::endl;
+	for (std::vector<int>::iterator it(dbs.begin()); it != dbs.end(); it++)
+		std::cerr << *it << " ";
+	std::cerr << std::endl;
+
+	std::cerr << "New:" << std::endl;
+	for (std::vector<int>::const_iterator it(values.begin()); it != values.end(); it++)
+		std::cerr << *it << " ";
+	std::cerr << std::endl;
+
 	std::vector<int> d = dbs;
-	for (std::vector<int>::iterator it(d.begin()); it != d.end(); it++) {
-		if (std::find(values.begin(), values.end(), *it) != values.end()) {
+	for (std::vector<int>::iterator it(d.begin()); it != d.end();) {
+		if (std::find(values.begin(), values.end(), *it) != values.end())
 			d.erase(it);
-		}
+		else
+			it++;
 	}
 	// delete old ids not in new one
+	std::cerr << "Old - new:" << std::endl;
+	for (std::vector<int>::iterator it(d.begin()); it != d.end(); it++)
+		std::cerr << *it << " ";
+	std::cerr << std::endl;
 	clearDbs(d);
 	dbs = values;
 }
