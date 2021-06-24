@@ -28,4 +28,11 @@ namespace config {
 	);
 }
 
+/**
+ * @return last modification file time, seconds since unix epoch
+ */
+time_t fileModificationTime(
+	const std::string &fileName
+);
+
 #endif
