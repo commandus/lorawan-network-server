@@ -1,6 +1,12 @@
 #ifndef IDENTITY_DIR_TXT_H_
 #define IDENTITY_DIR_TXT_H_ 1
 
+/**
+ * DirTxtIdentityService class load device's passport text files.
+ * Each passport text file contain lines, som of them are device 
+ * idientifiers and keys
+ */
+
 #include <vector>
 #include "filewatch.hpp"
 
