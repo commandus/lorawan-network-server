@@ -82,7 +82,7 @@ class ReceiverQueueService {
 		// Return 0 if success
 		virtual int pop(const int &dbid, ReceiverQueueEntry &retval) = 0;
 		// List entries
-		void list(std::vector<ReceiverQueueEntry> &retval, size_t offset, size_t size);
+		virtual void list(std::vector<ReceiverQueueEntry> &retval, size_t offset, size_t size) = 0;
 		// force save
 		virtual void flush() = 0;
 		// reload

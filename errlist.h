@@ -75,6 +75,7 @@
 #define ERR_CODE_NO_PAYLOAD          		-561
 #define ERR_CODE_NO_MESSAGE_TYPE			-562
 #define ERR_CODE_QUEUE_EMPTY				-563
+#define ERR_CODE_RM_FILE					-564
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -147,6 +148,7 @@
 #define ERR_NO_PAYLOAD          		"No payload"
 #define ERR_NO_MESSAGE_TYPE				"No message type"
 #define ERR_QUEUE_EMPTY					"Message queue is empty"
+#define ERR_RM_FILE						"Can not delete file "
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"

@@ -20,7 +20,7 @@ LIB_STORAGE =
 
 if ENABLE_JSON
 C_STORAGE += identity-service-file-json.cpp 
-C_QUEUE_STORAGE += receiver-queue-service-file-json.cpp 
+C_QUEUE_STORAGE += receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp
 endif
 
 if ENABLE_LMDB
@@ -248,7 +248,7 @@ test_fb_CPPFLAGS = $(BACKEND_DB_DEF)
 
 test_message_queue_SOURCES = \
 	tests/test-message-queue.cpp \
-	receiver-queue-service.cpp receiver-queue-service-file-json.cpp \
+	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	utilstring.cpp \
 	third_party/base64/base64.cpp
 test_message_queue_LDADD = 

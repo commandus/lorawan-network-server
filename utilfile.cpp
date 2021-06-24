@@ -244,3 +244,39 @@ bool config::rmFile(const std::string &fn)
 {
 	return std::remove((const char*) fn.c_str()) == 0;
 }
+
+#ifdef _MSC_VER
+/**
+ * @see https://www.gamedev.net/forums/topic/565693-converting-filetime-to-time_t-on-windows/#:~:text=A%20FILETIME%20is%20the%20number,intervals%20since%20January%201%2C%201970.
+ * A FILETIME is the number of 100-nanosecond intervals since January 1, 1601.
+ * A time_t is the number of 1-second intervals since January 1, 1970.
+ */
+static time_t filetime2time_t
+(
+	const FILETIME &ft
+)
+{
+	ULARGE_INTEGER ull;
+	ull.LowPart = ft.LowPart;
+	ull.HighPart = ft.HighPart;
+	return ull.QuadPart / 10000000ULL - 11644473600ULL;
+}
+#endif
+
+/**
+ * @return last modification file time, seconds since unix epoch
+ */
+time_t fileModificationTime(
+	const std::string &fileName
+)
+{
+#ifdef _MSC_VER
+	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+	GetFileAttributesEx(fileName.c_str(), GetFileExInfoStandard, (void *)&fileInfo);
+	return filetime2time_t(fileInfo.ftLastWriteTime);
+#else
+	struct stat attrib;
+	stat(fileName.c_str(), &attrib);
+	return attrib.st_mtime;
+#endif	
+}

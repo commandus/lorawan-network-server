@@ -185,6 +185,8 @@ Option "txt" is slow and useful for debug only.
 Received messages are send to the database(s) as soon as possible. In case the database system is not avaliable
 for some reason, received messages stay in the queue until database has up.
 
+Option "messageQueueStorageName" set name of file name (or directory name).
+
 There messageQueueStorageType option determines how to keep received messages in the temporary queue.
 
 Option "messageQueueStorageType" values are:
@@ -203,6 +205,17 @@ Option "lmdb" is a little bit safer. You can avoid meory consumption in case of
 external database is down.
 
 Option "txt" is slow and useful for debug only.
+
+If option messageQueueStorageType value is "txt" then option "messageQueueStorageName" set directory name
+with ".bin", ".hex", ".b64" files.
+
+Other programs can put files to this directory and lorawan-network-server will parse files and put messages to the databases.
+
+- ".bin" - binary payload, as-is
+- ".hex" - payload each byte represented as hexadecimal two digits number
+- ".b64" - base64 encoded payload
+
+lorawan-network-server try to parse payload and insert parsed data to database(s). Does not matter success or fail is database insertaion, file is deleted.
 
 ### gateway.json
 
