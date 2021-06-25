@@ -13,6 +13,18 @@ static std::string dataFileExtensions[CNT_FILE_EXT] = {
 	".bin", ".hex", ".b64"
 };
 
+DirTxtReceiverQueueServiceOptions::DirTxtReceiverQueueServiceOptions()
+	: format(DIRTXT_FORMAT_BIN)
+{
+
+}
+
+DirTxtReceiverQueueService::DirTxtReceiverQueueService()
+	: writeFormat(DIRTXT_FORMAT_BIN), path("")
+{
+
+}
+
 /**
  * Read payload from the file
  * @return payload and last modification time
@@ -20,17 +32,17 @@ static std::string dataFileExtensions[CNT_FILE_EXT] = {
 int DirTxtReceiverQueueService::loadFile(
 	std::string &payload,
 	time_t &retTime, 
-	int format,
+	DIRTXT_FORMAT format,
 	const std::string &path
 )
 {
 	payload = file2string(path.c_str());
 	switch(format) {
-		case 1:
+		case DIRTXT_FORMAT_HEX:
 			// hex
 			payload = hex2string(payload);
 			break;
-		case 2:
+		case DIRTXT_FORMAT_BASE64:
 			// base64
 			payload = base64_decode(payload, true);
 			break;
@@ -52,29 +64,30 @@ int DirTxtReceiverQueueService::loadFile(
 int DirTxtReceiverQueueService::storeFile
 (
 	const std::string &payload,
-	int format
+	DIRTXT_FORMAT format
 )
 {
 	std::string fpayload;
 	switch(format) {
-		case 1:
+		case DIRTXT_FORMAT_HEX:
 			// hex
 			fpayload = hexString(payload);
 			break;
-		case 2:
+		case DIRTXT_FORMAT_BASE64:
 			// base64
 			fpayload = base64_encode(payload, false);
 			break;
 		default:
 			// as-is binary file
-			format = 0;
+			format = DIRTXT_FORMAT_BIN;
 			fpayload = payload;
 			break;
 	}
 	std::stringstream fn;
 	time_t t(time(NULL));
 
-	fn << path << "/" << t << "-" << cnt << dataFileExtensions[format];
+
+	fn << path << "/" << t << "-" << cnt << dataFileExtensions[(int)format];
 	string2file(fn.str(), fpayload);
 	return 0;
 }
@@ -83,9 +96,9 @@ int DirTxtReceiverQueueService::count()
 {
 	int r = 0;
 	std::vector<std::string> files;
-	for (int i = 0; i < CNT_FILE_EXT; i++) 
+	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
-		config::filesInPath(path, dataFileExtensions[i], 0, &files);
+		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 		r += files.size();
 		files.clear();
 	}
@@ -109,7 +122,7 @@ int DirTxtReceiverQueueService::get(
 		r += files.size();
 		if (r > onum)
 		{
-			if (loadFile(retval.value.payload, retval.key.time.tv_sec, fmt, files[onum])) {
+			if (loadFile(retval.value.payload, retval.key.time.tv_sec, (DIRTXT_FORMAT) fmt, files[onum])) {
 				// error
 				return ERR_CODE_INVALID_PACKET;
 			} else {
@@ -130,9 +143,9 @@ void DirTxtReceiverQueueService::remove(
 {
 	int r = 0;
 	std::vector<std::string> files;
-	for (int i = 0; i < CNT_FILE_EXT; i++) 
+	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
-		config::filesInPath(path, dataFileExtensions[i], 0, &files);
+		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 		r += files.size();
 		if (r > onum)
 		{
@@ -150,8 +163,8 @@ void DirTxtReceiverQueueService::clear(
 )
 {
 	std::vector<std::string> files;
-	for (int i = 0; i < CNT_FILE_EXT; i++) 
-		config::filesInPath(path, dataFileExtensions[i], 0, &files);
+	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
+		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 	for (std::vector<std::string>::const_iterator it(files.begin()); it != files.end(); it++)
 	{
 		if (fileModificationTime(*it) < olderthan)
@@ -167,8 +180,8 @@ void DirTxtReceiverQueueService::clear(
 void DirTxtReceiverQueueService::clear()
 {
 	std::vector<std::string> files;
-	for (int i = 0; i < CNT_FILE_EXT; i++) 
-		config::filesInPath(path, dataFileExtensions[i], 0, &files);
+	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
+		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 	for (std::vector<std::string>::const_iterator it(files.begin()); it != files.end(); it++)
 	{
 		if (!config::rmFile(*it)) {
@@ -191,7 +204,7 @@ void DirTxtReceiverQueueService::pushEntry(
 	ReceiverQueueEntry &value
 )
 {
-	storeFile(value.value.payload, 0);
+	storeFile(value.value.payload, writeFormat);
 }
 
 /** 
@@ -210,7 +223,7 @@ int DirTxtReceiverQueueService::pop(
 		std::vector<std::string>::const_iterator it(f.begin());
 		if (it != f.end())
 		{
-			if (loadFile(retval.value.payload, retval.key.time.tv_sec, fmt, *it)) {
+			if (loadFile(retval.value.payload, retval.key.time.tv_sec, (DIRTXT_FORMAT) fmt, *it)) {
 				// error
 				continue;
 			} else {
@@ -243,7 +256,7 @@ void DirTxtReceiverQueueService::list(
 		config::filesInPath(path, dataFileExtensions[fmt], 0, &f);
 		for (std::vector<std::string>::const_iterator it(f.begin()); it != f.end(); it++)
 		{
-			if (loadFile(e.value.payload, e.key.time.tv_sec, fmt, *it)) {
+			if (loadFile(e.value.payload, e.key.time.tv_sec, (DIRTXT_FORMAT) fmt, *it)) {
 				// error
 			} else {
 				e.key.id = c;
@@ -268,6 +281,11 @@ int DirTxtReceiverQueueService::init(
 )
 {
 	path = option;
+	writeFormat = DIRTXT_FORMAT_BIN;
+	if (data)
+	{
+		writeFormat = ((DirTxtReceiverQueueServiceOptions *) data)->format;
+	}
 }
 
 // close resources
