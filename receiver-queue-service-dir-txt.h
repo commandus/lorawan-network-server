@@ -7,20 +7,8 @@
 
 #include "receiver-queue-service.h"
 
-class DirTxtReceiverQueueService;
-
-typedef void (OnFileUpdate)
-(
-	DirTxtReceiverQueueService *service,
-	const std::string &path,
-	const filewatch::Event &event
-);
-
 class DirTxtReceiverQueueService: public ReceiverQueueService {
 	private:
-		filewatch::FileWatch<std::string> *fileWatcher;
-		OnFileUpdate *onFileUpdate;
-
 		static int loadFile(
 			std::string &payload,
 			time_t &retTime, 
@@ -60,8 +48,7 @@ class DirTxtReceiverQueueService: public ReceiverQueueService {
 		// close resources
 		void done();
 
-		int startListen(OnFileUpdate *callback);
-		int stopListen();
+		std::string toJsonString();
 };
 
 #endif

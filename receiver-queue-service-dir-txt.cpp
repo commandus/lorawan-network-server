@@ -13,7 +13,6 @@ static std::string dataFileExtensions[CNT_FILE_EXT] = {
 	".bin", ".hex", ".b64"
 };
 
-
 /**
  * Read payload from the file
  * @return payload and last modification time
@@ -77,27 +76,6 @@ int DirTxtReceiverQueueService::storeFile
 
 	fn << path << "/" << t << "-" << cnt << dataFileExtensions[format];
 	string2file(fn.str(), fpayload);
-	return 0;
-}
-
-int DirTxtReceiverQueueService::startListen(
-	OnFileUpdate value
-) {
-	onFileUpdate = value;
-	fileWatcher = new filewatch::FileWatch<std::string>(path,
-		std::regex(".*\\.json"), 
-		[this](const std::string& path, const filewatch::Event event) {
-			onFileUpdate(this, path, event);
-	});
-	return 0;
-}
-
-int DirTxtReceiverQueueService::stopListen() {
-	// OnFileUpdate = NULL;
-	if (fileWatcher) {
-		delete fileWatcher;
-		fileWatcher = NULL;
-	}
 	return 0;
 }
 
@@ -295,4 +273,49 @@ int DirTxtReceiverQueueService::init(
 // close resources
 void DirTxtReceiverQueueService::done()
 {
+}
+
+/**
+ * 	JSON attribute names
+ */
+#define ATTRS_COUNT	4
+static const char *ATTR_NAMES[ATTRS_COUNT] = {
+	"time", 		// time value
+	"id",			// identifier
+	"payload",		// payload
+	"dbids"			// database identifiers
+};
+
+std::string DirTxtReceiverQueueService::toJsonString()
+{
+	std::vector<ReceiverQueueEntry> entries;
+	list(entries, 0, count());
+	std::stringstream ss;
+	ss << "[";
+	bool addSeparator(false);
+	for (std::vector<ReceiverQueueEntry>::const_iterator it(entries.begin()); it != entries.end(); it++) {
+		if (addSeparator)
+			ss << ",";
+		else
+			addSeparator = true;
+		ss << "{\"" 
+			<< ATTR_NAMES[0] << "\":" << it->key.time.tv_sec << ",\"" 
+			<< ATTR_NAMES[1] << "\":" << it->key.id << ",\"" 
+			<< ATTR_NAMES[2] << "\":\"" << it->value.jsonPayload() << "\"" ;
+		if (it->value.dbids.size()) {
+			ss << ", \"" << ATTR_NAMES[3] << "\":[";
+			bool isFirst = true;
+			for (std::vector<int>::const_iterator itd(it->value.dbids.begin()); itd != it->value.dbids.end(); itd++) {
+				if (isFirst)
+					isFirst = false;
+				else
+					ss << ", ";
+				ss << *itd;
+			}
+			ss << "]";
+		}
+		ss << "}";
+	}
+	ss << "]";
+	return ss.str();
 }
