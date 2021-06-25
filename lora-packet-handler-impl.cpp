@@ -11,15 +11,17 @@ int LoraPacketProcessor::onPacket(
 )
 {
 	std::stringstream ss;
-	
 	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
+	if (receiverQueueService) {
+		receiverQueueService->push(value.devId, value.getPayload(), time);
+	}
 	return 0;
 }
 
 LoraPacketProcessor::LoraPacketProcessor()
-	: onLog(NULL), identityService(NULL)
+	: onLog(NULL), identityService(NULL), receiverQueueService(NULL)
 {
 	packetQueue.start(*this);
 }
@@ -63,6 +65,14 @@ void LoraPacketProcessor::setIdentityService
 )
 {
 	identityService = value;
+}
+
+void LoraPacketProcessor::setReceiverQueueService
+(
+	ReceiverQueueService* value
+)
+{
+	receiverQueueService = value;
 }
 
 void LoraPacketProcessor::setLogger(

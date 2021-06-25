@@ -16,12 +16,20 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_COUNT	4
+#define ATTRS_COUNT	11
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
-	"time", 		// time value
-	"id",			// identifier
-	"payload",		// payload
-	"dbids"			// database identifiers
+	"time", 		// 0 time value
+	"id",			// 1 identifier
+	"payload",		// 2 payload
+	"dbids",		// 3 database identifiers
+	"deviceId",		// 4 device id object
+	// deviceId members
+	"activation",
+	"class",
+	"eui",
+	"nwkSKey",
+	"appSKey",
+	"name"
 };
 
 static int getAttrByName(
@@ -63,11 +71,12 @@ JsonFileReceiverQueueService::~JsonFileReceiverQueueService()
 class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, MessageQueueJsonHandler> {
 	private:
 		int idx;
+		int level;
 		JsonFileReceiverQueueService *service;
 		ReceiverQueueEntry entry;
 	public:
 		MessageQueueJsonHandler(JsonFileReceiverQueueService *svc)
-			: idx(-1), service(svc)
+			: idx(-1), level(0), service(svc)
 		{
 		}
 
@@ -125,6 +134,26 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 				case 2:	// payload
 					entry.value.payload = base64_decode(s, true);
 					break;
+				case 4:	// deviceId:
+					break;
+				case 5:	// 	device activation
+					entry.value.deviceId.activation = string2activation(s);
+					break;
+				case 6:	// 	device class
+					entry.value.deviceId.deviceclass = string2deviceclass(s);
+					break;
+				case 7:	// 	device eui
+					string2DEVEUI(entry.value.deviceId.deviceEUI, s);
+					break;
+				case 8:	// 	device nwkSKey
+					string2KEY(entry.value.deviceId.nwkSKey, s);
+					break;
+				case 9:	// 	device appSKey
+					string2KEY(entry.value.deviceId.appSKey, s);
+					break;
+				case 10:	// device name
+					string2DEVICENAME(entry.value.deviceId.name, s.c_str());
+					break;
 				default:
 					{
 					unsigned long value = atoll(s.c_str());
@@ -136,6 +165,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 		}
 
 		bool StartObject() { 
+			level++;
 			return true; 
 		}
 
@@ -145,7 +175,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 		}
 		bool EndObject(rapidjson::SizeType memberCount)
 		{
-			{
+			if (level == 1) {
 				service->pushEntry(entry);
 				entry.clear();
 			}
@@ -235,6 +265,7 @@ int JsonFileReceiverQueueService::save()
 		os << "{\"" 
 			<< ATTR_NAMES[0] << "\":" << it->first.time.tv_sec << ",\"" 
 			<< ATTR_NAMES[1] << "\":" << it->first.id << ",\"" 
+			<< ATTR_NAMES[4] << "\":" << it->second.deviceId.toJsonString() << ",\"" 
 			<< ATTR_NAMES[2] << "\":\"" << it->second.jsonPayload() << "\"" ;
 		if (it->second.dbids.size()) {
 			os << ",\"" << ATTR_NAMES[3] << "\":[";
@@ -354,6 +385,7 @@ std::string JsonFileReceiverQueueService::toJsonString()
 		ss << "{\"" 
 			<< ATTR_NAMES[0] << "\":" << it->first.time.tv_sec << ",\"" 
 			<< ATTR_NAMES[1] << "\":" << it->first.id << ",\"" 
+			<< ATTR_NAMES[4] << "\":" << it->second.deviceId.toJsonString() << ",\"" 
 			<< ATTR_NAMES[2] << "\":\"" << it->second.jsonPayload() << "\"" ;
 		if (it->second.dbids.size()) {
 			ss << ", \"" << ATTR_NAMES[3] << "\":[";

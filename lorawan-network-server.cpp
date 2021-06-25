@@ -261,24 +261,33 @@ int main(
 	// Start recived message queue service
 	ReceiverQueueService *receiverQueueService;
 
+	void *options = NULL;
+	DirTxtReceiverQueueServiceOptions dirOptions;
 	switch (config->serverConfig.messageQueueType) {
 		case MESSAGE_QUEUE_STORAGE_LMDB:
 #ifdef ENABLE_LMDB
-			//receiverQueueService = new LmdbIdentityService();
+			//receiverQueueService = new LmdbReceiverQueueService();
 #endif			
 			break;
 		case MESSAGE_QUEUE_STORAGE_DIR_TEXT:
-			//receiverQueueService = new DirTxtIdentityService();
+			receiverQueueService = new DirTxtReceiverQueueService();
+			dirOptions.format = (DIRTXT_FORMAT) config->serverConfig.messageQueueDirFormat;
+			options = (void *) &dirOptions;
 			break;
 		default:
 			receiverQueueService = new JsonFileReceiverQueueService();
+			
+		break;
 	}
-	receiverQueueService->init(config->serverConfig.queueStorageName, NULL);
+	receiverQueueService->init(config->serverConfig.queueStorageName, options);
+	
 
 	// Set up processor
 	LoraPacketProcessor processor;
 	processor.setLogger(onLog);
 	processor.setIdentityService(identityService);
+	processor.setReceiverQueueService(receiverQueueService);
+	
 	// Set up listener
 	listener.setGatewayList(gatewayList);
 	listener.setHandler(&processor);

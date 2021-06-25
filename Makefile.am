@@ -137,6 +137,7 @@ mac_gw_SOURCES = \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp \
 	$(C_STORAGE) \
+	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
@@ -249,7 +250,7 @@ test_fb_CPPFLAGS = $(BACKEND_DB_DEF)
 test_message_queue_SOURCES = \
 	tests/test-message-queue.cpp \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
-	utilstring.cpp utilfile.cpp \
+	utilstring.cpp utilfile.cpp utillora.cpp utildate.cpp $(SRC_AES) gateway-stat.cpp lora-encrypt.cpp \
 	third_party/base64/base64.cpp
 test_message_queue_LDADD = 
 test_message_queue_CPPFLAGS = $(commoncppflags)

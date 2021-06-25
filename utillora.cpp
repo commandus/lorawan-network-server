@@ -70,6 +70,28 @@ DEVICECLASS string2deviceclass
 			return CLASS_C;
 }
 
+std::string activation2string
+(
+	ACTIVATION value
+)
+{
+	if (value == OTAA)
+		return "OTAA";
+	else
+		return "ABP";
+}
+
+ACTIVATION string2activation
+(
+	const std::string &value
+)
+{
+	if (value == "OTAA")
+		return OTAA;
+	else
+		return ABP;
+}
+
 /**
  * 4.3.3 MAC Frame Payload Encryption (FRMPayload)
  * message integrity code
@@ -186,7 +208,7 @@ std::string NetworkIdentity::toString() const
 {
 	std::stringstream ss;
 	ss << DEVADDR2string(devaddr) 
-		<< " " << (activation == 1 ? "OTAA" : "ABP")
+		<< " " << activation2string(activation)
 		<< " " << deviceclass2string(deviceclass)
 		<< " " << DEVEUI2string(deviceEUI)
 		<< " " << KEY2string(nwkSKey)
@@ -228,6 +250,20 @@ void DeviceId::set(
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
+}
+
+std::string DeviceId::toJsonString() const
+{
+	std::stringstream ss;
+	ss << "{" 
+		<< "\"activation\":\"" << activation2string(activation)
+		<< "\",\"class\":\"" << deviceclass2string(deviceclass)
+		<< "\",\"eui\":\"" << DEVEUI2string(deviceEUI)
+		<< "\",\"nwkSKey\":\"" << KEY2string(nwkSKey)
+		<< "\",\"appSKey\":\"" << KEY2string(appSKey)
+		<< "\",\"name\":\"" << std::string(name, sizeof(DEVICENAME))
+		<< "\"}";
+	return ss.str();
 }
 
 void NetworkIdentity::set(

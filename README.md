@@ -215,6 +215,12 @@ Other programs can put files to this directory and lorawan-network-server will p
 - ".hex" - payload each byte represented as hexadecimal two digits number
 - ".b64" - base64 encoded payload
 
+Option "messageQueueDirFormat" values are:
+
+- 0 or "bin" (default)
+- 1 or "hex"
+- 2 or "base64"
+
 lorawan-network-server try to parse payload and insert parsed data to database(s). Does not matter success or fail is database insertaion, file is deleted.
 
 ### gateway.json

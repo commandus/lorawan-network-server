@@ -5,6 +5,8 @@
 #include <string>
 #include <sys/time.h>
 
+#include "utillora.h"
+
 class ReceiverQueueKey {
 	public:
 		timeval time;	// key 1
@@ -16,6 +18,7 @@ class ReceiverQueueKey {
 
 class ReceiverQueueValue {
 	public:
+		DeviceId deviceId;
 		std::string payload;
 		std::string jsonPayload() const;
 		std::vector<int> dbids;	/// Database identifiers
@@ -77,7 +80,7 @@ class ReceiverQueueService {
 		
 		// Add entry
 		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
-		void push(const std::string &payload, const timeval &time);
+		void push(const DeviceId deviceId, const std::string &payload, const timeval &time);
 		
 		// Return 0 if success
 		virtual int pop(const int &dbid, ReceiverQueueEntry &retval) = 0;

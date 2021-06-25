@@ -44,7 +44,8 @@ static IDENTITY_STORAGE string2storageType(
 	return IDENTITY_STORAGE_FILE_JSON;
 }
 
-static MESSAGE_QUEUE_STORAGE string2messageQueueStorageType(
+static MESSAGE_QUEUE_STORAGE string2messageQueueStorageType
+(
 	const std::string &value
 ) {
 	if (value == "txt")
@@ -54,7 +55,19 @@ static MESSAGE_QUEUE_STORAGE string2messageQueueStorageType(
 	return MESSAGE_QUEUE_STORAGE_JSON;
 }
 
-void ServerConfig::clear() {
+static int string2messageQueueDirFormat
+(
+	const std::string &value
+) {
+	if (value == "hex")
+		return 1;
+	if (value == "base64")
+		return 2;
+	return 0;	// bin
+}
+
+void ServerConfig::clear()
+{
 	listenAddressIPv4.clear();
 	listenAddressIPv6.clear();
 	readBufferSize = DEF_BUFFER_SIZE;
@@ -64,7 +77,8 @@ void ServerConfig::clear() {
 
 ServerConfig::ServerConfig() 
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false),
-	identityStorageName(""), queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON), messageQueueType(MESSAGE_QUEUE_STORAGE_JSON)
+	identityStorageName(""), queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
+	messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0)
 {
 
 }
@@ -133,6 +147,16 @@ int ServerConfig::parse(
 		if (vstorageType.IsString())
 			messageQueueType = string2messageQueueStorageType(vstorageType.GetString());
 	}
+
+	// 0- bin, 1- hex, 2- base64
+	if (value.HasMember("messageQueueDirFormat")) {
+		rapidjson::Value &vmessageQueueDirFormat =  value["messageQueueStorageType"];
+		if (vmessageQueueDirFormat.IsString())
+			messageQueueDirFormat = string2messageQueueDirFormat(vmessageQueueDirFormat.GetString());
+		if (vmessageQueueDirFormat.IsInt())
+			messageQueueDirFormat = vmessageQueueDirFormat.GetInt() & 3;
+	}
+
 	return 0;
 }
 

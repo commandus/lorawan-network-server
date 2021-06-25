@@ -128,6 +128,7 @@ std::string ReceiverQueueEntry::toJsonString() const
 	std::stringstream ss;
 	ss << "{\"time\":" << key.time.tv_sec
 		<< ",\"id\":" << key.id
+		<< "\"deviceId\":" << value.deviceId.toJsonString()
 		<< ",\"payload\":\"" << base64_encode(value.payload, false) << "\"";
 	if (value.dbids.size()) {
 		ss << ",\"" << "dbids\":[";
@@ -177,6 +178,7 @@ void ReceiverQueueService::setDbs
 
 void ReceiverQueueService::push
 (
+	const DeviceId deviceId,
 	const std::string &payload,
 	const timeval &time
 )
@@ -184,6 +186,7 @@ void ReceiverQueueService::push
 	ReceiverQueueEntry e;
 	e.key.id = next();
 	e.key.time = time;
+	e.value.deviceId = deviceId;
 	e.value.payload = payload;
 	e.value.dbids = dbs;
 	pushEntry(e);

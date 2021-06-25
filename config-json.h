@@ -32,6 +32,7 @@ class ServerConfig {
 		std::string queueStorageName;
 		IDENTITY_STORAGE storageType;
 		MESSAGE_QUEUE_STORAGE messageQueueType;
+		int messageQueueDirFormat;	// 0- bin, 1- hex, 2- base64
 		void clear();
 		ServerConfig();
 		int parse(
