@@ -26,7 +26,7 @@ class ReceiverQueueValue {
 		ReceiverQueueValue();
 		ReceiverQueueValue(const ReceiverQueueValue &value);
 
-		void setJsonPayload(const std::string &jsonValue);
+		bool setJsonPayload(const std::string &jsonValue);
 		int popDbId(int dbid);	/// return remaining database count
 		void clear();
 };

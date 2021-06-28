@@ -266,6 +266,7 @@ public:
 	DeviceId(const DeviceId &value);
 	DeviceId(const DEVICEID &value);
 	void set(const DEVICEID &value);
+	std::string toJsonString() const;
 };
 
 class rfmMetaData {
@@ -450,5 +451,8 @@ MTYPE string2mtype(
 void string2NETID(NETID &retval, const char *str);
 void string2FREQUENCY(FREQUENCY &retval, const char *value);
 void string2JOINNONCE(JOINNONCE &retval, const char *value);
+
+std::string activation2string(ACTIVATION value);
+ACTIVATION string2activation(const std::string &value);
 
 #endif
