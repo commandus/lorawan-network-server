@@ -44,12 +44,18 @@ std::string ReceiverQueueValue::jsonPayload() const
 	return base64_encode(payload, false);
 }
 
-void ReceiverQueueValue::setJsonPayload
+bool ReceiverQueueValue::setJsonPayload
 (
 	const std::string &jsonValue
 )
 {
-	payload = base64_decode(jsonValue, true);
+	try {
+		payload = base64_decode(jsonValue, true);
+		return true;
+	}
+	catch (const std::exception& e) {
+		return false;
+	}
 }
 
 void ReceiverQueueValue::clear()

@@ -43,8 +43,13 @@ int DirTxtReceiverQueueService::loadFile(
 			payload = hex2string(payload);
 			break;
 		case DIRTXT_FORMAT_BASE64:
-			// base64
-			payload = base64_decode(payload, true);
+			try {
+				// base64
+				payload = base64_decode(payload, true);
+			}
+			catch (const std::exception& e) {
+				return ERR_CODE_INVALID_BASE64;
+			}
 			break;
 		default:
 			// as-is binary file

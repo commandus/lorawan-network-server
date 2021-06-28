@@ -14,6 +14,7 @@
 #include <google/protobuf/message.h>
 
 #include "argtable3/argtable3.h"
+#include "base64/base64.h"
 
 #include "platform.h"
 #include "utilstring.h"
@@ -100,7 +101,8 @@ int parseCmd(
 	int argc,
 	char *argv[])
 {
-	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, *a_payload_hex,
+	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, 
+		*a_payload_hex, *a_payload_base64,
 		*a_sort_asc, *a_sort_desc;
 	struct arg_int *a_offset, *a_limit;
 	struct arg_lit *a_verbosity, *a_help;
@@ -110,11 +112,12 @@ int parseCmd(
 		a_command = arg_str0(NULL, NULL, "<command>", "print|list|create|insert. Default print"),
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
 		a_dbconfig = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.js'"),
-		a_dbname = arg_strn("d", "dbname", "<database-name>", 0, 100, "database name, Default all"),
+		a_dbname = arg_strn("d", "dbname", "<database>", 0, 100, "database name, Default all"),
 
-		a_message_type = arg_str0("m", "message", "<packet.message>", "Message type packet and name"),
+		a_message_type = arg_str0("m", "message", "<pkt.msg>", "Message type packet and name"),
 		
 		a_payload_hex = arg_str0("x", "hex", "<hex-string>", "print, insert command, payload data."),
+		a_payload_base64 = arg_str0("6", "base64", "<base64>", "print, insert command, payload data."),
 
 		a_offset = arg_int0("o", "offset", "<number>", "list command, offset. Default 0."),
 		a_limit = arg_int0("l", "limit", "<number>", "list command, limit size. Default 10."),
@@ -160,11 +163,17 @@ int parseCmd(
 			config->dbname.push_back(a_dbname->sval[i]);
 		}
 
+		config->payload = "";
 		if (a_payload_hex->count)
 			config->payload = *a_payload_hex->sval;
-		else
-			config->payload = "";
-
+		if (a_payload_base64->count)
+			try {
+				config->payload = hexString(base64_decode(*a_payload_base64->sval, true));
+			}
+			catch (const std::exception& e) {
+				std::cerr << ERR_INVALID_BASE64 << std::endl;
+				nerrors++;
+			}
 		if (a_offset->count)
 			config->offset = *a_offset->ival;
 		else

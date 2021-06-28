@@ -145,11 +145,10 @@ mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
 mac_gw_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
-	proto-db.cpp \
+	proto-db.cpp utilstring.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
-
 proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 #

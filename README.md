@@ -556,20 +556,22 @@ ALTER TABLE "iridium_packet" add "gps_time" VARCHAR(32);
 ### proto-db utility
 
 ```
+Usage: proto-db
+ [-v?] [<command>] [-p <path>] [-c <file>] [-d <database-name>]... [-m <packet.message>] [-x <hex-string>] [-6 <base64-string>] [-o <number>] [-l <number>] [-s <field-name>]... [-S <field-name>]...
 proto-db helper utility
-  <command>                 list|create|insert. Default list
+  <command>                 print|list|create|insert. Default print
   -p, --proto=<path>        proto files directory. Default 'proto'
   -c, --dbconfig=<file>     database config file name. Default 'dbs.js'
-  -d, --dbname=<database-name> database name, Default all
-  -m, --message=<packet.message> Message type packet and name
-  -x, --hex=<hex-string>    insert command, payload data.
+  -d, --dbname=<database>   database name, Default all
+  -m, --message=<pkt.msg>   Message type packet and name
+  -x, --hex=<hex-string>    print, insert command, payload data.
+  -6, --base64=<base64>     print, insert command, payload data.
   -o, --offset=<number>     list command, offset. Default 0.
   -l, --limit=<number>      list command, limit size. Default 10.
   -s, --asc=<field-name>    list command, sort by field ascending.
   -S, --desc=<field-name>   list command, sort by field descending.
   -v, --verbose             Set verbosity level
-  -?, --help                Show this help
-```
+  -?, --help                Show this help```
 
 Create table for iridium.IEPacket packet in the "mysql_1" database:
 

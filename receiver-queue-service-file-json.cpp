@@ -132,7 +132,13 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 			std::string s(str, length); 
 			switch(idx) {
 				case 2:	// payload
-					entry.value.payload = base64_decode(s, true);
+					try {
+						// base64
+						entry.value.payload = base64_decode(s, true);
+					}
+					catch (const std::exception& e) {
+						return false;
+					}
 					break;
 				case 4:	// deviceId:
 					break;

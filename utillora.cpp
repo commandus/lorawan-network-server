@@ -853,7 +853,13 @@ int rfmMetaData::parse(
 	if (value.HasMember(METADATA_RX_NAMES[14])) {
 		rapidjson::Value &v = value[METADATA_RX_NAMES[14]];
 		if (v.IsString()) {
-			retData = base64_decode(v.GetString());
+			try {
+				// base64
+				retData = base64_decode(v.GetString());
+			} catch (const std::exception& e) {
+				retData = "";
+			}
+
 		}
 	}
 	return 0;
