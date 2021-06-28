@@ -7,13 +7,15 @@
 #include "identity-service-abstract.h"
 #include "packet-queue.h"
 #include "packet-handler-abstract.h"
+#include "receiver-queue-service.h"
 
 /**
  * Handle uplink messages
  */ 
 class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 	private:
-		IdentityService* identityService;
+		IdentityService *identityService;
+		ReceiverQueueService *receiverQueueService;
 		PacketQueue packetQueue;
 		std::function<void(
 			void *env,
@@ -26,6 +28,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		LoraPacketProcessor();
 		~LoraPacketProcessor();
 		void setIdentityService(IdentityService* identityService);
+		void setReceiverQueueService(ReceiverQueueService* value);
+
 		/**
 		 * Add packet to be processed
 		 */
