@@ -8,6 +8,8 @@
 #include "packet-queue.h"
 #include "packet-handler-abstract.h"
 #include "receiver-queue-service.h"
+#include "receiver-queue-processor.h"
+#include "db-any.h"
 
 /**
  * Handle uplink messages
@@ -17,6 +19,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		IdentityService *identityService;
 		ReceiverQueueService *receiverQueueService;
 		PacketQueue packetQueue;
+		RecieverQueueProcessor *recieverQueueProcessor;
+
 		std::function<void(
 			void *env,
 			int level,
@@ -50,6 +54,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 			DeviceId id,
 			semtechUDPPacket &value
 		);
+
+	void setRecieverQueueProcessor(RecieverQueueProcessor *value);
 };
 
 #endif

@@ -36,7 +36,11 @@ public:
 	DatabaseByConfig(const ConfigDatabases *config);
 	~DatabaseByConfig();
 
-	// deprecated ;)
+	size_t count() const;
+	/**
+	 * @param retConfig return config
+	 * @param id 0..count() - 1
+	 */ 
 	DatabaseIntf* getDb(const ConfigDatabase **retConfig, int id) const;
 	DatabaseIntf* findDb(const ConfigDatabase **retConfig, const std::string &name) const;
 

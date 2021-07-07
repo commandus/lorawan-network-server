@@ -7,10 +7,27 @@
 
 #include "utillora.h"
 
+/**
+ * 
+ * ReceiverQueueService manage queue of ReceiverQueueEntry.
+ * ReceiverQueueEntry is key-value pair ReceiverQueueKey and ReceiverQueueValue.
+ * ReceiverQueueKey has a time and serial number (id) in case two or more data at the same time
+ * ReceiverQueueValue has a payload, device identifier and target databases
+ * 
+ * LoraPacketProcessor calls ReceiverQueueService->push() method to insert received from end-device payload
+ * 
+ * ReceiverQueueService is abstract base class for some impementations:
+ * 
+ *                       / --> DirTxtReceiverQueueServiceOptions (file collection)
+ * ReceiverQueueService -  --> JsonFileReceiverQueueService (in-memory collection)
+ *                       \ --> LmdbReceiverQueueService (not implemented yet)
+ * 
+ */
+
 class ReceiverQueueKey {
 	public:
 		timeval time;	// key 1
-		int id;			// key 2
+		int id;			// key 2 just in case of of two simultaneous events
 		ReceiverQueueKey();
 		ReceiverQueueKey(const ReceiverQueueKey &value);
 		void clear();
@@ -18,7 +35,7 @@ class ReceiverQueueKey {
 
 class ReceiverQueueValue {
 	public:
-		DeviceId deviceId;
+		DeviceId deviceId;	// device identifier
 		std::string payload;
 		std::string jsonPayload() const;
 		std::vector<int> dbids;	/// Database identifiers

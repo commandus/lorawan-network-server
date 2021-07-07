@@ -32,7 +32,7 @@ class ServerConfig {
 		std::string queueStorageName;
 		IDENTITY_STORAGE storageType;
 		MESSAGE_QUEUE_STORAGE messageQueueType;
-		int messageQueueDirFormat;	// 0- bin, 1- hex, 2- base64
+		int messageQueueDirFormat;					// 0- bin, 1- hex, 2- base64
 		void clear();
 		ServerConfig();
 		int parse(
@@ -48,6 +48,8 @@ class Configuration {
 	public:
 		std::string configFileName;
 		std::string gatewaysFileName;
+		std::string databaseConfigFileName;
+		std::string protoPath;
 		ServerConfig serverConfig;
 		Configuration();
 		Configuration(const char* value);

@@ -25,7 +25,7 @@ public:
 	) = 0;
 
 	virtual int select(
-		std::vector<std::vector<std::string>> &retval,
+		std::vector<std::vector<std::string> > &retval,
 		const std::string &statement
 	) = 0;
 };

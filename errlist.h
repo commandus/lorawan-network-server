@@ -175,6 +175,10 @@
 #define MSG_RXPK						"rxpk "
 #define MSG_MAC_COMMANDS                "MAC commands"
 #define MSG_SEND_TO                     "Send to "
+#define MSG_DATABASE_LIST				"Databases: "
+#define MSG_CONN_ESTABLISHED			 "established"
+#define MSG_CONN_FAILED					"failed"
+#define MSG_CONNECTION					"connection "
 
 #define ERROR							"Error "
 
