@@ -41,7 +41,7 @@ public:
 	 * @param retConfig return config
 	 * @param id 0..count() - 1
 	 */ 
-	DatabaseIntf* getDb(const ConfigDatabase **retConfig, int id) const;
+	DatabaseIntf* getDb(const ConfigDatabase **retConfig, int seqno) const;
 	DatabaseIntf* findDb(const ConfigDatabase **retConfig, const std::string &name) const;
 
 	DatabaseNConfig *get(int id) const;

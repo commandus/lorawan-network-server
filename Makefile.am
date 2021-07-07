@@ -140,12 +140,13 @@ mac_gw_SOURCES = \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp \
 	$(C_STORAGE) \
+	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
-mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
+mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB)
 mac_gw_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \

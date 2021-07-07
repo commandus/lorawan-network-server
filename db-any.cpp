@@ -203,14 +203,14 @@ size_t DatabaseByConfig::count() const
 DatabaseIntf* DatabaseByConfig::getDb
 (
 	const ConfigDatabase **retConfig,
-	int id
+	int seqno
 ) const 
 {
-	if (id < 0 || id >= config->dbs.size())
+	if (seqno < 0 || seqno >= config->dbs.size())
 		return NULL;
 	if (retConfig)
-		*retConfig = &config->dbs[id];
-	return open(&config->dbs[id]);
+		*retConfig = &config->dbs[seqno];
+	return open(&config->dbs[seqno]);
 }
 
 DatabaseIntf* DatabaseByConfig::findDb

@@ -3,17 +3,32 @@
 
 #include <map>
 #include <functional>
+#include <mutex>
+#include <thread>
+
 #include "packet-queue.h"
 #include "db-any.h"
 #include "receiver-queue-service.h"
+
+// default delay in ms
+#define DB_MIN_DELAY_MS 200
+
+// queue default timeout
+#define DB_DEF_TIMEOUT_MS 500
 
 /**
  * Handle uplink messages
  */ 
 class RecieverQueueProcessor {
 	private:
+		bool isStarted;
+		bool isDone;
+		std::mutex mutexq;
+		std::thread *threadDb;
+		
 		void *pkt2env;
 		DatabaseByConfig *databaseByConfig;
+		ReceiverQueueService *receiverQueueService;
 
 		std::function<void(
 			void *env,
@@ -22,6 +37,8 @@ class RecieverQueueProcessor {
 			int errorcode,
 			const std::string &message
 		)> onLog;
+		void runner();
+		void processQueue();
 	public:
 		RecieverQueueProcessor();
 		~RecieverQueueProcessor();

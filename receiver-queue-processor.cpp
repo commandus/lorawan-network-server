@@ -4,6 +4,11 @@
 #include "utildate.h"
 #include "errlist.h"
 
+#include "pkt2/str-pkt2.h"
+// #include "pkt2/database-config.h"
+
+#include <sys/time.h>
+#include <unistd.h>
 #include <iostream>
 
 int RecieverQueueProcessor::onPacket(
@@ -20,7 +25,7 @@ int RecieverQueueProcessor::onPacket(
 }
 
 RecieverQueueProcessor::RecieverQueueProcessor()
-	: onLog(NULL),
+	: isStarted(false), isDone(false), threadDb(NULL), onLog(NULL), 
 	pkt2env(NULL), databaseByConfig(NULL)
 {
 }
@@ -57,13 +62,85 @@ void RecieverQueueProcessor::setDatabaseByConfig
 }
 
 void RecieverQueueProcessor::start(
-	ReceiverQueueService *queueService
+	ReceiverQueueService *rQueueService
 )
 {
-	std::cerr << "RecieverQueueProcessor::start()" << std::endl;
+	if (isStarted)
+		return;
+	isStarted = true;
+	isDone = false;
+	receiverQueueService = rQueueService;
+	threadDb = new std::thread(&RecieverQueueProcessor::runner, this);
 }
 
 void RecieverQueueProcessor::stop()
 {
-	std::cerr << "RecieverQueueProcessor::stop()" << std::endl;
+	if (!isStarted)
+		return;
+	isStarted = false;
+	while(!isDone) {
+		usleep(DB_MIN_DELAY_MS);
+	}
+}
+
+void RecieverQueueProcessor::runner()
+{
+	int timeoutMicroSeconds = DB_DEF_TIMEOUT_MS * 1000;
+	while (isStarted) {
+		struct timeval timeout;
+		timeout.tv_sec = 0;
+		timeout.tv_usec = timeoutMicroSeconds;
+		int retval = select(0, NULL, NULL, NULL, &timeout);
+		switch (retval) {
+			case -1:
+				break;
+			case 0:
+				// timeout
+				processQueue();
+				continue;
+			default:
+				break;
+		}
+	}
+	isDone = true;
+}
+
+void RecieverQueueProcessor::processQueue()
+{
+	if (!pkt2env)
+		return;
+	if (!databaseByConfig)
+		return;
+	if (!receiverQueueService)
+		return;
+	while (receiverQueueService->count()) {
+		ReceiverQueueEntry entry;
+		for (int i = 0; i < databaseByConfig->count(); i++) {
+			DatabaseNConfig *db = databaseByConfig->get(i);
+			if (!db) {
+				std::cerr << ERR_DB_DATABASE_NOT_FOUND << i << std::endl;
+				continue;
+			}
+			int dbId = db->config->id;
+			if (receiverQueueService->pop(dbId, entry) != 0) 
+				continue;
+
+
+			int r = db->open();
+			if (r) {
+				std::cerr << ERR_DB_DATABASE_OPEN << r << std::endl;
+				continue;
+			}
+
+			std::string messageType = "";
+			r = db->insert(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload);
+
+			if (r) {
+				std::cerr << ERR_DB_INSERT << r << " database " << i << ": " << db->db->errmsg << std::endl;
+				std::cerr << "SQL statement: " << db->insertClause(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload) << std::endl;
+			}
+			r = db->close();
+		}
+	}
+
 }
