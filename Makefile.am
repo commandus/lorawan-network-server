@@ -51,7 +51,7 @@ if ENABLE_DB_POSTGRES
 BACKEND_DB_SRC += db-pg.cpp 
 BACKEND_DB_LIB += -lpq 
 BACKEND_DB_C += 
-BACKEND_DB_DEF += -DENABLE_DB_POSTGRESQL 
+BACKEND_DB_DEF += -DENABLE_DB_POSTGRES 
 endif
 
 if ENABLE_DB_MYSQL
@@ -111,22 +111,25 @@ nobase_dist_include_HEADERS = \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h \
+	receiver-queue-processor.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp \
-	utillora.cpp udp-socket.cpp udp-emitter.cpp udp-listener.cpp \
+	utillora.cpp udp-socket.cpp udp-listener.cpp \
 	config-json.cpp lora-packet-handler-impl.cpp \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp config-filename.cpp \
 	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
 	semtech-metadata-tx.cpp identity-service-dir-txt.cpp lora-rejoin.cpp \
 	receiver-queue-service.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
+	db-any.cpp  $(BACKEND_DB_SRC) \
+	receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
-lorawan_network_server_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread
+lorawan_network_server_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB)
 lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 mac_gw_SOURCES = \
@@ -138,6 +141,7 @@ mac_gw_SOURCES = \
 	semtech-metadata-tx.cpp lora-rejoin.cpp \
 	$(C_STORAGE) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
+	receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 

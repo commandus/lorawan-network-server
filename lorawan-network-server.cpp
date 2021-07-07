@@ -24,7 +24,6 @@
 #include "utilstring.h"
 #include "utildate.h"
 
-#include "udp-emitter.h"
 #include "udp-listener.h"
 #include "config-json.h"
 #include "lora-packet-handler-impl.h"
@@ -38,14 +37,22 @@
 #include "receiver-queue-service-lmdb.h"
 #endif			
 
+#include "receiver-queue-processor.h"
+
 #include "gateway-list.h"
 #include "config-filename.h"
+#include "pkt2/database-config.h"
+#include "pkt2/str-pkt2.h"
+#include "db-any.h"
 
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
-#define DEF_QUEUE_STORAGE_NAME "queue.json"
+#define DEF_QUEUE_STORAGE_NAME "queue.js"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
+#define DEF_DATABASE_CONFIG_FILE_NAME "dbs.js"
+#define DEF_PROTO_PATH "proto"
+
 #define DEF_TIME_FORMAT "%FT%T"
 
 #define DEF_BUFFER_SIZE 4096
@@ -54,26 +61,59 @@ const std::string progname = "lorawan-network-server";
 static Configuration *config = NULL;
 static GatewayList *gatewayList = NULL;
 
-static UDPEmitter emitter;
-static UDPListener listener;
+static UDPListener *listener = NULL;
+static IdentityService *identityService = NULL;
+static RecieverQueueProcessor *recieverQueueProcessor = NULL;
+static LoraPacketProcessor *processor = NULL;
+static DatabaseByConfig *dbByConfig = NULL;
+
+// pkt2 environment
+static void* pkt2env = NULL;
 
 static void done()
 {
 	// destroy and free all
-	if (config && config->serverConfig.verbosity > 1)
-		std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
+	delete listener;
+	listener = NULL;
+
+	if (config) {
+		if(config->serverConfig.verbosity > 1)
+			std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
+		delete config;
+		config = NULL;
+	}
+	if (processor) {
+		delete processor;
+		processor = NULL;
+	}
+	if (recieverQueueProcessor) {
+		delete recieverQueueProcessor;
+		recieverQueueProcessor = NULL;
+	}
+	if (identityService) {
+		delete identityService;
+		identityService = NULL;
+	}
+	if (dbByConfig) {
+		delete dbByConfig;
+		dbByConfig = NULL;
+	}
 	if (gatewayList) {
 		gatewayList->save();
 		delete gatewayList;
 		gatewayList = NULL;
 	}
+
+	if (pkt2env)
+		donePkt2(pkt2env);
+
 	exit(0);
 }
 
 static void stop()
 {
-	emitter.stopped = true;
-	listener.stopped = true;
+	if (listener)
+		listener->stopped = true;
 }
 
 void signalHandler(int signal)
@@ -199,7 +239,7 @@ void onLog(
 
 static void run()
 {
-	listener.listen();
+	listener->listen();
 }
 
 int main(
@@ -224,7 +264,10 @@ int main(
 		std::cerr << ERR_NO_CONFIG << std::endl;
 		exit(ERR_CODE_NO_CONFIG);
 	}
-	listener.setLogger(config->serverConfig.verbosity, onLog);
+	
+	listener = new UDPListener();
+
+	listener->setLogger(config->serverConfig.verbosity, onLog);
 
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
@@ -242,8 +285,6 @@ int main(
 	std::cerr << gatewayList->toJsonString() << std::endl;
 
 	// Start identity service
-	IdentityService *identityService;
-
 	switch (config->serverConfig.storageType) {
 		case IDENTITY_STORAGE_LMDB:
 #ifdef ENABLE_LMDB
@@ -281,30 +322,94 @@ int main(
 	}
 	receiverQueueService->init(config->serverConfig.queueStorageName, options);
 	
+	if (config->databaseConfigFileName.empty()) {
+		config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
+	}
+
+	ConfigDatabases configDatabases(config->databaseConfigFileName);
+	if (configDatabases.dbs.size() == 0) {
+		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
+		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
+	}
+
+	if (config->serverConfig.verbosity > 2)
+		std::cerr << MSG_DATABASE_LIST << std::endl;
+
+	// heloer class to find out database by name or sequnce number (id)
+	dbByConfig = new DatabaseByConfig(&configDatabases);
+	// check out database connectivity
+	bool dbOk = true;
+	for (std::vector<ConfigDatabase>::const_iterator it(configDatabases.dbs.begin()); it != configDatabases.dbs.end(); it++) {
+		DatabaseNConfig *dc = dbByConfig->find(it->name);
+		bool hasConn;
+		if (!dc) {
+			dbOk = false;
+			hasConn = false;
+		} else {
+			hasConn = true;
+		}
+		int r = dc->open();
+		hasConn = hasConn && (r == 0);
+		if (config->serverConfig.verbosity > 2) {
+			std::cerr << "\t" << it->name  << "\t " << MSG_CONNECTION << (hasConn?MSG_CONN_ESTABLISHED : MSG_CONN_FAILED) << std::endl;
+			if (r) {
+				if (dc->db)
+					std::cerr << dc->db->errmsg << std::endl;
+			}
+		}
+		dc->close();
+		if (!hasConn) {
+			dbOk = false;
+		}
+	}
+	// exit, if can not connected to the database
+	if (!dbOk) {
+		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
+		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
+	}
+
+	if (config->protoPath.empty()) {
+		// if proto path is not specidfied, try use default ./proto/ path
+		config->protoPath = DEF_PROTO_PATH;
+	}
+
+	pkt2env = initPkt2(config->protoPath, 0);
+	if (!pkt2env) {
+		std::cerr << ERR_LOAD_PROTO << std::endl;
+		exit(ERR_CODE_LOAD_PROTO);
+	}
 
 	// Set up processor
-	LoraPacketProcessor processor;
-	processor.setLogger(onLog);
-	processor.setIdentityService(identityService);
-	processor.setReceiverQueueService(receiverQueueService);
+	processor = new LoraPacketProcessor();
+	processor->setLogger(onLog);
+	processor->setIdentityService(identityService);
+	processor->setReceiverQueueService(receiverQueueService);
+
+	// Set pkt2 environment
+	recieverQueueProcessor = new RecieverQueueProcessor();
+	recieverQueueProcessor->setPkt2Env(pkt2env);
+	// Set databases
+	recieverQueueProcessor->setDatabaseByConfig(dbByConfig);
+	// start processing queue
+	processor->setRecieverQueueProcessor(recieverQueueProcessor);
 	
 	// Set up listener
-	listener.setGatewayList(gatewayList);
-	listener.setHandler(&processor);
-	listener.setIdentityService(identityService);
+	listener->setGatewayList(gatewayList);
+	listener->setHandler(processor);
+	listener->setIdentityService(identityService);
 
 	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;
 			exit(ERR_CODE_PARAM_NO_INTERFACE);
 	}
 	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv4.begin()); it != config->serverConfig.listenAddressIPv4.end(); it++) {
-		if (!listener.add(*it, MODE_FAMILY_HINT_IPV4)) {
+		if (!listener->add(*it, MODE_FAMILY_HINT_IPV4)) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
 			exit(ERR_CODE_SOCKET_BIND);
 		}
 	}
 	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv6.begin()); it != config->serverConfig.listenAddressIPv6.end(); it++) {
-		if (!listener.add(*it, MODE_FAMILY_HINT_IPV6)) {
+		if (!listener->add(*it, MODE_FAMILY_HINT_IPV6)) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
 			exit(ERR_CODE_SOCKET_BIND);
 		}

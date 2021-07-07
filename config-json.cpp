@@ -189,7 +189,6 @@ void ServerConfig::toJson(
 	n.SetString(identityStorageName.c_str(), identityStorageName.size(), allocator);
 	value.AddMember("identityStorageName", n, allocator);
 
-	
 	rapidjson::Value nq;
 	nq.SetString(queueStorageName.c_str(), queueStorageName.size(), allocator);
 	value.AddMember("queueStorageName", nq, allocator);
@@ -235,13 +234,24 @@ int Configuration::parse(
 			if (gfn.IsString())
 				gatewaysFileName = gfn.GetString();
 		}
+		if (doc.HasMember("databaseConfigFileName")) {
+			rapidjson::Value &dbcfn =  doc["databaseConfigFileName"];
+			if (dbcfn.IsString())
+				databaseConfigFileName = dbcfn.GetString();
+		}
+		if (doc.HasMember("protoPath")) {
+			rapidjson::Value &vpp =  doc["protoPath"];
+			if (vpp.IsString())
+				protoPath = vpp.GetString();
+		}
 	} else
 		return ERR_CODE_INVALID_JSON;
 	return r;
 }
 
 Configuration::Configuration() 
-	: configFileName(""), gatewaysFileName("")
+	: configFileName(""), gatewaysFileName(""), 
+	databaseConfigFileName(""), protoPath("")
 {
 }
 
@@ -256,6 +266,8 @@ Configuration::Configuration(
 void Configuration::clear() {
 	configFileName = "";
 	gatewaysFileName = "";
+	databaseConfigFileName = "";
+	protoPath = "";
 	serverConfig.clear();
 }
 
@@ -277,6 +289,13 @@ std::string Configuration::toString() {
 
 	serverConfig.toJson(server, allocator);
 	doc.AddMember("server", server, allocator);
+
+	rapidjson::Value dbcfn;
+	dbcfn.SetString(databaseConfigFileName.c_str(), databaseConfigFileName.size(), allocator);
+	doc.AddMember("databaseConfigFileName", dbcfn, allocator);
+	rapidjson::Value pp;
+	pp.SetString(protoPath.c_str(), protoPath.size(), allocator);
+	doc.AddMember("protoPath", pp, allocator);
 
 	doc.Accept(writer);
 	return std::string(buffer.GetString());

@@ -195,6 +195,11 @@ DatabaseIntf* DatabaseByConfig::open
 	return NULL;
 }
 
+size_t DatabaseByConfig::count() const
+{
+	return config->dbs.size();
+}
+
 DatabaseIntf* DatabaseByConfig::getDb
 (
 	const ConfigDatabase **retConfig,

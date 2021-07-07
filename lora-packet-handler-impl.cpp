@@ -21,7 +21,8 @@ int LoraPacketProcessor::onPacket(
 }
 
 LoraPacketProcessor::LoraPacketProcessor()
-	: onLog(NULL), identityService(NULL), receiverQueueService(NULL)
+	: onLog(NULL), identityService(NULL), receiverQueueService(NULL),
+	recieverQueueProcessor(NULL)
 {
 	packetQueue.start(*this);
 }
@@ -29,6 +30,8 @@ LoraPacketProcessor::LoraPacketProcessor()
 LoraPacketProcessor::~LoraPacketProcessor()
 {
 	packetQueue.stop();
+	if (recieverQueueProcessor)
+		recieverQueueProcessor->stop();
 }
 
 int LoraPacketProcessor::put
@@ -42,6 +45,7 @@ int LoraPacketProcessor::put
 		DeviceId id;
 		r = identityService->get(packet.getHeader()->header.devaddr, id);
 		if (r) {
+			// device id NOT identified
 			if (onLog) {
 				// report error
 				std::stringstream ss;
@@ -73,6 +77,12 @@ void LoraPacketProcessor::setReceiverQueueService
 )
 {
 	receiverQueueService = value;
+	if (recieverQueueProcessor) {
+		if (receiverQueueService)
+			recieverQueueProcessor->start(receiverQueueService);
+		else
+			recieverQueueProcessor->stop();
+	}
 }
 
 void LoraPacketProcessor::setLogger(
@@ -84,4 +94,20 @@ void LoraPacketProcessor::setLogger(
 		const std::string &message
 )> value) {
 	onLog = value;
+}
+
+void LoraPacketProcessor::setRecieverQueueProcessor
+(
+	RecieverQueueProcessor *value
+)
+{
+	if (recieverQueueProcessor)
+		recieverQueueProcessor->stop();
+	recieverQueueProcessor = value;
+	if (recieverQueueProcessor) {
+		if (receiverQueueService)
+			recieverQueueProcessor->start(receiverQueueService);
+		else
+			recieverQueueProcessor->stop();
+	}
 }

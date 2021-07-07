@@ -8,6 +8,11 @@
 #include "utilfile.h"
 #include "errlist.h"
 
+/**
+ * Implementation of ReceiverQueueService abstract class.
+ * Read payload from *.bin, *.hex, *.b64 files from specified directory.
+ * Set receive time from the file modification time.
+ */ 
 #define CNT_FILE_EXT 3
 static std::string dataFileExtensions[CNT_FILE_EXT] = {
 	".bin", ".hex", ".b64"

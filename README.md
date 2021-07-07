@@ -101,6 +101,12 @@ sudo make install
 - --enable-db-mysql
 - --enable-db-firebird
 
+Configure all supported databases:
+
+```
+./configure --enable-db-postgres --enable-db-mysql --enable-db-firebird
+```
+
 You must have database client and developer's tools (include files and libraries at least) installed on the computer.
 
 lorawan-network-server uses internal database to keep device's authentication information.
@@ -138,6 +144,8 @@ make
 ### server config ~/.lorawan-network-server.json
 
 - gatewaysFileName Gateways list. Default ~/gateway.json
+- databaseConfigFileName databases list default "dbs.js"
+- protoPath protobuf message description files directory path. Default "proto"
 - server Network server properties, including end-device list served by the server
 - configFileName (optional) Redirect config file to another one
 
