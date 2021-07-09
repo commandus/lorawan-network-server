@@ -2,8 +2,8 @@
 	"gatewaysFileName": "./gateway.json",
 	"databaseConfigFileName": "dbs.js",
 	"server": {
-		"identityStorageName": "doc",
-		"storageType": "txt",
+		"identityStorageName": "identity.json",
+		"storageType": "json",
 		"queueStorageName": "queue",
 		"messageQueueStorageType": "txt",
 		"listenAddressIPv4": [

@@ -377,7 +377,7 @@ public:
 	rfmHeader *getHeader();
 	void setRfmHeader(const RFM_HEADER &value);
 
-	std::string getDeviceEUI();
+	std::string getDeviceEUI() const;
 	void setDeviceEUI(const std::string &value);
 
 	float getSignalLevel() const;
@@ -389,7 +389,7 @@ public:
 	void setApplicationSessionKey(const std::string &value);
 	void setFrameCounter(uint16_t value);
 
-	std::string getPayload();
+	std::string getPayload() const;
 	void setPayload(uint8_t port, const std::string &payload);
 	void setPayload(const std::string &value);
 	// Create ACK response to be send to the BS 
@@ -454,5 +454,9 @@ void string2JOINNONCE(JOINNONCE &retval, const char *value);
 
 std::string activation2string(ACTIVATION value);
 ACTIVATION string2activation(const std::string &value);
+
+std::string semtechDataPrefix2JsonString(
+	const SEMTECH_DATA_PREFIX &prefix
+);
 
 #endif

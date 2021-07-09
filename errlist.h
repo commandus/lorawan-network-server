@@ -11,7 +11,7 @@
 #define LOG_PACKET_HANDLER					4
 
 #define LORA_OK            					0
-#define ERR_CODE_COMMAND_LINE		    	-500
+#define ERR_CODE_COMMAND_LINE		    	-500                
 #define ERR_CODE_OPEN_DEVICE		    	-501
 #define ERR_CODE_CLOSE_DEVICE		    	-502
 #define ERR_CODE_BAD_STATUS		        	-503
@@ -84,8 +84,8 @@
 #define ERR_TIMEOUT						"Timeout"
 
 #define ERR_COMMAND_LINE        		"Wrong parameter(s)"
-#define ERR_OPEN_SOCKET         		"open socket error "
-#define ERR_CLOSE_SOCKET        		"close socket error "
+#define ERR_OPEN_DEVICE         		"open error "
+#define ERR_CLOSE_DEVICE        		"close error "
 #define ERR_BAD_STATUS          		"Bad status"
 #define ERR_INVALID_PAR_LOG_FILE		"Invalid log file "
 #define ERR_GET_ADDRESS					"get address info error "
