@@ -72,7 +72,7 @@ int UDPEmitter::openSocket(
 	
 	if (retval.sock == -1) {
 		std::stringstream ss;
-		ss << ERR_OPEN_SOCKET << errno << ": " << strerror(errno);
+		ss << ERR_OPEN_DEVICE << errno << ": " << strerror(errno);
 		(*onLog)(LOG_ERR, errno, LOG_UDP_EMITTER, ss.str());
 
 		return -1;

@@ -68,7 +68,6 @@ BACKEND_DB_C +=
 BACKEND_DB_DEF += -DENABLE_DB_FIREBIRD 
 endif
 
-
 #
 # mysql_config --cflags
 # -I/usr/include/mysql
@@ -82,7 +81,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server mac-gw proto-db
+bin_PROGRAMS = lorawan-network-server mac-gw proto-db lora-print
 
 commonlibs =
 
@@ -122,8 +121,8 @@ lorawan_network_server_SOURCES = \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp config-filename.cpp \
 	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
-	semtech-metadata-tx.cpp identity-service-dir-txt.cpp lora-rejoin.cpp \
-	receiver-queue-service.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
+	semtech-metadata-tx.cpp lora-rejoin.cpp \
+	receiver-queue-service.cpp identity-service-dir-txt.cpp  $(C_STORAGE) $(C_QUEUE_STORAGE) \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
@@ -156,6 +155,18 @@ proto_db_SOURCES = \
 	third_party/base64/base64.cpp $(SRC_AES)
 proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
+
+lora_print_SOURCES = \
+	lora-print.cpp utilstring.cpp \
+	db-any.cpp $(BACKEND_DB_SRC) \
+	third_party/argtable3/argtable3.c \
+	third_party/base64/base64.cpp $(SRC_AES) \
+	gateway-stat.cpp utillora.cpp utildate.cpp utilfile.cpp lora-encrypt.cpp \
+	errlist.cpp \
+	identity-service-dir-txt.cpp $(C_STORAGE)
+lora_print_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+lora_print_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
+
 #
 # Configs, readme, CMake etc.
 #

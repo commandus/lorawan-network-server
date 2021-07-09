@@ -1328,14 +1328,15 @@ void semtechUDPPacket::setGatewayId(
 	setMAC(prefix.mac, value);
 }
 
-std::string semtechUDPPacket::getDeviceEUI() {
-	return getMAC(devId.deviceEUI);
+std::string semtechUDPPacket::getDeviceEUI() const
+{
+	return DEVEUI2string(devId.deviceEUI);
 }
 
 void semtechUDPPacket::setDeviceEUI(
 	const std::string &value
 ) {
-	setMAC(devId.deviceEUI, value);
+	string2DEVEUI(devId.deviceEUI, value);
 }
 
 /**
@@ -1388,7 +1389,8 @@ void semtechUDPPacket::setFrameCounter(
 	header.header.fcnt = value;
 }
 
-std::string semtechUDPPacket::getPayload() {
+std::string semtechUDPPacket::getPayload() const
+{
 	return payload;
 }
 
@@ -1558,4 +1560,19 @@ void string2JOINNONCE(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(JOINNONCE))
 		memset(&retval + len, 0, sizeof(JOINNONCE) - len);
+}
+
+
+std::string semtechDataPrefix2JsonString(
+	const SEMTECH_DATA_PREFIX &prefix
+)
+{
+	std::stringstream ss;
+	ss << "{"
+		<< "\"version\":" << (int) prefix.version			// protocol version = 2
+		<< ", \"token\":" << (int) prefix.token
+		<< ", \"tag\":" << (int) prefix.tag
+		<< ", \"mac\": \"" << DEVEUI2string(prefix.mac)		 /// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
+		<< "\"}";
+	return ss.str();
 }

@@ -168,7 +168,7 @@ int parseCmd(
 			config->payload = *a_payload_hex->sval;
 		if (a_payload_base64->count)
 			try {
-				config->payload = hexString(base64_decode(*a_payload_base64->sval, true));
+				config->payload = hexString(base64_decode(*a_payload_base64->sval, false));
 			}
 			catch (const std::exception& e) {
 				std::cerr << ERR_INVALID_BASE64 << std::endl;

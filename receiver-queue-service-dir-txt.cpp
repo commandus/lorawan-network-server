@@ -50,7 +50,7 @@ int DirTxtReceiverQueueService::loadFile(
 		case DIRTXT_FORMAT_BASE64:
 			try {
 				// base64
-				payload = base64_decode(payload, true);
+				payload = base64_decode(payload, false);
 			}
 			catch (const std::exception& e) {
 				return ERR_CODE_INVALID_BASE64;

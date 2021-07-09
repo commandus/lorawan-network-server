@@ -234,7 +234,7 @@ void onLog(
 		if (listener->verbosity < level)
 			return;
 	}
-	std::cerr << message << std::endl;
+	std::cerr << time2string(time(NULL)) << " " << message << std::endl;
 }
 
 static void run()

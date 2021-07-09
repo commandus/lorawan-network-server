@@ -23,7 +23,7 @@ static std::string storageType2String(IDENTITY_STORAGE value) {
 	}
 }
 
-static std::string storageType2String(MESSAGE_QUEUE_STORAGE value) {
+static std::string messageQueueStorageType2String(MESSAGE_QUEUE_STORAGE value) {
 	switch(value) {
 		case MESSAGE_QUEUE_STORAGE_DIR_TEXT:
 			return "txt";
@@ -150,7 +150,7 @@ int ServerConfig::parse(
 
 	// 0- bin, 1- hex, 2- base64
 	if (value.HasMember("messageQueueDirFormat")) {
-		rapidjson::Value &vmessageQueueDirFormat =  value["messageQueueStorageType"];
+		rapidjson::Value &vmessageQueueDirFormat =  value["messageQueueDirFormat"];
 		if (vmessageQueueDirFormat.IsString())
 			messageQueueDirFormat = string2messageQueueDirFormat(vmessageQueueDirFormat.GetString());
 		if (vmessageQueueDirFormat.IsInt())
@@ -209,6 +209,11 @@ void ServerConfig::toJson(
 	std::string s(storageType2String(storageType));
 	vstorageType.SetString(s.c_str(), s.size(), allocator);
 	value.AddMember("storageType", vstorageType, allocator);
+
+	rapidjson::Value vMessageQueuestorageType;
+	std::string s2(messageQueueStorageType2String(messageQueueType));
+	vMessageQueuestorageType.SetString(s2.c_str(), s2.size(), allocator);
+	value.AddMember("messageQueueStorageType", vMessageQueuestorageType, allocator);
 }
 
 int Configuration::parse(
