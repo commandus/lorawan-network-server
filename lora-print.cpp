@@ -294,7 +294,11 @@ int main(
 	std::vector<semtechUDPPacket> packets;
 
 	int r = semtechUDPPacket::parse(dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
-	std::cerr  << strerror_client(r) << std::endl;
+	
+	if (r) {
+		std::cerr << strerror_client(r) << std::endl;
+	}
+
 	if (gatewayStat.errcode == 0) {
 		std::cout << gatewayStat.toJsonString() << std::endl;
 	}
@@ -314,9 +318,6 @@ int main(
 
 
 		std::string payload = it->getPayload();
-		std::cout << payload.size() << std::endl;
-		std::cout << base64_encode(payload) << std::endl;
-		
 		if (config.command == "sql") {
 			doInsert(env, &config, &databaseByConfig, config.message_type, payload);
 		} else {
