@@ -132,7 +132,7 @@
 #define ERR_INSUFFICIENT_PARAMS			"Insufficient parameters"
 #define ERR_NO_MAC_NO_PAYLOAD           "No MAC command(s) and/or payload"
 #define ERR_INVALID_REGEX               "Invalid regular expression"
-#define ERR_NO_DATABASE               	"No database"
+#define ERR_NO_DATABASE               	"No database support enabled"
 #define ERR_LOAD_PROTO					"Error loading proto files"
 #define ERR_LOAD_DATABASE_CONFIG		"Error loading database config file"
 #define ERR_DB_SELECT					"Error SQL select from table "

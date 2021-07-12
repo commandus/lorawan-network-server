@@ -266,6 +266,7 @@ public:
 	DeviceId(const DeviceId &value);
 	DeviceId(const DEVICEID &value);
 	void set(const DEVICEID &value);
+	void setEUIString(const std::string &value);
 	std::string toJsonString() const;
 };
 
