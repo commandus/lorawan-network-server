@@ -105,6 +105,9 @@ int DatabaseNConfig::createTable(void *env, const std::string &message)
 	return db->exec(clause);
 }
 
+/**
+ * @return 0- success, ERR_CODE_INVALID_PACKET- data is not parselable, otherwise database error code
+ */ 
 int DatabaseNConfig::insert(
 	void *env,
 	const std::string &message,
@@ -113,6 +116,8 @@ int DatabaseNConfig::insert(
 )
 {
 	std::string clause = insertClause(env, message, inputFormat, data);
+	if (clause.size() == 0)
+		return ERR_CODE_INVALID_PACKET;
 	return db->exec(clause);
 }
 
@@ -244,4 +249,20 @@ DatabaseNConfig* DatabaseByConfig::find(
 	if (!cd)
 		return NULL;
 	return new DatabaseNConfig(cd);
+}
+
+/**
+ * @param retval return dayavase identiofiiers
+ * @return  count of databases
+ */
+size_t DatabaseByConfig::getIds(
+	std::vector<int> &retval
+)
+{
+	size_t r = config->dbs.size();
+	retval.clear();
+	for (std::vector<ConfigDatabase>::const_iterator it(config->dbs.begin()); it != config->dbs.end(); it++) {
+		retval.push_back(it->id);
+	}
+	return r;
 }

@@ -272,7 +272,7 @@ test_message_queue_CPPFLAGS = $(commoncppflags)
 
 test_queue_processor_SOURCES = \
 	tests/test-queue-processor.cpp receiver-queue-processor.cpp \
-	udp-socket.cpp errlist.cpp \
+	udp-socket.cpp errlist.cpp identity-service-file-json.cpp \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	utilstring.cpp utilfile.cpp utillora.cpp utildate.cpp $(SRC_AES) gateway-stat.cpp lora-encrypt.cpp \

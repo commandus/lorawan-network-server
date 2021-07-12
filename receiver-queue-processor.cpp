@@ -95,6 +95,9 @@ void RecieverQueueProcessor::start(
 	isStarted = true;
 	isDone = false;
 	receiverQueueService = rQueueService;
+	std::vector<int> ids;
+	this->databaseByConfig->getIds(ids);
+	rQueueService->setDbs(ids);
 	threadDb = new std::thread(&RecieverQueueProcessor::runner, this);
 }
 
@@ -143,7 +146,6 @@ void RecieverQueueProcessor::processQueue()
 		return;
 	while (receiverQueueService->count()) {
 		ReceiverQueueEntry entry;
-		std::cerr << "Databases: " << databaseByConfig->count() << std::endl;
 		for (int i = 0; i < databaseByConfig->count(); i++) {
 			DatabaseNConfig *db = databaseByConfig->get(i);
 			if (!db) {
@@ -151,9 +153,11 @@ void RecieverQueueProcessor::processQueue()
 				continue;
 			}
 			int dbId = db->config->id;
-			std::cerr << "Database: " << dbId << " " << db->config->name << std::endl;
-			if (receiverQueueService->pop(dbId, entry) != 0) 
+			
+			if (receiverQueueService->pop(dbId, entry) != 0) {
+				std::cerr << "Database: " << dbId << " " << db->config->name << " pop() error" << std::endl;
 				continue;
+			}
 
 
 			int r = db->open();
@@ -166,7 +170,9 @@ void RecieverQueueProcessor::processQueue()
 			r = db->insert(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload);
 
 			if (r) {
-				std::cerr << ERR_DB_INSERT << r << " database " << i << ": " << db->db->errmsg << std::endl;
+				std::cerr << ERR_DB_INSERT << r 
+					<< " database id " << db->config->id << " " << db->config->name
+					<< ": " << db->db->errmsg << std::endl;
 				std::cerr << "SQL statement: " << db->insertClause(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload) << std::endl;
 			}
 			r = db->close();
