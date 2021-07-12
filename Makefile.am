@@ -270,8 +270,18 @@ test_message_queue_SOURCES = \
 test_message_queue_LDADD = 
 test_message_queue_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS = test-message-queue
-# test-fb test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json
+test_queue_processor_SOURCES = \
+	tests/test-queue-processor.cpp receiver-queue-processor.cpp \
+	udp-socket.cpp errlist.cpp \
+	receiver-queue-service.cpp receiver-queue-service-file-json.cpp \
+	db-any.cpp $(BACKEND_DB_SRC) \
+	utilstring.cpp utilfile.cpp utillora.cpp utildate.cpp $(SRC_AES) gateway-stat.cpp lora-encrypt.cpp \
+	third_party/base64/base64.cpp
+test_queue_processor_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+test_queue_processor_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
+
+check_PROGRAMS = test-queue-processor 
+# test-message-queue test-fb test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json
 # test-file-watch test-mac-gw
 #test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json
 

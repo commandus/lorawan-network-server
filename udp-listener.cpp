@@ -189,74 +189,19 @@ int UDPListener::listen() {
 						// send ACK immediately
 						switch (pr) {
 							case ERR_CODE_PING:
+							case ERR_CODE_PACKET_TOO_SHORT:
+							case ERR_CODE_INVALID_PROTOCOL_VERSION:
+							case ERR_CODE_NO_GATEWAY_STAT:
+							case ERR_CODE_INVALID_STAT:
+							case ERR_CODE_INVALID_PACKET:
+							case ERR_CODE_INVALID_JSON:
 								{
 									std::stringstream sse;
-									sse << ERR_PING
+									sse << strerror_client(pr)
 										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
 										<< " (" << bytesReceived
 										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
 									onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
-								}
-								break;
-							case ERR_CODE_PACKET_TOO_SHORT:
-								{
-									std::stringstream sse;
-									sse << ERR_PACKET_TOO_SHORT
-										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-										<< " (" << bytesReceived
-										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
-								}
-								break;
-							case ERR_CODE_INVALID_PROTOCOL_VERSION:
-								{
-									std::stringstream sse;
-									sse << ERR_INVALID_PROTOCOL_VERSION
-										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-										<< " (" << bytesReceived
-										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
-								}
-								break;
-							case ERR_CODE_NO_GATEWAY_STAT:
-								{
-									std::stringstream sse;
-									sse << ERR_NO_GATEWAY_STAT
-										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-										<< " (" << bytesReceived
-										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
-								}
-								break;
-							case ERR_CODE_INVALID_STAT:
-								{
-									std::stringstream sse;
-									sse << ERR_INVALID_STAT
-										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-										<< " (" << bytesReceived
-										<< " bytes): " << semtechUDPPacket::getSemtechJSONCharPtr(buffer.c_str(), bytesReceived);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
-								}
-								break;
-							case ERR_CODE_INVALID_PACKET:
-								{
-									std::stringstream sse;
-									sse << ERR_INVALID_PACKET
-										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-										<< " (" << bytesReceived
-										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
-								}
-								break;
-							case ERR_CODE_INVALID_JSON:
-								// it is completely invalid packet, do not response
-								{
-									std::stringstream sse;
-									sse << ERR_INVALID_JSON
-										<< " " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-										<< " (" << bytesReceived
-										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, sse.str());
 								}
 								break;
 							default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue
@@ -307,7 +252,7 @@ int UDPListener::listen() {
 											<< UDPSocket::addrString((const struct sockaddr *) &clientAddress)
 											<< ": " << ERR_INVALID_PACKET << ", " << hexString(v);
 										onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
-										break;
+										continue;
 									} else {
 										if (onLog) {
 											std::stringstream ss;

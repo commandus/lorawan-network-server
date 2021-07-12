@@ -85,7 +85,7 @@ apt install cmake
 
 ### autoconf
 
-Generate auttomake files, configure and make:
+Generate automake files, configure and make:
 
 ```
 autogen.sh
@@ -104,7 +104,7 @@ sudo make install
 Configure all supported databases:
 
 ```
-./configure --enable-db-postgres --enable-db-mysql --enable-db-firebird
+./configure --enable-db-sqlite --enable-db-postgres --enable-db-mysql --enable-db-firebird
 ```
 
 You must have database client and developer's tools (include files and libraries at least) installed on the computer.
@@ -774,3 +774,8 @@ pak811-1  3231323549304C0A 34313235343132353431323534313235 34313235343132353431
 
 52 bytes
 d09ed09bd0afd0a0d09c2120d093d09ed09bd090d09ad0a2d095d09ad09e20d09ed09fd090d0a1d09dd09ed0a1d0a2d098212131
+
+
+проверка покрытия
+
+Message received 84.237.104.16:59233 (194 bytes): 02c99a0000006cc3743eed467b227278706b223a5b7b22746d7374223a39363133393232382c226368616e223a322c2272666368223a302c2266726571223a3836342e3530303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a312e302c2272737369223a2d3130362c2273697a65223a31342c2264617461223a225144414452514741657759414f51736a7730593d227d5d7d

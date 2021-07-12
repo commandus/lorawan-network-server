@@ -186,12 +186,12 @@ void ReceiverQueueService::push
 (
 	const DeviceId deviceId,
 	const std::string &payload,
-	const timeval &time
+	const timeval &timeval
 )
 {
 	ReceiverQueueEntry e;
 	e.key.id = next();
-	e.key.time = time;
+	e.key.time = timeval;
 	e.value.deviceId = deviceId;
 	e.value.payload = payload;
 	e.value.dbids = dbs;

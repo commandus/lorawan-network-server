@@ -1,3 +1,28 @@
+/**
+ * 
+ * Queue processor (in separate thread)
+ * 
+ * Usage:
+ * 
+ * // create queue
+ * receiverQueueService = new JsonFileReceiverQueueService();
+ * // create processor to serve queue
+ * recieverQueueProcessor = new RecieverQueueProcessor();
+ * // create protobuf declarations
+ * void *pkt2env = initPkt2("proto", 0);
+ * recieverQueueProcessor->setPkt2Env(pkt2env);
+ * // load database config
+ * ConfigDatabases configDatabases("dbs.js");
+ * // create helper object
+ * DatabaseByConfig *dbByConfig = new DatabaseByConfig(&configDatabases);
+ * // add helper object to the processor
+ * recieverQueueProcessor->setDatabaseByConfig(dbByConfig);	
+ * // run processor
+ * recieverQueueProcessor->start(receiverQueueService);
+ * // stop processor
+ * recieverQueueProcessor->stop();
+ * 
+ */
 #include "receiver-queue-processor.h"
 #include "udp-socket.h"
 #include "utilstring.h"
@@ -105,6 +130,9 @@ void RecieverQueueProcessor::runner()
 	isDone = true;
 }
 
+/**
+ * Called from runner()
+ */ 
 void RecieverQueueProcessor::processQueue()
 {
 	if (!pkt2env)
@@ -115,6 +143,7 @@ void RecieverQueueProcessor::processQueue()
 		return;
 	while (receiverQueueService->count()) {
 		ReceiverQueueEntry entry;
+		std::cerr << "Databases: " << databaseByConfig->count() << std::endl;
 		for (int i = 0; i < databaseByConfig->count(); i++) {
 			DatabaseNConfig *db = databaseByConfig->get(i);
 			if (!db) {
@@ -122,13 +151,14 @@ void RecieverQueueProcessor::processQueue()
 				continue;
 			}
 			int dbId = db->config->id;
+			std::cerr << "Database: " << dbId << " " << db->config->name << std::endl;
 			if (receiverQueueService->pop(dbId, entry) != 0) 
 				continue;
 
 
 			int r = db->open();
 			if (r) {
-				std::cerr << ERR_DB_DATABASE_OPEN << r << std::endl;
+				std::cerr << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_client(r) << std::endl;
 				continue;
 			}
 

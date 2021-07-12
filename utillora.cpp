@@ -252,6 +252,14 @@ void DeviceId::set(
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
+void DeviceId::setEUIString
+(
+	const std::string &value
+)
+{
+	string2DEVEUI(deviceEUI, value);
+}
+
 std::string DeviceId::toJsonString() const
 {
 	std::stringstream ss;

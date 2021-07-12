@@ -44,7 +44,9 @@ int LoraPacketProcessor::put
 	if (identityService) {
 		DeviceId id;
 		r = identityService->get(packet.getHeader()->header.devaddr, id);
-		if (r) {
+		if (r == 0) {
+			onPacket(time, id, packet);
+		} else {
 			// device id NOT identified
 			if (onLog) {
 				// report error
@@ -55,9 +57,6 @@ int LoraPacketProcessor::put
 					<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
 				onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 			}
-		}
-		if (r == 0) {
-			onPacket(time, id, packet);
 		}
 	}
 	return r;
