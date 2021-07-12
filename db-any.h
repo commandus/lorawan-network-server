@@ -46,6 +46,12 @@ public:
 
 	DatabaseNConfig *get(int id) const;
 	DatabaseNConfig *find(const std::string &name) const;
+
+	/**
+	 * @param retval return dayavase identiofiiers
+	 * @return  count of databases
+	 */
+	size_t getIds(std::vector<int> &retval);
 };
 
 #endif
