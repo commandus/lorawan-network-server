@@ -230,7 +230,7 @@ DeviceId::DeviceId(
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
-	memset(&name, 0, sizeof(DEVICENAME));
+	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
 DeviceId::DeviceId(
@@ -258,6 +258,35 @@ void DeviceId::setEUIString
 )
 {
 	string2DEVEUI(deviceEUI, value);
+}
+
+void DeviceId::setNwkSKeyString
+(
+	const std::string &value
+)
+{
+	string2KEY(nwkSKey, value);
+}
+
+void DeviceId::setAppSKeyString(
+	const std::string &value
+)
+{
+	string2KEY(appSKey, value);
+}
+
+void DeviceId::setName(
+	const std::string &value
+)
+{
+	string2DEVICENAME(name, value.c_str());
+}
+
+void DeviceId::setClass(
+	const DEVICECLASS &value
+)
+{
+	deviceclass = value;
 }
 
 std::string DeviceId::toJsonString() const

@@ -2,8 +2,6 @@
 #include <regex>
 #include <base64/base64.h>
 
-#include <iostream>
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/reader.h"
@@ -429,13 +427,25 @@ int JsonFileReceiverQueueService::pop(
 	value.set(it->first, it->second);
 
 	mutexMap.lock();
-	std::cerr << "pop, before " << it->second.dbids.size() << std::endl;
 	int remainDbCount = it->second.popDbId(dbid);
-	std::cerr << "pop, remains " << remainDbCount << " (" << it->second.dbids.size() << ")" << std::endl;
 	if (remainDbCount == 0) {
 		// remove itself
 		storage.erase(it);
 	}
 	mutexMap.unlock();
+	return remainDbCount >= 0 ? 0 : remainDbCount;
+}
+
+int JsonFileReceiverQueueService::peek(
+	const int &dbid,
+	ReceiverQueueEntry &value
+)
+{
+	std::map<ReceiverQueueKey, ReceiverQueueValue, ReceiverQueueKeyCompare>::iterator it(storage.begin());
+	if (it == storage.end())
+		return ERR_CODE_QUEUE_EMPTY;
+	if (!it->second.hasDbId(dbid))
+		return ERR_CODE_NO_DATABASE;
+	value.set(it->first, it->second);
 	return 0;
 }

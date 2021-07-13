@@ -250,6 +250,37 @@ int DirTxtReceiverQueueService::pop(
 	return ERR_CODE_QUEUE_EMPTY;
 }
 
+/** 
+ * @return 0 if success, ERR_CODE_QUEUE_EMPTY if no message in queue, ERR_CODE_RM_FILE if program can nor delete file
+ * @param dbid ignored
+ */
+int DirTxtReceiverQueueService::peek(
+	const int &dbid,
+	ReceiverQueueEntry &retval
+)
+{
+	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++)
+	{
+		std::vector<std::string> f;
+		config::filesInPath(path, dataFileExtensions[fmt], 0, &f);
+		std::vector<std::string>::const_iterator it(f.begin());
+		if (it != f.end())
+		{
+			if (loadFile(retval.value.payload, retval.key.time.tv_sec, (DIRTXT_FORMAT) fmt, *it)) {
+				// error
+				continue;
+			} else {
+				ReceiverQueueEntry e;
+				retval.key.id = 0;
+				retval.key.time.tv_sec = fileModificationTime(*it);
+				retval.key.time.tv_usec = 0;
+				return 0;
+			}
+		}
+	}
+	return ERR_CODE_QUEUE_EMPTY;
+}
+
 // List entries
 void DirTxtReceiverQueueService::list(
 	std::vector<ReceiverQueueEntry> &retval,

@@ -124,6 +124,7 @@ void RecieverQueueProcessor::runner()
 				break;
 			case 0:
 				// timeout
+				std::cerr << isStarted << std::endl;
 				processQueue();
 				continue;
 			default:
@@ -144,21 +145,22 @@ void RecieverQueueProcessor::processQueue()
 		return;
 	if (!receiverQueueService)
 		return;
-	while (receiverQueueService->count()) {
+	size_t cnt = receiverQueueService->count();
+	if (cnt > 1024)
+		cnt = 1024;
+	for (int i = 0; i < cnt; i++) {	// do not use while(!receiverQueueService->count()) to prevent endless loop
 		ReceiverQueueEntry entry;
 		for (int i = 0; i < databaseByConfig->count(); i++) {
 			DatabaseNConfig *db = databaseByConfig->get(i);
 			if (!db) {
-				std::cerr << ERR_DB_DATABASE_NOT_FOUND << i << std::endl;
+				// std::cerr << ERR_DB_DATABASE_NOT_FOUND << i << std::endl;
 				continue;
 			}
 			int dbId = db->config->id;
 			
-			if (receiverQueueService->pop(dbId, entry) != 0) {
-				std::cerr << "Database: " << dbId << " " << db->config->name << " pop() error" << std::endl;
+			if (receiverQueueService->peek(dbId, entry) != 0) {
 				continue;
 			}
-
 
 			int r = db->open();
 			if (r) {
@@ -174,6 +176,10 @@ void RecieverQueueProcessor::processQueue()
 					<< " database id " << db->config->id << " " << db->config->name
 					<< ": " << db->db->errmsg << std::endl;
 				std::cerr << "SQL statement: " << db->insertClause(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload) << std::endl;
+			} else {
+				if (receiverQueueService->pop(dbId, entry) != 0) {
+					std::cerr << "Database: " << dbId << " " << db->config->name << " pop() error" << std::endl;
+				}
 			}
 			r = db->close();
 		}

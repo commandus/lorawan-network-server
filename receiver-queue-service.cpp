@@ -3,6 +3,7 @@
 
 #include "receiver-queue-service.h"
 #include "base64/base64.h"
+#include "errlist.h"
 
 ReceiverQueueKey::ReceiverQueueKey()
 	: id(0)
@@ -29,7 +30,7 @@ ReceiverQueueValue::ReceiverQueueValue
 (
 	const ReceiverQueueValue &value
 )
-	: payload(value.payload), dbids(value.dbids)
+	: deviceId(value.deviceId), payload(value.payload), dbids(value.dbids)
 {
 }
 
@@ -76,10 +77,21 @@ int ReceiverQueueValue::popDbId
 	{
 		if (*it == dbid) {
         	dbids.erase(it);
-			break;
+			return dbids.size();
 		}
     }
-	return dbids.size();
+	return ERR_CODE_NO_DATABASE;
+}	
+
+/**
+ * @return true if database exists
+ */
+bool ReceiverQueueValue::hasDbId
+(
+	int dbid
+)
+{
+	return (std::find(dbids.begin(), dbids.end(), dbid) != dbids.end());
 }	
 
 bool ReceiverQueueKeyCompare::operator() (
@@ -184,7 +196,7 @@ void ReceiverQueueService::setDbs
 
 void ReceiverQueueService::push
 (
-	const DeviceId deviceId,
+	const DeviceId &deviceId,
 	const std::string &payload,
 	const timeval &timeval
 )

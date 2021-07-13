@@ -267,6 +267,11 @@ public:
 	DeviceId(const DEVICEID &value);
 	void set(const DEVICEID &value);
 	void setEUIString(const std::string &value);
+	void setNwkSKeyString(const std::string &value);
+	void setAppSKeyString(const std::string &value);
+	void setName(const std::string &value);
+	void setClass(const DEVICECLASS &value);
+
 	std::string toJsonString() const;
 };
 
