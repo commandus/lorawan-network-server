@@ -45,7 +45,8 @@ class ReceiverQueueValue {
 
 		bool setJsonPayload(const std::string &jsonValue);
 		int popDbId(int dbid);	/// return remaining database count
-		void clear();
+		bool hasDbId(int dbid);	/// @return true if database exists
+ 		void clear();
 };
 
 struct ReceiverQueueKeyCompare
@@ -97,10 +98,12 @@ class ReceiverQueueService {
 		
 		// Add entry
 		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
-		void push(const DeviceId deviceId, const std::string &payload, const timeval &time);
+		void push(const DeviceId &deviceId, const std::string &payload, const timeval &time);
 		
 		// Return 0 if success
 		virtual int pop(const int &dbid, ReceiverQueueEntry &retval) = 0;
+		// Return 0 if success
+		virtual int peek(const int &dbid, ReceiverQueueEntry &retval) = 0;
 		// List entries
 		virtual void list(std::vector<ReceiverQueueEntry> &retval, size_t offset, size_t size) = 0;
 		// force save

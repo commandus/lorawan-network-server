@@ -53,6 +53,8 @@ class DirTxtReceiverQueueService: public ReceiverQueueService {
 		void pushEntry(ReceiverQueueEntry &value);
 		// Return 0 if success
 		int pop(const int &dbid, ReceiverQueueEntry &retval);
+		// Return 0 if success
+		int peek(const int &dbid, ReceiverQueueEntry &retval);
 		// List entries
 		void list(std::vector<ReceiverQueueEntry> &retval, size_t offset, size_t size);
 		// force save
