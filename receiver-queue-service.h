@@ -2,6 +2,7 @@
 #define RECEIVER_QUEUE_SERVICE_H_ 1
 
 #include <vector>
+#include <map>
 #include <string>
 #include <sys/time.h>
 
@@ -31,6 +32,7 @@ class ReceiverQueueKey {
 		ReceiverQueueKey();
 		ReceiverQueueKey(const ReceiverQueueKey &value);
 		void clear();
+		void setProperties(std::map<std::string, std::string> &retval);
 };
 
 class ReceiverQueueValue {
@@ -47,6 +49,7 @@ class ReceiverQueueValue {
 		int popDbId(int dbid);	/// return remaining database count
 		bool hasDbId(int dbid);	/// @return true if database exists
  		void clear();
+		void setProperties(std::map<std::string, std::string> &retval);
 };
 
 struct ReceiverQueueKeyCompare
@@ -68,6 +71,7 @@ class ReceiverQueueEntry {
 			const ReceiverQueueValue &value
 		);
 		std::string toJsonString() const;
+		void setProperties(std::map<std::string, std::string> *retval);
 		void clear();
 };
 

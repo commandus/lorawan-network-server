@@ -15,9 +15,9 @@ public:
 	std::string tableName(void *env, const std::string &message);
 	std::string selectClause(void *env, const std::string &message);
 	std::string createClause(void *env, const std::string &message);
-	std::string insertClause(void *env, const std::string &message, int inputFormat, const std::string &data);
+	std::string insertClause(void *env, const std::string &message, int inputFormat, const std::string &data, const std::map<std::string, std::string> *properties);
 	int createTable(void *env, const std::string &message);
-	int insert(void *env, const std::string &message, int inputFormat, const std::string &data);
+	int insert(void *env, const std::string &message, int inputFormat, const std::string &data, const std::map<std::string, std::string> *properties);
 	int open();
 	int close();
 	int exec(const std::string &statement);
@@ -48,7 +48,7 @@ public:
 	DatabaseNConfig *find(const std::string &name) const;
 
 	/**
-	 * @param retval return dayavase identiofiiers
+	 * @param retval return dayavase identifier
 	 * @return  count of databases
 	 */
 	size_t getIds(std::vector<int> &retval);

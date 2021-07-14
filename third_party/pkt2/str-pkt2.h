@@ -44,6 +44,9 @@ void donePkt2(void *env);
  * @param sqlDialect 0- PostgeSQL, 1- MySQL, 1- Firebird
  * @param packet data
  * @param forceMessage "" If specifed, try only message type
+ * @param tableAliases protobuf message to datanase table map
+ * @param fieldAliases protobuf message attribute to datanase column map
+ * @param properties "session environment variables", e.g addr, eui, time, timestamp
  * @return empty string if fails
  */
 std::string parsePacket(
@@ -54,7 +57,8 @@ std::string parsePacket(
 	const std::string &packet,
 	const std::string &forceMessage,
 	const std::map<std::string, std::string> *tableAliases = NULL,
-	const std::map<std::string, std::string> *fieldAliases = NULL
+	const std::map<std::string, std::string> *fieldAliases = NULL,
+	const std::map<std::string, std::string> *properties = NULL
 );
 
 /**
@@ -64,6 +68,9 @@ std::string parsePacket(
  * @param inputFormat 0- binary, 1- hex string
  * @param packet data
  * @param forceMessage "" If specifed, try only message type
+ * @param tableAliases protobuf message to datanase table map
+ * @param fieldAliases protobuf message attribute to datanase column map
+ * @param properties "session environment variables", e.g addr, eui, time, timestamp
  * @return empty string if fails
  */
 bool parsePacket2ProtobufMessage(
@@ -73,7 +80,8 @@ bool parsePacket2ProtobufMessage(
 	const std::string &packet,
 	const std::string &forceMessage,
 	const std::map<std::string, std::string> *tableAliases = NULL,
-	const std::map<std::string, std::string> *fieldAliases = NULL
+	const std::map<std::string, std::string> *fieldAliases = NULL,
+	const std::map<std::string, std::string> *properties = NULL
 );
 
 /**
@@ -105,7 +113,8 @@ std::string createTableSQLClause(
 	int outputFormat,
 	int sqlDialect,
 	const std::map<std::string, std::string> *tableAliases = NULL,
-	const std::map<std::string, std::string> *fieldAliases = NULL
+	const std::map<std::string, std::string> *fieldAliases = NULL,
+	const std::map<std::string, std::string> *properties = NULL
 );
 
 #endif
