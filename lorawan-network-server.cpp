@@ -229,9 +229,8 @@ void onLog(
 	const std::string &message
 )
 {
-	UDPListener *listener = (UDPListener *) env;
-	if (listener) {
-		if (listener->verbosity < level)
+	if (env) {
+		if (((UDPListener *) listener)->verbosity < level)
 			return;
 	}
 	std::cerr << time2string(time(NULL)) << " " << message << std::endl;
@@ -388,6 +387,7 @@ int main(
 	// Set pkt2 environment
 	recieverQueueProcessor = new RecieverQueueProcessor();
 	recieverQueueProcessor->setPkt2Env(pkt2env);
+	recieverQueueProcessor->setLogger(onLog);
 	// Set databases
 	recieverQueueProcessor->setDatabaseByConfig(dbByConfig);
 	// start processing queue

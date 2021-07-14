@@ -34,7 +34,6 @@
 
 #include <sys/time.h>
 #include <unistd.h>
-#include <iostream>
 
 int RecieverQueueProcessor::onPacket(
 	struct timeval &time,
@@ -44,7 +43,8 @@ int RecieverQueueProcessor::onPacket(
 {
 	std::stringstream ss;
 	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress);
-	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+	if (onLog)
+		onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
 	return 0;
 }
@@ -97,7 +97,7 @@ void RecieverQueueProcessor::start(
 	receiverQueueService = rQueueService;
 	std::vector<int> ids;
 	this->databaseByConfig->getIds(ids);
-	rQueueService->setDbs(ids);
+	receiverQueueService->setDbs(ids);
 	threadDb = new std::thread(&RecieverQueueProcessor::runner, this);
 }
 
@@ -124,7 +124,6 @@ void RecieverQueueProcessor::runner()
 				break;
 			case 0:
 				// timeout
-				std::cerr << isStarted << std::endl;
 				processQueue();
 				continue;
 			default:
@@ -152,33 +151,55 @@ void RecieverQueueProcessor::processQueue()
 		ReceiverQueueEntry entry;
 		for (int i = 0; i < databaseByConfig->count(); i++) {
 			DatabaseNConfig *db = databaseByConfig->get(i);
-			if (!db) {
-				// std::cerr << ERR_DB_DATABASE_NOT_FOUND << i << std::endl;
-				continue;
-			}
+
 			int dbId = db->config->id;
-			
-			if (receiverQueueService->peek(dbId, entry) != 0) {
+
+			if (!db) {
+				if (onLog) {
+					std::stringstream ss;
+					ss <<  ERR_DB_DATABASE_NOT_FOUND << " " << i;
+					onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+				}
+				// remove database from queue
+				if (receiverQueueService->pop(dbId, entry) != 0) {
+					if (onLog) {
+						std::stringstream ss;
+						ss << "Database: " << dbId << " " << db->config->name << " pop() error";
+						onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
+					}
+				}
 				continue;
 			}
+			
+			if (receiverQueueService->peek(dbId, entry) != 0)
+				continue;
 
 			int r = db->open();
-			if (r) {
-				std::cerr << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_client(r) << std::endl;
+			if (r && onLog) {
+				std::stringstream ss;
+				ss << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_client(r);
+				onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 				continue;
 			}
 
 			std::string messageType = "";
 			r = db->insert(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload);
 
-			if (r) {
-				std::cerr << ERR_DB_INSERT << r 
+			if (r && onLog) {
+				std::stringstream ss;
+				ss << ERR_DB_INSERT << r 
 					<< " database id " << db->config->id << " " << db->config->name
-					<< ": " << db->db->errmsg << std::endl;
-				std::cerr << "SQL statement: " << db->insertClause(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload) << std::endl;
-			} else {
-				if (receiverQueueService->pop(dbId, entry) != 0) {
-					std::cerr << "Database: " << dbId << " " << db->config->name << " pop() error" << std::endl;
+					<< ": " << db->db->errmsg
+					<< ", SQL statement: " << db->insertClause(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload)
+					<< ", payload: " << hexString(entry.value.payload);
+				onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
+			}
+			// remove datase from queue if database connection is ok
+			if (receiverQueueService->pop(dbId, entry) != 0) {
+				if(onLog) {
+					std::stringstream ss;
+					ss << "Database: " << dbId << " " << db->config->name << " pop() error";
+					onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
 				}
 			}
 			r = db->close();

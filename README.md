@@ -532,6 +532,8 @@ databases = [
 ];
 ```
 
+### MySQL
+
 In the Protobuf there are no date or time types, but it can return formatted date and time stamp as text.
 
 This field may have integer type not text.
@@ -543,13 +545,16 @@ If proto defines some fields as timestamp, proto-db utility return MySQL error
 Error insert record into SQL table 1 database mysql: Data truncated for column 'recvtime' at row 1
 ```
 
-Change rable's field type in the dstabase like this:
+Change table's field type in the dstabase like this:
 
 ```
 ALTER TABLE iridium_packet drop column recvtime;
 ALTER TABLE iridium_packet add COLUMN recvtime timestamp with time zone; 
+```
 
--- firebird
+### Firebird
+
+```
 ALTER TABLE "iridium_packet" drop "recvtime";
 ALTER TABLE "iridium_packet" add "recvtime" VARCHAR(32); 
 
@@ -559,6 +564,49 @@ ALTER TABLE "iridium_packet" add "recvtime" VARCHAR(32);
 ALTER TABLE "iridium_packet" drop "gps_time";
 ALTER TABLE "iridium_packet" add "gps_time" VARCHAR(32); 
 
+```
+
+Each table's row must have unique identifier.
+
+You need manually add column id and tnen make column "autoincrment".
+
+For instance, for column id create sequence generator:
+
+```
+create sequence gen_vega_id
+```
+
+Then in the trigger before insert put genetrated value to the "id" column:
+
+Add create time. Add column:
+
+```
+ALTER TABLE "vega_SI13" ADD CREATED TIMESTAMP;
+```
+Then modify trigger:
+
+```
+ALTER TRIGGER trg_vega_bi
+as
+begin
+  if ((new.id is null) or (new.id = 0)) then
+  begin
+    new.id = gen_id(gen_vega_id, 1);
+    new.created = current_timestamp;
+  end
+end
+```
+
+```
+CREATE TRIGGER trg_vega_bi for "vega_SI13"
+active before insert position 0
+as
+begin
+  if ((new.id is null) or (new.id = 0)) then
+  begin
+    new.id = gen_id(gen_vega_id, 1);
+  end
+end
 ```
 
 ### proto-db utility

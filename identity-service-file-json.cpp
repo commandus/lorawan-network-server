@@ -17,13 +17,13 @@
  */
 #define ATTRS_COUNT	7
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
-	"addr", 		// network address (hex string, 4 bytes)
-	"activation",	// ABP or OTAA
-	"eui",			// device identifier (hex string, 8 bytes)
-	"nwkSKey",		// shared session key (hex string, 16 bytes)
-	"appSKey",		// private key (hex string, 16 bytes)
-	"class", 		// A, B or C
-	"name"			// added for search
+	"addr", 		// 0 network address (hex string, 4 bytes)
+	"activation",	// 1 ABP or OTAA
+	"eui",			// 2 device identifier (hex string, 8 bytes)
+	"nwkSKey",		// 3 shared session key (hex string, 16 bytes)
+	"appSKey",		// 4 private key (hex string, 16 bytes)
+	"class", 		// 5 A, B or C
+	"name"			// 6 added for search
 };
 
 static const char *ACTIVATION_NAMES[2] = {
@@ -133,6 +133,9 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 
 		bool String(const char* str, rapidjson::SizeType length, bool copy) { 
 			std::string s; 
+			/*
+			 * 0- addr 1- activation 2- eui 3- nwkSKey 4- appSKey 5- class 6- name
+			 */
 			switch(idx) {
 				case 0:
 					string2DEVADDR(k, str);
@@ -152,6 +155,9 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 					string2KEY(v.appSKey, s);
 					break;
 				case 5:
+					v.deviceclass = string2deviceclass(str);
+					break;
+				case 6:
 					string2DEVICENAME(v.name, str);
 					break;
 				default:

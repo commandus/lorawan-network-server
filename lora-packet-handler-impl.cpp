@@ -4,6 +4,8 @@
 #include "utildate.h"
 #include "errlist.h"
 
+#include <iostream>
+
 int LoraPacketProcessor::onPacket(
 	struct timeval &time,
 	DeviceId id,
@@ -15,7 +17,12 @@ int LoraPacketProcessor::onPacket(
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
 	if (receiverQueueService) {
-		receiverQueueService->push(value.devId, value.getPayload(), time);
+		std::string p = value.getPayload();
+		std::cerr << "received packet " << value.devId.toJsonString() << ": " << hexString(p) << std::endl;
+		if (receiverQueueService)
+			receiverQueueService->push(value.devId, p, time);
+		else 
+			std::cerr << "receiverQueueService is NULL" << std::endl;
 	}
 	return 0;
 }
