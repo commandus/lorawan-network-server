@@ -4,8 +4,8 @@
 	"server": {
 		"identityStorageName": "identity.json",
 		"storageType": "json",
-		"queueStorageName": "queue",
-		"messageQueueStorageType": "txt",
+		"queueStorageName": "queue.json",
+		"messageQueueStorageType": "json",
 		"listenAddressIPv4": [
 			"127.0.0.1:5000",
 			"84.237.104.128:5000"
