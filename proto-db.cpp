@@ -10,6 +10,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <vector>
+#include <map>
 
 #include <google/protobuf/message.h>
 
@@ -367,7 +368,8 @@ void doInsert
 	Configuration *config,
 	DatabaseByConfig *dbAny,
 	const std::string &messageType,
-	const std::string &hexData
+	const std::string &hexData,
+	const std::map<std::string, std::string> *properties
 )
 {
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
@@ -384,11 +386,11 @@ void doInsert
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
 
-		r = db->insert(env, messageType, INPUT_FORMAT_HEX, hexData);
+		r = db->insert(env, messageType, INPUT_FORMAT_HEX, hexData, properties);
 
 		if (r) {
 			std::cerr << ERR_DB_INSERT << r << " database " << *it << ": " << db->db->errmsg << std::endl;
-			std::cerr << "SQL statement: " << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData) << std::endl;
+			std::cerr << "SQL statement: " << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData, properties) << std::endl;
 		}
 		r = db->close();
 	}
@@ -403,7 +405,7 @@ void doPrint
 	const std::string &hexData
 )
 {
-	std::cout << parsePacket(env, 1, 0, 0, hexData, forceMessageType, NULL, NULL) << std::endl;
+	std::cout << parsePacket(env, 1, 0, 0, hexData, forceMessageType, NULL, NULL, NULL) << std::endl;
 }
 
 int main(
@@ -449,14 +451,17 @@ int main(
 	if (config.command == "create") {
 		if (config.message_type.empty()) {
 			google::protobuf::Message *m;
-			parsePacket2ProtobufMessage((void**) &m, env, 1, config.payload, "", NULL, NULL);
+			parsePacket2ProtobufMessage((void**) &m, env, 1, config.payload, "", NULL, NULL, NULL);
 			if (m)
 				config.message_type = m->GetTypeName();
 			doCreate(env, &config, &dbAny, config.message_type);
 		}
 	}
-	if (config.command == "insert")
-		doInsert(env, &config, &dbAny, config.message_type, config.payload);
+	if (config.command == "insert") {
+		std::map<std::string, std::string> properties;
+		// TODO set properties
+		doInsert(env, &config, &dbAny, config.message_type, config.payload, &properties);
+	}
 	donePkt2(env);
 	return 0;
 }

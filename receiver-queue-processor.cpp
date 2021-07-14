@@ -151,9 +151,7 @@ void RecieverQueueProcessor::processQueue()
 		ReceiverQueueEntry entry;
 		for (int i = 0; i < databaseByConfig->count(); i++) {
 			DatabaseNConfig *db = databaseByConfig->get(i);
-
 			int dbId = db->config->id;
-
 			if (!db) {
 				if (onLog) {
 					std::stringstream ss;
@@ -182,15 +180,17 @@ void RecieverQueueProcessor::processQueue()
 				continue;
 			}
 
-			std::string messageType = "";
-			r = db->insert(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload);
+			std::map<std::string, std::string> properties;
+			entry.setProperties(&properties);
+
+			r = db->insert(pkt2env, "", INPUT_FORMAT_BINARY, entry.value.payload, &properties);
 
 			if (r && onLog) {
 				std::stringstream ss;
 				ss << ERR_DB_INSERT << r 
 					<< " database id " << db->config->id << " " << db->config->name
 					<< ": " << db->db->errmsg
-					<< ", SQL statement: " << db->insertClause(pkt2env, messageType, INPUT_FORMAT_BINARY, entry.value.payload)
+					<< ", SQL statement: " << db->insertClause(pkt2env, "", INPUT_FORMAT_BINARY, entry.value.payload, &properties)
 					<< ", payload: " << hexString(entry.value.payload);
 				onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
 			}

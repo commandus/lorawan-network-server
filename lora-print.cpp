@@ -10,6 +10,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <vector>
+#include <map>
 
 #include <google/protobuf/message.h>
 
@@ -211,7 +212,8 @@ void doInsert
 	LoraPrintConfiguration *config,
 	DatabaseByConfig *databaseByConfig,
 	const std::string &messageType,
-	const std::string &binData
+	const std::string &binData,
+	const std::map<std::string, std::string> *properties
 )
 {
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
@@ -221,7 +223,7 @@ void doInsert
 			std::cerr << ERR_DB_DATABASE_NOT_FOUND << *it << std::endl;
 			exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
 		}
-		std::cout << db->insertClause(env, messageType, INPUT_FORMAT_BINARY, binData) << std::endl;
+		std::cout << db->insertClause(env, messageType, INPUT_FORMAT_BINARY, binData, properties) << std::endl;
 	}
 }
 
@@ -238,7 +240,7 @@ void doPrint
 	const std::string &binData
 )
 {
-	std::cout << parsePacket(env, INPUT_FORMAT_BINARY, outputFormat, 0, binData, forceMessageType, NULL, NULL) << std::endl;
+	std::cout << parsePacket(env, INPUT_FORMAT_BINARY, outputFormat, 0, binData, forceMessageType, NULL, NULL, NULL) << std::endl;
 }
 
 int main(
@@ -319,7 +321,9 @@ int main(
 
 		std::string payload = it->getPayload();
 		if (config.command == "sql") {
-			doInsert(env, &config, &databaseByConfig, config.message_type, payload);
+			std::map<std::string, std::string> properties;
+			// TODO set properties
+			doInsert(env, &config, &databaseByConfig, config.message_type, payload, &properties);
 		} else {
 			doPrint(env, &config, config.message_type, config.outputFormat, payload);
 		}

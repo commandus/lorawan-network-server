@@ -4,6 +4,7 @@
 #include "receiver-queue-service.h"
 #include "base64/base64.h"
 #include "errlist.h"
+#include "utildate.h"
 
 ReceiverQueueKey::ReceiverQueueKey()
 	: id(0)
@@ -24,6 +25,16 @@ void ReceiverQueueKey::clear()
 {
 	time = {0, 0};
 	id = 0;
+}
+
+void ReceiverQueueKey::setProperties
+(
+	std::map<std::string, std::string> &retval
+)
+{
+	retval["time"] = time2string(time.tv_sec);
+	retval["timestamp"] = timeval2string(time);
+	retval["id"] = std::to_string(time.tv_sec);
 }
 
 ReceiverQueueValue::ReceiverQueueValue
@@ -93,6 +104,17 @@ bool ReceiverQueueValue::hasDbId
 {
 	return (std::find(dbids.begin(), dbids.end(), dbid) != dbids.end());
 }	
+
+void ReceiverQueueValue::setProperties
+(
+	std::map<std::string, std::string> &retval
+)
+{
+	retval["activation"] = activation2string(deviceId.activation);
+	retval["class"] = activation2string(deviceId.activation);
+	retval["eui"] = DEVEUI2string(deviceId.deviceEUI);
+	retval["name"] = std::string(deviceId.name, sizeof(DEVICENAME));
+}
 
 bool ReceiverQueueKeyCompare::operator() (
 	const ReceiverQueueKey& l,
@@ -164,6 +186,17 @@ std::string ReceiverQueueEntry::toJsonString() const
 	}
 	ss << "}";
 	return ss.str();
+}
+
+void ReceiverQueueEntry::setProperties
+(
+	std::map<std::string, std::string> *properties
+)
+{
+	if (!properties)
+		return;
+	this->key.setProperties(*properties);
+	this->value.setProperties(*properties);
 }
 
 ReceiverQueueService::ReceiverQueueService()

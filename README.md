@@ -475,6 +475,16 @@ Second element is an alias used in the database for table column.
 
 If second element is empty string, this message or field does not put to the database.
 
+Special fields starting with "$" (for strings or timestamps) or "@" (numbers) symbol.
+
+For example ["$addr", ""] declare addr is not stored in the database
+	
+- $addr
+- $eui
+- $name
+- @time
+- $timestamp
+
 Optional parameters:
 
 - login (reserved)

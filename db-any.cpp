@@ -83,18 +83,19 @@ std::string DatabaseNConfig::createClause
 )
 {
 	return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, config->getDialect(), 
-		&config->tableAliases, &config->fieldAliases);
+		&config->tableAliases, &config->fieldAliases, &config->properties);
 }
 
 std::string DatabaseNConfig::insertClause(
 	void *env,
 	const std::string &message,
 	int inputFormat,
-	const std::string &data
+	const std::string &data,
+	const std::map<std::string, std::string> *properties
 )
 {
 	return parsePacket(env, inputFormat, OUTPUT_FORMAT_SQL, config->getDialect(), data, message,
-		&config->tableAliases, &config->fieldAliases);
+		&config->tableAliases, &config->fieldAliases, properties);
 }
 
 int DatabaseNConfig::createTable(void *env, const std::string &message)
@@ -112,10 +113,11 @@ int DatabaseNConfig::insert(
 	void *env,
 	const std::string &message,
 	int inputFormat,
-	const std::string &data
+	const std::string &data,
+	const std::map<std::string, std::string> *properties
 )
 {
-	std::string clause = insertClause(env, message, inputFormat, data);
+	std::string clause = insertClause(env, message, inputFormat, data, properties);
 	if (clause.size() == 0)
 		return ERR_CODE_INVALID_PACKET;
 	return db->exec(clause);
