@@ -286,7 +286,7 @@ void doList
 				isFirst = false;
 			else
 				ss << ", ";
-			ss << *it;
+			ss << quote << *it << quote;
 		}
 
 		for (std::vector<std::string>::const_iterator it(config->sort_desc.begin()); it != config->sort_desc.end(); it++)  {
@@ -294,7 +294,7 @@ void doList
 				isFirst = false;
 			else
 				ss << ", ";
-			ss << *it << " DESC";
+			ss << quote << *it << quote << " DESC";
 		}
 
 		if (db->db->type != "firebird") {
@@ -336,7 +336,8 @@ void doCreate
 	void* env,
 	Configuration *config,
 	DatabaseByConfig *dbAny,
-	const std::string &messageType
+	const std::string &messageType,
+	int verbosity
 )
 {
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
@@ -353,6 +354,9 @@ void doCreate
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
 
+		if (verbosity) {
+			std::cout << db->createClause(env, messageType) << std::endl;
+		}
 		r = db->createTable(env, messageType);
 		if (r) {
 			std::cerr << ERR_DB_CREATE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
@@ -454,8 +458,8 @@ int main(
 			parsePacket2ProtobufMessage((void**) &m, env, 1, config.payload, "", NULL, NULL, NULL);
 			if (m)
 				config.message_type = m->GetTypeName();
-			doCreate(env, &config, &dbAny, config.message_type);
 		}
+		doCreate(env, &config, &dbAny, config.message_type, config.verbosity);
 	}
 	if (config.command == "insert") {
 		std::map<std::string, std::string> properties;
