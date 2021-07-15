@@ -36,7 +36,7 @@ class Configuration {
 public:
 	std::string command;				// print|list|create|insert
 	std::string proto_path;				// proto files directory. Default 'proto
-	std::string dbconfig;				// Default dbs.js'
+	std::string dbConfigFileName;		// Default dbs.js'
 	std::vector<std::string> dbname;	// database names
 
 	std::string payload;				// hex-string
@@ -102,7 +102,7 @@ int parseCmd(
 	int argc,
 	char *argv[])
 {
-	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, 
+	struct arg_str *a_command, *a_proto_path, *a_dbconfigfilename, *a_dbname, *a_message_type, 
 		*a_payload_hex, *a_payload_base64,
 		*a_sort_asc, *a_sort_desc;
 	struct arg_int *a_offset, *a_limit;
@@ -112,7 +112,7 @@ int parseCmd(
 	void *argtable[] = {
 		a_command = arg_str0(NULL, NULL, "<command>", "print|list|create|insert. Default print"),
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
-		a_dbconfig = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.js'"),
+		a_dbconfigfilename = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.js'"),
 		a_dbname = arg_strn("d", "dbname", "<database>", 0, 100, "database name, Default all"),
 
 		a_message_type = arg_str0("m", "message", "<pkt.msg>", "Message type packet and name"),
@@ -150,10 +150,10 @@ int parseCmd(
 		else
 			config->proto_path = "proto";
 
-		if (a_dbconfig->count)
-			config->dbconfig = *a_dbconfig->sval;
+		if (a_dbconfigfilename->count)
+			config->dbConfigFileName = *a_dbconfigfilename->sval;
 		else
-			config->dbconfig = "dbs.js";
+			config->dbConfigFileName = "dbs.js";
 
 		if (a_message_type->count)
 			config->message_type = *a_message_type->sval;
@@ -432,7 +432,7 @@ int main(
 		exit(ERR_CODE_LOAD_PROTO);
 	}
 
-	ConfigDatabases configDatabases(config.dbconfig);
+	ConfigDatabases configDatabases(config.dbConfigFileName);
 	if (configDatabases.dbs.size() == 0) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		donePkt2(env);

@@ -454,6 +454,7 @@ Each element is object with members
 - connection
 - table_aliases
 - field_aliases
+- properties
 
 Name is used to find out appropriate database.
 
@@ -475,15 +476,23 @@ Second element is an alias used in the database for table column.
 
 If second element is empty string, this message or field does not put to the database.
 
-Special fields starting with "$" (for strings or timestamps) or "@" (numbers) symbol.
+properties array consist of [key, value] pairs.
 
-For example ["$addr", ""] declare addr is not stored in the database
-	
-- $addr
-- $eui
-- $name
-- @time
-- $timestamp
+Keys are:
+
+- addr
+- eui
+- name
+- time (32 bit integer)
+- timestamp string
+- activation (ABP|OTAA)
+- class A|B|C
+- eui
+- name
+
+The only integer key is time. All others are string.
+
+Values are set by receiver processor before data is inserted into database.
 
 Optional parameters:
 
@@ -647,10 +656,11 @@ Pass message type in the -m option:
 ./proto-db -d mysql_1 -m iridium.IEPacket create
 ```
 
-Detremine message type by the payload using -x <payload-hex>
+Determine message type by the payload using -x <payload-hex>
 
 ```
-./proto-db -d mysql_1 -x 0100213887c1601c000000004a0000000000000000000000
+./proto-db create -d mysql -x 0100213887c1601c000000004a0000000000000000000000
+./proto-db -d sqlite -x 010021b8b06b581f000000004a0000000000000000000000 create
 ```
 
 Print "iridium.IEPacket" messages stored in the "mysql_1" database:
@@ -810,13 +820,24 @@ dpkg-query -L firebird-dev
 ...
 /usr/lib/x86_64-linux-gnu/libfbclient.so
 ...
-```
 
 ### LMDB
 
 ```
 sudo apt install liblmdb-dev 
 ```
+
+## Known bugs
+
+Javascript parser does not support merge using the spread operator like
+
+```
+const mergeResult = [...array1, ...array2]
+```
+
+in the dbs.js configuration file
+
+### References
 
 [Semtech LoRaWAN-lib](https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/) uses
 

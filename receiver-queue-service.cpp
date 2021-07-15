@@ -190,13 +190,25 @@ std::string ReceiverQueueEntry::toJsonString() const
 
 void ReceiverQueueEntry::setProperties
 (
-	std::map<std::string, std::string> *properties
+	std::map<std::string, std::string> *values,
+	const std::map<std::string, std::string> *aliases
+
 )
 {
-	if (!properties)
+	if (!values)
 		return;
-	this->key.setProperties(*properties);
-	this->value.setProperties(*properties);
+	this->key.setProperties(*values);
+	this->value.setProperties(*values);
+	if (!aliases)
+		return;
+	// remove not uised
+	for (std::map<std::string, std::string>::iterator it(values->begin()); it != values->end();  ) {
+		if (aliases->find(it->first) == aliases->end()) {
+			it = values->erase(it);
+		} else {
+			it++;
+		}
+	}
 }
 
 ReceiverQueueService::ReceiverQueueService()
