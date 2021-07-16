@@ -181,7 +181,7 @@ void RecieverQueueProcessor::processQueue()
 			}
 
 			std::map<std::string, std::string> properties;
-			entry.setProperties(&properties, &db->config->properties);
+			entry.setProperties(properties, db->config->properties);
 
 			r = db->insert(pkt2env, "", INPUT_FORMAT_BINARY, entry.value.payload, &properties);
 

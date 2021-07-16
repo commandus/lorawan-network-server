@@ -32,9 +32,9 @@ void ReceiverQueueKey::setProperties
 	std::map<std::string, std::string> &retval
 )
 {
-	retval["time"] = time2string(time.tv_sec);
-	retval["timestamp"] = timeval2string(time);
-	retval["id"] = std::to_string(time.tv_sec);
+	retval["time"] = std::to_string(time.tv_sec);
+	retval["timestamp"] = time2string(time.tv_sec);// timeval2string(time);
+	retval["id"] = std::to_string(id);
 }
 
 ReceiverQueueValue::ReceiverQueueValue
@@ -190,23 +190,21 @@ std::string ReceiverQueueEntry::toJsonString() const
 
 void ReceiverQueueEntry::setProperties
 (
-	std::map<std::string, std::string> *values,
-	const std::map<std::string, std::string> *aliases
+	std::map<std::string, std::string> values,
+	const std::map<std::string, std::string> aliases
 
 )
 {
-	if (!values)
-		return;
-	this->key.setProperties(*values);
-	this->value.setProperties(*values);
-	if (!aliases)
-		return;
-	// remove not uised
-	for (std::map<std::string, std::string>::iterator it(values->begin()); it != values->end();  ) {
-		if (aliases->find(it->first) == aliases->end()) {
-			it = values->erase(it);
-		} else {
-			it++;
+	// copy only values lsted in aliases, and replace key to the alias name
+	std::map<std::string, std::string> sessionProperties;
+	this->key.setProperties(sessionProperties);
+	this->value.setProperties(sessionProperties);
+	for (std::map<std::string, std::string>::const_iterator it(aliases.begin()); it != aliases.end(); it++) {
+		std::map<std::string, std::string>::const_iterator f = sessionProperties.find(it->first);
+		if (f != sessionProperties.end()) {
+			if (!f->second.empty()) {
+				values[f->second] = it->second;
+			}
 		}
 	}
 }

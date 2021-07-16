@@ -14,6 +14,7 @@
 #endif
 
 const static char *dateformat = "%FT%T";
+const static char *dateformat1 = "%FT%T%Z";
 const static char *dateformat2 = "%F %T %Z";
 
 std::string ltimeString(
@@ -45,8 +46,10 @@ time_t parseDate(const char *v)
 	memset(&tmd, 0, sizeof(struct tm));
 
 	time_t r;
-	if ((strptime(v, dateformat, &tmd) == NULL) &&
-		(strptime(v, dateformat2, &tmd) == NULL))
+	if ((strptime(v, dateformat, &tmd) == NULL) 
+		&& (strptime(v, dateformat1, &tmd) == NULL)
+		&& (strptime(v, dateformat2, &tmd) == NULL)
+		)
 			r = strtol(v, NULL, 0);
 	else
 			r = mktime(&tmd);
@@ -139,7 +142,7 @@ std::string timeval2string(
 {
 	char buf[64];
 	struct tm *tm = localtime(&val.tv_sec);
-	strftime(buf, sizeof(buf), dateformat, tm);
+	strftime(buf, sizeof(buf), dateformat1, tm);
 	std::stringstream ss;
 	ss << buf << "." << val.tv_usec;
 	return ss.str();
@@ -151,6 +154,6 @@ std::string time2string(
 {
 	char buf[64];
 	struct tm *tm = localtime(&val);
-	strftime(buf, sizeof(buf), dateformat, tm);
+	strftime(buf, sizeof(buf), dateformat1, tm);
 	return std::string(buf);
 }
