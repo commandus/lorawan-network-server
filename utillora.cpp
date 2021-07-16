@@ -303,6 +303,17 @@ std::string DeviceId::toJsonString() const
 	return ss.str();
 }
 
+void DeviceId::setProperties
+(
+	std::map<std::string, std::string> &retval
+)
+{
+	retval["activation"] = activation2string(activation);
+	retval["class"] = deviceclass2string(deviceclass);
+	retval["eui"] = DEVEUI2string(deviceEUI);
+	retval["name"] = std::string(name, sizeof(DEVICENAME));
+}
+
 void NetworkIdentity::set(
 	const DEVADDRINT &addr,
 	const DEVICEID &value

@@ -23,14 +23,20 @@
 #include "errlist.h"
 #include "utilstring.h"
 #include "utildate.h"
+#include "utilidentity.h"
 
 #include "pkt2/str-pkt2.h"
 #include "db-any.h"
+
+#include "identity-service-file-json.h"
+#include "identity-service-dir-txt.h"
 
 #include "config-filename.h"
 
 const std::string progname = "proto-db";
 #define DEF_CONFIG_FILE_NAME ".proto-db.json"
+#define DEF_IDENTITY_STORAGE_NAME	"identity.json"
+#define DEF_IDENTITY_STORAGE_TYPE	"json"
 
 class Configuration {
 public:
@@ -47,7 +53,12 @@ public:
 	std::vector<std::string> sort_desc;	// list command, sort by field descending
 
 	std::string message_type;
-	
+
+	// identity service
+	std::string identityStorageName;
+	int identityStorageType;
+	std::string addr;					// for insert
+
 	int verbosity;						// verbosity level
 };
 
@@ -104,7 +115,7 @@ int parseCmd(
 {
 	struct arg_str *a_command, *a_proto_path, *a_dbconfigfilename, *a_dbname, *a_message_type, 
 		*a_payload_hex, *a_payload_base64,
-		*a_sort_asc, *a_sort_desc;
+		*a_sort_asc, *a_sort_desc, *a_addr, *a_identityStorageName, *a_identityStorageType;
 	struct arg_int *a_offset, *a_limit;
 	struct arg_lit *a_verbosity, *a_help;
 	struct arg_end *a_end;
@@ -125,6 +136,10 @@ int parseCmd(
 		a_sort_asc = arg_strn("s", "asc", "<field-name>", 0, 100, "list command, sort by field ascending."),
 		a_sort_desc = arg_strn("S", "desc", "<field-name>", 0, 100, "list command, sort by field descending."),
 		
+		a_addr = arg_str0("a", "addr", "<addr>", "insert, device network address"),
+		a_identityStorageName = arg_str0("i", "id-name", "<name>", "default " DEF_IDENTITY_STORAGE_NAME),
+		a_identityStorageType = arg_str0("y", "id-type", "json|txt|lmdb", "default " DEF_IDENTITY_STORAGE_TYPE),
+
 		a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level"),
 		a_help = arg_lit0("?", "help", "Show this help"),
 		a_end = arg_end(20)
@@ -191,6 +206,24 @@ int parseCmd(
 		for (int i = 0; i < a_sort_desc->count; i++) {
 			config->sort_desc.push_back(a_sort_desc->sval[i]);
 		}
+
+		config->identityStorageName = "";
+		if (a_identityStorageName->count) {
+			config->identityStorageName = *a_identityStorageName->sval;
+		}
+		if (config->identityStorageName.empty())
+			config->identityStorageName = DEF_IDENTITY_STORAGE_NAME;
+		
+		std::string sidentityStorageType = "";
+		if (a_identityStorageType->count) {
+			sidentityStorageType = *a_identityStorageType->sval;
+		}
+		config->identityStorageType = string2storageType(sidentityStorageType);
+
+		config->addr = "";
+		if (a_addr->count)
+			config->addr = *a_addr->sval;
+
 		config->verbosity = a_verbosity->count;
 	}
 
@@ -373,7 +406,8 @@ void doInsert
 	DatabaseByConfig *dbAny,
 	const std::string &messageType,
 	const std::string &hexData,
-	const std::map<std::string, std::string> *properties
+	const std::map<std::string, std::string> &props,
+	int verbosity
 )
 {
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
@@ -389,12 +423,18 @@ void doInsert
 			std::cerr << ERR_DB_DATABASE_OPEN << r << std::endl;
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
+		std::map<std::string, std::string> properties;
+		db->config->setProperties(properties, props);
 
-		r = db->insert(env, messageType, INPUT_FORMAT_HEX, hexData, properties);
+		if (verbosity) {
+			std::cout << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData, &properties) << std::endl;
+		}
+
+		r = db->insert(env, messageType, INPUT_FORMAT_HEX, hexData, &properties);
 
 		if (r) {
 			std::cerr << ERR_DB_INSERT << r << " database " << *it << ": " << db->db->errmsg << std::endl;
-			std::cerr << "SQL statement: " << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData, properties) << std::endl;
+			std::cerr << "SQL statement: " << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData, &properties) << std::endl;
 		}
 		r = db->close();
 	}
@@ -462,10 +502,43 @@ int main(
 		doCreate(env, &config, &dbAny, config.message_type, config.verbosity);
 	}
 	if (config.command == "insert") {
+		IdentityService *identityService = NULL;
+		// Start identity service
+		switch (config.identityStorageType) {
+			case IDENTITY_STORAGE_LMDB:
+	#ifdef ENABLE_LMDB
+				identityService = new LmdbIdentityService();
+	#endif			
+				break;
+			case IDENTITY_STORAGE_DIR_TEXT:
+				identityService = new DirTxtIdentityService();
+				break;
+			default:
+				identityService = new JsonFileIdentityService();
+		}
+		identityService->init(config.identityStorageName, NULL);
+		DEVADDR devaddr;
+		string2DEVADDR(devaddr, config.addr);
+		DeviceId deviceId;
+		int r = identityService->get(devaddr, deviceId);
+		if (r) {
+			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_ADDRESS << ": " << ERR_INVALID_ADDRESS << std::endl;
+			exit(ERR_CODE_INVALID_ADDRESS);
+		}
+		// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
 		std::map<std::string, std::string> properties;
-		// TODO set properties
-		doInsert(env, &config, &dbAny, config.message_type, config.payload, &properties);
+		time_t t(time(NULL));
+		properties["time"] = std::to_string(t);
+		properties["timestamp"] = time2string(t);
+		deviceId.setProperties(properties);
+
+		doInsert(env, &config, &dbAny, config.message_type, config.payload, properties, config.verbosity);
+
+		if (identityService)
+			delete identityService;
 	}
+
+
 	donePkt2(env);
 	return 0;
 }

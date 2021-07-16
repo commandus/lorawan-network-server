@@ -72,8 +72,8 @@ class ReceiverQueueEntry {
 		);
 		std::string toJsonString() const;
 		void setProperties(
-			std::map<std::string, std::string> values,
-			const std::map<std::string, std::string> aliases
+			std::map<std::string, std::string> &values,
+			const std::map<std::string, std::string> &aliases
 		);
 		void clear();
 };

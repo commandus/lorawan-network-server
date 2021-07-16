@@ -110,10 +110,7 @@ void ReceiverQueueValue::setProperties
 	std::map<std::string, std::string> &retval
 )
 {
-	retval["activation"] = activation2string(deviceId.activation);
-	retval["class"] = activation2string(deviceId.activation);
-	retval["eui"] = DEVEUI2string(deviceId.deviceEUI);
-	retval["name"] = std::string(deviceId.name, sizeof(DEVICENAME));
+	deviceId.setProperties(retval);
 }
 
 bool ReceiverQueueKeyCompare::operator() (
@@ -190,8 +187,8 @@ std::string ReceiverQueueEntry::toJsonString() const
 
 void ReceiverQueueEntry::setProperties
 (
-	std::map<std::string, std::string> values,
-	const std::map<std::string, std::string> aliases
+	std::map<std::string, std::string> &values,
+	const std::map<std::string, std::string> &aliases
 
 )
 {
@@ -203,7 +200,7 @@ void ReceiverQueueEntry::setProperties
 		std::map<std::string, std::string>::const_iterator f = sessionProperties.find(it->first);
 		if (f != sessionProperties.end()) {
 			if (!f->second.empty()) {
-				values[f->second] = it->second;
+				values[it->second] = f->second;
 			}
 		}
 	}

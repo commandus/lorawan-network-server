@@ -32,7 +32,7 @@
 
 #include "identity-service-file-json.h"
 #include "identity-service-dir-txt.h"
-#include "config-json.h"
+#include "utilidentity.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
@@ -57,16 +57,6 @@ public:
 	IDENTITY_STORAGE identityStorageType;
 	int outputFormat;					// 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
 	int verbosity;						// verbosity level
-};
-
-static IDENTITY_STORAGE string2storageType(
-	const std::string &value
-) {
-	if (value == "txt")
-		return IDENTITY_STORAGE_DIR_TEXT;
-	if (value == "lmdb")
-		return IDENTITY_STORAGE_LMDB;
-	return IDENTITY_STORAGE_FILE_JSON;
 };
 
 /**
@@ -165,7 +155,6 @@ int parseCmd(
 	}
 	if (config->identityStorageName.empty())
 		config->identityStorageName = DEF_IDENTITY_STORAGE_NAME;
-
 	
 	std::string sidentityStorageType = "";
 	if (a_identityStorageType->count) {
@@ -322,7 +311,11 @@ int main(
 		std::string payload = it->getPayload();
 		if (config.command == "sql") {
 			std::map<std::string, std::string> properties;
-			// TODO set properties
+			// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
+			// time  timestamp 
+			time_t t(time(NULL));
+			properties["time"] = std::to_string(t);
+			properties["timestamp"] = time2string(t);
 			doInsert(env, &config, &databaseByConfig, config.message_type, payload, &properties);
 		} else {
 			doPrint(env, &config, config.message_type, config.outputFormat, payload);

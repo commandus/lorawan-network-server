@@ -24,6 +24,10 @@ public:
 	ConfigDatabase();
 	std::string toString() const;
 	int getDialect() const;
+	void setProperties(
+		std::map<std::string, std::string> &retval,
+		const std::map<std::string, std::string> &values
+	) const;
 };
 
 class ConfigDatabases

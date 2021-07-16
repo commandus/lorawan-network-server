@@ -12,17 +12,6 @@
 
 #define DEF_BUFFER_SIZE	4096
 
-static std::string storageType2String(IDENTITY_STORAGE value) {
-	switch(value) {
-		case IDENTITY_STORAGE_DIR_TEXT:
-			return "txt";
-		case IDENTITY_STORAGE_LMDB:
-			return "lmdb";
-		default:
-			return "json";
-	}
-}
-
 static std::string messageQueueStorageType2String(MESSAGE_QUEUE_STORAGE value) {
 	switch(value) {
 		case MESSAGE_QUEUE_STORAGE_DIR_TEXT:
@@ -32,16 +21,6 @@ static std::string messageQueueStorageType2String(MESSAGE_QUEUE_STORAGE value) {
 		default:
 			return "json";
 	}
-}
-
-static IDENTITY_STORAGE string2storageType(
-	const std::string &value
-) {
-	if (value == "txt")
-		return IDENTITY_STORAGE_DIR_TEXT;
-	if (value == "lmdb")
-		return IDENTITY_STORAGE_LMDB;
-	return IDENTITY_STORAGE_FILE_JSON;
 }
 
 static MESSAGE_QUEUE_STORAGE string2messageQueueStorageType

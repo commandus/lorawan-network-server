@@ -104,7 +104,7 @@ nobase_dist_include_HEADERS = \
 	identity-service-abstract.h identity-service-file-json.h \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
-	lora-rejoin.h \
+	lora-rejoin.h utilidentity.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -120,7 +120,7 @@ lorawan_network_server_SOURCES = \
 	config-json.cpp lora-packet-handler-impl.cpp \
 	packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp config-filename.cpp \
-	semtech-pull-resp-packet.cpp lora-encrypt.cpp \
+	utilidentity.cpp semtech-pull-resp-packet.cpp lora-encrypt.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp \
 	receiver-queue-service.cpp identity-service-dir-txt.cpp  $(C_STORAGE) $(C_QUEUE_STORAGE) \
 	db-any.cpp  $(BACKEND_DB_SRC) \
@@ -132,7 +132,7 @@ lorawan_network_server_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2
 lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 mac_gw_SOURCES = \
-	mac-gw.cpp macgw-config-json.cpp errlist.cpp \
+	mac-gw.cpp macgw-config-json.cpp errlist.cpp utilidentity.cpp \
 	utillora.cpp udp-socket.cpp udp-emitter.cpp \
 	config-json.cpp packet-queue.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
@@ -149,7 +149,8 @@ mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(B
 mac_gw_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
-	proto-db.cpp utilstring.cpp \
+	proto-db.cpp utilstring.cpp utilidentity.cpp utillora.cpp utildate.cpp utilfile.cpp \
+	gateway-stat.cpp lora-encrypt.cpp identity-service-dir-txt.cpp $(C_STORAGE) \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -157,7 +158,7 @@ proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 lora_print_SOURCES = \
-	lora-print.cpp utilstring.cpp \
+	lora-print.cpp utilstring.cpp utilidentity.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES) \

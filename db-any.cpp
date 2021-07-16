@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "db-any.h"
 #ifdef ENABLE_DB_SQLITE
 #include "db-sqlite.h"
@@ -57,7 +55,6 @@ DatabaseNConfig::DatabaseNConfig
 
 DatabaseNConfig::~DatabaseNConfig()
 {
-	std::cerr << "~DatabaseNConfig" << std::endl;
 	if (db) {
 		db->close();
 		delete db;
