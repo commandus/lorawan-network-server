@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <inttypes.h>
 
 #include <netinet/in.h>
@@ -273,6 +274,7 @@ public:
 	void setClass(const DEVICECLASS &value);
 
 	std::string toJsonString() const;
+	void setProperties(std::map<std::string, std::string> &retval);
 };
 
 class rfmMetaData {

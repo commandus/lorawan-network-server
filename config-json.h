@@ -4,16 +4,12 @@
 #include <string>
 #include <vector>
 
+#include "utilidentity.h"
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
-
-typedef enum {
-	IDENTITY_STORAGE_FILE_JSON = 1,
-	IDENTITY_STORAGE_DIR_TEXT = 2,
-	IDENTITY_STORAGE_LMDB = 3
-} IDENTITY_STORAGE;
 
 typedef enum {
 	MESSAGE_QUEUE_STORAGE_JSON = 1,
