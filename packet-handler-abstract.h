@@ -12,6 +12,7 @@ class PacketHandler {
 		// Return 0, retval = EUI and keys
 		virtual int onPacket(
 			struct timeval &time,
+			const DEVADDR &addr,
 			DeviceId id,
 			semtechUDPPacket &value
 		) = 0;

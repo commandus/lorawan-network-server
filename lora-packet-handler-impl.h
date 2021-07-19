@@ -51,6 +51,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		)> value);
 		int onPacket(
 			struct timeval &time,
+			const DEVADDR &addr,
 			DeviceId id,
 			semtechUDPPacket &value
 		);
