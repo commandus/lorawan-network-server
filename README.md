@@ -119,7 +119,7 @@ lorawan-network-server can store device's authentication information in the LMDB
 
 ./configure has options to choose how to store device's authentication information:
 
-- --enable-json=true (by default in memory)
+- --enable-json in memory database (by default)
 - --enable-lmdb or --enable-mdbx (on the disk file)
 
 For clang:
