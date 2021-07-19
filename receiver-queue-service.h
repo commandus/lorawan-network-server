@@ -37,6 +37,7 @@ class ReceiverQueueKey {
 
 class ReceiverQueueValue {
 	public:
+		DEVADDR addr;
 		DeviceId deviceId;	// device identifier
 		std::string payload;
 		std::string jsonPayload() const;
@@ -105,7 +106,7 @@ class ReceiverQueueService {
 		
 		// Add entry
 		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
-		void push(const DeviceId &deviceId, const std::string &payload, const timeval &time);
+		void push(const DEVADDR &addr, const DeviceId &deviceId, const std::string &payload, const timeval &time);
 		
 		// Return 0 if success
 		virtual int pop(const int &dbid, ReceiverQueueEntry &retval) = 0;

@@ -43,6 +43,7 @@ ReceiverQueueValue::ReceiverQueueValue
 )
 	: deviceId(value.deviceId), payload(value.payload), dbids(value.dbids)
 {
+	memmove(addr, value.addr, sizeof(DEVADDR)); 
 }
 
 ReceiverQueueValue::ReceiverQueueValue()
@@ -111,6 +112,7 @@ void ReceiverQueueValue::setProperties
 )
 {
 	deviceId.setProperties(retval);
+	retval["addr"] = DEVADDRINT2string(addr);
 }
 
 bool ReceiverQueueKeyCompare::operator() (
@@ -199,7 +201,7 @@ void ReceiverQueueEntry::setProperties
 	for (std::map<std::string, std::string>::const_iterator it(aliases.begin()); it != aliases.end(); it++) {
 		std::map<std::string, std::string>::const_iterator f = sessionProperties.find(it->first);
 		if (f != sessionProperties.end()) {
-			if (!f->second.empty()) {
+			if (!it->second.empty()) {
 				values[it->second] = f->second;
 			}
 		}
@@ -236,6 +238,7 @@ void ReceiverQueueService::setDbs
 
 void ReceiverQueueService::push
 (
+	const DEVADDR &addr,
 	const DeviceId &deviceId,
 	const std::string &payload,
 	const timeval &timeval
@@ -244,6 +247,7 @@ void ReceiverQueueService::push
 	ReceiverQueueEntry e;
 	e.key.id = next();
 	e.key.time = timeval;
+	memmove(e.value.addr, addr, sizeof(DEVADDR));
 	e.value.deviceId = deviceId;
 	e.value.payload = payload;
 	e.value.dbids = dbs;

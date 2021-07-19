@@ -530,7 +530,9 @@ int main(
 		time_t t(time(NULL));
 		properties["time"] = std::to_string(t);
 		properties["timestamp"] = time2string(t);
+		properties["addr"] = config.addr;
 		deviceId.setProperties(properties);
+
 
 		doInsert(env, &config, &dbAny, config.message_type, config.payload, properties, config.verbosity);
 

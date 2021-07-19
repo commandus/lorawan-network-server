@@ -8,6 +8,7 @@
 
 int LoraPacketProcessor::onPacket(
 	struct timeval &time,
+	const DEVADDR &addr,
 	DeviceId id,
 	semtechUDPPacket &value
 )
@@ -20,7 +21,7 @@ int LoraPacketProcessor::onPacket(
 		std::string p = value.getPayload();
 		std::cerr << "received packet " << value.devId.toJsonString() << ": " << hexString(p) << std::endl;
 		if (receiverQueueService)
-			receiverQueueService->push(value.devId, p, time);
+			receiverQueueService->push(addr, value.devId, p, time);
 		else 
 			std::cerr << "receiverQueueService is NULL" << std::endl;
 	}
@@ -50,9 +51,11 @@ int LoraPacketProcessor::put
 	int r;
 	if (identityService) {
 		DeviceId id;
-		r = identityService->get(packet.getHeader()->header.devaddr, id);
+		DEVADDR *addr = &packet.getHeader()->header.devaddr;
+
+		r = identityService->get(*addr, id);
 		if (r == 0) {
-			onPacket(time, id, packet);
+			onPacket(time, *addr, id, packet);
 		} else {
 			// device id NOT identified
 			if (onLog) {
