@@ -8,38 +8,6 @@ import "pkt2.proto";
 import "hlogger/time5.proto";
 import "hlogger/gps16.proto";
 
-/*
-typedef ALIGN struct {  30 bytes + 3 header
-	uint8_t packettype;		    //< 0) 1 байт 0х08 - координаты с NMEA приемников LAT, LON,
-	uint8_t gpsolddata:1;		//< 1)GPS old data, GPS not read
-	uint8_t gpsencoded:1;		//< GPS data encoded
-	uint8_t gpsfrommemory:1;	//< data got from the memory
-	uint8_t gpsnoformat:1;		//< memory is not formatted
-	uint8_t gpsnosats:1;		//< No visible GPS salellites
-	uint8_t gpsbadhdop:1;		//< GPS HDOP = 99 or > 50
-	uint8_t gpstime:1;		    //< 1 бит 1-0  GPS.valid=0x01 или 0;     GPS.time_valid=0b0000 0010 или 0;
-	uint8_t gpsnavdata:1;		//< 1 бит 1-0  GPS.valid=0x01 или 0;     GPS.time_valid=0b0000 0010 или 0;
-	uint8_t sats;		        //< 2) 1 байт  кол. видимых спутников
-	gps_coord_t coord;		    //< 3) 16 байт (или 10 байт??? ) hex ?
-	uint8_t bat:6;			    //< 19) байт бортовое напряжение fixed point (32=3.2 вольта) (от 2.0 до 4.0)
-	uint8_t alarmlow:1;	        //< bit 6 < 2V, bit 7 > 4V
-	uint8_t alarmhigh:1;		//< bit 6 < 2V, bit 7 > 4V
-	int8_t temperature;	        //< 20) 1 байт температура
-	uint8_t r2;			        //< 21) 1 байт номер пакета?? - он же индекс в таблице кодировки
-	uint8_t failurepower:1;		//< 22) device status power loss
-	uint8_t failureeep:1;		//< EEPROM failure
-	uint8_t failureclock:1;		//< clock not responding
-	uint8_t failurecable:1;		//< MAC not responding
-	uint8_t failureint0:1;		//< clock int failure
-	uint8_t failurewatchdog:1;	//< software failure
-	uint8_t failurenoise:1;		//< blocks in memory found
-	uint8_t failureworking:1;	//< device was
-	uint16_t key;			    // 23) 2 байт     volatile unsigned int packet_key;  младшие 16 бит
-	// uint8_t		 res[3];
-	time5 time;                 // 25 5 байт
-	// uint32_t crc;
-} PACKED packet46420_t;
-*/
 /// A lot of flags
 message Packet46420
 {
@@ -143,7 +111,8 @@ message Packet46420
         }
         ]
     };
-	// structure 16 bytes long (bytes 3..18) 
+
+    // structure 16 bytes long (bytes 3..18) 
     GPSCoordinates gps_coordinates = 1 [(pkt2.variable) = {
         get: "field.gps_coordinates"
     }];

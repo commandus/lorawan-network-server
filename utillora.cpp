@@ -1276,8 +1276,8 @@ static std::string getMAC(
 	return hexString(&value, sizeof(DEVEUI));
 }
 
-RFM_HEADER *semtechUDPPacket::getRfmHeader() {
-	
+RFM_HEADER *semtechUDPPacket::getRfmHeader()
+{
 	return &header.header;
 }
 

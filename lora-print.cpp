@@ -293,12 +293,11 @@ int main(
 	if (gatewayStat.errcode == 0) {
 		std::cout << gatewayStat.toJsonString() << std::endl;
 	}
-	for (std::vector<semtechUDPPacket>::const_iterator it(packets.begin()); it != packets.end(); it++) {
+	for (std::vector<semtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
 		if (it->errcode) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << std::endl;
 			continue;
 		}
-
 		std::cout 
 			<< "{\"prefix\": "
 			<< semtechDataPrefix2JsonString(dataprefix)
@@ -309,6 +308,21 @@ int main(
 
 
 		std::string payload = it->getPayload();
+
+		if (config.verbosity > 2) {
+			std::cout << "fcnt: " << std::hex
+				<< "0x" << it->getRfmHeader()->fcnt
+				<< ", fctrl: {foptslen: " << std::dec << (int) it->getRfmHeader()->fctrl.f.foptslen
+				<< ", fpending: " << (int)  it->getRfmHeader()->fctrl.f.fpending
+				<< ", ack: " << (int)  it->getRfmHeader()->fctrl.f.ack
+				<< ", adr: " << (int)  it->getRfmHeader()->fctrl.f.adr
+				<< "}"
+				<< ", major: " << (int) it->getRfmHeader()->macheader.f.major
+				<< ", mtype: " << mtype2string((MTYPE) it->getRfmHeader()->macheader.f.mtype)
+				<< "(" << (int) it->getRfmHeader()->macheader.f.mtype << ")"
+				<< std::endl;
+		}
+
 		if (config.command == "sql") {
 			std::map<std::string, std::string> properties;
 			// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
