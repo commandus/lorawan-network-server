@@ -342,6 +342,7 @@ public:
 	);
 
 	std::string toString() const;
+	std::string toJson() const;
 	bool parse(const std::string &value);
 };
 
@@ -380,6 +381,7 @@ public:
 	std::string toString() const;
 	std::string toDebugString() const;
 	std::string metadataToJsonString() const;
+	std::string toJson() const;
 
 	RFM_HEADER *getRfmHeader();
 	rfmHeader *getHeader();
@@ -450,6 +452,11 @@ DEVICECLASS string2deviceclass
 
 std::string mtype2string(
 	MTYPE value
+);
+
+std::string opts2string
+(
+	const FOPTS &value
 );
 
 MTYPE string2mtype(

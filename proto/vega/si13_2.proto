@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package vega;
+
+import "pkt2.proto";
+
+message SI13p2
+{
+    // backend database
+    option(pkt2.output) = {
+    	sql {
+    		dialect: SQL_POSTGRESQL
+    	}
+    };
+    // Вега SI-13 Port 2
+    option(pkt2.packet) = {
+        id: 13002
+        name: "si13p2"
+        short_name: "Тревога"
+        full_name: "Вега SI-13-232 Тревога"
+        fields: [
+            {
+                name: "tag2"
+                type: INPUT_INT
+                size: 1
+                offset: 0,
+                tag: 2
+            },
+            {
+                name: "reserved1"
+                type: INPUT_INT
+                size: 1
+                offset: 1
+            },
+            {
+                name: "settings"
+                type: INPUT_INT
+                size: 1
+                offset: 2
+            },
+            {
+                name: "input"
+                type: INPUT_INT
+                size: 1
+                offset: 3
+            },
+            {
+                name: "counter1"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 4
+            },
+            {
+                name: "counter2"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 8
+            },
+            {
+                name: "reserved2"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 12
+            },
+            {
+                name: "reserved3"
+                type: INPUT_INT
+                size: 4
+                endian: ENDIAN_LITTLE_ENDIAN
+                offset: 16
+            }
+        ]
+    };
+
+    // output 
+    int32 input = 1 [(pkt2.variable) = {
+        name: "input"
+        short_name: "Вход"
+        full_name: "Номер входа"
+        measure_unit: ""
+        get: "field.input"
+        priority: 0                                 // required
+    }];
+    int32 counter1 = 2 [(pkt2.variable) = {
+        name: "counter1"
+        short_name: "Счетчик 1"
+        full_name: "Счетчик 1"
+        measure_unit: "импульсов"
+        get: "field.counter1"
+        priority: 0                                 // required
+    }];
+    int32 counter2 = 3 [(pkt2.variable) = {
+        name: "counter2"
+        short_name: "Счетчик 2"
+        full_name: "Счетчик 2"
+        measure_unit: "импульсов"
+        get: "field.counter2"
+        priority: 0                                 // required
+    }];
+}
