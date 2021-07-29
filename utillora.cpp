@@ -1009,6 +1009,23 @@ std::string rfmHeader::toString() const {
 	return r;
 }
 
+std::string rfmHeader::toJson() const
+{
+	std::stringstream ss;
+	ss << "{\"port\": "  << (int) fport
+		<< ", \"opts\": \""  << opts2string(fopts)
+		<< "\", \"header\": {\"fcnt\": "  << header.fcnt
+		<< ", \"fctrl\": {\"foptslen\": " << (int) header.fctrl.f.foptslen
+		<< ", \"fpending\": " << (int)  header.fctrl.f.fpending
+		<< ", \"ack\": " << (int)  header.fctrl.f.ack
+		<< ", \"adr\": " << (int)  header.fctrl.f.adr
+		<< "}, \"addr\": \"" << DEVADDR2string(header.devaddr)
+		<< "\", \"mac\": {\"major\": " << (int) header.macheader.f.major
+		<< ", \"mtype\": \"" << mtype2string((MTYPE) header.macheader.f.mtype)
+		<< "\"}}}";
+	return ss.str();
+}
+
 semtechUDPPacket::semtechUDPPacket() 
 	: errcode(0)
 {
@@ -1442,6 +1459,22 @@ std::string semtechUDPPacket::getPayload() const
 	return payload;
 }
 
+std::string semtechUDPPacket::toJson() const
+{
+	std::stringstream ss;
+	ss << "{\"prefix\": "
+			<< semtechDataPrefix2JsonString(prefix)
+			<< ", \"addr\": \"" << getDeviceAddrStr() << "\""
+			<< ", \"id\": " <<devId.toJsonString()
+			<< ", \"metadata\": "
+			<< metadataToJsonString() 
+			<< ", \"rfm\": " << header.toJson()
+			<< ", \"payload_size\": " << payload.size()
+			<< ", \"payload\": \"" << hexString(payload)
+			<< "\"}";
+	return ss.str();
+}
+
 void semtechUDPPacket::setPayload(
 	uint8_t port,
 	const std::string &value
@@ -1524,7 +1557,16 @@ std::string TDEVEUI::toString() {
 	return DEVEUI2string(eui);
 }
 
-std::string mtype2string(
+std::string opts2string
+(
+	const FOPTS &value
+)
+{
+	return hexString(&value, sizeof(FOPTS));
+}
+
+std::string mtype2string
+(
 	MTYPE value
 ) {
 	switch (value) {
