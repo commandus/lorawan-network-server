@@ -381,7 +381,7 @@ public:
 	std::string toString() const;
 	std::string toDebugString() const;
 	std::string metadataToJsonString() const;
-	std::string toJson() const;
+	std::string toJsonString() const;
 
 	RFM_HEADER *getRfmHeader();
 	rfmHeader *getHeader();
