@@ -299,6 +299,14 @@ int main(
 			continue;
 		}
 		std::cout << it->toJsonString() << std::endl;
+		if (config.verbosity > 2) {
+			
+			if (it->hasApplicationPayload())
+				std::cerr << "application payload " << (int) it->getHeader()->fport << std::endl;
+			if (it->hasMACPayload())
+				std::cerr << "MAC payload " << std::endl;
+
+		}
 		std::string payload = it->getPayload();
 		if (config.command == "sql") {
 			std::map<std::string, std::string> properties;

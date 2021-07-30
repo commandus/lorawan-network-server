@@ -407,6 +407,10 @@ public:
 	int16_t getStrongesSignalLevel(int &idx) const;
 
 	static char *getSemtechJSONCharPtr(const void *packet, size_t size);
+
+	// @return true- has MAC payload
+	bool hasMACPayload() const ;
+	bool hasApplicationPayload() const;
 };
 
 uint64_t deveui2int(const DEVEUI &value);
@@ -456,6 +460,7 @@ std::string mtype2string(
 
 std::string opts2string
 (
+	uint8_t len,
 	const FOPTS &value
 );
 

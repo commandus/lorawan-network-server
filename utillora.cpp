@@ -997,6 +997,8 @@ bool rfmHeader::parse(
 		sz = value.size();
 	if (sz > 0)
 		memcpy(&header, value.c_str(), sz);
+	if (value.size() > sizeof(RFM_HEADER))
+		memcpy(&fport, value.c_str() + sizeof(RFM_HEADER), 1);
 	return r;
 }
 
@@ -1012,8 +1014,8 @@ std::string rfmHeader::toString() const {
 std::string rfmHeader::toJson() const
 {
 	std::stringstream ss;
-	ss << "{\"port\": "  << (int) fport
-		<< ", \"opts\": \""  << opts2string(fopts)
+	ss << "{\"fport\": "  << (int) fport
+		<< ", \"fopts\": \""  << opts2string(header.fctrl.f.foptslen, fopts)
 		<< "\", \"header\": {\"fcnt\": "  << header.fcnt
 		<< ", \"fctrl\": {\"foptslen\": " << (int) header.fctrl.f.foptslen
 		<< ", \"fpending\": " << (int)  header.fctrl.f.fpending
@@ -1533,6 +1535,20 @@ int semtechUDPPacket::parseData(
 	return LORA_OK;
 }
 
+bool semtechUDPPacket::hasMACPayload() const
+{
+	// fport 1..223 - application payload
+	// fport 224 - LoRaWAN test protocol
+	return (header.fport == 0) && (payload.size() > 0);
+}
+
+bool semtechUDPPacket::hasApplicationPayload() const
+{
+	// fport 1..223 - application payload
+	// fport 224 - LoRaWAN test protocol
+	return (header.fport >= 1) && (header.fport <= 223) && (payload.size() > 0);
+}
+
 uint64_t deveui2int(
 	const DEVEUI &value
 )
@@ -1558,10 +1574,13 @@ std::string TDEVEUI::toString() {
 
 std::string opts2string
 (
+	uint8_t len,
 	const FOPTS &value
 )
 {
-	return hexString(&value, sizeof(FOPTS));
+	if (len > sizeof(FOPTS))
+		len = sizeof(FOPTS);
+	return hexString(&value, len);
 }
 
 std::string mtype2string
