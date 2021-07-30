@@ -298,7 +298,7 @@ int main(
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << std::endl;
 			continue;
 		}
-		std::cout << it->toJson() << std::endl;
+		std::cout << it->toJsonString() << std::endl;
 		std::string payload = it->getPayload();
 		if (config.command == "sql") {
 			std::map<std::string, std::string> properties;

@@ -552,7 +552,7 @@ void rfmMetaData::setCodr(
 rfmMetaData::rfmMetaData(
 	const rfmMetaData &value
 )
-	: t(value.t), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), 
+	: t(value.t), tmst(value.tmst), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), 
 	modu(value.modu), bandwith(value.bandwith),
 	spreadingFactor(value.spreadingFactor), codingRate(value.codingRate), 
 	bps(value.bps), rssi(value.rssi), lsnr(value.lsnr)
@@ -886,8 +886,8 @@ int rfmMetaData::parse(
 
 	if (value.HasMember(METADATA_RX_NAMES[12])) {
 		rapidjson::Value &v = value[METADATA_RX_NAMES[12]];
-		if (v.IsInt()) {
-			lsnr = v.GetInt();
+		if (v.IsFloat()) {
+			lsnr = v.GetFloat();
 		}
 	}
 
@@ -1459,15 +1459,14 @@ std::string semtechUDPPacket::getPayload() const
 	return payload;
 }
 
-std::string semtechUDPPacket::toJson() const
+std::string semtechUDPPacket::toJsonString() const
 {
 	std::stringstream ss;
 	ss << "{\"prefix\": "
 			<< semtechDataPrefix2JsonString(prefix)
 			<< ", \"addr\": \"" << getDeviceAddrStr() << "\""
-			<< ", \"id\": " <<devId.toJsonString()
-			<< ", \"metadata\": "
-			<< metadataToJsonString() 
+			<< ", \"id\": " << devId.toJsonString()
+			<< ", \"metadata\": " << metadataToJsonString() 
 			<< ", \"rfm\": " << header.toJson()
 			<< ", \"payload_size\": " << payload.size()
 			<< ", \"payload\": \"" << hexString(payload)
