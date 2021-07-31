@@ -1523,7 +1523,12 @@ int semtechUDPPacket::parseData(
 		// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 		int rc = identityService->get(header.header.devaddr, devId);
 		if (rc == 0) {
-			decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
+			KEY128 *key;
+			if (header.fport == 0)
+				key = &devId.nwkSKey;
+			else
+				key = &devId.appSKey;
+			decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
 		} else {
 			// return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 		}
