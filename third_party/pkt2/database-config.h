@@ -36,7 +36,7 @@ public:
 	std::vector<ConfigDatabase> dbs;
 	
 	ConfigDatabases(const std::string &filename);
-	void load(const std::string &value);
+	int load(const std::string &value);
 	std::string toString() const;
 	const ConfigDatabase *findByName(const std::string &name) const;
 };
