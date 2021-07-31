@@ -100,7 +100,10 @@ AC_CHECK_LIB(pq,PQfformat)
 fi
 
 if test "$ENABLE_DB_MYSQL" == "true"; then
-AX_CHECK_MYSQL()
+# AX_CHECK_MYSQL() cause /configure: line 11688: syntax error near unexpected token `fi'
+# AX_CHECK_MYSQL()
+AC_CHECK_HEADERS(mysql/mysql.h mysql/mysql_com.h mysql/mysql_version.h)
+AC_CHECK_LIB(mysqlclient, mysql_init) 
 fi
 
 if test "$ENABLE_DB_FIREBIRD" == "true"; then

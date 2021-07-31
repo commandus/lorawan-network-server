@@ -327,6 +327,7 @@ int DirTxtReceiverQueueService::init(
 	{
 		writeFormat = ((DirTxtReceiverQueueServiceOptions *) data)->format;
 	}
+	return 0;
 }
 
 // close resources

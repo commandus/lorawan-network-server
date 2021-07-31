@@ -195,6 +195,8 @@ DatabaseIntf* DatabaseByConfig::open
 				if (dbc->type == "firebird")
 #ifdef ENABLE_DB_FIREBIRD					
 					return new DatabaseFirebird();
+#else
+	;		
 #endif					
 	return NULL;
 }
