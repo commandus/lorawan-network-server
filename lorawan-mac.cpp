@@ -12,6 +12,50 @@
 
 #define DEF_FREQUENCY_100 868900
 
+static const std::string MAC_NAME[] =
+{
+	// Class-A
+	"",
+	"Reset",			// 1
+	"LinkCheck",		// 2
+	"LinkADR",			// 3
+	"DutyCycle",		// 4
+	"RXParamSetup",		// 5
+	"DevStatus",		// 6
+	"NewChannel",		// 7
+	"RXTimingSetup",	// 8
+	"TXParamSetup",		// 9
+	"DLChannel",		// 0x0a
+	"Rekey",			// 0x0b
+	"ADRParamSetup",	// 0x0c
+	"DeviceTime",		// 0x0d
+	"ForceRejoin",		// 0x0e
+	"RejoinParamSetup",	// 0x0f
+	// Class-B Section 14
+	"PingSlotInfo",		// 0x10
+	"PingSlotChannel",	// 0x11
+	// 0x12 has been deprecated in 1.1
+	"BeaconTiming",		// 0x12,	//  Deprecated
+	"BeaconFreq",		// 0x13,
+};
+// Class-C	"DeviceMode" 0x20
+static const std::string MAC_NAME_DEVICEMODE = "DeviceMode";
+static const std::string MAC_NAME_INVALID = "invalid";
+static const std::string MAC_NAME_EXTENSION = "extension";
+
+// 0x80 to 0xFF reserved for proprietary network command extensions
+
+const std::string& getMACCommandName(uint8_t command)
+{
+	if (command <= 0x13)
+		return MAC_NAME[command];
+	if (command <= 0x20)
+		return MAC_NAME_DEVICEMODE;
+	if (command >= 0x80)
+		return MAC_NAME_EXTENSION;
+	return MAC_NAME_INVALID;
+}
+
 #define SET_FREQUENCY(arr, value) \
 	std::cerr << "set frequency: " << value << std::endl; \
 	arr[0] = value & 0xff; \
@@ -39,6 +83,14 @@ MAC_COMMAND_TYPE isMACCommand(uint8_t cmd)
 			return ERR_CODE_MAC_TOO_SHORT; \
 		r = MAC_##cn##_SIZE; \
 		memmove(&retval, value, MAC_##cn##_SIZE);
+
+#define PTR_MAC(cn) \
+		if (sz < MAC_##cn##_SIZE) \
+			return ERR_CODE_MAC_TOO_SHORT; \
+		r = MAC_##cn##_SIZE; \
+		if (retval) \
+			*retval = (MAC_COMMAND*) value;
+
 
 /**
  * Parse transmitted by the server client side
@@ -199,6 +251,173 @@ int parseServerSide(
 	// Class-C
 	case DeviceMode:
 		COPY_MAC(DEVICEMODE)	// same
+		break;
+	default:
+		return ERR_CODE_MAC_INVALID;
+	}
+	return r;
+}
+// -----------------------------------------
+
+/**
+ * Parse transmitted by the server client side
+ * @return size of first MAC command, if error, return <0
+ */
+int parseClientSidePtr(
+	MAC_COMMAND **retval,
+	const char* value,
+	size_t sz
+)
+{
+	if (sz < 1)
+		return ERR_CODE_MAC_TOO_SHORT;
+	int r = 0;
+	switch ((uint8_t) *value) {
+	case Reset:	// req
+		PTR_MAC(RESET)	// same request and response
+		break;
+	case LinkCheck:
+		PTR_MAC(LINK_CHECK)
+		break;
+	case LinkADR:
+		PTR_MAC(LINK_ADR_REQ)
+		break;
+	case DutyCycle:
+		PTR_MAC(DUTY_CYCLE)	// same request and response
+		break;
+	case RXParamSetup:
+		PTR_MAC(RXRARAMSETUP_REQ)
+		break;
+	case DevStatus:
+		PTR_MAC(EMPTY)
+		break;
+	case NewChannel:
+		PTR_MAC(NEWCHANNEL_REQ)
+		break;
+	case RXTimingSetup:
+		PTR_MAC(TIMINGSETUP)
+		break;
+	case TXParamSetup:
+		PTR_MAC(TXPARAMSETUP)
+		break;
+	case DLChannel:
+		PTR_MAC(DLCHANNEL_REQ)
+		break;
+	case Rekey:
+		PTR_MAC(REKEY_RESP)
+		break;
+	case ADRParamSetup:
+		PTR_MAC(ADRPARAMSETUP) 
+		break;
+	case DeviceTime:
+		PTR_MAC(DEVICETIME)
+		break;
+	case ForceRejoin:
+		PTR_MAC(FORCEREJOIN)
+		break;
+	case RejoinParamSetup:
+		PTR_MAC(REJOINPARAMSETUP_REQ)
+		break;
+	// Class-B Section 14
+	case PingSlotInfo:
+		PTR_MAC(EMPTY)
+		break;
+	case PingSlotChannel:
+		PTR_MAC(PINGSLOTCHANNEL_REQ)
+		break;
+	// 0x12 has been deprecated in 1.1
+	case BeaconTiming:
+		PTR_MAC(BEACONTIMING)
+		break;
+	case BeaconFreq:
+		PTR_MAC(BEACONFREQUENCY_REQ)
+		break;
+	// Class-C
+	case DeviceMode:
+		PTR_MAC(DEVICEMODE)	// same
+		break;
+	default:
+		return ERR_CODE_MAC_INVALID;
+	}
+	return r;
+}
+
+/**
+ * Parse MAC command transmitted by end-device (server side)
+ * @return size of first MAC command, if error, return <0
+ */
+int parseServerSidePtr(
+	MAC_COMMAND **retval,
+	const char* value,
+	size_t sz
+)
+{
+	if (sz < 1)
+		return ERR_CODE_MAC_TOO_SHORT;
+	int r = 0;
+	switch ((uint8_t) *value) {
+	case Reset:	// req
+		PTR_MAC(RESET)	// same request and response
+		break;
+	case LinkCheck:
+		PTR_MAC(EMPTY)
+		break;
+	case LinkADR:
+		PTR_MAC(LINK_ADR_RESP)
+		break;
+	case DutyCycle:
+		PTR_MAC(EMPTY)
+		break;
+	case RXParamSetup:
+		PTR_MAC(RXRARAMSETUP_RESP)
+		break;
+	case DevStatus:
+		PTR_MAC(DEVSTATUS)
+		break;
+	case NewChannel:
+		PTR_MAC(NEWCHANNEL_RESP)
+		break;
+	case RXTimingSetup:
+		PTR_MAC(EMPTY)
+		break;
+	case TXParamSetup:
+		PTR_MAC(EMPTY)
+		break;
+	case DLChannel:
+		PTR_MAC(DLCHANNEL_RESP)
+		break;
+	case Rekey:
+		PTR_MAC(REKEY_REQ)
+		break;
+	case ADRParamSetup:
+		PTR_MAC(EMPTY) 
+		break;
+	case DeviceTime:
+		PTR_MAC(EMPTY)
+		break;
+	case ForceRejoin:
+		PTR_MAC(EMPTY)	// actually no response, it is re-join request
+		break;
+	case RejoinParamSetup:
+		PTR_MAC(REJOINPARAMSETUP_RESP)
+		break;
+	// Class-B Section 14
+	case PingSlotInfo:
+		PTR_MAC(PINGSLOTINFO)
+		break;
+	case PingSlotChannel:
+		PTR_MAC(PINGSLOTCHANNEL_RESP)
+		break;
+	// 0x12 has been deprecated in 1.1
+	case BeaconTiming:
+		PTR_MAC(EMPTY)
+		break;
+	case BeaconFreq:
+		PTR_MAC(BEACONFREQUENCY_RESP)
+		break;
+	// Class-C
+	case DeviceMode:
+		PTR_MAC(DEVICEMODE)	// same
 		break;
 	default:
 		return ERR_CODE_MAC_INVALID;
@@ -517,7 +736,10 @@ std::string MacData::toHexString() const
 #define MD2JSONSS_COMMA() \
 	ss << ", ";
 
-std::string MacData::toJSONString() const
+std::string MAC_DATA2JSONString(
+	const MAC_COMMAND &command,
+	const bool isClientSide 
+)
 {
 	std::stringstream ss;
 	if (isClientSide)	{
@@ -775,6 +997,11 @@ std::string MacData::toJSONString() const
 			}
 	}
 	return ss.str();
+}
+
+std::string MacData::toJSONString() const
+{
+	return MAC_DATA2JSONString(command, isClientSide);
 }
 
 size_t commandSize(
@@ -1328,7 +1555,8 @@ MacDataForceRejoin::MacDataForceRejoin()
  * @param period delay, s: 32s * 2^Period + Random(0..32)
  * @param maxretries 0- no retry, 1..7 
  * @param rejointype 0 or 1: A Rejoin-request type 0, 2: type 2
- * @param dr 0..15 data rate
+ * @param dr 0..15 data rateMakefile:2115: recipe for target 'lorawan_network_server-lorawan-mac.o' failed
+
  */
 MacDataForceRejoin::MacDataForceRejoin(
 	uint8_t period,
@@ -1502,4 +1730,63 @@ MacDataDeviceMode::MacDataDeviceMode(
 	v->data.cl = classC ? 2 : 0; // class: 0- A, 1- RFU, 2- C
 }
 
+MacPtr::MacPtr(
+	const std::string &parseData,
+	const bool aClientSide
+)
+	: clientSide(aClientSide)
+{
+	parse(parseData);
+}
 
+/**
+ * Set size, errorcode
+ */
+void MacPtr::parse(
+	const std::string &parseData
+) 
+{
+	MAC_COMMAND *m;
+	int r;
+	const char *p = parseData.c_str();
+	size_t sz = parseData.size();
+	while (sz > 0)
+	{
+		if (clientSide)
+			r = parseClientSidePtr(&m, p, sz);
+		else
+			r = parseServerSidePtr(&m, p, sz);
+		if (r < 0)
+			break;
+		sz -= r;
+		p += sz;
+		mac.push_back(m);
+	}
+	errorcode = r < 0 ? r : 0;
+}
+
+std::string MacPtr::toHexString() const
+{
+	std::stringstream ss;
+	for (std::vector<MAC_COMMAND* >::const_iterator it(mac.begin()); it != mac.end(); it++ ) {
+		ss << std::hex << (int) (*it)->command;
+		int sz = commandSize(*(*it), clientSide);
+		ss << hexString((const char *) &(*it)->data, sz);
+	}
+	return ss.str();
+}
+
+std::string MacPtr::toJSONString() const
+{
+	std::stringstream ss;
+	ss << "[";
+	bool needComma = false;
+	for (std::vector<MAC_COMMAND* >::const_iterator it(mac.begin()); it != mac.end(); it++ ) {
+		if (needComma)
+			ss << ", ";
+		ss << "{" << MAC_DATA2JSONString(*(*it), clientSide) << "}";
+		needComma = true;
+	}
+	ss << "]";
+	return ss.str();
+}

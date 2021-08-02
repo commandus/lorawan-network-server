@@ -150,6 +150,7 @@ mac_gw_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
 	proto-db.cpp utilstring.cpp utilidentity.cpp utillora.cpp utildate.cpp utilfile.cpp \
+	lorawan-mac.cpp errlist.cpp \
 	gateway-stat.cpp lora-encrypt.cpp identity-service-dir-txt.cpp $(C_STORAGE) \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
@@ -158,7 +159,7 @@ proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 lora_print_SOURCES = \
-	lora-print.cpp utilstring.cpp utilidentity.cpp \
+	lora-print.cpp utilstring.cpp utilidentity.cpp lorawan-mac.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES) \

@@ -23,6 +23,7 @@
 #include "identity-service-abstract.h"
 
 #include "lora-encrypt.h"
+#include "lorawan-mac.h"
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define swap16(x) (x)
@@ -1470,9 +1471,18 @@ std::string semtechUDPPacket::toJsonString() const
 			<< ", \"id\": " << devId.toJsonString()
 			<< ", \"metadata\": " << metadataToJsonString() 
 			<< ", \"rfm\": " << header.toJson()
-			<< ", \"payload_size\": " << payload.size()
-			<< ", \"payload\": \"" << hexString(payload)
-			<< "\"}";
+			<< ", \"payload_size\": " << payload.size();
+
+	if (hasMACPayload()) {
+		MacPtr macPtr(payload);
+		ss << ", \"mac\": " << (macPtr.toJSONString());
+		if (macPtr.errorcode) {
+			std::cerr << ERR_MESSAGE << macPtr.errorcode << ": " << strerror_client(macPtr.errorcode) << std::endl;
+		}
+	}
+	if (hasApplicationPayload())
+		ss << ", \"payload\": \"" << hexString(payload) << "\"";
+	ss << "}";
 	return ss.str();
 }
 
