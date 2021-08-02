@@ -37,6 +37,8 @@ enum MAC_CID {
 	// 0x80 to 0xFF reserved for proprietary network command extensions
 };
 
+const std::string& getMACCommandName(uint8_t command);
+
 enum MAC_COMMAND_TYPE {
 	MCT_KNOWN = 0,
 	MCT_PROPRIETARY = 1,
@@ -538,7 +540,7 @@ typedef ALIGN struct {
 	MAC_DEVICEMODE data;
 } PACKED MAC_COMMAND_DEVICEMODE;
 
-#define MAC_EMPTY_SIZE sizeof(MAC_COMMAND_EMPTY)
+#define MAC_EMPTY_SIZE 1
 #define MAC_RESET_SIZE sizeof(MAC_COMMAND_RESET)
 #define MAC_LINK_CHECK_SIZE sizeof(MAC_COMMAND_LINK_CHECK)
 #define MAC_LINK_ADR_REQ_SIZE sizeof(MAC_COMMAND_LINK_ADR_REQ)
@@ -588,6 +590,23 @@ int parseClientSide(
 	size_t sz
 );
 
+int parseServerSidePtr(
+	MAC_COMMAND *retval,
+	const char* value,
+	size_t sz
+);
+
+int parseClientSidePtr(
+	MAC_COMMAND *retval,
+	const char* value,
+	size_t sz
+);
+
+std::string MAC_DATA2JSONString(
+	const MAC_COMMAND &command,
+	const bool isClientSide = false
+);
+
 class MacData {
 	public:
 		MAC_COMMAND command;
@@ -596,7 +615,7 @@ class MacData {
 		MacData();
 		MacData(const MacData &macData);
 		MacData(MAC_COMMAND &command);
-		MacData(const std::string &command, const bool clientSide = false);
+		MacData(const std::string &data2parse, const bool clientSide = false);
 
 		bool set(enum MAC_CID cid,  const std::vector <int> &values, bool clientSide);
 		std::string toString() const;	///< for debug only 
@@ -725,6 +744,9 @@ class MacData {
 		size_t size() const;
 };
 
+/**
+ * Good for send MAC commands from the server
+ */
 class MacDataList {
 	public:
 		bool isClientSide;
@@ -733,6 +755,23 @@ class MacDataList {
 		MacDataList(const MacDataList &macData);
 		MacDataList(const std::string &command, const bool clientSide = false);
 		size_t size();
+		std::string toHexString() const;
+		std::string toJSONString() const;
+};
+
+/**
+ * Good for parse MAC commands sent by the client
+ */
+class MacPtr {
+	protected:
+		void parse(
+			const std::string &parseData
+		);
+	public:
+		std::vector<MAC_COMMAND* > mac;
+		int errorcode;
+		bool clientSide;
+		MacPtr(const std::string &parseData, const bool clientSide = false);
 		std::string toHexString() const;
 		std::string toJSONString() const;
 };
@@ -759,7 +798,7 @@ class MacDataClientLinkCheck : public MacData {
 // Network Server requests an end-device to perform a rate adaptation
 class MacDataClientLinkADR : public MacData {
 	public:
-		// set some "default" data rate, channels. Do not use!
+		// set some `default` data rate, channels. Do not use!
 		MacDataClientLinkADR();
 		MacDataClientLinkADR(
 			uint8_t txpower,
