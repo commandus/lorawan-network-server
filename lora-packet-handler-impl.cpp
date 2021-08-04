@@ -23,6 +23,7 @@ int LoraPacketProcessor::onPacket(
 		// MAC commands
 		onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "MAC command does not processed yet");
 	}
+	// ReceiverQueueService deduplicate repeated packets received from gateways and then store data to the database asynchronously
 	if (value.hasApplicationPayload()) {
 		if (receiverQueueService)
 			receiverQueueService->push(value, time);
