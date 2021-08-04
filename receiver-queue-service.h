@@ -88,7 +88,12 @@ class ReceiverQueueService {
 		int cnt;
 		std::vector<int> dbs;
 		int next();
+		bool isDuplicated(
+			const semtechUDPPacket &packet,
+			const time_t &received
+		);
 	public:
+		std::map<DEVADDRINT, uint16_t, DEVADDRINTCompare> fcnts; 
 		ReceiverQueueService();
 		void setDbs(const std::vector<int> &values);
 		// return messages in queue
@@ -106,7 +111,7 @@ class ReceiverQueueService {
 		
 		// Add entry
 		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
-		void push(const DEVADDR &addr, const DeviceId &deviceId, const std::string &payload, const timeval &time);
+		void push(const semtechUDPPacket &packet, const timeval &time);
 		
 		// Return 0 if success
 		virtual int pop(const int &dbid, ReceiverQueueEntry &retval) = 0;

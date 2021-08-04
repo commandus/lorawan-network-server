@@ -48,10 +48,9 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 				int modulecode,
 				int errorcode,
 				const std::string &message
-		)> value);
+		) > value);
 		int onPacket(
 			struct timeval &time,
-			const DEVADDR &addr,
 			DeviceId id,
 			semtechUDPPacket &value
 		);

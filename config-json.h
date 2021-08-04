@@ -46,6 +46,7 @@ class Configuration {
 		std::string gatewaysFileName;
 		std::string databaseConfigFileName;
 		std::string protoPath;
+		int gatewayPort;
 		ServerConfig serverConfig;
 		Configuration();
 		Configuration(const char* value);

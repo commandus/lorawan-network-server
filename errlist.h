@@ -77,6 +77,9 @@
 #define ERR_CODE_QUEUE_EMPTY				-563
 #define ERR_CODE_RM_FILE					-564
 #define ERR_CODE_INVALID_BASE64				-565
+#define ERR_CODE_MISSED_DEVICE				-566
+#define ERR_CODE_MISSED_GATEWAY				-567
+
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -151,6 +154,8 @@
 #define ERR_QUEUE_EMPTY					"Message queue is empty"
 #define ERR_RM_FILE						"Can not delete file "
 #define ERR_INVALID_BASE64				"Input is not valid base64-encoded data"
+#define ERR_MISSED_DEVICE				"No device specified"
+#define ERR_MISSED_GATEWAY				"No gateway specified"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
