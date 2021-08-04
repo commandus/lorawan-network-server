@@ -7,6 +7,8 @@
 #include "utildate.h"
 #include "utillora.h"
 
+#define CLEAR_COUNT	2048
+
 ReceiverQueueKey::ReceiverQueueKey()
 	: id(0)
 {
@@ -243,23 +245,40 @@ void ReceiverQueueService::setDbs
 bool ReceiverQueueService::isDuplicated
 (
 	const semtechUDPPacket &packet,
-	const time_t &received	// not used
+	const time_t &received
 )
 {
 	DEVADDRINT v = packet.getDeviceAddr();
-	std::map<DEVADDRINT, uint16_t, DEVADDRINTCompare>::const_iterator it(fcnts.find(v));
+	std::map<DEVADDRINT, FCNT_TIME, DEVADDRINTCompare>::const_iterator it(fcnts.find(v));
 	if (it == fcnts.end()) {
 		// device address not found
-		fcnts[v] = packet.getRfmHeader()->fcnt;
+		FCNT_TIME ft = { packet.getRfmHeader()->fcnt, received };
+		fcnts[v] = ft;
 	} else {
 		// address exists
 		// TODO if addresses changed, neead to restart servuce
-		if (packet.getRfmHeader()->fcnt == fcnts[v]) {
-			// duplicated
+		if (packet.getRfmHeader()->fcnt == fcnts[v].fcnt) {
+			// duplicated, ignore time
 			return true;
 		}
 	}
 	return false;
+}
+
+/**
+ * Clear oldest device from the memory
+ */ 
+void ReceiverQueueService::clearFcnts()
+{
+	// fcnts.clear();
+	time_t t = time(NULL);
+	t -= 5;	// 5s
+	for (std::map<DEVADDRINT, FCNT_TIME, DEVADDRINTCompare>::const_iterator it(fcnts.begin()); it != fcnts.end();) {
+		if (it->second.time <= t)
+			it = fcnts.erase(it);
+		else 
+			it++;
+	}
 }
 
 void ReceiverQueueService::push
@@ -278,4 +297,8 @@ void ReceiverQueueService::push
 	e.value.payload = packet.getPayload();
 	e.value.dbids = dbs;
 	pushEntry(e);
+
+	// garbage collector ;)
+	if (e.key.id % CLEAR_COUNT == CLEAR_COUNT - 1)
+		clearFcnts();
 }

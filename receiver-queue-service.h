@@ -79,8 +79,17 @@ class ReceiverQueueEntry {
 		void clear();
 };
 
+struct FCNT_TIME {
+	uint16_t fcnt;
+	time_t time;
+};
+
 /**
- * Recieved message queue service interface
+ * Recieved payload message queue service interface
+ * Deduplicates packets recevied from routers
+ * This interface MUST be overloaded to  store data
+ * in the database or memory (see JSON implementation of this service)
+ * in overloaded classes for specific database
  */ 
 
 class ReceiverQueueService {
@@ -93,7 +102,8 @@ class ReceiverQueueService {
 			const time_t &received
 		);
 	public:
-		std::map<DEVADDRINT, uint16_t, DEVADDRINTCompare> fcnts; 
+		std::map<DEVADDRINT, FCNT_TIME, DEVADDRINTCompare> fcnts; 
+		void clearFcnts();
 		ReceiverQueueService();
 		void setDbs(const std::vector<int> &values);
 		// return messages in queue
