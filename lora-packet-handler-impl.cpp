@@ -8,22 +8,26 @@
 
 int LoraPacketProcessor::onPacket(
 	struct timeval &time,
-	const DEVADDR &addr,
 	DeviceId id,
 	semtechUDPPacket &value
 )
 {
 	std::stringstream ss;
-	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress);
+		std::string p = value.getPayload();
+
+	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress)
+		<< " " << value.devId.toJsonString() << ": " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-	if (receiverQueueService) {
-		std::string p = value.getPayload();
-		std::cerr << "received packet " << value.devId.toJsonString() << ": " << hexString(p) << std::endl;
+	if (value.hasMACPayload()) {
+		// MAC commands
+		onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "MAC command does not processed yet");
+	}
+	if (value.hasApplicationPayload()) {
 		if (receiverQueueService)
-			receiverQueueService->push(addr, value.devId, p, time);
+			receiverQueueService->push(value, time);
 		else 
-			std::cerr << "receiverQueueService is NULL" << std::endl;
+			onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "receiverQueueService is NULL");
 	}
 	return 0;
 }
@@ -52,10 +56,9 @@ int LoraPacketProcessor::put
 	if (identityService) {
 		DeviceId id;
 		DEVADDR *addr = &packet.getHeader()->header.devaddr;
-
 		r = identityService->get(*addr, id);
 		if (r == 0) {
-			onPacket(time, *addr, id, packet);
+			onPacket(time, id, packet);
 		} else {
 			// device id NOT identified
 			if (onLog) {

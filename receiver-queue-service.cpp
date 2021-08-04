@@ -5,6 +5,7 @@
 #include "base64/base64.h"
 #include "errlist.h"
 #include "utildate.h"
+#include "utillora.h"
 
 ReceiverQueueKey::ReceiverQueueKey()
 	: id(0)
@@ -236,20 +237,45 @@ void ReceiverQueueService::setDbs
 	dbs = values;
 }
 
+/**
+ * Check does it received already
+ */
+bool ReceiverQueueService::isDuplicated
+(
+	const semtechUDPPacket &packet,
+	const time_t &received	// not used
+)
+{
+	DEVADDRINT v = packet.getDeviceAddr();
+	std::map<DEVADDRINT, uint16_t, DEVADDRINTCompare>::const_iterator it(fcnts.find(v));
+	if (it == fcnts.end()) {
+		// device address not found
+		fcnts[v] = packet.getRfmHeader()->fcnt;
+	} else {
+		// address exists
+		// TODO if addresses changed, neead to restart servuce
+		if (packet.getRfmHeader()->fcnt == fcnts[v]) {
+			// duplicated
+			return true;
+		}
+	}
+	return false;
+}
+
 void ReceiverQueueService::push
 (
-	const DEVADDR &addr,
-	const DeviceId &deviceId,
-	const std::string &payload,
+	const semtechUDPPacket &packet,
 	const timeval &timeval
 )
 {
+	if (isDuplicated(packet, timeval.tv_sec))
+		return;
 	ReceiverQueueEntry e;
 	e.key.id = next();
 	e.key.time = timeval;
-	memmove(e.value.addr, addr, sizeof(DEVADDR));
-	e.value.deviceId = deviceId;
-	e.value.payload = payload;
+	memmove(e.value.addr, packet.getRfmHeader()->devaddr, sizeof(DEVADDR));
+	e.value.deviceId = packet.devId;
+	e.value.payload = packet.getPayload();
 	e.value.dbids = dbs;
 	pushEntry(e);
 }

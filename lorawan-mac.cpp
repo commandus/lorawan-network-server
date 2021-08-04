@@ -848,6 +848,8 @@ std::string MAC_DATA2JSONString(
 				break;
 			// Class-B Section 14
 			case PingSlotInfo:
+				MDPREFIX(pinginfoslot)
+				MDSUFFIX(pinginfoslot)
 				break;
 			case PingSlotChannel:
 				MDPREFIX(pingslotchannelreq)

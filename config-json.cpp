@@ -203,6 +203,7 @@ int Configuration::parse(
 		return ERR_CODE_INVALID_JSON;
 	rapidjson::Document doc;
 	doc.Parse(json);
+	gatewayPort = 4242;
 	if (doc.IsObject()) {
 		if (doc.HasMember("server")) {
 			rapidjson::Value &server = doc["server"];
@@ -228,6 +229,11 @@ int Configuration::parse(
 			if (vpp.IsString())
 				protoPath = vpp.GetString();
 		}
+		if (doc.HasMember("gatewayPort")) {
+			rapidjson::Value &gwp =  doc["gatewayPort"];
+			if (gwp.IsInt())
+				gatewayPort = gwp.GetInt();
+		}
 	} else
 		return ERR_CODE_INVALID_JSON;
 	return r;
@@ -235,7 +241,7 @@ int Configuration::parse(
 
 Configuration::Configuration() 
 	: configFileName(""), gatewaysFileName(""), 
-	databaseConfigFileName(""), protoPath("")
+	databaseConfigFileName(""), protoPath(""), gatewayPort(4242)
 {
 }
 
@@ -277,9 +283,14 @@ std::string Configuration::toString() {
 	rapidjson::Value dbcfn;
 	dbcfn.SetString(databaseConfigFileName.c_str(), databaseConfigFileName.size(), allocator);
 	doc.AddMember("databaseConfigFileName", dbcfn, allocator);
+
 	rapidjson::Value pp;
 	pp.SetString(protoPath.c_str(), protoPath.size(), allocator);
 	doc.AddMember("protoPath", pp, allocator);
+
+	rapidjson::Value gwp;
+	gwp.SetInt(gatewayPort);
+	doc.AddMember("gatewPort", gwp, allocator);
 
 	doc.Accept(writer);
 	return std::string(buffer.GetString());

@@ -109,11 +109,13 @@ int parseCmd(
 	// device path
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
-	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 0, 100, "gateway identifier, *- all");
-	struct arg_str *a_gatewayname = arg_strn("G", "gatewayname", "<name>", 0, 100, "gateway name, *- all");
-	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 0, 100, "end-device identifier, *- all");
-	struct arg_str *a_devicename = arg_strn("E", "devicename", "<name>", 0, 100, "end-device name, *- all");
-	struct arg_str *a_payload_hex = arg_str0("p", "payload", "<hex>", "payload bytes, in hex");
+	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 0, 100, "gateway identifier. Mask \"*\" - all");
+	struct arg_str *a_gatewayname = arg_strn("G", "gatewayname", "<name>", 0, 100, "gateway name. Mask \"*\" - all");
+	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 0, 100, "end-device identifier. Mask \"*\" - all");
+	struct arg_str *a_devicename = arg_strn("E", "devicename", "<name>", 0, 100, "end-device name. Mask \"*\" - all");
+	struct arg_str *a_payload_hex = arg_str0("x", "payload", "<hex>", "payload bytes, in hex");
+
+	struct arg_int *a_gateway_port = arg_int0("p", "port", "<1..65535>", "gateway port, default 4242");
 	
 	struct arg_lit *a_regex = arg_lit0("x", "regex", "Use regular expression in -g, -e options. By default wildcards (*, ?) can be used.");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
@@ -122,7 +124,7 @@ int parseCmd(
 
 	void *argtable[] = {
 		a_config,
-		a_command, a_gatewayid, a_gatewayname, a_eui, a_devicename, a_payload_hex,
+		a_command, a_gatewayid, a_gatewayname, a_eui, a_devicename, a_payload_hex, a_gateway_port,
 		a_regex, a_verbosity, a_help, a_end};
 
 	int nerrors;
@@ -162,6 +164,10 @@ int parseCmd(
 		}
 		if (a_payload_hex->count) {
 			macGwConfig->payload = hex2string(*a_payload_hex->sval);
+		}
+		
+		if (a_gateway_port->count) {
+			config->gatewayPort = (*a_gateway_port->ival);
 		}
 	}
 
@@ -257,11 +263,6 @@ int main(
 		std::cerr << ERR_MESSAGE << r << ": " << strerror_client(r) << std::endl;
 		exit(ERR_CODE_INVALID_GATEWAY_ID);
 	}
-	if (macGwConfig->gatewayIds.size() == 0) {
-		// At leaast one gateway required
-		std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": " << ERR_INVALID_GATEWAY_ID << std::endl;
-		exit(ERR_CODE_INVALID_GATEWAY_ID);
-	}
 
 	// load device list
 	JsonFileIdentityService identityService;
@@ -282,6 +283,18 @@ int main(
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
 	}
 
+	// check at least one device specified
+	if (macGwConfig->euis.size() == 0) {
+		std::cerr << ERR_MISSED_DEVICE << std::endl;
+		exit(ERR_CODE_MISSED_DEVICE);
+	}
+
+	// check at least one device specified
+	if (macGwConfig->gatewayIds.size() == 0) {
+		std::cerr << ERR_MISSED_GATEWAY << std::endl;
+		exit(ERR_CODE_MISSED_GATEWAY);
+	}
+
 	// parse MAC command(s)
 	r = macGwConfig->parse(true);
 	if (r) {
@@ -294,21 +307,36 @@ int main(
 		std::cerr << ERR_NO_MAC_NO_PAYLOAD << std::endl;
 		exit(ERR_CODE_NO_MAC_NO_PAYLOAD);
 	}
-	if (config->serverConfig.verbosity > 2)
-		std::cerr << "command line parameters: " << std::endl << macGwConfig->toJsonString() << std::endl;
-
-	// form MAC data
+	// form MAC data ?!!
 	std::vector<MacData> md;
 	for (int i = 0; i < macGwConfig->macCommands.list.size(); i++) {
+		std::cerr << macGwConfig->macCommands.list[i].toJSONString() << std::endl;
 		MacData d(macGwConfig->macCommands.list[i].toString(), true);
 		md.push_back(d);
 	}
 
+	if (config->serverConfig.verbosity > 2) {
+		std::cerr << "command line parameters: " << std::endl << macGwConfig->toJsonString() << std::endl << std::endl;
+		std::cerr << std::dec << std::endl;
+		for (int i = 0; i < macGwConfig->macCommands.list.size(); i++) {
+			std::cerr << macGwConfig->macCommands.toJSONString() << std::endl << std::endl;
+		}
+	}
+
 	for (int i = 0; i < macGwConfig->gatewayIds.size(); i++) {
 		// open socket
-		UDPSocket socket(gatewayList->getAddress(macGwConfig->gatewayIds[i]), MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
+		std::string a = gatewayList->getAddress(macGwConfig->gatewayIds[i]);
+		if (a.find(":") == std::string::npos) {
+			// add port
+			std::stringstream ss;
+			ss << a << ":" << config->gatewayPort;
+			a = ss.str();
+		}
+		UDPSocket socket(a, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
 		if (socket.errcode) {
-			std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_client(socket.errcode) << std::endl;
+			std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_client(socket.errcode)
+				<< ", gateway " << std::hex << macGwConfig->gatewayIds[i] << std::dec << " address: " << a
+				<< std::endl;
 			exit(socket.errcode);
 		}
 		for (int d = 0; d < macGwConfig->euis.size(); d++) {
@@ -319,11 +347,13 @@ int main(
 			}
 			// compose packet
 			semtechUDPPacket packet;
+			// TODO form correct data
+			// packet.setPayload();
 			std::string s = packet.toString();
 			if (config->serverConfig.verbosity > 0)
 				std::cerr << MSG_SEND_TO 
 					<< UDPSocket::addrString(&socket.addrStorage)
-					<< s.size() << " bytes, "
+					<< " " << s.size() << " bytes, "
 					<< "packet: " << hexString(s)
 					<< std::endl;
 		}

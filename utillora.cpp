@@ -1061,7 +1061,9 @@ char *semtechUDPPacket::getSemtechJSONCharPtr
  * Parse Semtech UDP packet
  * @return 0, ERR_CODE_PACKET_TOO_SHORT, ERR_CODE_INVALID_PROTOCOL_VERSION, ERR_CODE_NO_GATEWAY_STAT, ERR_CODE_INVALID_PACKET or ERR_CODE_INVALID_JSON
  */ 
-int semtechUDPPacket::parse(
+int semtechUDPPacket::parse
+(
+	const struct sockaddr *gwAddress,
 	SEMTECH_DATA_PREFIX &retprefix,
 	GatewayStat &retgwstat,
 	std::vector<semtechUDPPacket> &retPackets,
@@ -1110,6 +1112,7 @@ int semtechUDPPacket::parse(
 	rapidjson::Value &rxpk = doc[METADATA_RX_NAMES[0]];
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
+
 	for (int i = 0; i < rxpk.Size(); i++) {
 		rapidjson::Value &jm = rxpk[i];
 		if (!jm.IsObject())
@@ -1120,9 +1123,10 @@ int semtechUDPPacket::parse(
 		int rr = m.parse(sz, data, jm);
 		if (rr)
 			return rr;
-		semtechUDPPacket packet(&retprefix, &m, data, identityService);
+		semtechUDPPacket packet(gwAddress, &retprefix, &m, data, identityService);
 		retPackets.push_back(packet);
 	}
+
 	return 0;
 }
 
@@ -1245,6 +1249,7 @@ void setKey(
  * format = 0 hex
  */ 
 semtechUDPPacket::semtechUDPPacket(
+	const struct sockaddr *gwAddress,
 	const std::string &data,
 	const std::string &devaddr,
 	const std::string &appskey
@@ -1261,6 +1266,16 @@ semtechUDPPacket::semtechUDPPacket(
 	// autentication keys
 	setKey(devId.appSKey, appskey);
 
+	// save gateway address
+	size_t sz = 0;
+	if (gwAddress) {
+		if (gwAddress->sa_family == AF_INET6)
+			sz = sizeof(struct sockaddr_in6 *);
+		if (gwAddress->sa_family == AF_INET)
+			sz = sizeof(struct sockaddr_in *);
+		memmove(&gatewayAddress, gwAddress, sz);
+	}
+
 	parseData(data, NULL);
 }
 
@@ -1273,6 +1288,7 @@ void semtechUDPPacket::clearPrefix()
 }
 
 semtechUDPPacket::semtechUDPPacket(
+	const struct sockaddr *gwAddress,
 	const SEMTECH_DATA_PREFIX *aprefix,
 	const rfmMetaData *ametadata,
 	const std::string &data,
@@ -1287,6 +1303,17 @@ semtechUDPPacket::semtechUDPPacket(
 	}
 	if (ametadata)
 		metadata.push_back(rfmMetaData(*ametadata));
+
+	// save gateway address
+	size_t sz = 0;
+	if (gwAddress) {
+		if (gwAddress->sa_family == AF_INET6)
+			sz = sizeof(struct sockaddr_in6 *);
+		if (gwAddress->sa_family == AF_INET)
+			sz = sizeof(struct sockaddr_in *);
+		memmove(&gatewayAddress, gwAddress, sz);
+	}
+
 	parseData(data, identityService);
 }
 
@@ -1296,9 +1323,9 @@ static std::string getMAC(
 	return hexString(&value, sizeof(DEVEUI));
 }
 
-RFM_HEADER *semtechUDPPacket::getRfmHeader()
+const RFM_HEADER *semtechUDPPacket::getRfmHeader() const
 {
-	return &header.header;
+	return (const RFM_HEADER *) &header.header;
 }
 
 rfmHeader *semtechUDPPacket::getHeader() {
@@ -1583,7 +1610,7 @@ uint64_t str2gatewayId(const char *value) {
 	return strtoull(value, NULL, 16);
 }
 
-std::string TDEVEUI::toString() {
+std::string TDEVEUI::toString() const {
 	return DEVEUI2string(eui);
 }
 

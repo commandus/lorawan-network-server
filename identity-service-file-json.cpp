@@ -346,10 +346,10 @@ int JsonFileIdentityService::parseIdentifiers(
 			// identifier itself
 			TDEVEUI v(*it);
 			for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
-				if (memcmp(v.eui, dit->second.deviceEUI, sizeof(DEVEUI)) == 0)
+				if (memcmp(v.eui, dit->second.deviceEUI, sizeof(DEVEUI)) == 0) {
 					retval.push_back(v);
-				else
-					return false;
+					break;
+				}
 			}
 		} else {
 			// can contain regex "*"

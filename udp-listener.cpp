@@ -170,19 +170,19 @@ int UDPListener::listen() {
 					if (bytesReceived >= 0) {
 						buffer[bytesReceived] = '\0';	// set  string terminator for null-terminatede JSON char* 
 						std::vector<semtechUDPPacket> packets;
-						{
-							std::stringstream ss;
-							ss << MSG_RECEIVED
-								<< UDPSocket::addrString((const struct sockaddr *) &clientAddress)
-								<< " (" << bytesReceived
-								<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-							onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
-						}
+
+						std::stringstream ss;
+						ss << MSG_RECEIVED
+							<< UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+							<< " (" << bytesReceived
+							<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
+						onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+
 						// get packets
 						SEMTECH_DATA_PREFIX dataprefix;
 						// rapidjson operates with \0 terminated string, just in case add terminator. Extra space is reserved
 						buffer[bytesReceived] = '\0';
-						int pr = semtechUDPPacket::parse(dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
+						int pr = semtechUDPPacket::parse((const struct sockaddr *) &clientAddress, dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
 
 						// std::cerr << "===" << pr << ": " << strerror_client(pr) << std::endl;
 
@@ -240,7 +240,7 @@ int UDPListener::listen() {
 						}
 						// process PULL data if exists
 						switch (dataprefix.tag) {
-							case 0:
+							case 0:	// PUSH DATA
 								// process data packets if exists
 								for (std::vector<semtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
 									memmove(&itp->clientAddress, &clientAddress,
@@ -260,17 +260,18 @@ int UDPListener::listen() {
 												<< itp->toDebugString();
 											onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 										}
-									}
-									if (handler) {
-										handler->put(recievedTime, *itp);
-									} else {
-										if (onLog) {
-											std::stringstream ss;
-											ss << MSG_READ_BYTES 
-												<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ": "
-												<< itp->toString();
-											onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+										if (handler) {
+											handler->put(recievedTime, *itp);
+										} else {
+											if (onLog) {
+												std::stringstream ss;
+												ss << MSG_READ_BYTES 
+													<< UDPSocket::addrString((const struct sockaddr *) &clientAddress) << ": "
+													<< itp->toString();
+												onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+											}
 										}
+
 									}
 								}
 								break;

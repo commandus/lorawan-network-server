@@ -87,7 +87,7 @@ class TDEVEUI
 		TDEVEUI(const DEVEUI &v) {
 			memmove(&eui, &v, sizeof(DEVEUI));
 		}
-		std::string toString();
+		std::string toString() const;
 };
 
 struct DEVEUICompare
@@ -105,8 +105,10 @@ int getMetadataName(
 );
 
 /**
+ * Semtech PUSH DATA packet described in section 3.2
+ * Semtech PULL DATA packet described in section 5.2
  * PUSH_DATA, PULL_DATA packets prefix.
- * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT section 3.2
+ * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT sections 3.2, 5,2
  */
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
@@ -185,7 +187,7 @@ typedef ALIGN struct {
 			uint8_t adr: 1;
 		} f;
 	} fctrl;	// frame control
-	uint16_t fcnt;	// frame counter 0..15
+	uint16_t fcnt;	// frame counter 0..65535
 	// FOpts 0..15
 } PACKED RFM_HEADER;			// 8 bytes, +1
 
@@ -348,11 +350,13 @@ public:
 
 class semtechUDPPacket {
 private:
-	rfmHeader header;
 	std::string payload;
 	void clearPrefix();
 	int parseData(const std::string &data, IdentityService *identityService);
+protected:
+	struct sockaddr_in6 gatewayAddress;
 public:	
+	rfmHeader header;
 	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	struct sockaddr_in6 clientAddress;
 	// parse error code
@@ -364,6 +368,7 @@ public:
 
 	// return array of packets from Basic communication protocol packet
 	static int parse(
+		const struct sockaddr *gatewayAddress,
 		SEMTECH_DATA_PREFIX &retprefix,
 		GatewayStat &retgwstat,
 		std::vector<semtechUDPPacket> &retPackets, 
@@ -373,9 +378,9 @@ public:
 	);
 	semtechUDPPacket();
 	// Called from parse()
-	semtechUDPPacket(const SEMTECH_DATA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
+	semtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_DATA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
 	// TODO I dont remember what is it for
-	semtechUDPPacket(const std::string &data, const std::string &devaddr, const std::string &appskey);
+	semtechUDPPacket(const struct sockaddr *gatewayAddress, const std::string &data, const std::string &devaddr, const std::string &appskey);
 	
 	std::string serialize2RfmPacket() const;
 	std::string toString() const;
@@ -383,7 +388,7 @@ public:
 	std::string metadataToJsonString() const;
 	std::string toJsonString() const;
 
-	RFM_HEADER *getRfmHeader();
+	const RFM_HEADER *getRfmHeader() const;
 	rfmHeader *getHeader();
 	void setRfmHeader(const RFM_HEADER &value);
 

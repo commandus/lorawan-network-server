@@ -284,7 +284,7 @@ int main(
 	GatewayStat gatewayStat;
 	std::vector<semtechUDPPacket> packets;
 
-	int r = semtechUDPPacket::parse(dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
+	int r = semtechUDPPacket::parse(NULL, dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
 	
 	if (r) {
 		std::cerr << strerror_client(r) << std::endl;
