@@ -58,6 +58,7 @@ public:
 	std::string identityStorageName;
 	int identityStorageType;
 	std::string addr;					// for insert
+	uint8_t fport;
 
 	int verbosity;						// verbosity level
 };
@@ -116,7 +117,7 @@ int parseCmd(
 	struct arg_str *a_command, *a_proto_path, *a_dbconfigfilename, *a_dbname, *a_message_type, 
 		*a_payload_hex, *a_payload_base64,
 		*a_sort_asc, *a_sort_desc, *a_addr, *a_identityStorageName, *a_identityStorageType;
-	struct arg_int *a_offset, *a_limit;
+	struct arg_int *a_offset, *a_limit, *a_fport;
 	struct arg_lit *a_verbosity, *a_help;
 	struct arg_end *a_end;
 
@@ -137,6 +138,7 @@ int parseCmd(
 		a_sort_desc = arg_strn("S", "desc", "<field-name>", 0, 100, "list command, sort by field descending."),
 		
 		a_addr = arg_str0("a", "addr", "<addr>", "insert, device network address"),
+		a_fport = arg_int0("f", "fport", "<0.233>", "port field. 0- MAC. Default 1.."),
 		a_identityStorageName = arg_str0("i", "id-name", "<name>", "default " DEF_IDENTITY_STORAGE_NAME),
 		a_identityStorageType = arg_str0("y", "id-type", "json|txt|lmdb", "default " DEF_IDENTITY_STORAGE_TYPE),
 
@@ -224,7 +226,17 @@ int parseCmd(
 		if (a_addr->count)
 			config->addr = *a_addr->sval;
 
+		if (a_fport->count)
+			config->fport = *a_fport->ival;
+		else
+			config->fport = 1;
+
 		config->verbosity = a_verbosity->count;
+	}
+
+	if (config->fport > 233) {
+		std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_FPORT << ": " << ERR_INVALID_FPORT << std::endl;
+		nerrors++;
 	}
 
 	if (config->command.empty())
@@ -528,11 +540,17 @@ int main(
 		// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
 		std::map<std::string, std::string> properties;
 		time_t t(time(NULL));
-		properties["time"] = std::to_string(t);
-		properties["timestamp"] = time2string(t);
-		properties["addr"] = config.addr;
+		properties["addr"] = config.addr;						// addr network address string
+		properties["fport"] = std::to_string(config.fport);		// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
+		properties["time"] = std::to_string(t);					// time (32 bit integer, seconds since Unix epoch)
+		properties["timestamp"] = time2string(t);				// timestamp string
+		// TODO get it from command line
+		properties["eui"] = "3232323232323232";					// eui global end-device identifier in IEEE EUI64 address space
+		properties["name"] = "device32";						// device name
+		properties["activation"] = "ABP";						// (ABP|OTAA)
+		properties["class"] = "C";								// A|B|C
+ 
 		deviceId.setProperties(properties);
-
 
 		doInsert(env, &config, &dbAny, config.message_type, config.payload, properties, config.verbosity);
 

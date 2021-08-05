@@ -317,8 +317,15 @@ int main(
 			// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
 			// time  timestamp 
 			time_t t(time(NULL));
-			properties["time"] = std::to_string(t);
-			properties["timestamp"] = time2string(t);
+			properties["addr"] = it->getDeviceAddrStr();							// addr network address string
+			properties["fport"] = std::to_string((int) it->header.fport);			// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
+			properties["time"] = std::to_string(t);									// time (32 bit integer, seconds since Unix epoch)
+			properties["timestamp"] = time2string(t);								// timestamp string
+			properties["eui"] = it->getDeviceEUI();									// eui global end-device identifier in IEEE EUI64 address space
+			properties["name"] = it->devId.name;									// device name
+			properties["activation"] =  activation2string(it->devId.activation);	// (ABP|OTAA)
+			properties["class"] = deviceclass2string(it->devId.deviceclass);		// A|B|C
+
 			doInsert(env, &config, &databaseByConfig, config.message_type, payload, &properties);
 		} else {
 			doPrint(env, &config, config.message_type, config.outputFormat, payload);

@@ -480,15 +480,17 @@ properties array consist of [key, value] pairs.
 
 Keys are:
 
-- addr
-- eui
-- name
-- time (32 bit integer)
+- addr network address string
+- eui global end-device identifier in IEEE EUI64 address space
+- fport application port number (1..223). 0- MAC, 224- test, 225..255- reserved
+- name device name
+- time (32 bit integer, seconds since Unix epoch)
 - timestamp string
 - activation (ABP|OTAA)
 - class A|B|C
-- eui
-- name
+
+Optional property "id" is a number of packet received by the server (packets received from gateways
+deduplicated, first of them has a number, others omitted).
 
 The only integer key is time. All others are string.
 

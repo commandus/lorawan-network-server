@@ -116,6 +116,8 @@ void ReceiverQueueValue::setProperties
 {
 	deviceId.setProperties(retval);
 	retval["addr"] = DEVADDRINT2string(addr);
+	// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
+	retval["fport"] = std::to_string(fport);
 }
 
 bool ReceiverQueueKeyCompare::operator() (
@@ -296,6 +298,7 @@ void ReceiverQueueService::push
 	e.value.deviceId = packet.devId;
 	e.value.payload = packet.getPayload();
 	e.value.dbids = dbs;
+	e.value.fport = packet.header.fport;
 	pushEntry(e);
 
 	// garbage collector ;)
