@@ -1409,38 +1409,6 @@ std::string semtechUDPPacket::serialize2RfmPacket() const
 	return ss.str();
 }
 
-uint32_t semtechUDPPacket::MICcalculated() const
-{
-	std::string p(payload);
-	// direction of frame is up
-	unsigned char direction = downlink ? 1 : 0;
-	// build radio packet, unconfirmed data up macHeader.i = 0x40;
-	// RFM header 8 bytes
-	std::stringstream ss;
-	ss << header.toString() << header.fport;
-	// load data
-	// encrypt data
-std::cerr << "calculateMIC before encrypt " << hexString(p) << std::endl;
-	encryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
-	ss << p;
-	std::string rs = ss.str();
-	// calc MIC
-	const KEY128 *key = &devId.nwkSKey;
-	std::cerr << "calculateMIC rs size " 
-		<< std::dec << rs.size() << " payload " << hexString(rs) 
-		<< " header.header.fcnt " << (int) header.header.fcnt 
-		<< " direction " << (int) direction 
-		<< " header.header.devaddr " << DEVADDR2string(header.header.devaddr) 
-		<< std::endl;;
-	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(), rs.size(), header.header.fcnt, direction, header.header.devaddr, *key);
-	return mic;
-}
-
-bool semtechUDPPacket::isMICValid() const
-{
-	return MICcalculated() == mic;
-}
-
 std::string semtechUDPPacket::toString() const
 {
 	std::stringstream ss;
@@ -1613,49 +1581,36 @@ std::cerr << "parseData size " << data.size() << ": " << hexString(data) << std:
 	}
 
 	unsigned char direction = downlink ? 1 : 0;
-	mic = getMic(data);
-std::cerr << "MIC stored " << std::hex << mic << std::endl;		
 
-
-
-
-
-
-
-
-
-
-
-
-	int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
-	// FHDR FPort Fopts
-	std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
-std::cerr << "parseData payload " << p.size() << ": " << hexString(p) << std::endl;		
 	// get identity
 	if (identityService) {
 		// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 		int rc = identityService->get(header.header.devaddr, devId);
 		if (rc == 0) {
 			// calc MIC
+			uint32_t mic = getMic(data);
+			std::cerr << "MIC stored " << std::hex << mic << std::endl;		
 			uint32_t micCalc = calculateMIC((const unsigned char*) data.c_str(), data.size() - 4, header.header.fcnt, direction, header.header.devaddr, devId.nwkSKey);
-
-			KEY128 *key;
-			if (header.fport == 0)
-				key = &devId.nwkSKey;
-			else
-				key = &devId.appSKey;
-			decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
+			errcode = mic == micCalc ? LORA_OK : ERR_CODE_INVALID_MIC; 
+			if (errcode == LORA_OK) {
+				int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
+				// FHDR FPort Fopts
+				std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
+std::cerr << "parseData payload " << p.size() << ": " << hexString(p) << std::endl;		
+				KEY128 *key;
+				if (header.fport == 0)
+					key = &devId.nwkSKey;
+				else
+					key = &devId.appSKey;
+				decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
 std::cerr << "parseData payload decypted " << p.size() << ": " << hexString(p) << std::endl;					
+				setPayload(p); 
+			}
 		} else {
 			// return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 		}
-		setPayload(p); 
-	} else {
-		// put cipher data
-		setPayload(p); 
+		
 	}
-std::cerr << "MIC " << std::hex << mic << ", calculated: " << MICcalculated() << std::endl;
-	errcode = mic == MICcalculated() ? LORA_OK : ERR_CODE_INVALID_MIC; 
 	return errcode;
 }
 

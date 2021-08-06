@@ -366,8 +366,6 @@ public:
 	int errcode;
 	// downlink direction 01, uplink direction 00
 	bool downlink;
-	// stored MOC
-	uint32_t mic;
 	// prefix contains gateway identifier
 	SEMTECH_DATA_PREFIX prefix;
 	// authentication keys
@@ -389,8 +387,6 @@ public:
 	// TODO I dont remember what is it for
 	semtechUDPPacket(const struct sockaddr *gatewayAddress, const std::string &data, const std::string &devaddr, const std::string &appskey);
 	
-	uint32_t MICcalculated() const;
-	bool isMICValid() const;
 	std::string serialize2RfmPacket() const;
 	std::string toString() const;
 	std::string toDebugString() const;
