@@ -1,4 +1,5 @@
 #include <iostream>
+#include "db-identity.h"
 #include "identity-service-lmdb.h"
 #include "utilstring.h"
 

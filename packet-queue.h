@@ -32,7 +32,7 @@ class SemtechUDPPacketItem {
 		std::string toString() const;
 };
 
-class SemtechUDPPacketsAddr {
+class SemtechUDPPacketItems {
 	public:
 		std::vector <SemtechUDPPacketItem> packets;
 		std::string toString() const;
@@ -48,7 +48,7 @@ class PacketQueue {
 		// void runner(PacketHandler &value);
 		void runner();
 	public:
-		std::map<DEVADDRINT, SemtechUDPPacketsAddr, DEVADDRINTCompare> packets;
+		std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare> packets;
 		std::deque <DEVADDRINT> addrs;
 		// statistics, packets read since last start()
 		size_t packetsRead;

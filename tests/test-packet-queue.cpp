@@ -14,6 +14,8 @@
 #include "packet-queue.h"
 #include "errlist.h"
 #include "utildate.h"
+#include "packet-handler-abstract.h"
+
 
 bool stopped;
 size_t packetsSent = 0;
@@ -121,14 +123,27 @@ void printStat() {
 	}
 }
 
-void onPacket(
-	const void *env,
-	semtechUDPPacket &value
-)
-{
-	packetsRead++;
-	// std::cerr << value.getDeviceAddrStr() << " " << value.metadataToJsonString() << std::endl;
-}
+
+class PacketHandlerTest : public PacketHandler {
+	public:
+		// Return 0, retval = EUI and keys
+		int enqueuePayload(
+			struct timeval &time,
+			DeviceId id,
+			semtechUDPPacket &value
+		)  {
+			packetsRead++;
+			// std::cerr << value.getDeviceAddrStr() << " " << value.metadataToJsonString() << std::endl;
+		}
+
+		virtual int enqueueMAC(
+			struct timeval &time,
+			DeviceId id,
+			semtechUDPPacket &value
+		) {
+
+		}
+};
 
 void t2() {
 	setSignalHandler();
@@ -144,7 +159,8 @@ void t2() {
 
 	// std::thread tr(readPackets);
 	// tr.detach();
-	q.start(onPacket);
+	PacketHandlerTest packetHandlerTest;
+	q.start(packetHandlerTest);
 	
 	ts.join();
 	printStat();

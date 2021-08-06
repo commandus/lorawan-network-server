@@ -48,10 +48,10 @@ int main(int argc, char **argv) {
 			std::cerr << "Clause " << db->createClause(env, mt) << std::endl;
 		}
 
-		r = db->insert(env, mt, INPUT_FORMAT_HEX, hexData);
+		r = db->insert(env, mt, INPUT_FORMAT_HEX, hexData, NULL);
 		if (r) {
 			std::cerr << "Error INSERT " << r << ": " << db->db->errmsg << std::endl;
-			std::cerr << "Clause " << db->insertClause(env, mt, INPUT_FORMAT_HEX, hexData) << std::endl;
+			std::cerr << "Clause " << db->insertClause(env, mt, INPUT_FORMAT_HEX, hexData, NULL) << std::endl;
 		}
 
 		std::string selectClause = "SELECT * FROM iridium_packet";

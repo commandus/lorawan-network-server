@@ -17,7 +17,9 @@
 #define DB_DEF_TIMEOUT_MS 500
 
 /**
- * Handle uplink messages
+ * ReceiverQueueService enqueue aplication data payload,
+ * RecieverQueueProcessor get payload from the queue, parse and put parsed data 
+ * to the database(s) async
  */ 
 class RecieverQueueProcessor {
 	private:
