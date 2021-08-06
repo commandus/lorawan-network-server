@@ -49,7 +49,7 @@ std::string SemtechPullRespPacket::toString() {
 
 	std::string rs = ss.str();
 	// calc MIC
-	uint32_t mic = calculateMIC(rs, header.header.fcnt, direction, header.header.devaddr, identity.nwkSKey);	// nwkSKey
+	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(), rs.size(), header.header.fcnt, direction, header.header.devaddr, identity.nwkSKey);	// nwkSKey
 	// load MIC in package
 	// mic = ntoh4(mic);
 	ss << std::string((char *) &mic, 4);

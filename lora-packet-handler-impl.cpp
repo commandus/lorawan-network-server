@@ -6,32 +6,43 @@
 
 #include <iostream>
 
-int LoraPacketProcessor::onPacket(
+int LoraPacketProcessor::enqueuePayload(
 	struct timeval &time,
 	DeviceId id,
 	semtechUDPPacket &value
 )
 {
 	std::stringstream ss;
-		std::string p = value.getPayload();
-
+	std::string p = value.getPayload();
 	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress)
 		<< " " << value.devId.toJsonString() << ": " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-	if (value.hasMACPayload()) {
-		// MAC commands
-		onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "MAC command does not processed yet");
-	}
 	// ReceiverQueueService deduplicate repeated packets received from gateways and then store data to the database asynchronously
-	if (value.hasApplicationPayload()) {
-		if (receiverQueueService)
-			receiverQueueService->push(value, time);
-		else 
-			onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "receiverQueueService is NULL");
-	}
+	if (receiverQueueService)
+		receiverQueueService->push(value, time);
 	return 0;
 }
+
+int LoraPacketProcessor::enqueueMAC(
+	struct timeval &time,
+	DeviceId id,
+	semtechUDPPacket &value
+)
+{
+	std::stringstream ss;
+	std::string p = value.getPayload();
+	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress)
+		<< " " << value.devId.toJsonString() << ": MAC command(s)" << hexString(p);
+	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+
+
+	// MAC commands
+	onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "MAC command does not processed yet");
+
+	return 0;
+}
+
 
 LoraPacketProcessor::LoraPacketProcessor()
 	: onLog(NULL), identityService(NULL), receiverQueueService(NULL),
@@ -59,7 +70,10 @@ int LoraPacketProcessor::put
 		DEVADDR *addr = &packet.getHeader()->header.devaddr;
 		r = identityService->get(*addr, id);
 		if (r == 0) {
-			onPacket(time, id, packet);
+			if (packet.hasApplicationPayload()) 
+				enqueuePayload(time, id, packet);
+			if (packet.hasMACPayload())
+				enqueueMAC(time, id, packet);
 		} else {
 			// device id NOT identified
 			if (onLog) {

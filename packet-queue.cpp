@@ -24,7 +24,7 @@ std::string SemtechUDPPacketItem::toString() const
 	return ss.str();
 }
 
-std::string SemtechUDPPacketsAddr::toString() const
+std::string SemtechUDPPacketItems::toString() const
 {
 	std::stringstream ss;
 	for (std::vector <SemtechUDPPacketItem>::const_iterator it(packets.begin()); it != packets.end(); it++) {
@@ -67,7 +67,7 @@ void PacketQueue::put(
 	SemtechUDPPacketItem item(value);
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();
-	std::map<DEVADDRINT, SemtechUDPPacketsAddr>::iterator it(packets.find(a));
+	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
 	// add first packet, add metadata only for others
 	if (it != packets.end()) {
 		if (it->second.packets.size() == 0)
@@ -110,7 +110,7 @@ bool PacketQueue::getFirstExpired(
 	mutexq.lock();
 
 	DEVADDRINT a = addrs.front();
-	std::map<DEVADDRINT, SemtechUDPPacketsAddr>::iterator it(packets.find(a));
+	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
 	if (it == packets.end()) {
 		mutexq.unlock();
 		return false;
@@ -139,7 +139,7 @@ bool PacketQueue::getFirstExpired(
 int PacketQueue::getNextTimeout(struct timeval &currenttime)
 {
 	DEVADDRINT a = addrs.front();
-	std::map<DEVADDRINT, SemtechUDPPacketsAddr>::iterator it(packets.find(a));
+	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
 	if (it == packets.end()) {
 		return DEF_TIMEOUT_MS;
 	}
@@ -161,7 +161,7 @@ std::string PacketQueue::toString() const
 	}
 	ss << std::endl;
 	*/
-	for (std::map<DEVADDRINT, SemtechUDPPacketsAddr, DEVADDRINTCompare>::const_iterator it(packets.begin()); it != packets.end(); it++) {
+	for (std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare>::const_iterator it(packets.begin()); it != packets.end(); it++) {
 		ss << DEVADDRINT2string(it->first) << ": " 
 			<< it->second.toString()
 			<< std::endl;

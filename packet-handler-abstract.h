@@ -10,7 +10,13 @@
 class PacketHandler {
 	public:
 		// Return 0, retval = EUI and keys
-		virtual int onPacket(
+		virtual int enqueuePayload(
+			struct timeval &time,
+			DeviceId id,
+			semtechUDPPacket &value
+		) = 0;
+
+		virtual int enqueueMAC(
 			struct timeval &time,
 			DeviceId id,
 			semtechUDPPacket &value

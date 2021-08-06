@@ -172,6 +172,9 @@ typedef ALIGN struct {
 	};
 } PACKED MHDR;			// 1 byte
 
+/**
+ * MHDR + FHDR
+ */ 
 typedef ALIGN struct {
 	// MAC heaader byte: message type, RFU, Major
 	MHDR macheader;			// 0x40 unconfirmed uplink
@@ -361,6 +364,10 @@ public:
 	struct sockaddr_in6 clientAddress;
 	// parse error code
 	int errcode;
+	// downlink direction 01, uplink direction 00
+	bool downlink;
+	// stored MOC
+	uint32_t mic;
 	// prefix contains gateway identifier
 	SEMTECH_DATA_PREFIX prefix;
 	// authentication keys
@@ -382,6 +389,8 @@ public:
 	// TODO I dont remember what is it for
 	semtechUDPPacket(const struct sockaddr *gatewayAddress, const std::string &data, const std::string &devaddr, const std::string &appskey);
 	
+	uint32_t MICcalculated() const;
+	bool isMICValid() const;
 	std::string serialize2RfmPacket() const;
 	std::string toString() const;
 	std::string toDebugString() const;
@@ -441,7 +450,8 @@ void decryptPayload(
 );
 
 uint32_t calculateMIC(
-	const std::string &payload,
+	const unsigned char *data,
+	const unsigned char size,
 	const unsigned int frameCounter,
 	const unsigned char direction,
 	const DEVADDR &devAddr,

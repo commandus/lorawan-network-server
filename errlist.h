@@ -80,6 +80,7 @@
 #define ERR_CODE_MISSED_DEVICE				-566
 #define ERR_CODE_MISSED_GATEWAY				-567
 #define ERR_CODE_INVALID_FPORT				-568
+#define ERR_CODE_INVALID_MIC				-569
 
 
 #define ERR_MESSAGE						"Error "
@@ -158,6 +159,7 @@
 #define ERR_MISSED_DEVICE				"No device specified"
 #define ERR_MISSED_GATEWAY				"No gateway specified"
 #define ERR_INVALID_FPORT				"Invalid FPort value"
+#define ERR_INVALID_MIC					"Invalid MIC"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"

@@ -283,6 +283,24 @@ void ReceiverQueueService::clearFcnts()
 	}
 }
 
+// brute-force push payload
+void ReceiverQueueService::pushForce
+(
+	const DeviceId &deviceId,
+	const std::string &payload,
+	const timeval &time
+)
+{
+	ReceiverQueueEntry e;
+	e.key.id = next();
+	e.key.time = time;
+	memset(e.value.addr, 0, sizeof(DEVADDR));
+	e.value.deviceId = deviceId;
+	e.value.payload = payload;
+	e.value.dbids = dbs;
+	pushEntry(e);
+}
+
 void ReceiverQueueService::push
 (
 	const semtechUDPPacket &packet,

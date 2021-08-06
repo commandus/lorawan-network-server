@@ -93,27 +93,9 @@ ACTIVATION string2activation
 		return ABP;
 }
 
-/**
- * 4.3.3 MAC Frame Payload Encryption (FRMPayload)
- * message integrity code
- * B0
- * 1    4       1   4       4(3+1)       1 1
- * 0x49 0 0 0 0 Dir DevAddr frameCounter 0 Len(msg)
- * cmac = aes128_cmac(NwkSKey, B0 | msg)
- * MIC = cmac[0..3]
- * 
- * 401111111100000001a1a46ff045b570
- *   DEV-ADDR  FRAMCN  PAYLOA
- * MH        FC(1.0) FP      MIC
- *           FRAME-CN (1.1)
- * 
- * MH MAC header (40)
- * FC Frame control
- * CN Frame counter
- * FP Frame port
- */ 
-uint32_t calculateMIC(
-	const std::string &payload,
+static uint32_t calculateMICRev103(
+	const unsigned char *data,
+	const unsigned char size,
 	const unsigned int frameCounter,
 	const unsigned char direction,
 	const DEVADDR &devAddr,
@@ -121,8 +103,6 @@ uint32_t calculateMIC(
 )
 {
 	AES_CMAC_CTX aesCmacCtx;
-	unsigned char *data = (unsigned char *) payload.c_str();
-	unsigned char size = payload.size();
 	unsigned char blockB[16];
 	// blockB
 	blockB[0] = 0x49;
@@ -160,6 +140,44 @@ uint32_t calculateMIC(
 	AES_CMAC_Final(mic, &aesCmacCtx);
     r = (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
 	return r;
+}
+
+/**
+ * 4.3.3 MAC Frame Payload Encryption (FRMPayload)
+ * message integrity code
+ * B0
+ * 1    4       1   4       4(3+1)       1 1
+ * 0x49 0 0 0 0 Dir DevAddr frameCounter 0 Len(msg)
+ * cmac = aes128_cmac(NwkSKey, B0 | msg)
+ * MIC = cmac[0..3]
+ * 
+ * 401111111100000001a1a46ff045b570
+ *   DEV-ADDR  FRAMCN  PAYLOA
+ * MH        FC(1.0) FP      MIC
+ *           FRAME-CN (1.1)
+ * 
+ * MH MAC header (40)
+ * FC Frame control
+ * CN Frame counter
+ * FP Frame port
+ */ 
+uint32_t calculateMIC(
+	const unsigned char *data,
+	const unsigned char size,
+	const unsigned int frameCounter,
+	const unsigned char direction,
+	const DEVADDR &devAddr,
+	const KEY128 &key
+)
+{
+	return calculateMICRev103(
+		data,
+		size,
+		frameCounter,
+		direction,
+		devAddr,
+		key
+	);
 }
 
 NetworkIdentity::NetworkIdentity()
@@ -1003,6 +1021,9 @@ bool rfmHeader::parse(
 	return r;
 }
 
+/**
+ * Serialize MHDR + FHDR
+ */ 
 std::string rfmHeader::toString() const {
 	RFM_HEADER h;
 	*((uint32_t*) &h.devaddr) = ntoh4(*((uint32_t *) &header.devaddr));
@@ -1030,7 +1051,7 @@ std::string rfmHeader::toJson() const
 }
 
 semtechUDPPacket::semtechUDPPacket() 
-	: errcode(0)
+	: errcode(0), downlink(false)
 {
 	prefix.version = 2;
 	prefix.token = 0;
@@ -1113,6 +1134,8 @@ int semtechUDPPacket::parse
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
 
+	int r = LORA_OK;
+
 	for (int i = 0; i < rxpk.Size(); i++) {
 		rapidjson::Value &jm = rxpk[i];
 		if (!jm.IsObject())
@@ -1124,10 +1147,12 @@ int semtechUDPPacket::parse
 		if (rr)
 			return rr;
 		semtechUDPPacket packet(gwAddress, &retprefix, &m, data, identityService);
-		retPackets.push_back(packet);
+		if (packet.errcode == 0)
+			retPackets.push_back(packet);
+		else
+			r = packet.errcode;
 	}
-
-	return 0;
+	return r;
 }
 
 /**
@@ -1254,7 +1279,7 @@ semtechUDPPacket::semtechUDPPacket(
 	const std::string &devaddr,
 	const std::string &appskey
 )
-	: errcode(0)
+	: errcode(0), downlink(false)
 {
 	clearPrefix();
 
@@ -1294,7 +1319,7 @@ semtechUDPPacket::semtechUDPPacket(
 	const std::string &data,
 	IdentityService *identityService
 )
-	: errcode(0)
+	: errcode(0), downlink(false)
 {
 	if (aprefix)
 		memmove(&prefix, aprefix, sizeof(SEMTECH_DATA_PREFIX));
@@ -1363,10 +1388,10 @@ std::string semtechUDPPacket::serialize2RfmPacket() const
 	std::string p(payload);
 
 	// direction of frame is up
-	unsigned char direction = 0x00;
+	unsigned char direction = downlink ? 1 : 0;
 
 	// build radio packet, unconfirmed data up macHeader.i = 0x40;
-	// RFM header 8 bytes
+	// RFM header 8 bytes: MHDR + FHDR
 	ss << header.toString() << header.fport;
 
 	// load data
@@ -1376,11 +1401,44 @@ std::string semtechUDPPacket::serialize2RfmPacket() const
 
 	std::string rs = ss.str();
 	// calc MIC
-	uint32_t mic = calculateMIC(rs, header.header.fcnt, direction, header.header.devaddr, devId.nwkSKey);	// nwkSKey
+	const KEY128 *key = &devId.nwkSKey;
+	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(), rs.size(), header.header.fcnt, direction, header.header.devaddr, *key);
 	// load MIC in package
 	// mic = ntoh4(mic);
 	ss << std::string((char *) &mic, 4);
 	return ss.str();
+}
+
+uint32_t semtechUDPPacket::MICcalculated() const
+{
+	std::string p(payload);
+	// direction of frame is up
+	unsigned char direction = downlink ? 1 : 0;
+	// build radio packet, unconfirmed data up macHeader.i = 0x40;
+	// RFM header 8 bytes
+	std::stringstream ss;
+	ss << header.toString() << header.fport;
+	// load data
+	// encrypt data
+std::cerr << "calculateMIC before encrypt " << hexString(p) << std::endl;
+	encryptPayload(p, header.header.fcnt, direction, header.header.devaddr, devId.appSKey);
+	ss << p;
+	std::string rs = ss.str();
+	// calc MIC
+	const KEY128 *key = &devId.nwkSKey;
+	std::cerr << "calculateMIC rs size " 
+		<< std::dec << rs.size() << " payload " << hexString(rs) 
+		<< " header.header.fcnt " << (int) header.header.fcnt 
+		<< " direction " << (int) direction 
+		<< " header.header.devaddr " << DEVADDR2string(header.header.devaddr) 
+		<< std::endl;;
+	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(), rs.size(), header.header.fcnt, direction, header.header.devaddr, *key);
+	return mic;
+}
+
+bool semtechUDPPacket::isMICValid() const
+{
+	return MICcalculated() == mic;
 }
 
 std::string semtechUDPPacket::toString() const
@@ -1549,23 +1607,45 @@ int semtechUDPPacket::parseData(
 	const std::string &data,
 	IdentityService *identityService
 ) {
+std::cerr << "parseData size " << data.size() << ": " << hexString(data) << std::endl;	
 	if (!header.parse(data)) {
 		return ERR_CODE_INVALID_RFM_HEADER;
 	}
-	char direction = 0;
+
+	unsigned char direction = downlink ? 1 : 0;
+	mic = getMic(data);
+std::cerr << "MIC stored " << std::hex << mic << std::endl;		
+
+
+
+
+
+
+
+
+
+
+
+
 	int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
+	// FHDR FPort Fopts
 	std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
+std::cerr << "parseData payload " << p.size() << ": " << hexString(p) << std::endl;		
 	// get identity
 	if (identityService) {
 		// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 		int rc = identityService->get(header.header.devaddr, devId);
 		if (rc == 0) {
+			// calc MIC
+			uint32_t micCalc = calculateMIC((const unsigned char*) data.c_str(), data.size() - 4, header.header.fcnt, direction, header.header.devaddr, devId.nwkSKey);
+
 			KEY128 *key;
 			if (header.fport == 0)
 				key = &devId.nwkSKey;
 			else
 				key = &devId.appSKey;
 			decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
+std::cerr << "parseData payload decypted " << p.size() << ": " << hexString(p) << std::endl;					
 		} else {
 			// return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 		}
@@ -1574,7 +1654,9 @@ int semtechUDPPacket::parseData(
 		// put cipher data
 		setPayload(p); 
 	}
-	return LORA_OK;
+std::cerr << "MIC " << std::hex << mic << ", calculated: " << MICcalculated() << std::endl;
+	errcode = mic == MICcalculated() ? LORA_OK : ERR_CODE_INVALID_MIC; 
+	return errcode;
 }
 
 bool semtechUDPPacket::hasMACPayload() const

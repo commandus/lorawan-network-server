@@ -53,14 +53,46 @@ int LmdbIdentityService::get(
 	return r;
 }
 
+class FindAddrEnv {
+	public:
+		DEVEUI value;
+		NetworkIdentity retval;
+		bool found;
+
+		FindAddrEnv(
+			const DEVEUI &eui
+		)
+			: found(false) 
+		{
+			memmove(&value, &eui, sizeof(DEVEUI)); 
+		}
+};
+
+static bool onFindAddr
+(
+	void *env,
+	DEVADDR *key,
+	DEVICEID *data
+) {
+	FindAddrEnv *e = (FindAddrEnv *) env;
+	NetworkIdentity nid(*key, *data);
+	e->found = memcmp(&e->value, &nid.deviceEUI, sizeof(DEVEUI)) == 0;
+	if (e->found)
+		e->retval = nid;
+	return e->found;
+}
+
 int LmdbIdentityService::getNetworkIdentity(
 	NetworkIdentity &retval,
 	const DEVEUI &eui
 ) {
 	DEVICEID v;
-	int r = getAddr(env, devaddr, v);
-	retval.set(devaddr, v);
-	return r;
+	FindAddrEnv findAddrEnv(eui);
+	lsAddr(env, &onFindAddr, &findAddrEnv);
+	if (!findAddrEnv.found)
+		return ERR_CODE_INVALID_DEVICE_EUI;
+	retval = findAddrEnv.retval;
+	return LORA_OK;
 }
 
 class ListEnv {

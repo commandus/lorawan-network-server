@@ -195,6 +195,8 @@ int UDPListener::listen() {
 							case ERR_CODE_INVALID_STAT:
 							case ERR_CODE_INVALID_PACKET:
 							case ERR_CODE_INVALID_JSON:
+							// ignore invalid mic, inconsistent packet removed, json can contain other valid packets
+							// case ERR_CODE_INVALID_MIC: 
 								{
 									std::stringstream sse;
 									sse << strerror_client(pr)

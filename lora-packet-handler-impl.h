@@ -17,9 +17,11 @@
 class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 	private:
 		IdentityService *identityService;
+		// ReceiverQueueService enque data payload packets received from gateways (with deduplication)
 		ReceiverQueueService *receiverQueueService;
-		PacketQueue packetQueue;
+		// RecieverQueueProcessor get payload from the queue, parse and put parsed data 
 		RecieverQueueProcessor *recieverQueueProcessor;
+		PacketQueue packetQueue;
 
 		std::function<void(
 			void *env,
@@ -49,12 +51,16 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 				int errorcode,
 				const std::string &message
 		) > value);
-		int onPacket(
+		int enqueuePayload(
 			struct timeval &time,
 			DeviceId id,
 			semtechUDPPacket &value
 		);
-
+		int enqueueMAC(
+			struct timeval &time,
+			DeviceId id,
+			semtechUDPPacket &value
+		);
 	void setRecieverQueueProcessor(RecieverQueueProcessor *value);
 };
 

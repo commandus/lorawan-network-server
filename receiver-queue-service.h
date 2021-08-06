@@ -125,6 +125,8 @@ class ReceiverQueueService {
 		// Add entry
 		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
 		void push(const semtechUDPPacket &packet, const timeval &time);
+		// brute-force push payload
+		void pushForce(const DeviceId &deviceId, const std::string &payload, const timeval &time);
 		
 		// Return 0 if success
 		virtual int pop(const int &dbid, ReceiverQueueEntry &retval) = 0;
