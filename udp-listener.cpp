@@ -207,6 +207,19 @@ int UDPListener::listen() {
 								}
 								break;
 							default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue
+								// check gateway
+								if (gatewayList) {
+									if (gatewayList->has(dataprefix.mac)) {
+										std::stringstream ss;
+										ss << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": "
+											<< ERR_INVALID_GATEWAY_ID
+											<< " from " << UDPSocket::addrString((const struct sockaddr *) &clientAddress)
+											<< " gateway: " << DEVEUI2string(dataprefix.mac);
+											;
+										onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+										break;
+									}
+								}
 								// send ACK immediately
 								SEMTECH_ACK response;
 								response.version = 2;

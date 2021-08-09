@@ -7,9 +7,18 @@
 SemtechUDPPacketItem::SemtechUDPPacketItem(
 	const semtechUDPPacket &apacket
 )
+	: packet(apacket)
 {
 	gettimeofday(&timeAdded, NULL);
-	packet = apacket;
+}
+
+SemtechUDPPacketItem::SemtechUDPPacketItem(
+	const struct timeval &time,
+	const semtechUDPPacket &apacket
+)
+	: timeAdded(time), packet(apacket)
+{
+	
 }
 
 DEVADDRINT SemtechUDPPacketItem::getAddr() const
@@ -61,10 +70,11 @@ PacketQueue::~PacketQueue()
 	stop();
 }
 
-void PacketQueue::put(
+void PacketQueue::push(
+	const struct timeval &time,
 	const semtechUDPPacket &value
 ) {
-	SemtechUDPPacketItem item(value);
+	SemtechUDPPacketItem item(time, value);
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();
 	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
@@ -116,19 +126,53 @@ bool PacketQueue::getFirstExpired(
 		return false;
 	}
 
-	// always keep at leats 1 item
+	// always keep at least 1 item
 	if (!it->second.packets.size()) {
 		mutexq.unlock();
 		return false;
 	}
-	// first packet is earliest packet
+	// first packet is earliest packet, check time using first earliest packet
 	if (diffMicroSeconds(it->second.packets[0].timeAdded, currenttime) < delayMicroSeconds) {
 		mutexq.unlock();
 		return false;
 	}
-	retval = it->second.packets[0].packet;
 
-	packets.erase(it);
+	// return packet with received signal strength indicator. Worst is -85 dBm.
+	int bestIndex = 0;
+	std::vector<SemtechUDPPacketItem>::const_iterator pit(it->second.packets.begin());
+	// validate have an other packet (by fcnt)
+	uint16_t fcntFirst = pit->packet.header.header.fcnt;
+	int16_t rssi = pit->packet.header.header.fcnt;
+	bool hasOtherPacket = false;
+	pit++;
+	int idx = 0;
+	for (; pit != it->second.packets.end(); pit++) {
+		if (pit->packet.header.header.fcnt != fcntFirst) {
+			hasOtherPacket = true;
+		} else {
+			if (pit->packet.metadata[0].rssi > rssi) {
+				bestIndex = idx;
+				rssi = pit->packet.metadata[0].rssi;
+
+			}
+		}
+		idx++;
+	}
+	retval = it->second.packets[idx].packet;
+
+	if (hasOtherPacket) {
+		// remove first received packet and aothers wit the sama fcnt
+		for (std::vector<SemtechUDPPacketItem>::iterator pit(it->second.packets.begin()); pit != it->second.packets.end();) {
+			if (pit->packet.header.header.fcnt == fcntFirst) {
+				pit = it->second.packets.erase(pit);
+			} else {
+				pit++;
+			}
+		}
+	} else {
+		// entirely remove all packets
+		packets.erase(it);
+	}
 	addrs.pop_front();
 
 	mutexq.unlock();

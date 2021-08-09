@@ -11,6 +11,7 @@
 #pragma clang diagnostic pop
 
 #include "utilstring.h"
+#include "platform.h"
 
 GatewayList::GatewayList()
 	: errmessage(""), filename("")
@@ -203,4 +204,12 @@ void GatewayList::parse(
 void GatewayList::save()
 {
 	string2file(filename, toJsonString());
+}
+
+bool GatewayList::has(
+	const DEVEUI  &gwid
+) const
+{
+	uint64_t k = *(uint64_t *) &gwid;
+	return (gateways.find(ntoh8(k)) != gateways.end());
 }

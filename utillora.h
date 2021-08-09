@@ -38,6 +38,7 @@ void string2DEVADDR(DEVADDR &retval, const std::string &str);
 void string2DEVEUI(DEVEUI &retval, const std::string &str);
 void string2KEY(KEY128 &retval, const std::string &str);
 void string2DEVICENAME(DEVICENAME &retval, const char *str);
+std::string DEVICENAME2string(const DEVICENAME &value);
 
 uint64_t str2gatewayId(const char *value);
 

@@ -53,12 +53,10 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		) > value);
 		int enqueuePayload(
 			struct timeval &time,
-			DeviceId id,
 			semtechUDPPacket &value
 		);
 		int enqueueMAC(
 			struct timeval &time,
-			DeviceId id,
 			semtechUDPPacket &value
 		);
 	void setRecieverQueueProcessor(RecieverQueueProcessor *value);

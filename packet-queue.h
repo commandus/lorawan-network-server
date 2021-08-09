@@ -29,6 +29,10 @@ class SemtechUDPPacketItem {
 		semtechUDPPacket packet;
 		DEVADDRINT getAddr() const;
 		SemtechUDPPacketItem(const semtechUDPPacket &packet);
+		SemtechUDPPacketItem(
+			const struct timeval &time,
+			const semtechUDPPacket &packet
+		);
 		std::string toString() const;
 };
 
@@ -57,7 +61,10 @@ class PacketQueue {
 		PacketQueue(int delayMilliSeconds);
 		~PacketQueue();
 		void setDelay(int delayMilliSeconds);
-		void put(const semtechUDPPacket &value);
+		void push(
+			const struct timeval &time,
+			const semtechUDPPacket &value
+		);
 		size_t count();
 		bool getFirstExpired(semtechUDPPacket &retval, struct timeval &currenttime);
 		int getNextTimeout(struct timeval &currenttime);

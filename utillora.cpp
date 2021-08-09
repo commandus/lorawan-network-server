@@ -713,6 +713,15 @@ void string2DEVICENAME(
 	strncpy(retval, str, sizeof(DEVICENAME));
 }
 
+std::string DEVICENAME2string
+(
+	const DEVICENAME &value
+)
+{
+	size_t sz = strnlen(value, sizeof(DEVICENAME));
+	return std::string(&value[0], sz);
+}
+
 void int2DEVADDR(
 	DEVADDR &retval,
 	uint32_t value
@@ -933,7 +942,7 @@ int rfmMetaData::parse(
 }
 
 std::string rfmMetaData::toJsonString(
-	const std::string &data
+	const std::string &payload
 ) const
 {
 	std::stringstream ss;
@@ -953,8 +962,8 @@ std::string rfmMetaData::toJsonString(
 		<< "\",\"" << METADATA_RX_NAMES[10] << "\":\"" << codr()
 		<< "\",\"" << METADATA_RX_NAMES[11] << "\":" << rssi
 		<< ",\"" << METADATA_RX_NAMES[12] << "\":" << lsnr
-		<< ",\"" << METADATA_RX_NAMES[13] << "\":" << data.size()
-		<< ",\"" << METADATA_RX_NAMES[14] << "\":\"" << base64_encode(data) << "\"}";
+		<< ",\"" << METADATA_RX_NAMES[13] << "\":" << payload.size()
+		<< ",\"" << METADATA_RX_NAMES[14] << "\":\"" << base64_encode(payload) << "\"}";
 	return ss.str();
 }
 
@@ -1098,6 +1107,7 @@ int semtechUDPPacket::parse
 		return ERR_CODE_PACKET_TOO_SHORT;
 	}
 	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_DATA_PREFIX));
+	*(uint64_t *) &(retprefix.mac) = ntoh8(*(uint64_t *) &(retprefix.mac));
 	// check version
 
 	if (retprefix.version != 2) {
@@ -1421,9 +1431,11 @@ std::string semtechUDPPacket::toString() const
 std::string semtechUDPPacket::toDebugString() const
 {
 	std::stringstream ss;
-	ss << "device " << getDeviceAddrStr()
-		<< ": "
-		<< hexString(payload);
+	ss << "device " << DEVICENAME2string(devId.name)
+		<< ", addr: " << getDeviceAddrStr()
+		<< ", gw: " << DEVEUI2string(prefix.mac);
+	if (metadata.size() > 0)
+		ss << ", rssi: " << (int) metadata[0].rssi << "dBm";
 	return ss.str();
 }
 
@@ -1575,7 +1587,6 @@ int semtechUDPPacket::parseData(
 	const std::string &data,
 	IdentityService *identityService
 ) {
-std::cerr << "parseData size " << data.size() << ": " << hexString(data) << std::endl;	
 	if (!header.parse(data)) {
 		return ERR_CODE_INVALID_RFM_HEADER;
 	}
@@ -1589,21 +1600,18 @@ std::cerr << "parseData size " << data.size() << ": " << hexString(data) << std:
 		if (rc == 0) {
 			// calc MIC
 			uint32_t mic = getMic(data);
-			std::cerr << "MIC stored " << std::hex << mic << std::endl;		
 			uint32_t micCalc = calculateMIC((const unsigned char*) data.c_str(), data.size() - 4, header.header.fcnt, direction, header.header.devaddr, devId.nwkSKey);
 			errcode = mic == micCalc ? LORA_OK : ERR_CODE_INVALID_MIC; 
 			if (errcode == LORA_OK) {
 				int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
 				// FHDR FPort Fopts
 				std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
-std::cerr << "parseData payload " << p.size() << ": " << hexString(p) << std::endl;		
 				KEY128 *key;
 				if (header.fport == 0)
 					key = &devId.nwkSKey;
 				else
 					key = &devId.appSKey;
 				decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
-std::cerr << "parseData payload decypted " << p.size() << ": " << hexString(p) << std::endl;					
 				setPayload(p); 
 			}
 		} else {
