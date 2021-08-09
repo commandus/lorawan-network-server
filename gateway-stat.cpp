@@ -254,10 +254,11 @@ std::string GatewayStat::toJsonString() const
 std::string GatewayStat::toString() const
 {
 		std::stringstream ss;
-		ss << std::hex << gatewayId << std::dec
+		ss 
+			<< time2string(t)
+			<< " " << std::hex << gatewayId << std::dec
 			<< " " << addr
 			<< " " << name
-			<< " " << time2string(t)
 			<< " (" << std::fixed << std::setprecision(5) << lat
 			<< ", " << std::fixed << std::setprecision(5) << lon
 			<< ", " << alt

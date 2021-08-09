@@ -213,3 +213,21 @@ bool GatewayList::has(
 	uint64_t k = *(uint64_t *) &gwid;
 	return (gateways.find(ntoh8(k)) != gateways.end());
 }
+
+// Set identifier, name and geolocation if found. Return true if found
+bool GatewayList::copyId
+(
+	GatewayStat &value,
+	const struct sockaddr *gwAddress
+) const
+{
+	uint64_t k = *(uint64_t *) &value.gatewayId;
+	std::map<uint64_t, GatewayStat>::const_iterator it(gateways.find(k));
+	if (it == gateways.end())
+		return false;
+	value.name = it->second.name;
+	value.lat = it->second.lat;
+	value.lon = it->second.lon;
+	value.addr = UDPSocket::addrString(gwAddress);
+	return true;
+}

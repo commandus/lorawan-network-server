@@ -12,6 +12,7 @@
 
 #include "gateway-stat.h"
 #include "utillora.h"
+#include "udp-socket.h"
 
 class GatewayList {
 	private:
@@ -43,6 +44,12 @@ class GatewayList {
 		) const;
 		bool has(
 			const DEVEUI &gwid
+		) const;
+		
+		// Set identifier, name and geolocation if found. Return true if found
+		bool copyId(
+			GatewayStat &value,
+			const struct sockaddr *gwAddress
 		) const;
 };
 
