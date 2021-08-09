@@ -13,7 +13,9 @@ int LoraPacketProcessor::enqueuePayload(
 {
 	std::stringstream ss;
 	std::string p = value.getPayload();
-	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress)
+	ss << timeval2string(time)
+		<< " " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress)
+//		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) 
 		<< " " << value.devId.toJsonString() << ": " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 

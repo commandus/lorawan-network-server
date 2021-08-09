@@ -1,6 +1,5 @@
 #include "gateway-stat.h"
 #include <sstream>
-#include <iostream>
 #include <iomanip>
 
 #include "utildate.h"
@@ -132,8 +131,6 @@ int GatewayStat::parse(
 		}
 		cnt++;
 	}
-std::cerr << std::hex << gatewayId << std::endl;
-
 
 	if (value.HasMember(STAT_NAMES[1])) {
 		rapidjson::Value &v = value[STAT_NAMES[1]];
