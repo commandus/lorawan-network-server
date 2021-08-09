@@ -11,6 +11,7 @@
 #pragma clang diagnostic pop
 
 #include "gateway-stat.h"
+#include "utillora.h"
 
 class GatewayList {
 	private:
@@ -39,6 +40,9 @@ class GatewayList {
 			std::vector<uint64_t> &retval,
 			const std::vector<std::string> &value,
 			bool useRegex
+		) const;
+		bool has(
+			const DEVEUI &gwid
 		) const;
 };
 
