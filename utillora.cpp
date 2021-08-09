@@ -1,5 +1,4 @@
 #include <sstream>
-#include <iostream>
 #include <iomanip>
 #include <cstring>
 
@@ -1130,7 +1129,7 @@ int semtechUDPPacket::parse
 		rapidjson::Value &jstat = doc["stat"];
 		if (retgwstat.parse(jstat) == 0) {
 			// set gateway identifier
-			retgwstat.gatewayId = deveui2int(retprefix.mac);
+			retgwstat.gatewayId = *(uint64_t *) &retprefix.mac;
 			retgwstat.errcode = 0;
 		} else {
 			return ERR_CODE_INVALID_STAT;
@@ -1542,7 +1541,8 @@ std::string semtechUDPPacket::toJsonString() const
 		MacPtr macPtr(payload);
 		ss << ", \"mac\": " << (macPtr.toJSONString());
 		if (macPtr.errorcode) {
-			std::cerr << ERR_MESSAGE << macPtr.errorcode << ": " << strerror_client(macPtr.errorcode) << std::endl;
+			ss << ", \"mac_error_code\": " << macPtr.errorcode
+				<< ", \"mac_error\": \"" << strerror_client(macPtr.errorcode) << "\"";
 		}
 	}
 	if (hasApplicationPayload())
