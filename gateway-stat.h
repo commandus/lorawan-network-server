@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <inttypes.h>
+#include <netinet/in.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -18,7 +19,10 @@ class GatewayStat {
 public:
 	std::string name;
 	uint64_t gatewayId;
+	// host name or address of the gateway
 	std::string addr;
+	// Gateway send PULL_DATA packet to inform network server what gateway current adddress and port are (possibly over NAT)
+	struct sockaddr_in6 sockaddr;
 	int errcode;
 	time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'expanded' format e.g. 2021-02-24 04:54:01 GMT
 	double lat;					// GPS latitude of the gateway in degree (float, N is +)

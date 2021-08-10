@@ -56,12 +56,6 @@ public:
 
 	void clearLogger();
 
-	int sendAck(
-		const UDPSocket &socket,
-		const struct sockaddr_in *dest,
-		const SEMTECH_ACK &response
-	);
-
 	void setLogger(
 		int verbosity,
 		std::function<void(
