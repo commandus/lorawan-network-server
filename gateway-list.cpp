@@ -207,11 +207,29 @@ void GatewayList::save()
 }
 
 bool GatewayList::has(
-	const DEVEUI  &gwid
+	const DEVEUI &gwid
 ) const
 {
 	uint64_t k = *(uint64_t *) &gwid;
-	return (gateways.find(ntoh8(k)) != gateways.end());
+	return (gateways.find(k) != gateways.end());
+}
+
+/**
+ * Set socket address
+ */
+bool GatewayList::setSocketAddress
+(
+	const DEVEUI &gwid,
+	const struct sockaddr_in *gwAddress
+)
+{
+	uint64_t k = *(uint64_t *) &gwid;
+	std::map<uint64_t, GatewayStat>::iterator it(gateways.find(k));
+	if (it == gateways.end())
+		return false;
+	memmove(&it->second.sockaddr, gwAddress,
+		(gwAddress->sin_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+
 }
 
 // Set identifier, name and geolocation if found. Return true if found

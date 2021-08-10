@@ -42,6 +42,11 @@ class GatewayList {
 			const std::vector<std::string> &value,
 			bool useRegex
 		) const;
+		bool setSocketAddress(
+			const DEVEUI  &gwid,
+			const struct sockaddr_in *gwAddress
+		);
+
 		bool has(
 			const DEVEUI &gwid
 		) const;

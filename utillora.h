@@ -116,7 +116,7 @@ typedef ALIGN struct {
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
-} PACKED SEMTECH_DATA_PREFIX;	// 12 bytesRADIO
+} PACKED SEMTECH_DATA_PREFIX;	// 12 bytes
 // After prefix "JSON object", starting with {, ending with }, see section 4
 
 /**
@@ -126,7 +126,7 @@ typedef ALIGN struct {
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// same random token as SEMTECH_DATA_PREFIX
-	uint8_t tag;				// PUSH_ACK 0x01
+	uint8_t tag;				// PUSH_ACK 1 PULL_ACK 4
 } PACKED SEMTECH_ACK;			// 4 bytes
 
 /**

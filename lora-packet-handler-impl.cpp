@@ -58,6 +58,46 @@ LoraPacketProcessor::~LoraPacketProcessor()
 		recieverQueueProcessor->stop();
 }
 
+// immediately send ACK
+int LoraPacketProcessor::ack
+(
+	const UDPSocket &socket,
+	const sockaddr_in* gwAddress,
+	const SEMTECH_DATA_PREFIX &dataprefix
+)
+{
+	SEMTECH_ACK response;
+	response.version = 2;
+	response.token = dataprefix.token;
+	switch(dataprefix.tag) {
+		default:
+			response.tag = dataprefix.tag + 1;
+			break;
+	}
+
+	size_t r = sendto(socket.sock, &response, sizeof(SEMTECH_ACK), 0,
+		(const struct sockaddr*) gwAddress,
+		((gwAddress->sin_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+
+	int rr = sizeof(SEMTECH_ACK) ? LORA_OK : ERR_CODE_SEND_ACK;
+	if (onLog) {
+		if (rr) {
+			std::stringstream ss;
+			ss << ERR_MESSAGE << ERR_CODE_SEND_ACK << " "
+				<< UDPSocket::addrString((const struct sockaddr *) gwAddress)
+				<< " " << rr << ": " << strerror_client(rr)
+				<< ", errno: " << errno << ": " << strerror(errno);
+			onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+		} else {
+			std::stringstream ss;
+			ss << MSG_SENT_ACK_TO
+				<< UDPSocket::addrString((const struct sockaddr *) gwAddress);
+			onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+		}
+	}
+	return rr;
+}
+
 int LoraPacketProcessor::put
 (
 	struct timeval &time,

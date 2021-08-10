@@ -38,6 +38,10 @@ void UDPSocket::closeSocket() {
 		sock = 0;
 	}
 }
+
+/**
+ * @return address string
+ */
 std::string UDPSocket::addrString(
 	const struct sockaddr *value
 ) {

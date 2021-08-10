@@ -71,16 +71,18 @@
 #define ERR_CODE_DB_COMMIT_TRANSACTION		-557
 #define ERR_CODE_DB_EXEC					-558
 #define ERR_CODE_PING						-559
-#define ERR_CODE_INVALID_STAT				-560
-#define ERR_CODE_NO_PAYLOAD          		-561
-#define ERR_CODE_NO_MESSAGE_TYPE			-562
-#define ERR_CODE_QUEUE_EMPTY				-563
-#define ERR_CODE_RM_FILE					-564
-#define ERR_CODE_INVALID_BASE64				-565
-#define ERR_CODE_MISSED_DEVICE				-566
-#define ERR_CODE_MISSED_GATEWAY				-567
-#define ERR_CODE_INVALID_FPORT				-568
-#define ERR_CODE_INVALID_MIC				-569
+#define ERR_CODE_PULLOUT					-560
+#define ERR_CODE_INVALID_STAT				-561
+#define ERR_CODE_NO_PAYLOAD          		-562
+#define ERR_CODE_NO_MESSAGE_TYPE			-563
+#define ERR_CODE_QUEUE_EMPTY				-564
+#define ERR_CODE_RM_FILE					-565
+#define ERR_CODE_INVALID_BASE64				-566
+#define ERR_CODE_MISSED_DEVICE				-567
+#define ERR_CODE_MISSED_GATEWAY				-568
+#define ERR_CODE_INVALID_FPORT				-569
+#define ERR_CODE_INVALID_MIC				-570
+
 
 
 #define ERR_MESSAGE						"Error "
@@ -150,6 +152,7 @@
 #define ERR_DB_COMMIT_TRANSACTION		"Error commit SQL transaction"
 #define ERR_DB_EXEC						"Error exec SQL statement"
 #define ERR_PING						"Ping"
+#define ERR_PULLOUT						"Pullout"
 #define ERR_INVALID_STAT				"Invalid stat"
 #define ERR_NO_PAYLOAD          		"No payload"
 #define ERR_NO_MESSAGE_TYPE				"No message type"

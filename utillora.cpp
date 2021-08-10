@@ -1114,7 +1114,10 @@ int semtechUDPPacket::parse
 	}
 	char *json = getSemtechJSONCharPtr(packetForwarderPacket, size);
 	if (size == sizeof(SEMTECH_DATA_PREFIX)) {
-		return ERR_CODE_PING;	// that's ok
+		if (retprefix.tag == 2)
+			return ERR_CODE_PULLOUT;
+		else
+			return ERR_CODE_PING;	// remove it, nothing to do
 	}
 
 	rapidjson::Document doc;

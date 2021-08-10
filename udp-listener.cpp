@@ -110,21 +110,6 @@ int UDPListener::largestSocket() {
 	return r;
 }
 
-/**
- * @return 0- success, ERR_CODE_SEND_ACK- error occured
- */ 
-int UDPListener::sendAck(
-	const UDPSocket &socket,
-	const struct sockaddr_in *dest,
-	const SEMTECH_ACK &response
-)
-{
-	size_t r = sendto(socket.sock, &response, sizeof(SEMTECH_ACK), 0,
-		(const struct sockaddr*) dest,
-		((dest->sin_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
-	return r == sizeof(SEMTECH_ACK) ? 0 : ERR_CODE_SEND_ACK;
-}
-
 int UDPListener::listen() {
 	int sz = sockets.size();
 	if (!sz)
@@ -188,7 +173,6 @@ int UDPListener::listen() {
 
 						// send ACK immediately
 						switch (pr) {
-							case ERR_CODE_PING:
 							case ERR_CODE_PACKET_TOO_SHORT:
 							case ERR_CODE_INVALID_PROTOCOL_VERSION:
 							case ERR_CODE_NO_GATEWAY_STAT:
@@ -206,10 +190,35 @@ int UDPListener::listen() {
 									onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
 								}
 								break;
+							case ERR_CODE_PULLOUT:
+								{
+									std::stringstream sse;
+									sse << strerror_client(pr)
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress);
+									onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
+									// send PULL ACK immediately
+									if (handler) {
+										handler->ack(*it, (const sockaddr_in *) &gwAddress, dataprefix);
+									}
+									if (gatewayList) {
+										if (!gatewayList->setSocketAddress(dataprefix.mac, (const struct sockaddr_in *) &gwAddress)) {
+											std::stringstream ss;
+											ss << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": "
+												<< ERR_INVALID_GATEWAY_ID
+												<< " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
+												<< " gateway: " << DEVEUI2string(dataprefix.mac);
+												;
+											onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+											break;
+										}
+									}
+
+								}
+								break;
 							default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue
 								// check gateway
 								if (gatewayList) {
-									if (gatewayList->has(dataprefix.mac)) {
+									if (!gatewayList->has(dataprefix.mac)) {
 										std::stringstream ss;
 										ss << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": "
 											<< ERR_INVALID_GATEWAY_ID
@@ -221,28 +230,8 @@ int UDPListener::listen() {
 									}
 								}
 								// send ACK immediately
-								SEMTECH_ACK response;
-								response.version = 2;
-								response.token = dataprefix.token;
-								switch(dataprefix.tag) {
-									default:
-										response.tag = dataprefix.tag + 1;
-										break;
-								}
-							
-								int ar = sendAck(*it, (const sockaddr_in*) &gwAddress, response);
-								if (ar) {
-									std::stringstream ss;
-									ss << ERR_MESSAGE << ERR_CODE_SEND_ACK << " "
-										<< UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-										<< " " << ar << ": " << strerror_client(ar)
-										<< ", errno: " << errno << ": " << strerror(errno);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
-								} else {
-									std::stringstream ss;
-									ss << MSG_SENT_ACK_TO
-										<< UDPSocket::addrString((const struct sockaddr *) &gwAddress);
-									onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+								if (handler) {
+									handler->ack(*it, (const sockaddr_in *) &gwAddress, dataprefix);
 								}
 								break;
 						}
