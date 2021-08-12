@@ -1,22 +1,34 @@
 #include "packet-queue.h"
 #include <sys/time.h>
+#include <sys/eventfd.h>
 #include <unistd.h>
 
+#include <iostream>
+
 #include "utildate.h"
+#include "errlist.h"
+#include "udp-socket.h"
+
+SemtechUDPPacketItem::SemtechUDPPacketItem()
+	: processMode(MODE_NONE)
+{
+}
 
 SemtechUDPPacketItem::SemtechUDPPacketItem(
 	const semtechUDPPacket &apacket
 )
-	: packet(apacket)
+	: processMode(MODE_NONE), packet(apacket)
 {
 	gettimeofday(&timeAdded, NULL);
 }
 
 SemtechUDPPacketItem::SemtechUDPPacketItem(
+	int socket,
+	ITEM_PROCESS_MODE mode,
 	const struct timeval &time,
 	const semtechUDPPacket &apacket
 )
-	: timeAdded(time), packet(apacket)
+	: processMode(mode), timeAdded(time), packet(apacket)
 {
 	
 }
@@ -43,16 +55,27 @@ std::string SemtechUDPPacketItems::toString() const
 }
 
 PacketQueue::PacketQueue()
-	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), isStarted(false), isDone(false)
+	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), mode(0), onLog(NULL)
 {
 }
 
 PacketQueue::PacketQueue(
 	int delayMillisSeconds
 )
-	: packetsRead(0), isStarted(false), threadSend(NULL)
+	: packetsRead(0), mode(0), threadSend(NULL), onLog(NULL)
 {
 	setDelay(delayMillisSeconds);
+}
+
+void PacketQueue::setLogger(
+	std::function<void(
+		void *env,
+		int level,
+		int modulecode,
+		int errorcode,
+		const std::string &message
+)> value) {
+	onLog = value;
 }
 
 void PacketQueue::setDelay(
@@ -71,10 +94,12 @@ PacketQueue::~PacketQueue()
 }
 
 void PacketQueue::push(
+	int socket,
+	ITEM_PROCESS_MODE mode,
 	const struct timeval &time,
 	const semtechUDPPacket &value
 ) {
-	SemtechUDPPacketItem item(time, value);
+	SemtechUDPPacketItem item(socket, mode, time, value);
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();
 	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
@@ -110,7 +135,7 @@ size_t PacketQueue::count()
 }
 
 bool PacketQueue::getFirstExpired(
-	semtechUDPPacket &retval,
+	SemtechUDPPacketItem &retval,
 	struct timeval &currenttime
 )
 {
@@ -131,6 +156,7 @@ bool PacketQueue::getFirstExpired(
 		mutexq.unlock();
 		return false;
 	}
+
 	// first packet is earliest packet, check time using first earliest packet
 	if (diffMicroSeconds(it->second.packets[0].timeAdded, currenttime) < delayMicroSeconds) {
 		mutexq.unlock();
@@ -158,7 +184,7 @@ bool PacketQueue::getFirstExpired(
 		}
 		idx++;
 	}
-	retval = it->second.packets[idx].packet;
+	retval = it->second.packets[idx];
 
 	if (hasOtherPacket) {
 		// remove first received packet and aothers wit the sama fcnt
@@ -188,7 +214,7 @@ int PacketQueue::getNextTimeout(struct timeval &currenttime)
 		return DEF_TIMEOUT_MS;
 	}
 
-	// always keep at leats 1 item
+	// always keep at least 1 item
 	if (!it->second.packets.size()) {
 		return DEF_TIMEOUT_MS;
 	}
@@ -213,60 +239,146 @@ std::string PacketQueue::toString() const
 	return ss.str();
 }
 
+// immediately send ACK
+int PacketQueue::ack
+(
+	int socket,
+	const sockaddr_in* gwAddress,
+	const SEMTECH_DATA_PREFIX &dataprefix
+)
+{
+	SEMTECH_ACK response;
+	response.version = 2;
+	response.token = dataprefix.token;
+	switch(dataprefix.tag) {
+		default:
+			response.tag = dataprefix.tag + 1;
+			break;
+	}
+
+	size_t r = sendto(socket, &response, sizeof(SEMTECH_ACK), 0,
+		(const struct sockaddr*) gwAddress,
+		((gwAddress->sin_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+
+	int rr = sizeof(SEMTECH_ACK) ? LORA_OK : ERR_CODE_SEND_ACK;
+	if (onLog) {
+		if (rr) {
+			std::stringstream ss;
+			ss << ERR_MESSAGE << ERR_CODE_SEND_ACK << " "
+				<< UDPSocket::addrString((const struct sockaddr *) gwAddress)
+				<< " " << rr << ": " << strerror_client(rr)
+				<< ", errno: " << errno << ": " << strerror(errno);
+			onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+		} else {
+			std::stringstream ss;
+			ss << MSG_SENT_ACK_TO
+				<< UDPSocket::addrString((const struct sockaddr *) gwAddress);
+			onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+		}
+	}
+	return rr;
+}
+
 void PacketQueue::runner()
 {
 	// PacketHandler value;
 	packetsRead = 0;
 	int timeoutMicroSeconds = DEF_TIMEOUT_MS * 1000;
-	while (isStarted) {
+
+	fd_set fh;
+    FD_ZERO(&fh);
+	FD_SET(fdWakeup, &fh);
+	
+	// mode 0- stopped, 1- running, -1- stop request
+	mode = 1;
+	while (mode == 1) {
 		struct timeval timeout;
 		timeout.tv_sec = 0;
 		timeout.tv_usec = timeoutMicroSeconds;
-		int retval = select(0, NULL, NULL, NULL, &timeout);
+		int retval = select(fdWakeup + 1, &fh, NULL, NULL, &timeout);
 		switch (retval) {
 			case -1:
+				// select error
 				break;
-			case 0:
-				// timeout
+			default:
+			// case 0:
+				// 0- timeout occured
 				if (count()) {
-					semtechUDPPacket p;
+					SemtechUDPPacketItem item;
 					struct timeval t;
 					gettimeofday(&t, NULL);
-					while (getFirstExpired(p, t)) {
-						/*
-						std::cerr << timeval2string(t) << " "  << p.getDeviceAddrStr() << " "
-							<< p.metadataToJsonString() << std::endl;
-						*/
+					while (getFirstExpired(item, t)) {
+						switch (item.processMode)
+						{
+						case MODE_ACK:
+							ack(item.socket, (const sockaddr_in *) &item.packet.gatewayAddress, item.packet.prefix);
+							break;
+						case MODE_REPLY:
+							if (onLog) {
+								std::stringstream ss;
+								ss << MSG_SENT_REPLY_TO << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
+								onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+							}
+							break;
+						
+						default:
+							if (onLog) {
+								std::stringstream ss;
+								ss << ERR_MESSAGE << ERR_CODE_WRONG_PARAM << ": " << ERR_WRONG_PARAM << " mode: " << (int) mode
+									<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
+								onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+							}
+							break;
+						}
 						packetsRead++;
 						// value.onPacket(p);
 					}
 					timeoutMicroSeconds = getNextTimeout(t);
 				}
 				continue;
-			default:
-				break;
 		}
 	}
-	isDone = true;
+	// mode 0- stopped, 1- running, -1- stop request
+	mode = 0;
+}
+
+void PacketQueue::wakeUp() 
+{
+	// mode 0- stopped, 1- running, -1- stop request
+	if (mode == 1)
+		return;
+	uint64_t u = 1;
+	if (write(fdWakeup, &u, sizeof(uint64_t)) != sizeof(uint64_t)) {
+
+	}
 }
 
 void PacketQueue::start(
 	PacketHandler &value
 ) 
 {
-	if (isStarted)
+	// mode 0- stopped, 1- running, -1- stop request
+	if (mode == 1)
 		return;
-	isStarted = true;
-	isDone = false;
+
+	fdWakeup = eventfd(0, EFD_CLOEXEC);
+
 	threadSend = new std::thread(&PacketQueue::runner, this);
 }
 
 void PacketQueue::stop()
 {
-	if (!isStarted)
+	// mode 0- stopped, 1- running, -1- stop request
+	if (mode == 0)
 		return;
-	isStarted = false;
-	while(!isDone) {
+
+	mode = -1;
+	wakeUp();
+
+	// mode 0- stopped, 1- running, -1- stop request
+	while (mode != 0) {
 		usleep(100);
 	}
+
+	close(fdWakeup);
 }

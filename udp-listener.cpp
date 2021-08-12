@@ -171,7 +171,6 @@ int UDPListener::listen() {
 
 						// std::cerr << "===" << pr << ": " << strerror_client(pr) << std::endl;
 
-						// send ACK immediately
 						switch (pr) {
 							case ERR_CODE_PACKET_TOO_SHORT:
 							case ERR_CODE_INVALID_PROTOCOL_VERSION:
@@ -198,7 +197,7 @@ int UDPListener::listen() {
 									onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
 									// send PULL ACK immediately
 									if (handler) {
-										handler->ack(*it, (const sockaddr_in *) &gwAddress, dataprefix);
+										handler->ack(it->sock, (const sockaddr_in *) &gwAddress, dataprefix);
 									}
 									if (gatewayList) {
 										if (!gatewayList->setSocketAddress(dataprefix.mac, (const struct sockaddr_in *) &gwAddress)) {
@@ -231,7 +230,7 @@ int UDPListener::listen() {
 								}
 								// send ACK immediately
 								if (handler) {
-									handler->ack(*it, (const sockaddr_in *) &gwAddress, dataprefix);
+									handler->ack(it->sock, (const sockaddr_in *) &gwAddress, dataprefix);
 								}
 								break;
 						}
@@ -249,8 +248,6 @@ int UDPListener::listen() {
 							case 0:	// PUSH DATA
 								// process data packets if exists
 								for (std::vector<semtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
-									memmove(&itp->clientAddress, &gwAddress,
-										(gwAddress.sin6_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
 									if (itp->errcode) {
 										std::string v = std::string(buffer.c_str(), bytesReceived);
 										std::stringstream ss;

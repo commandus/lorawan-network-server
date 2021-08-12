@@ -23,13 +23,26 @@
 // queue default timeout
 #define DEF_TIMEOUT_MS 200
 
+typedef enum {
+	MODE_NONE = 0,
+	MODE_ACK = 1,
+	MODE_REPLY = 2
+} ITEM_PROCESS_MODE;
+
 class SemtechUDPPacketItem {
 	public:
 		struct timeval timeAdded;
 		semtechUDPPacket packet;
+		ITEM_PROCESS_MODE processMode;
+		// socket
+		int socket;
+		// device address actually is gatreway address
 		DEVADDRINT getAddr() const;
+		SemtechUDPPacketItem();
 		SemtechUDPPacketItem(const semtechUDPPacket &packet);
 		SemtechUDPPacketItem(
+			int socket,
+			ITEM_PROCESS_MODE mode,
 			const struct timeval &time,
 			const semtechUDPPacket &packet
 		);
@@ -44,12 +57,21 @@ class SemtechUDPPacketItems {
 
 class PacketQueue {
 	private:
-		bool isStarted;
-		bool isDone;
+		int mode;	// 0- stopped, 1- running, -1- stop request
 		int delayMicroSeconds;	// wait for packets from any base station and send response
 		std::mutex mutexq;
 		std::thread *threadSend;
 		// void runner(PacketHandler &value);
+		std::function<void(
+			void *env,
+			int level,
+			int modulecode,
+			int errorcode,
+			const std::string &message
+		)> onLog;
+
+		int fdWakeup;
+
 		void runner();
 	public:
 		std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare> packets;
@@ -61,17 +83,42 @@ class PacketQueue {
 		PacketQueue(int delayMilliSeconds);
 		~PacketQueue();
 		void setDelay(int delayMilliSeconds);
+		int ack(
+			int socket,
+			const sockaddr_in* gwAddress,
+			const SEMTECH_DATA_PREFIX &dataprefix
+		);
 		void push(
+			int socket,
+			ITEM_PROCESS_MODE mode,
 			const struct timeval &time,
 			const semtechUDPPacket &value
 		);
 		size_t count();
-		bool getFirstExpired(semtechUDPPacket &retval, struct timeval &currenttime);
+		/**
+		 * @param retval returned packet from queue
+		 * @param retmode returned what to do with packet
+		 * @param currenttime time
+		 * @return  true if packet ready for send returned in the retval parameter
+		 */
+		bool getFirstExpired(
+			SemtechUDPPacketItem &retval,
+			struct timeval &currenttime
+		);
 		int getNextTimeout(struct timeval &currenttime);
 		void start(PacketHandler &value);
 		void stop();
+		void wakeUp();
 		int diffMicroSeconds(struct timeval &t1, struct timeval &t2);
 		std::string toString() const;
+				void setLogger(
+			std::function<void(
+				void *env,
+				int level,
+				int modulecode,
+				int errorcode,
+				const std::string &message
+		) > value);
 };
 
 #endif

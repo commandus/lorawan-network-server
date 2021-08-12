@@ -37,7 +37,13 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		void setReceiverQueueService(ReceiverQueueService* value);
 
 		int ack(
-			const UDPSocket &socket,
+			int socket,
+			const sockaddr_in* gwAddress,
+			const SEMTECH_DATA_PREFIX &dataprefix
+		);
+
+		int ackImmediately(
+			int socket,
 			const sockaddr_in* gwAddress,
 			const SEMTECH_DATA_PREFIX &dataprefix
 		);

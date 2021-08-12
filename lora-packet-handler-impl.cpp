@@ -14,7 +14,7 @@ int LoraPacketProcessor::enqueuePayload(
 	std::stringstream ss;
 	std::string p = value.getPayload();
 	ss << timeval2string(time)
-		<< " " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress)
+		<< " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
 //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) 
 		<< " " << value.devId.toJsonString() << ": " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
@@ -32,11 +32,11 @@ int LoraPacketProcessor::enqueueMAC(
 {
 	std::stringstream ss;
 	std::string p = value.getPayload();
-	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.clientAddress)
+	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
 		<< " " << value.devId.toJsonString() << ": MAC command(s)" << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-	packetQueue.push(time, value);
+	packetQueue.push(0, MODE_REPLY, time, value);
 	// MAC commands
 	onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "MAC command does not processed yet");
 
@@ -59,9 +59,9 @@ LoraPacketProcessor::~LoraPacketProcessor()
 }
 
 // immediately send ACK
-int LoraPacketProcessor::ack
+int LoraPacketProcessor::ackImmediately
 (
-	const UDPSocket &socket,
+	int socket,
 	const sockaddr_in* gwAddress,
 	const SEMTECH_DATA_PREFIX &dataprefix
 )
@@ -75,7 +75,7 @@ int LoraPacketProcessor::ack
 			break;
 	}
 
-	size_t r = sendto(socket.sock, &response, sizeof(SEMTECH_ACK), 0,
+	size_t r = sendto(socket, &response, sizeof(SEMTECH_ACK), 0,
 		(const struct sockaddr*) gwAddress,
 		((gwAddress->sin_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
 
@@ -96,6 +96,21 @@ int LoraPacketProcessor::ack
 		}
 	}
 	return rr;
+}
+
+// send ACK via queue
+int LoraPacketProcessor::ack
+(
+	int socket,
+	const sockaddr_in* gwAddress,
+	const SEMTECH_DATA_PREFIX &dataprefix
+)
+{
+	semtechUDPPacket p((const struct sockaddr *) gwAddress, &dataprefix, NULL, "", identityService);
+	struct timeval t = { 0, 0 };
+	packetQueue.push(socket, MODE_ACK, t, p);
+	packetQueue.wakeUp();
+	return LORA_OK;
 }
 
 int LoraPacketProcessor::put
@@ -121,7 +136,7 @@ int LoraPacketProcessor::put
 				ss << ERR_DEVICE_ADDRESS_NOTFOUND << r << ": " 
 					<< strerror_client(r) << " " 
 					<< ", " << MSG_DEVICE_EUI << DEVADDR2string(packet.getHeader()->header.devaddr)
-					<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.clientAddress);
+					<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
 				onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 			}
 		}
@@ -160,6 +175,7 @@ void LoraPacketProcessor::setLogger(
 		const std::string &message
 )> value) {
 	onLog = value;
+	packetQueue.setLogger(value);
 }
 
 void LoraPacketProcessor::setRecieverQueueProcessor

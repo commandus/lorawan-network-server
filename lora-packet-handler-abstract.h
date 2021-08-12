@@ -3,7 +3,6 @@
 
 #include <sys/time.h>
 #include "utillora.h"
-#include "udp-socket.h"
 
 /**
  * Handle uplink messages interface
@@ -12,7 +11,7 @@ class LoraPacketHandler {
 	public:
 		// immediately send ACK
 		virtual int ack(
-			const UDPSocket &socket,
+			int socket,
 			const sockaddr_in* gwAddress,
 			const SEMTECH_DATA_PREFIX &dataprefix
 		) = 0;

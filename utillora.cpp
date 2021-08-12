@@ -1593,14 +1593,12 @@ int semtechUDPPacket::parseData(
 	if (!header.parse(data)) {
 		return ERR_CODE_INVALID_RFM_HEADER;
 	}
-
-	unsigned char direction = downlink ? 1 : 0;
-
 	// get identity
 	if (identityService) {
 		// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
 		int rc = identityService->get(header.header.devaddr, devId);
 		if (rc == 0) {
+			unsigned char direction = downlink ? 1 : 0;
 			// calc MIC
 			uint32_t mic = getMic(data);
 			uint32_t micCalc = calculateMIC((const unsigned char*) data.c_str(), data.size() - 4, header.header.fcnt, direction, header.header.devaddr, devId.nwkSKey);

@@ -358,11 +358,10 @@ private:
 	void clearPrefix();
 	int parseData(const std::string &data, IdentityService *identityService);
 protected:
-	struct sockaddr_in6 gatewayAddress;
 public:	
 	rfmHeader header;
 	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
-	struct sockaddr_in6 clientAddress;
+	struct sockaddr_in6 gatewayAddress;
 	// parse error code
 	int errcode;
 	// downlink direction 01, uplink direction 00

@@ -183,6 +183,7 @@
 #define MSG_READ_BYTES					"Read bytes "
 #define MSG_RECEIVED					"Message received "
 #define MSG_SENT_ACK_TO					"Sent ACK to "
+#define MSG_SENT_REPLY_TO				"Sent reply to "
 #define MSG_GATEWAY_STAT				"Gateway statistics "
 #define MSG_RXPK						"rxpk "
 #define MSG_MAC_COMMANDS                "MAC commands"
