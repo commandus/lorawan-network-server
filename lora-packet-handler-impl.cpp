@@ -32,11 +32,13 @@ int LoraPacketProcessor::enqueueMAC(
 {
 	std::stringstream ss;
 	std::string p = value.getPayload();
-	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-		<< " " << value.devId.toJsonString() << ": MAC command(s)" << hexString(p);
+	ss << MSG_MAC_COMMAND_RECEIVED 
+		<< UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+		<< ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " 
+		<< " " << value.devId.toJsonString() << "payload: " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-	packetQueue.push(0, MODE_REPLY, time, value);
+	packetQueue.push(0, MODE_REPLY_MAC, time, value);
 	// MAC commands
 	onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "MAC command does not processed yet");
 

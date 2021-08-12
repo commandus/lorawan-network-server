@@ -82,8 +82,7 @@
 #define ERR_CODE_MISSED_GATEWAY				-568
 #define ERR_CODE_INVALID_FPORT				-569
 #define ERR_CODE_INVALID_MIC				-570
-
-
+#define ERR_CODE_SEGMENTATION_FAULT			-571
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -163,6 +162,7 @@
 #define ERR_MISSED_GATEWAY				"No gateway specified"
 #define ERR_INVALID_FPORT				"Invalid FPort value"
 #define ERR_INVALID_MIC					"Invalid MIC"
+#define ERR_SEGMENTATION_FAULT			"Segmentation fault"
 
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
@@ -182,6 +182,7 @@
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "
 #define MSG_RECEIVED					"Message received "
+#define MSG_MAC_COMMAND_RECEIVED		"MAC command(s) received from "
 #define MSG_SENT_ACK_TO					"Sent ACK to "
 #define MSG_SENT_REPLY_TO				"Sent reply to "
 #define MSG_GATEWAY_STAT				"Gateway statistics "

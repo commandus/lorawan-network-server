@@ -26,7 +26,7 @@
 typedef enum {
 	MODE_NONE = 0,
 	MODE_ACK = 1,
-	MODE_REPLY = 2
+	MODE_REPLY_MAC = 2
 } ITEM_PROCESS_MODE;
 
 class SemtechUDPPacketItem {

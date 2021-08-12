@@ -105,13 +105,31 @@ void PacketQueue::push(
 	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
 	// add first packet, add metadata only for others
 	if (it != packets.end()) {
+		// there are already some packets from the device
 		if (it->second.packets.size() == 0)
+			// actually, no ;(
 			it->second.packets.push_back(item);
 		else {
-			if (value.metadata.size())
-				it->second.packets[0].packet.metadata.push_back(value.metadata[0]);
+			// sure, there are some packets already!
+			// find out same packet (if more than 1)
+			bool found = false;
+			for (std::vector<SemtechUDPPacketItem>::iterator itp(it->second.packets.begin()); itp != it->second.packets.end(); itp++)
+			{
+				if (itp->packet.header.fport == value.header.fport) 
+				{
+					// we need metadata only for calc best gateway with strongest signal
+					if (value.metadata.size())
+						itp->packet.metadata.push_back(value.metadata[0]);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				// add a new packet as a new one
+				packets[a].packets.push_back(item);
 		}
 	} else {
+		// this is first packet recieved from the device
 		packets[a].packets.push_back(item);
 		addrs.push_back(a);
 	}
@@ -322,7 +340,7 @@ void PacketQueue::runner()
 						case MODE_ACK:
 							ack(item.socket, (const sockaddr_in *) &item.packet.gatewayAddress, item.packet.prefix);
 							break;
-						case MODE_REPLY:
+						case MODE_REPLY_MAC:
 							if (onLog) {
 								std::stringstream ss;
 								ss << MSG_SENT_REPLY_TO << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);

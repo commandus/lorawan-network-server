@@ -14,6 +14,11 @@
 #include <limits.h>
 #include <errno.h>
 
+#ifdef WIN32
+#else
+#include <execinfo.h>
+#endif
+
 #include "argtable3/argtable3.h"
 #include "platform.h"
 #include "utilstring.h"
@@ -125,6 +130,14 @@ void signalHandler(int signal)
 		stop();
 		done();
 		break;
+	case SIGSEGV:
+    {
+		std::cerr << ERR_SEGMENTATION_FAULT << std::endl;
+		void *t[256];
+		size_t size = backtrace(t, 256);
+		backtrace_symbols_fd(t, size, STDERR_FILENO);
+		exit(ERR_CODE_SEGMENTATION_FAULT);
+    }
 	default:
 		break;
 	}
@@ -143,6 +156,7 @@ void setSignalHandler()
 	action.sa_handler = &signalHandler;
 	sigaction(SIGINT, &action, NULL);
 	sigaction(SIGHUP, &action, NULL);
+	sigaction(SIGSEGV, &action, NULL);
 }
 #endif
 
