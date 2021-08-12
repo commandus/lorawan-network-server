@@ -55,14 +55,14 @@ std::string SemtechUDPPacketItems::toString() const
 }
 
 PacketQueue::PacketQueue()
-	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), mode(0), onLog(NULL)
+	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), mode(0), fdWakeup(0), onLog(NULL)
 {
 }
 
 PacketQueue::PacketQueue(
 	int delayMillisSeconds
 )
-	: packetsRead(0), mode(0), threadSend(NULL), onLog(NULL)
+	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL)
 {
 	setDelay(delayMillisSeconds);
 }
@@ -126,7 +126,10 @@ int PacketQueue::diffMicroSeconds(
 	struct timeval &t2
 )
 {
-	return 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
+	int r = 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
+	if (r < 0)
+		r = 0;
+	return r;
 }
 
 size_t PacketQueue::count()
@@ -285,13 +288,12 @@ void PacketQueue::runner()
 	packetsRead = 0;
 	int timeoutMicroSeconds = DEF_TIMEOUT_MS * 1000;
 
-	fd_set fh;
-    FD_ZERO(&fh);
-	FD_SET(fdWakeup, &fh);
-	
 	// mode 0- stopped, 1- running, -1- stop request
 	mode = 1;
 	while (mode == 1) {
+		fd_set fh;
+		FD_ZERO(&fh);
+		FD_SET(fdWakeup, &fh);
 		struct timeval timeout;
 		timeout.tv_sec = 0;
 		timeout.tv_usec = timeoutMicroSeconds;
@@ -299,6 +301,13 @@ void PacketQueue::runner()
 		switch (retval) {
 			case -1:
 				// select error
+				if (onLog) {
+					std::stringstream ss;
+					ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << errno << ": " << strerror(errno) 
+						<< ", handler " << fdWakeup << ", timeout: " << timeoutMicroSeconds;
+					onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
+					abort();
+				}
 				break;
 			default:
 			// case 0:
@@ -320,7 +329,6 @@ void PacketQueue::runner()
 								onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 							}
 							break;
-						
 						default:
 							if (onLog) {
 								std::stringstream ss;
@@ -345,11 +353,11 @@ void PacketQueue::runner()
 void PacketQueue::wakeUp() 
 {
 	// mode 0- stopped, 1- running, -1- stop request
-	if (mode == 1)
+	if (mode != 1)
 		return;
 	uint64_t u = 1;
 	if (write(fdWakeup, &u, sizeof(uint64_t)) != sizeof(uint64_t)) {
-
+		// TODO smth
 	}
 }
 
@@ -381,4 +389,5 @@ void PacketQueue::stop()
 	}
 
 	close(fdWakeup);
+	fdWakeup = 0;
 }
