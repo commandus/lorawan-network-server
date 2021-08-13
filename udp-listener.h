@@ -10,6 +10,15 @@
 #include "identity-service-abstract.h"
 #include "gateway-list.h"
 
+/**
+ * Listen UDP port(s) for packets sent by Semtech's gateway on interfaces with IPv4 or IPv6 address
+ * from gateways listed in the GatewayList.
+ * Gateway send PULL request with address and port on which gateway now listen, UDPListener 
+ * save received address and port in the GatewayList.
+ * Devices are identified by IdentityService.
+ * Identified packets with application payload with optional MAC commands passed to the LoraPacketHandler.
+ * LoraPacketHandler handles MAC commands in another thread, application payload pass further via queue.
+ */
 class UDPListener
 {
 private:

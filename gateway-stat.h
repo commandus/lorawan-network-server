@@ -10,11 +10,14 @@
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
 
-/* 
+/** 
+ * Gateway stat keep current gateway address got from the last PULL request.
+ * There are also addr member to keep gateway address read from configuration file. This addr must never used.
+ * Gateway identified by 8 bit identifier.
+ * 
  * PUSH_DATA (0) stat Section 4
  * {"stat":{"time":"2021-02-24 04:54:01 GMT","lati":62.02774,"long":129.72883,"alti":348,"rxnb":0,"rxok":0,"rxfw":0,"ackr":0.0,"dwnb":0,"txnb":0}}
  */
-
 class GatewayStat {
 public:
 	std::string name;

@@ -10,6 +10,7 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <functional>
 #include <time.h>
 
 #include "utillora.h"

@@ -14,6 +14,9 @@
 #include "utillora.h"
 #include "udp-socket.h"
 
+/**
+ * Gateways list of gateways identifiers, addresses and statistics
+ */
 class GatewayList {
 	private:
 		std::string filename;
@@ -46,11 +49,9 @@ class GatewayList {
 			const DEVEUI  &gwid,
 			const struct sockaddr_in *gwAddress
 		);
-
 		bool has(
 			const DEVEUI &gwid
 		) const;
-		
 		// Set identifier, name and geolocation if found. Return true if found
 		bool copyId(
 			GatewayStat &value,
