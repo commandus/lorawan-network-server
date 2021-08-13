@@ -1545,7 +1545,7 @@ std::string semtechUDPPacket::toJsonString() const
 		ss << ", \"mac\": " << (macPtr.toJSONString());
 		if (macPtr.errorcode) {
 			ss << ", \"mac_error_code\": " << macPtr.errorcode
-				<< ", \"mac_error\": \"" << strerror_client(macPtr.errorcode) << "\"";
+				<< ", \"mac_error\": \"" << strerror_lorawan_ns(macPtr.errorcode) << "\"";
 		}
 	}
 	if (hasApplicationPayload())

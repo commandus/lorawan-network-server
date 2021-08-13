@@ -96,7 +96,7 @@ bool openDb
 	rc = mdb_dbi_open(env->txn, NULL, 0, &env->dbi);
 	if (rc)
 	{
-		// mdb_open error " << rc << ": " << strerror_client(rc) << std::endl;
+		// mdb_open error " << rc << ": " << strerror_lorawan_ns(rc) << std::endl;
 		env->env = NULL;
 		return false;
 	}

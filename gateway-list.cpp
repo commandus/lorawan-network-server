@@ -13,12 +13,18 @@
 #include "utilstring.h"
 #include "platform.h"
 
+/**
+ * Create empty gateway list
+ */
 GatewayList::GatewayList()
 	: errmessage(""), filename("")
 {
 
 }
 
+/**
+ * Copy gateways
+ */
 GatewayList::GatewayList(
 	const GatewayList &value
 )
@@ -28,6 +34,9 @@ GatewayList::GatewayList(
 	gateways = value.gateways;
 }
 
+/**
+ * Loads gateways fron JSON file
+ */
 GatewayList::GatewayList(
 	const std::string &afilename
 )
@@ -36,6 +45,9 @@ GatewayList::GatewayList(
 	parse(file2string(filename.c_str()));
 }
 
+/**
+ * Serialize gateway list to JSON
+ */
 void GatewayList::toJSON(
 	rapidjson::Value &value,
 	rapidjson::Document::AllocatorType& allocator
@@ -49,6 +61,9 @@ void GatewayList::toJSON(
 	}
 }
 
+/**
+ * Add gateway to the list frm JSON string
+ */
 int GatewayList::put(
 	uint64_t gatewayId,
 	const std::string &value
@@ -60,6 +75,11 @@ int GatewayList::put(
 	return parse(gatewayId, doc);
 }
 
+/**
+ * Return 'config' gateway address
+ * It is different than 'current' address extracted from last successful PULL request
+ * @param gatewayId gateway identifier
+ */
 std::string GatewayList::getAddress(
 	uint64_t gatewayId
 ) {
@@ -70,6 +90,9 @@ std::string GatewayList::getAddress(
 		return "";
 }
 
+/**
+ * Update list from statistic packet
+ */
 bool GatewayList::update(
 	const GatewayStat &value
 )
@@ -81,6 +104,9 @@ bool GatewayList::update(
 	return it != gateways.end();
 }
 
+/**
+ * Parse JSON
+ */
 int GatewayList::parse(
 	uint64_t gatewayId,
 	rapidjson::Value &value
@@ -91,7 +117,7 @@ int GatewayList::parse(
 	for (int i = 0; i < value.Size(); i++) {
 		GatewayStat stat;
 		if (int r = stat.parse(value[i])) {
-			errmessage = strerror_client(r);
+			errmessage = strerror_lorawan_ns(r);
 		} else {
 			if (gatewayId)
 				stat.gatewayId = gatewayId;
@@ -101,6 +127,13 @@ int GatewayList::parse(
 	return 0;
 }
 
+/**
+ * Return gateway list subset filters by gateway identifiers
+ * @param list gateway identifiers. You can use wildcards '*', '?'.
+ * @param useRegex true- list contains wildcards. Symbols '*', '?' are replaced with '.*' and '.' 
+ * regular expression symbol respectively.
+ * @return 0- success, < 0- error code
+ */
 int GatewayList::parseIdentifiers(
 	std::vector<uint64_t> &retval,
 	const std::vector<std::string> &list,
@@ -140,6 +173,13 @@ int GatewayList::parseIdentifiers(
 	return 0;
 }
 
+/**
+ * Return gateway list subset filters by gateway name
+ * @param list gateway names (case sensitive). You can use wildcards '*', '?'.
+ * @param useRegex true- list contains wildcards. Symbols '*', '?' are replaced with '.*' and '.' 
+ * regular expression symbol respectively.
+ * @return 0- success, < 0- error code
+ */
 int GatewayList::parseNames(
 	std::vector<uint64_t> &retval,
 	const std::vector<std::string> &list,
@@ -178,6 +218,9 @@ int GatewayList::parseNames(
 	return 0;
 }
 
+/**
+ * @return JSON string
+ */
 std::string GatewayList::toJsonString() const
 {
 	rapidjson::Document doc;
@@ -192,6 +235,9 @@ std::string GatewayList::toJsonString() const
 	return std::string(buffer.GetString());
 }
 
+/**
+ * Parse JSON string
+ */
 void GatewayList::parse(
 	const std::string &value
 )
@@ -201,11 +247,19 @@ void GatewayList::parse(
 	parse(0, doc);
 }
 
+/**
+ * Save to JSON file
+ */
 void GatewayList::save()
 {
 	string2file(filename, toJsonString());
 }
 
+/**
+ * Check does gateway exists
+ * @param gwid gateway identifier
+ * @return true is gateway exists
+ */
 bool GatewayList::has(
 	const DEVEUI &gwid
 ) const
@@ -215,7 +269,14 @@ bool GatewayList::has(
 }
 
 /**
- * Set socket address
+ * Set gateway socket address
+ * Gateway send PULL request from random port number each minute. 
+ * This port number is opened for communication until next PULL request.
+ * Network server must remember this port and then send packet to this port number.
+ * Please note gateway address can be different from assigned address in configuration file because of NAT.
+ * @param gwid gateway identifier
+ * @param gwAddress gateway socket address to be set(update)
+ * @return true if gateway with gwid identifier found and successfully updated
  */
 bool GatewayList::setSocketAddress
 (
@@ -229,10 +290,20 @@ bool GatewayList::setSocketAddress
 		return false;
 	memmove(&it->second.sockaddr, gwAddress,
 		(gwAddress->sin_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
-
+	return true;
 }
 
-// Set identifier, name and geolocation if found. Return true if found
+/**
+ * Set gateway socket address into parameter value from gwAddress parameter and copy name and geolocation
+ * from config file
+ * Gateway send PULL request from random port number each minute. 
+ * This port number is opened for communication until next PULL request.
+ * Network server must remember this port and then send packet to this port number.
+ * Please note gateway address can be different from assigned address in configuration file because of NAT.
+ * @param gwAddress gateway socket address to be set(update)
+ * @param value Set gateway stat socket address, name and geolocation (if gateway found).
+ * @return true if found
+ */
 bool GatewayList::copyId
 (
 	GatewayStat &value,

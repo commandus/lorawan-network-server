@@ -6,6 +6,9 @@
 #include "utilstring.h"
 #include "errlist.h"
 
+/**
+ * Create empty gateway statistics
+ */
 GatewayStat::GatewayStat()
 	: addr(""), name(""), gatewayId(0), errcode(0),
 	t(0),					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
@@ -22,6 +25,9 @@ GatewayStat::GatewayStat()
 
 }
 
+/**
+ * Copy gateway statistics
+ */
 GatewayStat::GatewayStat(
 	const GatewayStat &value
 )
@@ -41,12 +47,18 @@ GatewayStat::GatewayStat(
 	txnb = value.txnb;
 }
 
+/**
+ * 8-bit gateway Identifier
+ */
 bool GatewayStat::operator==(
 	GatewayStat &rhs
 ) const {
 	return gatewayId == rhs.gatewayId;
 }
 
+/**
+ * Statistics property names
+ */
 static const char* STAT_NAMES[13] = {
 	"gwid",	// 0 string id
 	"addr",	// 1 string address
@@ -63,6 +75,9 @@ static const char* STAT_NAMES[13] = {
 	"txnb" // 12 number
 };
 
+/**
+ * Serialize statistics
+ */
 void GatewayStat::toJSON(
 	rapidjson::Value &value,
 	rapidjson::Document::AllocatorType& allocator
@@ -116,6 +131,9 @@ void GatewayStat::toJSON(
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[12])), v10, allocator);
 }
 
+/**
+ * Parse JSON
+ */
 int GatewayStat::parse(
 	rapidjson::Value &value
 )
@@ -230,6 +248,9 @@ int GatewayStat::parse(
 	return (cnt > 0 ? 0 : ERR_CODE_NO_GATEWAY_STAT);	// means no any properties found
 }
 
+/**
+ * Serialize JSON string
+ */
 std::string GatewayStat::toJsonString() const
 {
 		std::stringstream ss;
@@ -251,6 +272,9 @@ std::string GatewayStat::toJsonString() const
 		return ss.str();
 }
 
+/**
+ * debug string
+ */
 std::string GatewayStat::toString() const
 {
 		std::stringstream ss;

@@ -12,6 +12,9 @@
 
 #define DEF_FREQUENCY_100 868900
 
+/**
+ * MAC command names
+ */
 static const std::string MAC_NAME[] =
 {
 	// Class-A
@@ -38,13 +41,21 @@ static const std::string MAC_NAME[] =
 	"BeaconTiming",		// 0x12,	//  Deprecated
 	"BeaconFreq",		// 0x13,
 };
-// Class-C	"DeviceMode" 0x20
+/**
+ * Extra MAC class C command name
+ * "DeviceMode" 0x20
+ */
 static const std::string MAC_NAME_DEVICEMODE = "DeviceMode";
+/**
+ * Extended MAC command name and invalid MAC command names
+ * 0x80 to 0xFF reserved for proprietary network command extensions
+ */
 static const std::string MAC_NAME_INVALID = "invalid";
 static const std::string MAC_NAME_EXTENSION = "extension";
 
-// 0x80 to 0xFF reserved for proprietary network command extensions
-
+/**
+ * @return MAC command name. If MAC command is extended, return 'extension'. Otherwise return 'invalid'
+ */
 const std::string& getMACCommandName(uint8_t command)
 {
 	if (command <= 0x13)
@@ -94,6 +105,8 @@ MAC_COMMAND_TYPE isMACCommand(uint8_t cmd)
 
 /**
  * Parse transmitted by the server client side
+ * @param retval returns MAC command
+ * @param value packet to parse
  * @return size of first MAC command, if error, return <0
  */
 int parseClientSide(
@@ -177,6 +190,9 @@ int parseClientSide(
 
 /**
  * Parse MAC command transmitted by end-device (server side)
+ * @param retval returns MAC command
+ * @param value packet to parse
+ * @param sz packet size
  * @return size of first MAC command, if error, return <0
  */
 int parseServerSide(
@@ -261,6 +277,9 @@ int parseServerSide(
 
 /**
  * Parse transmitted by the server client side
+ * @param retval if not NULL, return pointer to MAC command
+ * @param value packet to parse
+ * @param sz packet size
  * @return size of first MAC command, if error, return <0
  */
 int parseClientSidePtr(
@@ -344,6 +363,9 @@ int parseClientSidePtr(
 
 /**
  * Parse MAC command transmitted by end-device (server side)
+ * @param retval if not NULL, return pointer to MAC command
+ * @param value packet to parse
+ * @param sz packet size
  * @return size of first MAC command, if error, return <0
  */
 int parseServerSidePtr(
@@ -427,12 +449,18 @@ int parseServerSidePtr(
 
 // ---------------- MacData ----------------
 
+/**
+ * Create empty MAC
+ */
 MacData::MacData()
 	: errcode(0), isClientSide(false)
 {
 	memset(&command, 0, sizeof(MAC_COMMAND));
 }
 
+/**
+ * Copy MAC
+ */
 MacData::MacData(
 	const MacData &value
 )
@@ -467,6 +495,12 @@ MacData::MacData(
 		errcode = 0;
 }
 
+/**
+ * Set MAC command from array of paramaters
+ * @param cid MAC command identifier
+ * @param values MAC command paramaters in array
+ * @return true if success
+ */
 bool MacData::set(
 	enum MAC_CID cid,
 	const std::vector <int> &values,
@@ -709,11 +743,17 @@ bool MacData::set(
 	return true;
 }
 
+/**
+ * Return copy of MAC as string 
+ */
 std::string MacData::toString() const
 {
 	return std::string((const char *) &this->command, size());
 }
 
+/**
+ * Return hex repesentation of MAC
+ */
 std::string MacData::toHexString() const
 {
 	std::string r((const char *) &this->command, size());
@@ -736,6 +776,11 @@ std::string MacData::toHexString() const
 #define MD2JSONSS_COMMA() \
 	ss << ", ";
 
+/**
+ * Serialize MAC command as JSON string.
+ * Static method. 
+ * @param command MAC command
+ */
 std::string MAC_DATA2JSONString(
 	const MAC_COMMAND &command,
 	const bool isClientSide 
@@ -1001,11 +1046,19 @@ std::string MAC_DATA2JSONString(
 	return ss.str();
 }
 
+/**
+ * Serialize MAC command as JSON string
+ */
 std::string MacData::toJSONString() const
 {
 	return MAC_DATA2JSONString(command, isClientSide);
 }
 
+/**
+ * Return MAC command size
+ * Static method.
+ * @param value MAC command
+ */
 size_t commandSize(
 	const MAC_COMMAND &value,
 	bool clientSide
@@ -1113,6 +1166,9 @@ size_t commandSize(
 	}
 }
 
+/**
+ * Return MAC command size
+ */
 size_t MacData::size() const
 {
 	if (errcode)
@@ -1122,12 +1178,18 @@ size_t MacData::size() const
 
 // ---------------- MacDataList ----------------
 
+/**
+ * Create empty list of MAC commands
+ */
 MacDataList::MacDataList()
 	: isClientSide(false)
 {
 
 }
 
+/**
+ * Copy MAC commands list
+ */
 MacDataList::MacDataList(
 	const MacDataList &value
 )
@@ -1136,6 +1198,10 @@ MacDataList::MacDataList(
 	list = value.list;
 }
 
+/**
+ * Create MAC command list from MAC payload
+ * @param value payload
+ */
 MacDataList::MacDataList(
 	const std::string &value,
 	const bool clientSide
@@ -1160,6 +1226,9 @@ MacDataList::MacDataList(
 	}
 }
 
+/**
+ * Returm MAC commands total size
+ */
 size_t MacDataList::size()
 {
 	size_t sz = 0;
@@ -1169,6 +1238,9 @@ size_t MacDataList::size()
 	return sz;
 }
 
+/**
+ * Return MAC commands as hex string
+ */
 std::string MacDataList::toHexString() const
 {
 	std::stringstream ss;
@@ -1178,6 +1250,9 @@ std::string MacDataList::toHexString() const
 	return ss. str();
 }
 
+/**
+ * Serialize MAC commands as JSON string
+ */
 std::string MacDataList::toJSONString() const
 {
 	std::stringstream ss;

@@ -90,7 +90,7 @@ bool UDPListener::add(
 		if (onLog) {
 			std::stringstream ss;
 			ss << ERR_MESSAGE << s.errcode << ": " 
-				<< strerror_client(s.errcode) << " " << address
+				<< strerror_lorawan_ns(s.errcode) << " " << address
 				<< ", errno " << s.lasterrno << ": " << strerror(s.lasterrno)
 				;
 			onLog(this, LOG_ERR, LOG_UDP_LISTENER, s.errcode, ss.str());
@@ -169,7 +169,7 @@ int UDPListener::listen() {
 						buffer[bytesReceived] = '\0';
 						int pr = semtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
 
-						// std::cerr << "===" << pr << ": " << strerror_client(pr) << std::endl;
+						// std::cerr << "===" << pr << ": " << strerror_lorawan_ns(pr) << std::endl;
 
 						switch (pr) {
 							case ERR_CODE_PACKET_TOO_SHORT:
@@ -182,7 +182,7 @@ int UDPListener::listen() {
 							// case ERR_CODE_INVALID_MIC: 
 								{
 									std::stringstream sse;
-									sse << strerror_client(pr)
+									sse << strerror_lorawan_ns(pr)
 										<< " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
 										<< " (" << bytesReceived
 										<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
@@ -192,7 +192,7 @@ int UDPListener::listen() {
 							case ERR_CODE_PULLOUT:
 								{
 									std::stringstream sse;
-									sse << strerror_client(pr)
+									sse << strerror_lorawan_ns(pr)
 										<< " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress);
 									onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
 									// send PULL ACK immediately

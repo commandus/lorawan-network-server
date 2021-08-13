@@ -175,7 +175,7 @@ void RecieverQueueProcessor::processQueue()
 			int r = db->open();
 			if (r && onLog) {
 				std::stringstream ss;
-				ss << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_client(r);
+				ss << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_lorawan_ns(r);
 				onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 				continue;
 			}

@@ -87,7 +87,7 @@ int LoraPacketProcessor::ackImmediately
 			std::stringstream ss;
 			ss << ERR_MESSAGE << ERR_CODE_SEND_ACK << " "
 				<< UDPSocket::addrString((const struct sockaddr *) gwAddress)
-				<< " " << rr << ": " << strerror_client(rr)
+				<< " " << rr << ": " << strerror_lorawan_ns(rr)
 				<< ", errno: " << errno << ": " << strerror(errno);
 			onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
 		} else {
@@ -136,7 +136,7 @@ int LoraPacketProcessor::put
 				// report error
 				std::stringstream ss;
 				ss << ERR_DEVICE_ADDRESS_NOTFOUND << r << ": " 
-					<< strerror_client(r) << " " 
+					<< strerror_lorawan_ns(r) << " " 
 					<< ", " << MSG_DEVICE_EUI << DEVADDR2string(packet.getHeader()->header.devaddr)
 					<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
 				onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());

@@ -3,6 +3,7 @@
 
 #define ERR_COUNT 72
 
+// used by strerror_lorawan_ns()
 static const char *errlist[ERR_COUNT] = {
 	ERR_COMMAND_LINE,
 	ERR_OPEN_DEVICE,
@@ -78,7 +79,7 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_SEGMENTATION_FAULT
 };
 
-const char *strerror_client(
+const char *strerror_lorawan_ns(
 	int errcode)
 {
 	if ((errcode <= -500) && (errcode >= -500 - ERR_COUNT))

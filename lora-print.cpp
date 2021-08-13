@@ -1,7 +1,8 @@
 /**
  * @brief LoRaWAN 1.0.x packet decoder utility
  * @file lora-print.cpp
- * Copyright (c) 2021 andrey.ivanov@ikfia.ysn.ru Yu.G. Shafer Institute of Cosmophysical Research and Aeronomy of Siberian Branch of the Russian Academy of Sciences
+ * Copyright (c) 2021 andrey.ivanov@ikfia.ysn.ru
+ * Yu.G. Shafer Institute of Cosmophysical Research and Aeronomy of Siberian Branch of the Russian Academy of Sciences
  * MIT license
  */
 #include <iostream>
@@ -287,7 +288,7 @@ int main(
 	int r = semtechUDPPacket::parse(NULL, dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
 	
 	if (r) {
-		std::cerr << strerror_client(r) << std::endl;
+		std::cerr << strerror_lorawan_ns(r) << std::endl;
 	}
 
 	if (gatewayStat.errcode == 0) {

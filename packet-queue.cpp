@@ -287,7 +287,7 @@ int PacketQueue::ack
 			std::stringstream ss;
 			ss << ERR_MESSAGE << ERR_CODE_SEND_ACK << " "
 				<< UDPSocket::addrString((const struct sockaddr *) gwAddress)
-				<< " " << rr << ": " << strerror_client(rr)
+				<< " " << rr << ": " << strerror_lorawan_ns(rr)
 				<< ", errno: " << errno << ": " << strerror(errno);
 			onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
 		} else {
