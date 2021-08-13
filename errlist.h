@@ -10,6 +10,7 @@
 #define LOG_IDENTITY_SVC					3
 #define LOG_PACKET_HANDLER					4
 
+// Error codes
 #define LORA_OK            					0
 #define ERR_CODE_COMMAND_LINE		    	-500                
 #define ERR_CODE_OPEN_DEVICE		    	-501
@@ -89,6 +90,7 @@
 #define ERR_WARNING						"Warning "
 #define ERR_TIMEOUT						"Timeout"
 
+// Error en-us description
 #define ERR_COMMAND_LINE        		"Wrong parameter(s)"
 #define ERR_OPEN_DEVICE         		"open error "
 #define ERR_CLOSE_DEVICE        		"close error "
@@ -164,6 +166,7 @@
 #define ERR_INVALID_MIC					"Invalid MIC"
 #define ERR_SEGMENTATION_FAULT			"Segmentation fault"
 
+// Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
 #define MSG_INTERRUPTED 				"Interrupted "
@@ -174,8 +177,6 @@
 #define MSG_DAEMON_STARTED_1    		". Check syslog."
 #define MSG_WS_TIMEOUT					"Web service time out"
 #define MSG_TIMEOUT						"Timeout"
-#define MSG_STOPPED						"ChirpStack logger stopped gracefully"
-#define MSG_CHIRPSTACK_SERVER_VERSION	"ChirpStack network server version "
 #define MSG_GATEWAY						"Gateway "
 #define MSG_DEVICE						"Device "
 #define MSG_DEVICE_EUI					"Device EUI "
@@ -190,10 +191,10 @@
 #define MSG_MAC_COMMANDS                "MAC commands"
 #define MSG_SEND_TO                     "Send to "
 #define MSG_DATABASE_LIST				"Databases: "
-#define MSG_CONN_ESTABLISHED			 "established"
+#define MSG_CONN_ESTABLISHED			"established"
 #define MSG_CONN_FAILED					"failed"
 #define MSG_CONNECTION					"connection "
 
 #define ERROR							"Error "
 
-const char *strerror_client(int errcode);
+const char *strerror_lorawan_ns(int errcode);
