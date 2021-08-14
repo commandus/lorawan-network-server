@@ -6,6 +6,10 @@
 
 #include <iostream>
 
+// tme window delay, s
+#define DEF_TIME_WINDOW_1	1
+#define DEF_TIME_WINDOW_2	2
+
 int LoraPacketProcessor::enqueuePayload(
 	struct timeval &time,
 	semtechUDPPacket &value
@@ -38,6 +42,7 @@ int LoraPacketProcessor::enqueueMAC(
 		<< " " << value.devId.toJsonString() << "payload: " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
+	addTimeWindow1(time);
 	packetQueue.push(0, MODE_REPLY_MAC, time, value);
 	// MAC commands
 	onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, "MAC command does not processed yet");
@@ -194,4 +199,21 @@ void LoraPacketProcessor::setRecieverQueueProcessor
 		else
 			recieverQueueProcessor->stop();
 	}
+}
+
+
+void LoraPacketProcessor::addTimeWindow1
+(
+	struct timeval &value
+)
+{
+	incTimeval(value, DEF_TIME_WINDOW_1);
+}
+
+void LoraPacketProcessor::addTimeWindow2
+(
+	struct timeval &value
+)
+{
+	incTimeval(value, DEF_TIME_WINDOW_2);
 }

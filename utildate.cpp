@@ -157,3 +157,11 @@ std::string time2string(
 	strftime(buf, sizeof(buf), dateformat1, tm);
 	return std::string(buf);
 }
+
+void incTimeval(
+	struct timeval &val,
+	int seconds
+)
+{
+	val.tv_sec += seconds;
+}
