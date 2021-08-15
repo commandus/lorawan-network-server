@@ -356,7 +356,7 @@ void NetworkIdentity::set(
 #define DEF_LSNR	5.1
 
 rfmMetaData::rfmMetaData() 
-	: chan(0), rfch(0), freq(868900000), stat(0), 
+	: gatewayId(0), chan(0), rfch(0), freq(868900000), stat(0), 
 	modu(LORA), bandwith(DEF_BANDWIDTH), spreadingFactor(DEF_SPREADING_FACTOR),
  	codingRate(DEF_CODING_RATE), bps(0), rssi(DEF_RSSI), lsnr(DEF_LSNR)
 {
@@ -570,11 +570,25 @@ void rfmMetaData::setCodr(
 rfmMetaData::rfmMetaData(
 	const rfmMetaData &value
 )
+	: gatewayId(value.gatewayId), t(value.t), tmst(value.tmst), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), 
+	modu(value.modu), bandwith(value.bandwith),
+	spreadingFactor(value.spreadingFactor), codingRate(value.codingRate), 
+	bps(value.bps), rssi(value.rssi), lsnr(value.lsnr)
+{
+}
+
+// copy gateway address from prefix
+rfmMetaData::rfmMetaData(
+	const SEMTECH_DATA_PREFIX *aprefix,
+	const rfmMetaData &value
+)
 	: t(value.t), tmst(value.tmst), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), 
 	modu(value.modu), bandwith(value.bandwith),
 	spreadingFactor(value.spreadingFactor), codingRate(value.codingRate), 
 	bps(value.bps), rssi(value.rssi), lsnr(value.lsnr)
 {
+	if (aprefix)
+		gatewayId = (uint64_t) aprefix->mac;
 }
 
 /**
@@ -1339,7 +1353,7 @@ semtechUDPPacket::semtechUDPPacket(
 		clearPrefix();
 	}
 	if (ametadata)
-		metadata.push_back(rfmMetaData(*ametadata));
+		metadata.push_back(rfmMetaData(aprefix, *ametadata));
 
 	// save gateway address
 	size_t sz = 0;
@@ -1637,6 +1651,30 @@ bool semtechUDPPacket::hasApplicationPayload() const
 	return (header.fport >= 1) && (header.fport <= 223) && (payload.size() > 0);
 }
 
+/**
+ * Return gateway MAC address as int with best SNR
+ * @param retvalLsnr if provided, return SNR
+ * @return 0 if not found
+ */
+uint64_t semtechUDPPacket::getBestGatewayAddress(
+	float *retvalLsnr
+) const
+{
+	float f = -3.402823466E+38;
+	uint64_t r = 0;
+	for (std::vector<rfmMetaData>::const_iterator it(metadata.begin()); it != metadata.end(); it++)
+	{
+		if (f > it->lsnr)
+		{
+			f = it->lsnr;
+			r = it->gatewayId;
+			if (retvalLsnr)
+				*retvalLsnr = f;
+		}
+	}
+	return r;
+}
+
 uint64_t deveui2int(
 	const DEVEUI &value
 )
@@ -1654,6 +1692,12 @@ uint32_t getMic(const std::string &v)
 
 uint64_t str2gatewayId(const char *value) {
 	return strtoull(value, NULL, 16);
+}
+
+std::string gatewayId2str(uint64_t value) {
+	std::stringstream ss;
+	ss << std::hex << value;
+	return ss.str();
 }
 
 std::string TDEVEUI::toString() const {

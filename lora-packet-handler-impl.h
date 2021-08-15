@@ -31,6 +31,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 			const std::string &message
 		)> onLog;
 	public:
+		static void addTimeWindow1(struct timeval &value);
+		static void addTimeWindow2(struct timeval &value);
 		LoraPacketProcessor();
 		~LoraPacketProcessor();
 		void setIdentityService(IdentityService* identityService);

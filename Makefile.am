@@ -109,6 +109,7 @@ nobase_dist_include_HEADERS = \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
+	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h \
 	receiver-queue-processor.h \
 	$(rapid_headers)

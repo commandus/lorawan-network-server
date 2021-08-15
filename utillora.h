@@ -41,6 +41,7 @@ void string2DEVICENAME(DEVICENAME &retval, const char *str);
 std::string DEVICENAME2string(const DEVICENAME &value);
 
 uint64_t str2gatewayId(const char *value);
+std::string gatewayId2str(uint64_t value);
 
 class DEVADDRINT
 {
@@ -285,6 +286,7 @@ public:
 
 class rfmMetaData {
 public:
+	uint64_t gatewayId;
 	time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
 	uint32_t tmst;				// Internal timestamp of "RX finished" event (32b unsigned)
 	uint8_t chan;				// Concentrator "IF" channel used for RX (unsigned integer)
@@ -300,7 +302,10 @@ public:
 	int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
 	float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
 	rfmMetaData();
+	// copy gateway address from value
 	rfmMetaData(const rfmMetaData &value);
+	// copy gateway address from prefix
+	rfmMetaData(const SEMTECH_DATA_PREFIX *aprefix, const rfmMetaData &value);
 
 	uint32_t tmms() const;			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
 	std::string modulation() const;
@@ -421,6 +426,12 @@ public:
 	// @return true- has MAC payload
 	bool hasMACPayload() const ;
 	bool hasApplicationPayload() const;
+	/**
+	 * Return gateway MAC address as int with best SNR
+	 * @param retvalLsnr if provided, return SNR
+	 * @return 0 if not found
+	 */
+	uint64_t getBestGatewayAddress(float *retvalLsnr = NULL) const;
 };
 
 uint64_t deveui2int(const DEVEUI &value);
