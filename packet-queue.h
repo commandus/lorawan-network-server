@@ -112,7 +112,7 @@ class PacketQueue {
 		void wakeUp();
 		int diffMicroSeconds(struct timeval &t1, struct timeval &t2);
 		std::string toString() const;
-				void setLogger(
+		void setLogger(
 			std::function<void(
 				void *env,
 				int level,
