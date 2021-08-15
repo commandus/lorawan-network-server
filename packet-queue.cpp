@@ -119,7 +119,8 @@ void PacketQueue::push(
 				{
 					// we need metadata only for calc best gateway with strongest signal
 					if (value.metadata.size())
-						itp->packet.metadata.push_back(value.metadata[0]);
+						// copy gateway MAC address
+						itp->packet.metadata.push_back(rfmMetaData(&value.prefix, value.metadata[0]));
 					found = true;
 					break;
 				}
@@ -185,25 +186,34 @@ bool PacketQueue::getFirstExpired(
 	}
 
 	// return packet with received signal strength indicator. Worst is -85 dBm.
-	int bestIndex = 0;
+	float lsnr = -3.402823466E+38;
+	uint64_t gwid;
 	std::vector<SemtechUDPPacketItem>::const_iterator pit(it->second.packets.begin());
+	if (pit == it->second.packets.end()) {
+		mutexq.unlock();
+		return false;
+	}
+		
 	// validate have an other packet (by fcnt)
 	uint16_t fcntFirst = pit->packet.header.header.fcnt;
-	int16_t rssi = pit->packet.header.header.fcnt;
 	bool hasOtherPacket = false;
-	pit++;
 	int idx = 0;
+	int i = 0;
+	pit++;
 	for (; pit != it->second.packets.end(); pit++) {
 		if (pit->packet.header.header.fcnt != fcntFirst) {
 			hasOtherPacket = true;
 		} else {
-			if (pit->packet.metadata[0].rssi > rssi) {
-				bestIndex = idx;
-				rssi = pit->packet.metadata[0].rssi;
-
+			uint64_t bgwid;
+			float bsnr;
+			bgwid = pit->packet.getBestGatewayAddress(&bsnr);
+			if (bgwid != 0 && bsnr > lsnr) {
+				lsnr = bsnr;
+				gwid = bgwid;
+				idx = i;
 			}
 		}
-		idx++;
+		i++;
 	}
 	retval = it->second.packets[idx];
 
@@ -342,6 +352,13 @@ void PacketQueue::runner()
 							break;
 						case MODE_REPLY_MAC:
 							if (onLog) {
+								uint64_t gwa = item.packet.getBestGatewayAddress();
+								if (gwa == 0) {
+									std::stringstream ss;
+									ss << ERR_INVALID_GATEWAY_ID << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
+									onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_GATEWAY_ID, ss.str());
+								}
+
 								std::stringstream ss;
 								ss << MSG_SENT_REPLY_TO << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
 								onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
