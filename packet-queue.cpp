@@ -55,16 +55,32 @@ std::string SemtechUDPPacketItems::toString() const
 }
 
 PacketQueue::PacketQueue()
-	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), mode(0), fdWakeup(0), onLog(NULL)
+	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), mode(0), fdWakeup(0), onLog(NULL), identityService(NULL), gatewayList(NULL)
 {
 }
 
 PacketQueue::PacketQueue(
 	int delayMillisSeconds
 )
-	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL)
+	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL), identityService(NULL), gatewayList(NULL)
 {
 	setDelay(delayMillisSeconds);
+}
+
+void PacketQueue::setIdentityService
+(
+	IdentityService* value
+)
+{
+	identityService = value;
+}
+
+void PacketQueue::setGatewayList
+(
+	GatewayList *value
+)
+{
+	gatewayList = value;
 }
 
 void PacketQueue::setLogger(
@@ -299,12 +315,12 @@ int PacketQueue::ack
 				<< UDPSocket::addrString((const struct sockaddr *) gwAddress)
 				<< " " << rr << ": " << strerror_lorawan_ns(rr)
 				<< ", errno: " << errno << ": " << strerror(errno);
-			onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
 		} else {
 			std::stringstream ss;
 			ss << MSG_SENT_ACK_TO
 				<< UDPSocket::addrString((const struct sockaddr *) gwAddress);
-			onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+			onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	return rr;
@@ -333,7 +349,7 @@ void PacketQueue::runner()
 					std::stringstream ss;
 					ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << errno << ": " << strerror(errno) 
 						<< ", handler " << fdWakeup << ", timeout: " << timeoutMicroSeconds;
-					onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
+					onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
 					abort();
 				}
 				break;
@@ -352,16 +368,43 @@ void PacketQueue::runner()
 							break;
 						case MODE_REPLY_MAC:
 							if (onLog) {
-								uint64_t gwa = item.packet.getBestGatewayAddress();
+								// to reply via closest gateway, find out gatewsy with best SNR
+								float snr;
+								uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
 								if (gwa == 0) {
 									std::stringstream ss;
-									ss << ERR_INVALID_GATEWAY_ID << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
-									onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_GATEWAY_ID, ss.str());
+									ss << ERR_INVALID_GATEWAY_ID << " " << gatewayId2str(gwa);
+									onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_INVALID_GATEWAY_ID, ss.str());
+									break;
+								}
+
+								// get gateway
+								if (!gatewayList) {
+									// check just in case
+									break;
+								}
+								
+								// find out gateway statistics
+								std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
+								if (gwit != gatewayList->gateways.end()) {
+									std::stringstream ss;
+									ss << ERR_NO_GATEWAY_STAT << " " << gatewayId2str(gwa);
+									onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+									break;
+								}
+								
+								{
+									std::stringstream ss;
+									ss << MSG_BEST_GATEWAY << " " << gatewayId2str(gwit->second.gatewayId) 
+										<< " (" << gwit->second.name << ")"
+										<< MSG_GATEWAY_SNR  << snr << ", address: "
+										<< UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
+									onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 								}
 
 								std::stringstream ss;
 								ss << MSG_SENT_REPLY_TO << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
-								onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+								onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 							}
 							break;
 						default:
@@ -369,7 +412,7 @@ void PacketQueue::runner()
 								std::stringstream ss;
 								ss << ERR_MESSAGE << ERR_CODE_WRONG_PARAM << ": " << ERR_WRONG_PARAM << " mode: " << (int) mode
 									<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
-								onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+								onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 							}
 							break;
 						}

@@ -396,6 +396,7 @@ int main(
 	processor = new LoraPacketProcessor();
 	processor->setLogger(onLog);
 	processor->setIdentityService(identityService);
+	processor->setGatewayList(gatewayList);
 	processor->setReceiverQueueService(receiverQueueService);
 
 	// Set pkt2 environment
@@ -408,8 +409,8 @@ int main(
 	processor->setRecieverQueueProcessor(recieverQueueProcessor);
 	
 	// Set up listener
-	listener->setGatewayList(gatewayList);
 	listener->setHandler(processor);
+	listener->setGatewayList(gatewayList);
 	listener->setIdentityService(identityService);
 
 	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {

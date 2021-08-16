@@ -15,6 +15,7 @@
 
 #include "utillora.h"
 #include "packet-handler-abstract.h"
+#include "gateway-list.h"
 
 // default delay in ms
 #define DEF_DELAY_MS 1000
@@ -72,7 +73,8 @@ class PacketQueue {
 		)> onLog;
 
 		int fdWakeup;
-
+		IdentityService *identityService;
+		GatewayList *gatewayList;
 		void runner();
 	public:
 		std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare> packets;
@@ -83,6 +85,8 @@ class PacketQueue {
 		PacketQueue();
 		PacketQueue(int delayMilliSeconds);
 		~PacketQueue();
+		void setIdentityService(IdentityService* identityService);
+		void setGatewayList(GatewayList *value);
 		void setDelay(int delayMilliSeconds);
 		int ack(
 			int socket,

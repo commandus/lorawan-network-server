@@ -9,6 +9,7 @@
 #define LOG_UDP_LISTENER					2
 #define LOG_IDENTITY_SVC					3
 #define LOG_PACKET_HANDLER					4
+#define LOG_PACKET_QUEUE					5
 
 // Error codes
 #define LORA_OK            					0
@@ -194,6 +195,8 @@
 #define MSG_CONN_ESTABLISHED			"established"
 #define MSG_CONN_FAILED					"failed"
 #define MSG_CONNECTION					"connection "
+#define MSG_BEST_GATEWAY				"best gateway "
+#define MSG_GATEWAY_SNR					" SNR "
 
 #define ERROR							"Error "
 

@@ -52,6 +52,9 @@ class GatewayList {
 		bool has(
 			const DEVEUI &gwid
 		) const;
+		bool has(
+			const uint64_t gwid
+		) const;
 		// Set identifier, name and geolocation if found. Return true if found
 		bool copyId(
 			GatewayStat &value,

@@ -52,7 +52,7 @@ int LoraPacketProcessor::enqueueMAC(
 
 
 LoraPacketProcessor::LoraPacketProcessor()
-	: onLog(NULL), identityService(NULL), receiverQueueService(NULL),
+	: identityService(NULL), gatewayList(NULL),  onLog(NULL), receiverQueueService(NULL),
 	recieverQueueProcessor(NULL)
 {
 	packetQueue.start(*this);
@@ -157,6 +157,16 @@ void LoraPacketProcessor::setIdentityService
 )
 {
 	identityService = value;
+	packetQueue.setIdentityService(value);
+}
+
+void LoraPacketProcessor::setGatewayList
+(
+	GatewayList *value
+)
+{
+	gatewayList = value;
+	packetQueue.setGatewayList(value);
 }
 
 void LoraPacketProcessor::setReceiverQueueService

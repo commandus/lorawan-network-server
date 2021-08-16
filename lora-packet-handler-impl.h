@@ -3,8 +3,10 @@
 
 #include <map>
 #include <functional>
+
 #include "lora-packet-handler-abstract.h"
 #include "identity-service-abstract.h"
+#include "gateway-list.h"
 #include "packet-queue.h"
 #include "packet-handler-abstract.h"
 #include "receiver-queue-service.h"
@@ -17,6 +19,8 @@
 class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 	private:
 		IdentityService *identityService;
+		GatewayList *gatewayList;
+
 		// ReceiverQueueService enque data payload packets received from gateways (with deduplication)
 		ReceiverQueueService *receiverQueueService;
 		// RecieverQueueProcessor get payload from the queue, parse and put parsed data 
@@ -36,6 +40,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		LoraPacketProcessor();
 		~LoraPacketProcessor();
 		void setIdentityService(IdentityService* identityService);
+		void setGatewayList(GatewayList *value);
 		void setReceiverQueueService(ReceiverQueueService* value);
 
 		int ack(
