@@ -85,6 +85,9 @@
 #define ERR_CODE_INVALID_FPORT				-569
 #define ERR_CODE_INVALID_MIC				-570
 #define ERR_CODE_SEGMENTATION_FAULT			-571
+#define ERR_CODE_BEST_GATEWAY_NOT_FOUND		-572
+#define ERR_CODE_REPLY_MAC					-573
+#define ERR_CODE_NO_MAC			           	-574
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -166,6 +169,9 @@
 #define ERR_INVALID_FPORT				"Invalid FPort value"
 #define ERR_INVALID_MIC					"Invalid MIC"
 #define ERR_SEGMENTATION_FAULT			"Segmentation fault"
+#define ERR_BEST_GATEWAY_NOT_FOUND		"Best gateway not found"
+#define ERR_REPLY_MAC					"Error send MAC reply "
+#define ERR_NO_MAC			           	"No MAC command"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -180,7 +186,7 @@
 #define MSG_TIMEOUT						"Timeout"
 #define MSG_GATEWAY						"Gateway "
 #define MSG_DEVICE						"Device "
-#define MSG_DEVICE_EUI					"Device EUI "
+#define MSG_DEVICE_EUI					"EUI "
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "
 #define MSG_RECEIVED					"Message received "
@@ -196,6 +202,7 @@
 #define MSG_CONN_FAILED					"failed"
 #define MSG_CONNECTION					"connection "
 #define MSG_BEST_GATEWAY				"best gateway "
+#define MSG_SEND_MAC_REPLY				"Send reply on MAC command(s)"
 #define MSG_GATEWAY_SNR					" SNR "
 
 #define ERROR							"Error "
