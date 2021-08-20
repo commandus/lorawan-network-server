@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 72
+#define ERR_COUNT 75
 
 // used by strerror_lorawan_ns()
 static const char *errlist[ERR_COUNT] = {
@@ -76,7 +76,10 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_MISSED_GATEWAY,
 	ERR_INVALID_FPORT,
 	ERR_INVALID_MIC,
-	ERR_SEGMENTATION_FAULT
+	ERR_SEGMENTATION_FAULT,
+	ERR_BEST_GATEWAY_NOT_FOUND,
+	ERR_REPLY_MAC,
+	ERR_NO_MAC
 };
 
 const char *strerror_lorawan_ns(

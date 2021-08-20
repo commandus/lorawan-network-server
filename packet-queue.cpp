@@ -6,8 +6,11 @@
 #include <iostream>
 
 #include "utildate.h"
+#include "utilstring.h"
 #include "errlist.h"
 #include "udp-socket.h"
+#include "lorawan-mac.h"
+#include "identity-service-abstract.h"
 
 SemtechUDPPacketItem::SemtechUDPPacketItem()
 	: processMode(MODE_NONE)
@@ -115,6 +118,12 @@ void PacketQueue::push(
 	const struct timeval &time,
 	const semtechUDPPacket &value
 ) {
+	if (onLog) {
+		std::stringstream ss;
+		ss << "Push packet queue " << timeval2string(time);
+		onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+	}
+
 	SemtechUDPPacketItem item(socket, mode, time, value);
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();
@@ -154,14 +163,21 @@ void PacketQueue::push(
 }
 
 /**
- * @return time dirrerence in milliseconds 
+ * @param t1 current time
+ * @param t2 furure time
+ * @return time dirrerence in microseconds (>0)
  **/
 int PacketQueue::diffMicroSeconds(
 	struct timeval &t1,
 	struct timeval &t2
 )
 {
-	int r = 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
+	int ds = t2.tv_sec - t1.tv_sec;
+	if (ds > 2147)
+		return 2147483647;	// return max int
+	if (ds < -2147)
+		return 0;	// return min positive int
+	int64_t r = 1000000 * ds + (t2.tv_usec - t1.tv_usec);
 	if (r < 0)
 		r = 0;
 	return r;
@@ -172,13 +188,16 @@ size_t PacketQueue::count()
 	return packets.size();
 }
 
+const int TIME_LEAD_MICROSECONDS = 1000;
+
 bool PacketQueue::getFirstExpired(
 	SemtechUDPPacketItem &retval,
 	struct timeval &currenttime
 )
 {
-	if (!addrs.size())
+	if (!addrs.size()) {
 		return false;
+	}
 
 	mutexq.lock();
 
@@ -196,7 +215,8 @@ bool PacketQueue::getFirstExpired(
 	}
 
 	// first packet is earliest packet, check time using first earliest packet
-	if (diffMicroSeconds(it->second.packets[0].timeAdded, currenttime) < delayMicroSeconds) {
+	if (diffMicroSeconds(currenttime, it->second.packets[0].timeAdded) > TIME_LEAD_MICROSECONDS) {
+		// not ready, wait
 		mutexq.unlock();
 		return false;
 	}
@@ -253,20 +273,25 @@ bool PacketQueue::getFirstExpired(
 	return true;
 }
 
+/**
+ * Return time wait until time ready to send next packet
+ * @param currenttime current time
+ * @return microseconds to serve next packet from the queue
+ */
 int PacketQueue::getNextTimeout(struct timeval &currenttime)
 {
 	DEVADDRINT a = addrs.front();
 	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
 	if (it == packets.end()) {
-		return DEF_TIMEOUT_MS;
+		return DEF_TIMEOUT_MS * 1000;
 	}
 
 	// always keep at least 1 item
 	if (!it->second.packets.size()) {
-		return DEF_TIMEOUT_MS;
+		return DEF_TIMEOUT_MS * 1000;
 	}
 	// first packet is earliest packet
-	return diffMicroSeconds(it->second.packets[0].timeAdded, currenttime);
+	return diffMicroSeconds(currenttime, it->second.packets[0].timeAdded);
 }
 
 std::string PacketQueue::toString() const
@@ -290,7 +315,7 @@ std::string PacketQueue::toString() const
 int PacketQueue::ack
 (
 	int socket,
-	const sockaddr_in* gwAddress,
+	struct sockaddr* gwAddress,
 	const SEMTECH_DATA_PREFIX &dataprefix
 )
 {
@@ -298,14 +323,17 @@ int PacketQueue::ack
 	response.version = 2;
 	response.token = dataprefix.token;
 	switch(dataprefix.tag) {
+		case 2:	// PULL_DATA
+			response.tag = 4;	// PULL_ACK, PULL_RESP = 3
+			break;
 		default:
 			response.tag = dataprefix.tag + 1;
 			break;
 	}
-
+	
 	size_t r = sendto(socket, &response, sizeof(SEMTECH_ACK), 0,
 		(const struct sockaddr*) gwAddress,
-		((gwAddress->sin_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+		((gwAddress->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
 
 	int rr = sizeof(SEMTECH_ACK) ? LORA_OK : ERR_CODE_SEND_ACK;
 	if (onLog) {
@@ -319,11 +347,111 @@ int PacketQueue::ack
 		} else {
 			std::stringstream ss;
 			ss << MSG_SENT_ACK_TO
-				<< UDPSocket::addrString((const struct sockaddr *) gwAddress);
+				<< UDPSocket::addrString((const struct sockaddr *) gwAddress)
+				<< ", tag: " << (int) response.tag
+				<< ", token: " << std::hex << dataprefix.token
+				<< ", data: " <<  hexString(std::string((const char *) &response, sizeof(SEMTECH_ACK)));
 			onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	return rr;
+}
+
+/**
+ * Send MAC command response
+ * @param item packet
+ * @param t current time
+ */
+int PacketQueue::replyMAC(
+	SemtechUDPPacketItem &item,
+		struct timeval &t
+) {
+	// to reply via closest gateway, find out gatewsy with best SNR
+	float snr;
+	int power = 14;
+	uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
+	if (gwa == 0) {
+		std::stringstream ss;
+		ss << ERR_BEST_GATEWAY_NOT_FOUND;
+		if (onLog)
+			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
+		return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
+	}
+
+	// check just in case
+	// .. gateway
+	if (!gatewayList)
+		return ERR_CODE_WRONG_PARAM;
+	// .. MAC
+	if (!item.packet.hasMACPayload()){
+		std::stringstream ss;
+		ss << ERR_NO_MAC;
+		if (onLog)
+			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+		return ERR_CODE_NO_MAC;
+	}
+	
+	// find out gateway statistics
+	std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
+	if (gwit == gatewayList->gateways.end()) {
+		std::stringstream ss;
+		ss << ERR_NO_GATEWAY_STAT << " " << gatewayId2str(gwa);
+		if (onLog)
+			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+		return ERR_CODE_NO_GATEWAY_STAT;
+	}
+	
+	// get MAC commands
+	MacPtr macPtr(item.packet.payload);
+	// print out
+	std::stringstream ss;
+	ss << MSG_SEND_MAC_REPLY << ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId) 
+		<< " (" << gwit->second.name << ")"
+		<< MSG_GATEWAY_SNR  << snr << ", address: "
+		<< UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
+
+	ss << ", \"mac\": " << macPtr.toJSONString();
+	if (macPtr.errorcode) {
+		ss << ", \"mac_error_code\": " << macPtr.errorcode
+			<< ", \"mac_error\": \"" << strerror_lorawan_ns(macPtr.errorcode) << "\"";
+	}
+	if (onLog)
+		onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+	// make response
+	std::string macResponse;
+	int offset = 0;
+
+	// get identity for NwkS
+	DeviceId id;
+	if (identityService)
+		identityService->get(item.packet.header.header.devaddr, id);
+	while (int lastMACIndex = macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey, offset) != -1) {
+		offset = lastMACIndex;
+		std::string response = item.packet.mkResponse(macResponse, id.nwkSKey, power);
+
+		size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
+			(const struct sockaddr*) &gwit->second.sockaddr,
+			((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+
+		if (onLog) {
+			if (r != response.size()) {
+				std::stringstream ss;
+				ss << ERR_CODE_REPLY_MAC
+					<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
+					<< ", errno: " << errno << ": " << strerror(errno);
+				if (onLog)
+					onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
+			} else {
+				std::stringstream ss;
+				ss << MSG_SENT_REPLY_TO
+					<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
+					<< " payload: " << hexString(response);
+				if (onLog)
+					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+			}
+		}
+	}
+	return LORA_OK;
 }
 
 void PacketQueue::runner()
@@ -334,98 +462,70 @@ void PacketQueue::runner()
 
 	// mode 0- stopped, 1- running, -1- stop request
 	mode = 1;
+	fd_set fh;
 	while (mode == 1) {
-		fd_set fh;
 		FD_ZERO(&fh);
 		FD_SET(fdWakeup, &fh);
 		struct timeval timeout;
 		timeout.tv_sec = 0;
 		timeout.tv_usec = timeoutMicroSeconds;
 		int retval = select(fdWakeup + 1, &fh, NULL, NULL, &timeout);
-		switch (retval) {
-			case -1:
-				// select error
-				if (onLog) {
-					std::stringstream ss;
-					ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << errno << ": " << strerror(errno) 
-						<< ", handler " << fdWakeup << ", timeout: " << timeoutMicroSeconds;
-					onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
-					abort();
-				}
+		if (retval == -1) {
+			// select error
+			if (onLog) {
+				std::stringstream ss;
+				ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << errno << ": " << strerror(errno) 
+					<< ", handler " << fdWakeup << ", timeout: " << timeoutMicroSeconds;
+				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
+			}
+			abort();
+		}
+		if (FD_ISSET(fdWakeup, &fh)) {
+			if (onLog) {
+				std::stringstream ss;
+				ss << "wakeup is set, reset";
+				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+			}
+			uint8_t u = 1;
+			while (read(fdWakeup, &u, sizeof(u)) == sizeof(u));
+		}
+
+		if (!count())
+			continue;
+
+		SemtechUDPPacketItem item;
+		struct timeval t;
+		gettimeofday(&t, NULL);
+		while (getFirstExpired(item, t)) {
+			switch (item.processMode)
+			{
+			case MODE_ACK:
+				ack(item.socket, (sockaddr *) &item.packet.gatewayAddress, item.packet.prefix);
+				break;
+			case MODE_REPLY_MAC:
+				replyMAC(item, t);
 				break;
 			default:
-			// case 0:
-				// 0- timeout occured
-				if (count()) {
-					SemtechUDPPacketItem item;
-					struct timeval t;
-					gettimeofday(&t, NULL);
-					while (getFirstExpired(item, t)) {
-						switch (item.processMode)
-						{
-						case MODE_ACK:
-							ack(item.socket, (const sockaddr_in *) &item.packet.gatewayAddress, item.packet.prefix);
-							break;
-						case MODE_REPLY_MAC:
-							if (onLog) {
-								// to reply via closest gateway, find out gatewsy with best SNR
-								float snr;
-								uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
-								if (gwa == 0) {
-									std::stringstream ss;
-									ss << ERR_INVALID_GATEWAY_ID << " " << gatewayId2str(gwa);
-									onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_INVALID_GATEWAY_ID, ss.str());
-									break;
-								}
-
-								// get gateway
-								if (!gatewayList) {
-									// check just in case
-									break;
-								}
-								
-								// find out gateway statistics
-								std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
-								if (gwit != gatewayList->gateways.end()) {
-									std::stringstream ss;
-									ss << ERR_NO_GATEWAY_STAT << " " << gatewayId2str(gwa);
-									onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
-									break;
-								}
-								
-								{
-									std::stringstream ss;
-									ss << MSG_BEST_GATEWAY << " " << gatewayId2str(gwit->second.gatewayId) 
-										<< " (" << gwit->second.name << ")"
-										<< MSG_GATEWAY_SNR  << snr << ", address: "
-										<< UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
-									onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
-								}
-
-								std::stringstream ss;
-								ss << MSG_SENT_REPLY_TO << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
-								onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
-							}
-							break;
-						default:
-							if (onLog) {
-								std::stringstream ss;
-								ss << ERR_MESSAGE << ERR_CODE_WRONG_PARAM << ": " << ERR_WRONG_PARAM << " mode: " << (int) mode
-									<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
-								onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
-							}
-							break;
-						}
-						packetsRead++;
-						// value.onPacket(p);
-					}
-					timeoutMicroSeconds = getNextTimeout(t);
+				if (onLog) {
+					std::stringstream ss;
+					ss << ERR_MESSAGE << ERR_CODE_WRONG_PARAM << ": " << ERR_WRONG_PARAM << " mode: " << (int) mode
+						<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
+					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 				}
-				continue;
+				break;
+			}
+			packetsRead++;
+		}
+
+		gettimeofday(&t, NULL);
+		timeoutMicroSeconds = getNextTimeout(t);
+		if (onLog) {
+			std::stringstream ss;
+			ss << "next timeout: " << timeoutMicroSeconds << " microseconds, retval " << retval << std::endl;
+			onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
-	// mode 0- stopped, 1- running, -1- stop request
-	mode = 0;
+	mode = 0;	// mode 0- stopped, 1- running, -1- stop request
 }
 
 void PacketQueue::wakeUp() 
@@ -433,8 +533,8 @@ void PacketQueue::wakeUp()
 	// mode 0- stopped, 1- running, -1- stop request
 	if (mode != 1)
 		return;
-	uint64_t u = 1;
-	if (write(fdWakeup, &u, sizeof(uint64_t)) != sizeof(uint64_t)) {
+	uint8_t u = 1;
+	if (write(fdWakeup, &u, sizeof(u)) != sizeof(u)) {
 		// TODO smth
 	}
 }

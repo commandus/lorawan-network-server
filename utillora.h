@@ -184,6 +184,7 @@ typedef ALIGN struct {
 	DEVADDR devaddr;			// MAC address
 	union {
 		uint8_t i;
+		// downlink
 		struct {
 			uint8_t foptslen: 4;
 			uint8_t fpending: 1;
@@ -191,6 +192,14 @@ typedef ALIGN struct {
 			uint8_t rfu: 1;
 			uint8_t adr: 1;
 		} f;
+		// uplink
+		struct {
+			uint8_t foptslen: 4;
+			uint8_t classb: 1;
+			uint8_t ack: 1;
+			uint8_t addrackreq: 1;
+			uint8_t adr: 1;
+		} fup;
 	} fctrl;	// frame control
 	uint16_t fcnt;	// frame counter 0..65535
 	// FOpts 0..15
@@ -318,7 +327,7 @@ public:
 		std::string &retData,
 		rapidjson::Value &value
 	);
-	std::string toJsonString(const std::string &data) const;
+	std::string toJsonString(const std::string &payload) const;
 	std::string datr() const;			// LoRa datarate identifier e.g. "SF7BW125"
 	void setDatr(const std::string &value);			// LoRa datarate identifier e.g. "SF7BW125"
 	std::string codr() const;			// LoRa ECC coding rate identifier e.g. "4/6"
@@ -359,11 +368,15 @@ public:
 
 class semtechUDPPacket {
 private:
-	std::string payload;
 	void clearPrefix();
 	int parseData(const std::string &data, IdentityService *identityService);
+	std::string toTxImmediatelyJsonString(
+		const std::string &payload,
+		const int power = 14
+	) const;
 protected:
-public:	
+public:
+	std::string payload;
 	rfmHeader header;
 	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	struct sockaddr_in6 gatewayAddress;
@@ -408,15 +421,14 @@ public:
 	float getSignalLevel() const;
 	std::string getDeviceAddrStr() const;
 	DEVADDRINT getDeviceAddr() const;
+	void getDeviceAddr(DEVADDR &retval) const;
 	void setDeviceAddr(const std::string &value);
 	void setGatewayId(const std::string &value);
 	void setNetworkSessionKey(const std::string &value);
 	void setApplicationSessionKey(const std::string &value);
 	void setFrameCounter(uint16_t value);
 
-	std::string getPayload() const;
 	void setPayload(uint8_t port, const std::string &payload);
-	void setPayload(const std::string &value);
 	// Create ACK response to be send to the BS 
 	void ack(SEMTECH_ACK *retval);	// 4 bytes
 	int16_t getStrongesSignalLevel(int &idx) const;
@@ -432,6 +444,13 @@ public:
 	 * @return 0 if not found
 	 */
 	uint64_t getBestGatewayAddress(float *retvalLsnr = NULL) const;
+	
+	std::string mkResponse(
+		const std::string &payload,
+		const KEY128 &key,
+		const int power = 14
+	) const;
+
 };
 
 uint64_t deveui2int(const DEVEUI &value);
@@ -499,6 +518,19 @@ ACTIVATION string2activation(const std::string &value);
 
 std::string semtechDataPrefix2JsonString(
 	const SEMTECH_DATA_PREFIX &prefix
+);
+
+/**
+ * link margin, dB, range of 0..254
+ * “0” - the frame was received at the demodulation floor
+ * “20” - frame reached the gateway 20 dB above demodulation floor
+ * @param spreadingFactor 6,.12
+ * @param loraSNR
+ * @return 0..254
+ */
+uint8_t loraMargin(
+	uint8_t spreadingFactor,
+	float loraSNR
 );
 
 #endif

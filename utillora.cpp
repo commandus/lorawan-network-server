@@ -24,6 +24,7 @@
 #include "lora-encrypt.h"
 #include "lorawan-mac.h"
 
+
 #if BYTE_ORDER == BIG_ENDIAN
 #define swap16(x) (x)
 #else
@@ -587,8 +588,8 @@ rfmMetaData::rfmMetaData(
 	spreadingFactor(value.spreadingFactor), codingRate(value.codingRate), 
 	bps(value.bps), rssi(value.rssi), lsnr(value.lsnr)
 {
-	if (aprefix)
-		gatewayId = (uint64_t) aprefix->mac;
+	if (aprefix) 
+		gatewayId = *(uint64_t *) &aprefix->mac;
 }
 
 /**
@@ -637,7 +638,7 @@ std::string rfmMetaData::snrratio() const
 }
 
 /**
- * 	Section 3.3	 
+ * 	Section 3.3
  */
 const char* METADATA_RX_NAMES[15] = {
 	"rxpk",	// 0 array name
@@ -655,6 +656,28 @@ const char* METADATA_RX_NAMES[15] = {
 	"lsnr", // 12 number | Lora SNR ratio in dB (signed float, 0.1 dB precision)
 	"size", // 13 number | RF packet payload size in bytes (unsigned integer)
 	"data"  // 14 string | Base64 encoded RF packet payload, padded
+};
+
+/**
+ * 	Section 6
+ */
+const char* METADATA_TX_NAMES[16] = {
+	"txpk",	// 0 array name
+	"imme", // 1 bool     Send packet immediately (will ignore tmst & time)
+	"tmst", // 2 number   Send packet on a certain timestamp value (will ignore time)
+	"tmms", // 3 number   Send packet at a certain GPS time (GPS synchronization required)
+	"freq", // 4 number   TX central frequency in MHz (unsigned float, Hz precision)
+	"rfch", // 5 number   Concentrator "RF chain" used for TX (unsigned integer)
+	"powe", // 6 number   TX output power in dBm (unsigned integer, dBm precision)
+	"modu", // 7 string   Modulation identifier "LORA" or "FSK"
+	"datr", // 8 string or number  LoRa datarate identifier (eg. SF12BW500) or FSK datarate (unsigned, in bits per second)
+	"codr", // 9 string  LoRa ECC coding rate identifier
+	"fdev", // 10 number FSK frequency deviation (unsigned integer, in Hz) 
+	"ipol", // 11 bool   Lora modulation polarization inversion
+	"prea", // 12 number RF preamble size (unsigned integer)
+	"size", // 13 number RF packet payload size in bytes (unsigned integer)
+	"data", // 14 string Base64 encoded RF packet payload, padded
+	"ncrc", // 15 bool   If true, disable the CRC of the physical layer (optional)
 };
 
 int getMetadataName(
@@ -988,7 +1011,7 @@ rfmHeader::rfmHeader(
 	const RFM_HEADER &hdr
 ) {
 	memmove(&header, &hdr, sizeof(RFM_HEADER));
-	header.macheader.i = 0x40;
+	// header.macheader.i = 0x40;
 }
 
 rfmHeader::rfmHeader(
@@ -1514,6 +1537,13 @@ DEVADDRINT semtechUDPPacket::getDeviceAddr() const {
 	return r;
 }
 
+void semtechUDPPacket::getDeviceAddr(
+	DEVADDR &retval
+) const
+{
+	memmove(&retval, header.header.devaddr, sizeof(DEVADDR));
+}
+
 void semtechUDPPacket::setDeviceAddr(
 	const std::string &value
 ) {
@@ -1536,11 +1566,6 @@ void semtechUDPPacket::setFrameCounter(
 	uint16_t value
 ) {
 	header.header.fcnt = value;
-}
-
-std::string semtechUDPPacket::getPayload() const
-{
-	return payload;
 }
 
 std::string semtechUDPPacket::toJsonString() const
@@ -1574,12 +1599,6 @@ void semtechUDPPacket::setPayload(
 ) {
 	header.fport = port;
 	header.header.fctrl.i = 0;
-	payload = value;
-}
-
-void semtechUDPPacket::setPayload(
-	const std::string &value
-) {
 	payload = value;
 }
 
@@ -1627,7 +1646,7 @@ int semtechUDPPacket::parseData(
 				else
 					key = &devId.appSKey;
 				decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
-				setPayload(p); 
+				payload = p; 
 			}
 		} else {
 			// return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
@@ -1664,7 +1683,7 @@ uint64_t semtechUDPPacket::getBestGatewayAddress(
 	uint64_t r = 0;
 	for (std::vector<rfmMetaData>::const_iterator it(metadata.begin()); it != metadata.end(); it++)
 	{
-		if (f > it->lsnr)
+		if (it->lsnr > f)
 		{
 			f = it->lsnr;
 			r = it->gatewayId;
@@ -1673,6 +1692,61 @@ uint64_t semtechUDPPacket::getBestGatewayAddress(
 		}
 	}
 	return r;
+}
+
+std::string semtechUDPPacket::toTxImmediatelyJsonString(
+	const std::string &payload,
+	const int power
+) const
+{
+	if (metadata.size() == 0)
+		return "";
+	int rfch = 0;
+	int metadataIdx = 0;
+	SEMTECH_DATA_PREFIX pullPrefix;
+	memmove(&pullPrefix, &prefix, sizeof(SEMTECH_DATA_PREFIX));
+	pullPrefix.tag = 3; // PULL_RESP, after receiving PULL_DATA
+	
+	std::stringstream ss;
+	ss << std::string((const char *) &pullPrefix, sizeof(SEMTECH_DATA_PREFIX))
+		<< "{\"txpk\":{" 
+		<< "\"" << METADATA_TX_NAMES[1] << "\":true"
+		<< ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
+		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
+		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
+		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
+		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
+		<< "\",\"" << METADATA_TX_NAMES[9] << "\":\"" << metadata[metadataIdx].codr()
+		<< "\",\"" << METADATA_TX_NAMES[11] << "\":false" 									// Lora modulation polarization inversion
+		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payload.size()
+		<< ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payload) << "\"}}";
+	return ss.str();
+}
+
+std::string semtechUDPPacket::mkResponse(
+	const std::string &data,
+	const KEY128 &key,
+	const int power
+) const
+{
+	std::stringstream smsg;
+	// copy macheader, addr, fcnt form received packet
+	rfmHeader header(*getRfmHeader());
+	// replace direction: MTYPE_UNCONFIRMED_DATA_UP to MTYPE_UNCONFIRMED_DATA_DOWN
+	header.header.macheader.f.mtype = MTYPE_UNCONFIRMED_DATA_DOWN;
+	smsg << header.toString();
+	smsg << (uint8_t) 0;	// fport 0- MAC payload
+
+	// encrypt frame payload
+	int direction = 1;	// downlink
+	std::string frmpayload(data);
+	encryptPayload(frmpayload, header.header.fcnt, direction, header.header.devaddr, key);
+	smsg << frmpayload;
+	std::string msg = smsg.str();
+	// calc mic
+	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), header.header.fcnt, direction, header.header.devaddr, key);
+	smsg << std::string((char *) &mic, 4);
+	return toTxImmediatelyJsonString(smsg.str(), power);
 }
 
 uint64_t deveui2int(
@@ -1815,4 +1889,51 @@ std::string semtechDataPrefix2JsonString(
 		<< ", \"mac\": \"" << DEVEUI2string(prefix.mac)		 /// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
 		<< "\"}";
 	return ss.str();
+}
+
+/**
+ * SpreadFactorToRequiredSNRTable contains the required SNR to demodulate a LoRa frame for the given spreadfactor.
+ * Reference: SX1276 datasheet
+ * SpreadingFactor 6..12
+ * @see https://semtech.my.salesforce.com/sfc/p/#E0000000JelG/a/2R0000001Rbr/6EfVZUorrpoKFfvaF_Fkpgp5kzjiNyiAbqcpqh9qSjE
+ * 
+*/
+static float SpreadFactorToRequiredSNR[] = {
+	-5,	// 0
+	-5,
+	-5,
+	-5,
+	-5,
+	-5,	// 5
+	-5,
+	-7.5,
+	-10,
+	-12.5,
+	-15,
+	-17.5,
+	-20
+};
+
+/**
+ * link margin, dB, range of 0..254
+ * “0” - the frame was received at the demodulation floor
+ * “20” - frame reached the gateway 20 dB above demodulation floor
+ * @param spreadingFactor 6,.12
+ * @param loraSNR
+ * @return 0..254
+ */
+uint8_t loraMargin(
+	uint8_t spreadingFactor,
+	float loraSNR
+)
+{
+	if (spreadingFactor >= 12)
+		spreadingFactor = 11;
+	int r = loraSNR - SpreadFactorToRequiredSNR[spreadingFactor];
+	if (r < 0)
+		r = 0;
+	if (r > 254)
+		r = 254;
+	return r;
+
 }

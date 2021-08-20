@@ -293,6 +293,7 @@ bool GatewayList::has(
 bool GatewayList::setSocketAddress
 (
 	const DEVEUI &gwid,
+	int socket,
 	const struct sockaddr_in *gwAddress
 )
 {
@@ -302,6 +303,7 @@ bool GatewayList::setSocketAddress
 		return false;
 	memmove(&it->second.sockaddr, gwAddress,
 		(gwAddress->sin_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+	it->second.socket = socket;
 	return true;
 }
 

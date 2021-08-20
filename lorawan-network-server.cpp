@@ -247,7 +247,10 @@ void onLog(
 		if (((UDPListener *) listener)->verbosity < level)
 			return;
 	}
-	std::cerr << time2string(time(NULL)) << " " << message << std::endl;
+	// std::cerr << time2string(time(NULL)) << " " << message << std::endl;
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	std::cerr << timeval2string(t) << " " << message << std::endl;
 }
 
 static void run()

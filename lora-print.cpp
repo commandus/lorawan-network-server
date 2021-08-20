@@ -312,7 +312,7 @@ int main(
 		}
 		*/
 
-		std::string payload = it->getPayload();
+		std::string payload = it->payload;
 		if (config.command == "sql") {
 			std::map<std::string, std::string> properties;
 			// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name

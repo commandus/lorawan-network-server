@@ -10,7 +10,7 @@
  * Create empty gateway statistics
  */
 GatewayStat::GatewayStat()
-	: addr(""), name(""), gatewayId(0), errcode(0),
+	: addr(""), socket(0), name(""), gatewayId(0), errcode(0),
 	t(0),					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
 	lat(0.0),				// latitude
 	lon(0.0),				// longitude
@@ -32,6 +32,9 @@ GatewayStat::GatewayStat(
 	const GatewayStat &value
 )
 {
+	addr = value.addr; 
+	socket = value.socket; 
+	memmove(&sockaddr, &value.socket, sockaddr.sin6_family ==  AF_INET6 ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
 	name = value.name;
 	gatewayId = value.gatewayId;
 	errcode = value.errcode;
