@@ -47,6 +47,7 @@ class GatewayList {
 		) const;
 		bool setSocketAddress(
 			const DEVEUI  &gwid,
+			int socket,
 			const struct sockaddr_in *gwAddress
 		);
 		bool has(

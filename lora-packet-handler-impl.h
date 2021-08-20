@@ -49,12 +49,6 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 			const SEMTECH_DATA_PREFIX &dataprefix
 		);
 
-		int ackImmediately(
-			int socket,
-			const sockaddr_in* gwAddress,
-			const SEMTECH_DATA_PREFIX &dataprefix
-		);
-
 		/**
 		 * Add packet to be processed
 		 */

@@ -18,7 +18,7 @@
 #include "gateway-list.h"
 
 // default delay in ms
-#define DEF_DELAY_MS 1000
+#define DEF_DELAY_MS 500
 #define MIN_DELAY_MS 200
 #define MAX_DELAY_MS 1000
 
@@ -75,6 +75,10 @@ class PacketQueue {
 		int fdWakeup;
 		IdentityService *identityService;
 		GatewayList *gatewayList;
+		int replyMAC(
+			SemtechUDPPacketItem &item,
+			struct timeval &t
+		);
 		void runner();
 	public:
 		std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare> packets;
@@ -90,7 +94,7 @@ class PacketQueue {
 		void setDelay(int delayMilliSeconds);
 		int ack(
 			int socket,
-			const sockaddr_in* gwAddress,
+			struct sockaddr* gwAddress,
 			const SEMTECH_DATA_PREFIX &dataprefix
 		);
 		void push(

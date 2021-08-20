@@ -24,6 +24,8 @@ public:
 	uint64_t gatewayId;
 	// host name or address of the gateway
 	std::string addr;
+	// socket
+	int socket;
 	// Gateway send PULL_DATA packet to inform network server what gateway current adddress and port are (possibly over NAT)
 	struct sockaddr_in6 sockaddr;
 	int errcode;
