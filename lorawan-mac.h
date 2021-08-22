@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "platform.h"
+#include "utillora.h"
 
 // MAC commands as specified by the LoRaWAN R1.0 specs section 5
 enum MAC_CID {
@@ -770,10 +771,36 @@ class MacPtr {
 	public:
 		std::vector<MAC_COMMAND* > mac;
 		int errorcode;
+		// clientSide: true transmitted by the server client side, falae- MAC command transmitted by end-device (server side) 
 		bool clientSide;
 		MacPtr(const std::string &parseData, const bool clientSide = false);
 		std::string toHexString() const;
 		std::string toJSONString() const;
+		/**
+		 * Respond on MAC command
+		 * @param outMacCommand return MAC command
+		 * @param inMacCommand MAC command to response
+		 * @param packet Received Semtech packet to answer
+		 * @return true if has answer
+		 */
+		bool mkResponseMAC(
+			MAC_COMMAND &outMacCommand,
+			const MAC_COMMAND *inMacCommand,
+			semtechUDPPacket &packet
+		);
+
+		/**
+		 * Produce MAC command response 
+		 * @param retval JSON txpk string to be sent over Semtech gateway
+		 * @param packet Received Semtech packet to answer
+		 * @return count of MAC answered (response can be too long)
+		 */
+		int mkResponseMAC(
+			std::string &retval,
+			semtechUDPPacket &packet,
+			KEY128 &key,
+			const int offset = 0
+		);
 };
 
 /**

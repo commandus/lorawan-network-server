@@ -47,10 +47,14 @@ class GatewayList {
 		) const;
 		bool setSocketAddress(
 			const DEVEUI  &gwid,
+			int socket,
 			const struct sockaddr_in *gwAddress
 		);
 		bool has(
 			const DEVEUI &gwid
+		) const;
+		bool has(
+			const uint64_t gwid
 		) const;
 		// Set identifier, name and geolocation if found. Return true if found
 		bool copyId(
