@@ -269,6 +269,18 @@ bool GatewayList::has(
 }
 
 /**
+ * Check does gateway exists
+ * @param gwid gateway identifier
+ * @return true is gateway exists
+ */
+bool GatewayList::has(
+	const uint64_t gwid
+) const
+{
+	return (gateways.find(gwid) != gateways.end());
+}
+
+/**
  * Set gateway socket address
  * Gateway send PULL request from random port number each minute. 
  * This port number is opened for communication until next PULL request.
@@ -281,6 +293,7 @@ bool GatewayList::has(
 bool GatewayList::setSocketAddress
 (
 	const DEVEUI &gwid,
+	int socket,
 	const struct sockaddr_in *gwAddress
 )
 {
@@ -290,6 +303,7 @@ bool GatewayList::setSocketAddress
 		return false;
 	memmove(&it->second.sockaddr, gwAddress,
 		(gwAddress->sin_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
+	it->second.socket = socket;
 	return true;
 }
 

@@ -314,7 +314,7 @@ void ReceiverQueueService::push
 	e.key.time = timeval;
 	memmove(e.value.addr, packet.getRfmHeader()->devaddr, sizeof(DEVADDR));
 	e.value.deviceId = packet.devId;
-	e.value.payload = packet.getPayload();
+	e.value.payload = packet.payload;
 	e.value.dbids = dbs;
 	e.value.fport = packet.header.fport;
 	pushEntry(e);

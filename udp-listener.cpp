@@ -66,6 +66,7 @@ void UDPListener::setIdentityService
 	identityService = value;
 }
 
+
 std::string UDPListener::toString() {
 	std::stringstream ss;
 	for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
@@ -193,14 +194,15 @@ int UDPListener::listen() {
 								{
 									std::stringstream sse;
 									sse << strerror_lorawan_ns(pr)
-										<< " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress);
+										<< " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress) 
+										<< ", token: " << std::hex << dataprefix.token;
 									onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
 									// send PULL ACK immediately
 									if (handler) {
 										handler->ack(it->sock, (const sockaddr_in *) &gwAddress, dataprefix);
 									}
 									if (gatewayList) {
-										if (!gatewayList->setSocketAddress(dataprefix.mac, (const struct sockaddr_in *) &gwAddress)) {
+										if (!gatewayList->setSocketAddress(dataprefix.mac, it->sock, (const struct sockaddr_in *) &gwAddress)) {
 											std::stringstream ss;
 											ss << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": "
 												<< ERR_INVALID_GATEWAY_ID
@@ -211,7 +213,6 @@ int UDPListener::listen() {
 											break;
 										}
 									}
-
 								}
 								break;
 							default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue

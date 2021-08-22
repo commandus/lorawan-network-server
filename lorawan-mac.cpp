@@ -7,6 +7,7 @@
 
 #include "utildate.h"
 #include "utilstring.h"
+#include "lora-encrypt.h"
 
 #include "errlist.h"
 
@@ -788,7 +789,7 @@ std::string MAC_DATA2JSONString(
 {
 	std::stringstream ss;
 	if (isClientSide)	{
-		// end device side (sent by gateway)
+		// end device side (sent by network)
 		switch (command.command) {
 			case Reset:	// req
 				MDPREFIX(reset)
@@ -1866,4 +1867,61 @@ std::string MacPtr::toJSONString() const
 	}
 	ss << "]";
 	return ss.str();
+}
+
+/**
+ * Respond on MAC command
+ * @param outMacCommand return MAC command
+ * @param inMacCommand MAC command to response
+ * @param packet Received Semtech packet to answer
+ * @return true if has answer
+ */
+bool MacPtr::mkResponseMAC(
+	MAC_COMMAND &outMacCommand,
+	const MAC_COMMAND *inMacCommand,
+	semtechUDPPacket &packet
+)
+{
+	outMacCommand.command = inMacCommand->command;
+	switch (inMacCommand->command)
+	{
+	case LinkCheck:
+		// fill out
+		{
+			float lorasnr = 0.0;
+			uint64_t gwa = packet.getBestGatewayAddress(&lorasnr);
+			outMacCommand.data.linkcheck.gwcnt = packet.metadata.size();
+			outMacCommand.data.linkcheck.margin = loraMargin(6, lorasnr);
+		}
+		break;
+	default:
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Produce MAC command response 
+ * @param retval JSON txpk string to be sent over Semtech gateway
+ * @param packet Received Semtech packet to answer
+ * @return -1 no more, otherwise count of MAC answered (response can be too long)
+ */
+int MacPtr::mkResponseMAC(
+	std::string &retval,
+	semtechUDPPacket &packet,
+	KEY128 &key,	// NwkSKey not AppSKey
+	const int offset
+)
+{
+	std::stringstream sfrmpayload;
+	for (int i = offset; i < mac.size(); i++) {
+		MAC_COMMAND rmac;
+		if (mkResponseMAC(rmac, mac[i], packet)) {
+			sfrmpayload << MAC_DATA2JSONString(rmac, true);
+		}
+	}
+	retval = sfrmpayload.str();
+	if (retval.size() == 0)
+		return -1;
+	return mac.size();
 }

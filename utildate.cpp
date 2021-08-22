@@ -13,7 +13,7 @@
 #define localtime_s(tm, time) memmove(tm, localtime(time), TMSIZE)
 #endif
 
-const static char *dateformat = "%FT%T";
+const static char *dateformat0 = "%FT%T";
 const static char *dateformat1 = "%FT%T%Z";
 const static char *dateformat2 = "%F %T %Z";
 
@@ -46,7 +46,7 @@ time_t parseDate(const char *v)
 	memset(&tmd, 0, sizeof(struct tm));
 
 	time_t r;
-	if ((strptime(v, dateformat, &tmd) == NULL) 
+	if ((strptime(v, dateformat0, &tmd) == NULL) 
 		&& (strptime(v, dateformat1, &tmd) == NULL)
 		&& (strptime(v, dateformat2, &tmd) == NULL)
 		)
@@ -142,7 +142,7 @@ std::string timeval2string(
 {
 	char buf[64];
 	struct tm *tm = localtime(&val.tv_sec);
-	strftime(buf, sizeof(buf), dateformat1, tm);
+	strftime(buf, sizeof(buf), dateformat0, tm);
 	std::stringstream ss;
 	ss << buf << "." << val.tv_usec;
 	return ss.str();

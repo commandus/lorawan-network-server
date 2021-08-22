@@ -247,7 +247,10 @@ void onLog(
 		if (((UDPListener *) listener)->verbosity < level)
 			return;
 	}
-	std::cerr << time2string(time(NULL)) << " " << message << std::endl;
+	// std::cerr << time2string(time(NULL)) << " " << message << std::endl;
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	std::cerr << timeval2string(t) << " " << message << std::endl;
 }
 
 static void run()
@@ -396,6 +399,7 @@ int main(
 	processor = new LoraPacketProcessor();
 	processor->setLogger(onLog);
 	processor->setIdentityService(identityService);
+	processor->setGatewayList(gatewayList);
 	processor->setReceiverQueueService(receiverQueueService);
 
 	// Set pkt2 environment
@@ -408,8 +412,8 @@ int main(
 	processor->setRecieverQueueProcessor(recieverQueueProcessor);
 	
 	// Set up listener
-	listener->setGatewayList(gatewayList);
 	listener->setHandler(processor);
+	listener->setGatewayList(gatewayList);
 	listener->setIdentityService(identityService);
 
 	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
