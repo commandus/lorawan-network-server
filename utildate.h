@@ -9,7 +9,7 @@
  */
 std::string ltimeString(
 	time_t value,
-	int ms,
+	int usec,
 	const std::string &format
 );
 
