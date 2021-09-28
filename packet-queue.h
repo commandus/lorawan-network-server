@@ -95,7 +95,7 @@ class PacketQueue {
 		int ack(
 			int socket,
 			struct sockaddr* gwAddress,
-			const SEMTECH_DATA_PREFIX &dataprefix
+			const SEMTECH_PREFIX_GW &dataprefix
 		);
 		void push(
 			int socket,

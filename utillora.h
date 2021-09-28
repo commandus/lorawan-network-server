@@ -106,6 +106,12 @@ int getMetadataName(
 	const char *name
 );
 
+typedef ALIGN struct {
+	uint8_t version;			// protocol version = 2
+	uint16_t token;				// random token
+	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
+} PACKED SEMTECH_PREFIX;		// 4 bytes
+
 /**
  * Semtech PUSH DATA packet described in section 3.2
  * Semtech PULL DATA packet described in section 5.2
@@ -117,7 +123,9 @@ typedef ALIGN struct {
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
-} PACKED SEMTECH_DATA_PREFIX;	// 12 bytes
+} PACKED SEMTECH_PREFIX_GW;	// 12 bytes
+// After prefix "JSON object", starting with {, ending with }, see section 4
+
 // After prefix "JSON object", starting with {, ending with }, see section 4
 
 /**
@@ -126,7 +134,7 @@ typedef ALIGN struct {
  */
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
-	uint16_t token;				// same random token as SEMTECH_DATA_PREFIX
+	uint16_t token;				// same random token as SEMTECH_PREFIX_GW
 	uint8_t tag;				// PUSH_ACK 1 PULL_ACK 4
 } PACKED SEMTECH_ACK;			// 4 bytes
 
@@ -314,7 +322,7 @@ public:
 	// copy gateway address from value
 	rfmMetaData(const rfmMetaData &value);
 	// copy gateway address from prefix
-	rfmMetaData(const SEMTECH_DATA_PREFIX *aprefix, const rfmMetaData &value);
+	rfmMetaData(const SEMTECH_PREFIX_GW *aprefix, const rfmMetaData &value);
 
 	uint32_t tmms() const;			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
 	std::string modulation() const;
@@ -385,14 +393,14 @@ public:
 	// downlink direction 01, uplink direction 00
 	bool downlink;
 	// prefix contains gateway identifier
-	SEMTECH_DATA_PREFIX prefix;
+	SEMTECH_PREFIX_GW prefix;
 	// authentication keys
 	DeviceId devId;
 
 	// return array of packets from Basic communication protocol packet
 	static int parse(
 		const struct sockaddr *gatewayAddress,
-		SEMTECH_DATA_PREFIX &retprefix,
+		SEMTECH_PREFIX_GW &retprefix,
 		GatewayStat &retgwstat,
 		std::vector<semtechUDPPacket> &retPackets, 
 		const void *packetForwarderPacket, 
@@ -401,7 +409,7 @@ public:
 	);
 	semtechUDPPacket();
 	// Called from parse()
-	semtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_DATA_PREFIX *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
+	semtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_PREFIX_GW *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
 	// TODO I dont remember what is it for
 	semtechUDPPacket(const struct sockaddr *gatewayAddress, const std::string &data, const std::string &devaddr, const std::string &appskey);
 	
@@ -445,7 +453,13 @@ public:
 	 */
 	uint64_t getBestGatewayAddress(float *retvalLsnr = NULL) const;
 	
-	std::string mkResponse(
+	/**
+	 * Make PULL_RESP Semtech UDP protocol packet repsonse
+	 * @param data payload
+	 * @param key key
+	 * @param power transmission power
+	 */ 
+	std::string mkPullResponse(
 		const std::string &payload,
 		const KEY128 &key,
 		const int power = 14
@@ -517,7 +531,7 @@ std::string activation2string(ACTIVATION value);
 ACTIVATION string2activation(const std::string &value);
 
 std::string semtechDataPrefix2JsonString(
-	const SEMTECH_DATA_PREFIX &prefix
+	const SEMTECH_PREFIX_GW &prefix
 );
 
 /**

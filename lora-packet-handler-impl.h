@@ -46,7 +46,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		int ack(
 			int socket,
 			const sockaddr_in* gwAddress,
-			const SEMTECH_DATA_PREFIX &dataprefix
+			const SEMTECH_PREFIX_GW &dataprefix
 		);
 
 		/**

@@ -16,7 +16,7 @@ private:
     std::string toString();
 public:	
 	// prefix contains gateway identifier
-	SEMTECH_DATA_PREFIX prefix;
+	SEMTECH_PREFIX_GW prefix;
 	rfmMetaData metadata;
 	std::string payload;
 	// authentication keys

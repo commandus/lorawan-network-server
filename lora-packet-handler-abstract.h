@@ -13,7 +13,7 @@ class LoraPacketHandler {
 		virtual int ack(
 			int socket,
 			const sockaddr_in* gwAddress,
-			const SEMTECH_DATA_PREFIX &dataprefix
+			const SEMTECH_PREFIX_GW &dataprefix
 		) = 0;
 		// Return 0, retval = EUI and keys
 		virtual int put(
