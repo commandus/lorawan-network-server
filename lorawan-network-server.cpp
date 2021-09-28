@@ -4,6 +4,7 @@
  * MIT license
  */
 #include <iostream>
+#include <iomanip>
 #include <cstring>
 #include <fstream>
 
@@ -74,6 +75,11 @@ static DatabaseByConfig *dbByConfig = NULL;
 
 // pkt2 environment
 static void* pkt2env = NULL;
+#ifndef _MSC_VER
+#undef ENABLE_TERM_COLOR
+#else
+#define ENABLE_TERM_COLOR	1
+#endif
 
 static void done()
 {
@@ -247,10 +253,19 @@ void onLog(
 		if (((UDPListener *) listener)->verbosity < level)
 			return;
 	}
-	// std::cerr << time2string(time(NULL)) << " " << message << std::endl;
 	struct timeval t;
 	gettimeofday(&t, NULL);
-	std::cerr << timeval2string(t) << " " << message << std::endl;
+	// "\033[1;31mbold red text\033[0m\n";
+	std::cerr << timeval2string(t) << " " 
+#ifdef ENABLE_TERM_COLOR
+		<< "\033[" << logLevelColor(level)  << "m"
+#endif		
+		<< std::setw(9) << std::left
+		<< logLevelString(level) 
+#ifdef ENABLE_TERM_COLOR
+		<< "\033[0m"
+#endif		
+		<< message << std::endl;
 }
 
 static void run()

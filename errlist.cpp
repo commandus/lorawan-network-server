@@ -82,12 +82,65 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_NO_MAC
 };
 
-const char *strerror_lorawan_ns(
-	int errcode)
+const char *strerror_lorawan_ns
+(
+	int errcode
+)
 {
 	if ((errcode <= -500) && (errcode >= -500 - ERR_COUNT))
 	{
 		return errlist[-(errcode + 500)];
 	}
 	return strerror(errcode);
+}
+
+
+#define LOG_LEVEL_COUNT	8
+
+static const char *logLevelList[LOG_LEVEL_COUNT] = 
+{
+	"",
+	"fatal",
+	"critical",
+	"error",
+	"warning",
+	"info",
+	"info",
+	"debug"
+};
+
+static const char *logLevelColorList[LOG_LEVEL_COUNT] = 
+{
+	"",
+	"0;31",
+	"0;31",
+	"0;31",
+	"0;35 ",
+	"",
+	"",
+	""
+};
+
+const char *logLevelString
+(
+	int logLevel
+)
+{
+	if (logLevel < 0)
+		logLevel = 0;
+	if (logLevel > LOG_LEVEL_COUNT)
+		logLevel = 0;
+	return logLevelList[logLevel];
+}
+
+const char *logLevelColor
+(
+	int logLevel
+)
+{
+	if (logLevel < 0)
+		logLevel = 0;
+	if (logLevel > LOG_LEVEL_COUNT)
+		logLevel = 0;
+	return logLevelColorList[logLevel];
 }
