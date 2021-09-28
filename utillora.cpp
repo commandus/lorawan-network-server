@@ -815,7 +815,7 @@ void rfmMetaData::toJSON(
 	rapidjson::Document::AllocatorType& allocator,
 	const std::string &data
 ) {
-	int ms;
+	int ms = -1;
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 	rapidjson::Value v1(rapidjson::kStringType);
 	v1.SetString(dt.c_str(), dt.length());
@@ -982,7 +982,7 @@ std::string rfmMetaData::toJsonString(
 ) const
 {
 	std::stringstream ss;
-	int ms;
+	int ms = -1;
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 
 	ss << "{" 

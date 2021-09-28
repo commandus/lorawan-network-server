@@ -17,9 +17,16 @@ const static char *dateformat0 = "%FT%T";
 const static char *dateformat1 = "%FT%T%Z";
 const static char *dateformat2 = "%F %T %Z";
 
+/**
+ * Return formatted time stamp
+ * @param value seconds
+ * @param usec microseconds
+ * @param format format template string
+ * @return time stamp
+ */
 std::string ltimeString(
 	time_t value,
-	int ms,
+	int usec,
 	const std::string &format
 ) {
 	if (!value)
@@ -28,11 +35,11 @@ std::string ltimeString(
 	localtime_s(&tm, &value);
 	char dt[64];
 	strftime(dt, sizeof(dt), format.c_str(), &tm);
-	if (ms == -1)
+	if (usec == -1)
 		return std::string(dt);
 	else {
 		std::stringstream ss;
-		ss << std::string(dt) << "." << std::setw(5) << std::setfill('0') << ms;
+		ss << std::string(dt) << "." << std::setw(6) << std::setfill('0') << usec;
 		return ss.str();
 	}
 }
@@ -144,7 +151,7 @@ std::string timeval2string(
 	struct tm *tm = localtime(&val.tv_sec);
 	strftime(buf, sizeof(buf), dateformat0, tm);
 	std::stringstream ss;
-	ss << buf << "." << val.tv_usec;
+	ss << buf << "." << std::setw(6) << std::setfill('0') << val.tv_usec;
 	return ss.str();
 }
 
