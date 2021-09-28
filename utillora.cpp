@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <cstring>
 
@@ -580,7 +581,7 @@ rfmMetaData::rfmMetaData(
 
 // copy gateway address from prefix
 rfmMetaData::rfmMetaData(
-	const SEMTECH_DATA_PREFIX *aprefix,
+	const SEMTECH_PREFIX_GW *aprefix,
 	const rfmMetaData &value
 )
 	: t(value.t), tmst(value.tmst), chan(value.chan), rfch(value.rfch), freq(value.freq), stat(value.stat), 
@@ -1120,7 +1121,7 @@ char *semtechUDPPacket::getSemtechJSONCharPtr
 
 )
 {
-	return (char *) packet + sizeof(SEMTECH_DATA_PREFIX);
+	return (char *) packet + sizeof(SEMTECH_PREFIX_GW);
 }
 
 /**
@@ -1130,7 +1131,7 @@ char *semtechUDPPacket::getSemtechJSONCharPtr
 int semtechUDPPacket::parse
 (
 	const struct sockaddr *gwAddress,
-	SEMTECH_DATA_PREFIX &retprefix,
+	SEMTECH_PREFIX_GW &retprefix,
 	GatewayStat &retgwstat,
 	std::vector<semtechUDPPacket> &retPackets,
 	const void *packetForwarderPacket,
@@ -1139,10 +1140,10 @@ int semtechUDPPacket::parse
 ) {
 	retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 
-	if (size < sizeof(SEMTECH_DATA_PREFIX)) {
+	if (size < sizeof(SEMTECH_PREFIX_GW)) {
 		return ERR_CODE_PACKET_TOO_SHORT;
 	}
-	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_DATA_PREFIX));
+	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_PREFIX_GW));
 	*(uint64_t *) &(retprefix.mac) = ntoh8(*(uint64_t *) &(retprefix.mac));
 	// check version
 
@@ -1150,7 +1151,7 @@ int semtechUDPPacket::parse
 		return ERR_CODE_INVALID_PROTOCOL_VERSION;
 	}
 	char *json = getSemtechJSONCharPtr(packetForwarderPacket, size);
-	if (size == sizeof(SEMTECH_DATA_PREFIX)) {
+	if (size == sizeof(SEMTECH_PREFIX_GW)) {
 		if (retprefix.tag == 2)
 			return ERR_CODE_PULLOUT;
 		else
@@ -1363,7 +1364,7 @@ void semtechUDPPacket::clearPrefix()
 
 semtechUDPPacket::semtechUDPPacket(
 	const struct sockaddr *gwAddress,
-	const SEMTECH_DATA_PREFIX *aprefix,
+	const SEMTECH_PREFIX_GW *aprefix,
 	const rfmMetaData *ametadata,
 	const std::string &data,
 	IdentityService *identityService
@@ -1371,7 +1372,7 @@ semtechUDPPacket::semtechUDPPacket(
 	: errcode(0), downlink(false)
 {
 	if (aprefix)
-		memmove(&prefix, aprefix, sizeof(SEMTECH_DATA_PREFIX));
+		memmove(&prefix, aprefix, sizeof(SEMTECH_PREFIX_GW));
 	else {
 		clearPrefix();
 	}
@@ -1462,7 +1463,7 @@ std::string semtechUDPPacket::toString() const
 {
 	std::stringstream ss;
 	// prefix 12 bytes, metadata + payload
-	ss << std::string((const char *) &prefix, sizeof(SEMTECH_DATA_PREFIX))
+	ss << std::string((const char *) &prefix, sizeof(SEMTECH_PREFIX_GW))
 		<< metadataToJsonString();
 	return ss.str();
 }
@@ -1694,7 +1695,8 @@ uint64_t semtechUDPPacket::getBestGatewayAddress(
 	return r;
 }
 
-std::string semtechUDPPacket::toTxImmediatelyJsonString(
+std::string semtechUDPPacket::toTxImmediatelyJsonString
+(
 	const std::string &payload,
 	const int power
 ) const
@@ -1703,12 +1705,12 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString(
 		return "";
 	int rfch = 0;
 	int metadataIdx = 0;
-	SEMTECH_DATA_PREFIX pullPrefix;
-	memmove(&pullPrefix, &prefix, sizeof(SEMTECH_DATA_PREFIX));
+	SEMTECH_PREFIX pullPrefix;
+	memmove(&pullPrefix, &prefix, sizeof(SEMTECH_PREFIX));
 	pullPrefix.tag = 3; // PULL_RESP, after receiving PULL_DATA
 	
 	std::stringstream ss;
-	ss << std::string((const char *) &pullPrefix, sizeof(SEMTECH_DATA_PREFIX))
+	ss << std::string((const char *) &pullPrefix, sizeof(SEMTECH_PREFIX))
 		<< "{\"txpk\":{" 
 		<< "\"" << METADATA_TX_NAMES[1] << "\":true"
 		<< ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
@@ -1720,10 +1722,29 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString(
 		<< "\",\"" << METADATA_TX_NAMES[11] << "\":false" 									// Lora modulation polarization inversion
 		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payload.size()
 		<< ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payload) << "\"}}";
+	
+	std::cerr << "semtechUDPPacket::toTxImmediatelyJsonString {\"txpk\":{" 
+		<< "\"" << METADATA_TX_NAMES[1] << "\":true"
+		<< ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
+		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
+		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
+		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
+		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
+		<< "\",\"" << METADATA_TX_NAMES[9] << "\":\"" << metadata[metadataIdx].codr()
+		<< "\",\"" << METADATA_TX_NAMES[11] << "\":false" 									// Lora modulation polarization inversion
+		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payload.size()
+		<< ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payload) << "\"}}" << std::endl;
+
 	return ss.str();
 }
 
-std::string semtechUDPPacket::mkResponse(
+/**
+ * Make PULL_RESP Semtech UDP protocol packet repsonse
+ * @param data payload
+ * @param key key
+ * @param power transmission power
+ */ 
+std::string semtechUDPPacket::mkPullResponse(
 	const std::string &data,
 	const KEY128 &key,
 	const int power
@@ -1878,7 +1899,7 @@ void string2JOINNONCE(
 
 
 std::string semtechDataPrefix2JsonString(
-	const SEMTECH_DATA_PREFIX &prefix
+	const SEMTECH_PREFIX_GW &prefix
 )
 {
 	std::stringstream ss;

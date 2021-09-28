@@ -165,7 +165,7 @@ int UDPListener::listen() {
 						onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 
 						// get packets
-						SEMTECH_DATA_PREFIX dataprefix;
+						SEMTECH_PREFIX_GW dataprefix;
 						// rapidjson operates with \0 terminated string, just in case add terminator. Extra space is reserved
 						buffer[bytesReceived] = '\0';
 						int pr = semtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);

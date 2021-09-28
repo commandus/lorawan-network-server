@@ -316,7 +316,7 @@ int PacketQueue::ack
 (
 	int socket,
 	struct sockaddr* gwAddress,
-	const SEMTECH_DATA_PREFIX &dataprefix
+	const SEMTECH_PREFIX_GW &dataprefix
 )
 {
 	SEMTECH_ACK response;
@@ -358,13 +358,13 @@ int PacketQueue::ack
 }
 
 /**
- * Send MAC command response
+ * Send MAC command response, to the best gateway over UDP socket
  * @param item packet
  * @param t current time
  */
 int PacketQueue::replyMAC(
 	SemtechUDPPacketItem &item,
-		struct timeval &t
+	struct timeval &t
 ) {
 	// to reply via closest gateway, find out gatewsy with best SNR
 	float snr;
@@ -425,9 +425,10 @@ int PacketQueue::replyMAC(
 	DeviceId id;
 	if (identityService)
 		identityService->get(item.packet.header.header.devaddr, id);
+	// Produce MAC command response in the item.packet
 	while (int lastMACIndex = macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey, offset) != -1) {
 		offset = lastMACIndex;
-		std::string response = item.packet.mkResponse(macResponse, id.nwkSKey, power);
+		std::string response = item.packet.mkPullResponse(macResponse, id.nwkSKey, power);
 
 		size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
 			(const struct sockaddr*) &gwit->second.sockaddr,

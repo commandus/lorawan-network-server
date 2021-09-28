@@ -29,6 +29,11 @@ int LoraPacketProcessor::enqueuePayload(
 	return 0;
 }
 
+/**
+ * @param time receive time
+ * @param value Semtech packet
+ * @return 0- success
+ */ 
 int LoraPacketProcessor::enqueueMAC(
 	struct timeval &time,
 	semtechUDPPacket &value
@@ -46,12 +51,11 @@ int LoraPacketProcessor::enqueueMAC(
 	addTimeWindow1(time);
 	packetQueue.push(0, MODE_REPLY_MAC, time, value);
 	packetQueue.wakeUp();
-	return 0;
+	return LORA_OK;
 }
 
-
 LoraPacketProcessor::LoraPacketProcessor()
-	: identityService(NULL), gatewayList(NULL),  onLog(NULL), receiverQueueService(NULL),
+	: identityService(NULL), gatewayList(NULL), onLog(NULL), receiverQueueService(NULL),
 	recieverQueueProcessor(NULL)
 {
 	packetQueue.start(*this);
@@ -69,7 +73,7 @@ int LoraPacketProcessor::ack
 (
 	int socket,
 	const sockaddr_in* gwAddress,
-	const SEMTECH_DATA_PREFIX &dataprefix
+	const SEMTECH_PREFIX_GW &dataprefix
 )
 {
 	packetQueue.ack(socket, (struct sockaddr *) gwAddress, dataprefix);
@@ -82,6 +86,11 @@ int LoraPacketProcessor::ack
 	return LORA_OK;
 }
 
+/**
+ * Identify device, if device identified sucessfully, enqueue packet or MAC 
+ * @param time recived time
+ * @param packet Semtech gateway packet
+ */ 
 int LoraPacketProcessor::put
 (
 	struct timeval &time,

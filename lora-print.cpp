@@ -281,7 +281,7 @@ int main(
 	}
 	identityService->init(config.identityStorageName, NULL);
 
-	SEMTECH_DATA_PREFIX dataprefix;
+	SEMTECH_PREFIX_GW dataprefix;
 	GatewayStat gatewayStat;
 	std::vector<semtechUDPPacket> packets;
 

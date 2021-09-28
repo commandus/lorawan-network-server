@@ -67,15 +67,21 @@ const std::string progname = "lorawan-network-server";
 static Configuration *config = NULL;
 static GatewayList *gatewayList = NULL;
 
+// Listen UDP port(s) for packets sent by Semtech's gateway
 static UDPListener *listener = NULL;
+// Device identity service
 static IdentityService *identityService = NULL;
+// RecieverQueueProcessor get payload from the queue, parse and put parsed data 
 static RecieverQueueProcessor *recieverQueueProcessor = NULL;
+// LoraPacketProcessor handles uplink messages
 static LoraPacketProcessor *processor = NULL;
+// Database list
 static DatabaseByConfig *dbByConfig = NULL;
 
 // pkt2 environment
 static void* pkt2env = NULL;
-#ifndef _MSC_VER
+
+#ifdef _MSC_VER
 #undef ENABLE_TERM_COLOR
 #else
 #define ENABLE_TERM_COLOR	1

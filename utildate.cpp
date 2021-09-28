@@ -167,8 +167,23 @@ std::string time2string(
 
 void incTimeval(
 	struct timeval &val,
-	int seconds
+	int seconds,
+	int usec
 )
 {
 	val.tv_sec += seconds;
+	if (usec > 0) {
+		val.tv_usec += usec;
+		if (val.tv_usec >= 1000000) {
+			val.tv_sec++;
+			val.tv_usec -= 1000000;
+		}
+	} else {
+		if (usec < 0) {
+			if (val.tv_usec < 0) {
+				val.tv_sec--;
+				val.tv_usec = 1000000 + val.tv_usec;
+			}
+		}
+	}
 }
