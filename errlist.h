@@ -207,4 +207,8 @@
 
 #define ERROR							"Error "
 
+
+const char *logLevelString(int logLevel);
+const char *logLevelColor(int logLevel);
+
 const char *strerror_lorawan_ns(int errcode);
