@@ -30,6 +30,16 @@ std::string hex2string(const std::string &hex);
 
 std::string file2string(const char *filename);
 
+/**
+ * Append string to file
+ * @param filename file name
+ * @param value string
+ */
+bool append2file(
+	const std::string &filename,
+	const std::string &value
+);
+
 // write file
 bool string2file(const std::string &filename, const std::string &value);
 

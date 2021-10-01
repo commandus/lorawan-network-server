@@ -40,6 +40,18 @@ public:
 		const std::string &message
 	)> onLog;
 
+	std::function<void(
+		void *env,
+		GatewayStat *value
+	)> onGatewayStatDump;
+	void *gwStatEnv;
+
+	std::function<void(
+			void *env,
+			const semtechUDPPacket &value
+	)> onDeviceStatDump;
+	void *deviceStatEnv;
+
 	LoraPacketHandler *handler;
 
 	UDPListener();
@@ -63,8 +75,6 @@ public:
 	void setLastRemoteAddress(
 		struct sockaddr *value);
 
-	void clearLogger();
-
 	void setLogger(
 		int verbosity,
 		std::function<void(
@@ -77,6 +87,21 @@ public:
 	void setHandler(LoraPacketHandler *value);
 	void setIdentityService(IdentityService* value);
 	void setGatewayList(GatewayList *value);
+
+	void setGatewayStatDumper(
+		void *gwStatEnv,
+		std::function<void(
+			void *env,
+			GatewayStat *value
+	)> onGatewayStatDump);
+
+	
+	void setDeviceStatDumper(
+		void *deviceStatEnv,
+		std::function<void(
+			void *env,
+			const semtechUDPPacket &value
+	)> onDeviceStatDump);
 };
 
 #endif

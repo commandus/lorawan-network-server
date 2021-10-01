@@ -29,6 +29,9 @@ class ServerConfig {
 		IDENTITY_STORAGE storageType;
 		MESSAGE_QUEUE_STORAGE messageQueueType;
 		int messageQueueDirFormat;					// 0- bin, 1- hex, 2- base64
+		std::string logGWStatisticsFileName;
+		std::string logDeviceStatisticsFileName;
+
 		void clear();
 		ServerConfig();
 		int parse(
