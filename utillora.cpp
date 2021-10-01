@@ -1121,6 +1121,8 @@ char *semtechUDPPacket::getSemtechJSONCharPtr
 
 )
 {
+	if (size <= sizeof(SEMTECH_PREFIX_GW))
+		return NULL;
 	return (char *) packet + sizeof(SEMTECH_PREFIX_GW);
 }
 
@@ -1695,9 +1697,16 @@ uint64_t semtechUDPPacket::getBestGatewayAddress(
 	return r;
 }
 
+/**
+ * @param payload RFM header and encrypted data
+ * @param receivedTime time when gateway recived, microseconds, internal counter
+ * @param power transmission power
+ * @return JSON serialized metadata and payload
+ */
 std::string semtechUDPPacket::toTxImmediatelyJsonString
 (
 	const std::string &payload,
+	uint32_t recievedTime,
 	const int power
 ) const
 {
@@ -1711,10 +1720,15 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString
 	
 	std::stringstream ss;
 	ss << std::string((const char *) &pullPrefix, sizeof(SEMTECH_PREFIX))
-		<< "{\"txpk\":{" 
-		<< "\"" << METADATA_TX_NAMES[1] << "\":true"
-		<< ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
-		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
+		<< "{\"txpk\":{";
+	if (recievedTime == 0)	
+		ss << "\"" << METADATA_TX_NAMES[1] << "\":true";
+	else {
+		uint32_t sendTime = recievedTime + 1000000;
+		ss << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
+	}
+	ss << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
+		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
 		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
 		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
 		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
@@ -1723,10 +1737,16 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString
 		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payload.size()
 		<< ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payload) << "\"}}";
 	
-	std::cerr << "semtechUDPPacket::toTxImmediatelyJsonString {\"txpk\":{" 
-		<< "\"" << METADATA_TX_NAMES[1] << "\":true"
-		<< ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
-		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
+	std::cerr << "semtechUDPPacket::toTxImmediatelyJsonString {\"txpk\":{" ;
+	if (recievedTime == 0)	
+		std::cerr << "\"" << METADATA_TX_NAMES[1] << "\":true";
+	else {
+		uint32_t sendTime = recievedTime + 1000000;
+		std::cerr << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
+	}
+
+	std::cerr << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
+		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
 		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
 		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
 		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
@@ -1747,6 +1767,7 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString
 std::string semtechUDPPacket::mkPullResponse(
 	const std::string &data,
 	const KEY128 &key,
+	uint32_t recievedTime,
 	const int power
 ) const
 {
@@ -1758,6 +1779,8 @@ std::string semtechUDPPacket::mkPullResponse(
 	smsg << header.toString();
 	smsg << (uint8_t) 0;	// fport 0- MAC payload
 
+	// std::cerr << "Header: " << header.toJson() << std::endl;
+
 	// encrypt frame payload
 	int direction = 1;	// downlink
 	std::string frmpayload(data);
@@ -1767,7 +1790,29 @@ std::string semtechUDPPacket::mkPullResponse(
 	// calc mic
 	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), header.header.fcnt, direction, header.header.devaddr, key);
 	smsg << std::string((char *) &mic, 4);
-	return toTxImmediatelyJsonString(smsg.str(), power);
+	return toTxImmediatelyJsonString(smsg.str(), recievedTime, power);
+}
+
+/**
+ * @return received time from interal counter, microsends
+ */
+uint32_t semtechUDPPacket::tmst()
+{
+	std::vector<rfmMetaData>::const_iterator it(metadata.begin());
+	if (it == metadata.end())
+		return 0;
+	return it->tmst;
+}
+
+/**
+ * @return received GPS time, can be 0
+ */
+uint32_t semtechUDPPacket::tmms()
+{
+	std::vector<rfmMetaData>::const_iterator it(metadata.begin());
+	if (it == metadata.end())
+		return 0;
+	return it->tmms();
 }
 
 uint64_t deveui2int(
@@ -1957,4 +2002,50 @@ uint8_t loraMargin(
 		r = 254;
 	return r;
 
+}
+
+#define TXACKCODESSIZE	12
+static const char* TxAckCodes [TXACKCODESSIZE] {
+	"",
+	"TOO_LATE",
+	"TOO_EARLY",
+	"FULL",		// n/a	Downlink queue is full
+	"EMPTY",	// n/a
+	"COLLISION_PACKET",
+	"COLLISION_BEACON",
+	"TX_FREQ",
+	"TX_POWER",
+	"GPS_UNLOCKED",
+	"GPS_UNLOCKED",
+	"UNKNOWN"	// packet is invalid
+};
+
+ERR_CODE_TX extractTXAckCode(
+	const void *buffer,
+	size_t sz
+)
+{
+	if ((sz < sizeof(SEMTECH_PREFIX_GW)) || ((const char *) buffer)[3] != 5) /// 5- PKT_TX_ACK
+		return JIT_ERROR_OK;	// it is not tramsmission ACK packet
+	std::string s(((const char *) buffer ) + sizeof(SEMTECH_PREFIX_GW), sz);
+	std::size_t p = s.find("txpk_ack");
+	if (p == std::string::npos)
+		return JIT_ERROR_OK;
+	p = s.find("error", p);
+	if (p == std::string::npos)
+		return JIT_ERROR_OK;
+	for (int i = 1; i < TXACKCODESSIZE; i++) {
+		std::size_t f = s.find(TxAckCodes[i], p);
+		if (p != std::string::npos)
+			return (ERR_CODE_TX) i;
+	}
+	return JIT_ERROR_OK;
+}
+
+const char *getTXAckCodeName
+(
+	ERR_CODE_TX code
+)
+{
+	return TxAckCodes[(int) code];
 }

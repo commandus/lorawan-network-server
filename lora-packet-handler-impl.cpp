@@ -9,6 +9,8 @@
 // tme window delay, s
 #define DEF_TIME_WINDOW_1	1
 #define DEF_TIME_WINDOW_2	2
+// default queue timeout in microseconds
+#define DEF_TIMEOUT_US	1000
 
 int LoraPacketProcessor::enqueuePayload(
 	struct timeval &time,
@@ -48,7 +50,7 @@ int LoraPacketProcessor::enqueueMAC(
 		<< "payload: " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-	addTimeWindow1(time);
+	incTimeval(time, 0, DEF_TIMEOUT_US);
 	packetQueue.push(0, MODE_REPLY_MAC, time, value);
 	packetQueue.wakeUp();
 	return LORA_OK;
@@ -181,7 +183,6 @@ void LoraPacketProcessor::setRecieverQueueProcessor
 			recieverQueueProcessor->stop();
 	}
 }
-
 
 void LoraPacketProcessor::addTimeWindow1
 (

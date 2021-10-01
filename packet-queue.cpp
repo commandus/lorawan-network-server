@@ -405,7 +405,10 @@ int PacketQueue::replyMAC(
 	MacPtr macPtr(item.packet.payload);
 	// print out
 	std::stringstream ss;
-	ss << MSG_SEND_MAC_REPLY << ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId) 
+	uint32_t internalTime = item.packet.tmst();
+	ss << MSG_SEND_MAC_REPLY
+		<< " tmst: " << internalTime
+		<< ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId) 
 		<< " (" << gwit->second.name << ")"
 		<< MSG_GATEWAY_SNR  << snr << ", address: "
 		<< UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
@@ -428,7 +431,7 @@ int PacketQueue::replyMAC(
 	// Produce MAC command response in the item.packet
 	while (int lastMACIndex = macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey, offset) != -1) {
 		offset = lastMACIndex;
-		std::string response = item.packet.mkPullResponse(macResponse, id.nwkSKey, power);
+		std::string response = item.packet.mkPullResponse(macResponse, id.nwkSKey, internalTime, power);
 
 		size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
 			(const struct sockaddr*) &gwit->second.sockaddr,
@@ -438,15 +441,17 @@ int PacketQueue::replyMAC(
 			if (r != response.size()) {
 				std::stringstream ss;
 				ss << ERR_CODE_REPLY_MAC
-					<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-					<< ", errno: " << errno << ": " << strerror(errno);
+					<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
+				if (r == -1)
+					ss << ", sent " << r << " of " << response.size();
+				ss << ", errno: " << errno << ": " << strerror(errno);
 				if (onLog)
 					onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
 			} else {
 				std::stringstream ss;
 				ss << MSG_SENT_REPLY_TO
 					<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-					<< " payload: " << hexString(response);
+					<< " payload: " << hexString(response) << ", size: " << response.size();
 				if (onLog)
 					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 			}

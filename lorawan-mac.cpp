@@ -1904,7 +1904,7 @@ bool MacPtr::mkResponseMAC(
  * Produce MAC command response, return MAC response payload in the retval parameter 
  * @param retval JSON txpk string to be sent over Semtech gateway
  * @param packet Received Semtech packet to answer
- * @param key NwkSKey not AppSKey\
+ * @param key NwkSKey not AppSKey
  * @param offset default 0
  * @return -1 no more, otherwise count of MAC answered (response can be too long)
  */
