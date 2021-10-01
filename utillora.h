@@ -34,6 +34,20 @@ class IdentityService;
 
 typedef char DEVICENAME[8];
 
+enum ERR_CODE_TX {
+	JIT_ERROR_OK,           	// Packet ok to be sent
+	JIT_ERROR_TOO_LATE,     	// Too late to send this packet
+	JIT_ERROR_TOO_EARLY,    	// Too early to queue this packet
+	JIT_ERROR_FULL,         	// Downlink queue is full
+	JIT_ERROR_EMPTY,        	// Downlink queue is empty
+	JIT_ERROR_COLLISION_PACKET, // A packet is already enqueued for this timeframe
+	JIT_ERROR_COLLISION_BEACON, // A beacon is planned for this timeframe
+	JIT_ERROR_TX_FREQ,      	// The required frequency for downlink is not supported
+	JIT_ERROR_TX_POWER,     	// The required power for downlink is not supported
+	JIT_ERROR_GPS_UNLOCKED, 	// GPS timestamp could not be used as GPS is unlocked
+	JIT_ERROR_INVALID       	// Packet is invalid
+};
+
 void string2DEVADDR(DEVADDR &retval, const std::string &str);
 void string2DEVEUI(DEVEUI &retval, const std::string &str);
 void string2KEY(KEY128 &retval, const std::string &str);
@@ -105,6 +119,20 @@ struct DEVEUICompare
 int getMetadataName(
 	const char *name
 );
+
+// network server receives SEMTECH_GW_PUSH_DATA, SEMTECH_GW_PULL_DATA, SEMTECH_GW_TX_ACK
+// gateway forward the RF packets received, and associated metadata, to the network server
+#define SEMTECH_GW_PUSH_DATA	0
+// network server responds on PUSH_DATA to acknowledge immediately all the PUSH_DATA packets received
+#define SEMTECH_GW_PUSH_ACK		1
+// gateway initiate receiving packates from the metwork server (because of NAT)
+#define SEMTECH_GW_PULL_DATA	2
+// network server responds on PULL_DATA
+#define SEMTECH_GW_PULL_ACK		3
+// network server send packet to the gateway afrer PULL_DATA - PULL_ACK sequence
+#define SEMTECH_GW_PULL_RESP	4
+// gateway inform network server about does PULL_RESP data transmission was successful or not
+#define SEMTECH_GW_TX_ACK		5
 
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
@@ -380,6 +408,7 @@ private:
 	int parseData(const std::string &data, IdentityService *identityService);
 	std::string toTxImmediatelyJsonString(
 		const std::string &payload,
+		uint32_t recievedTime,
 		const int power = 14
 	) const;
 protected:
@@ -462,8 +491,12 @@ public:
 	std::string mkPullResponse(
 		const std::string &payload,
 		const KEY128 &key,
+		uint32_t recievedTime,
 		const int power = 14
 	) const;
+
+	uint32_t tmst();	// return received time in microsends
+	uint32_t tmms();	// return received GPS time, can be 0
 
 };
 
@@ -545,6 +578,22 @@ std::string semtechDataPrefix2JsonString(
 uint8_t loraMargin(
 	uint8_t spreadingFactor,
 	float loraSNR
+);
+
+/**
+ * Check is packet is transmission ACK packet, if it does, look for error code and return it if it found. If it is not, 
+ * ACK indicates that tramsmission was successful.
+ * @param buffer Semtech's gateway TX ACK packet buffer
+ * @param size recieved bytes (packet size)
+ */
+ERR_CODE_TX extractTXAckCode(
+	const void *buffer,
+	size_t sz
+);
+
+const char *getTXAckCodeName
+(
+	ERR_CODE_TX code
 );
 
 #endif
