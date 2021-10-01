@@ -52,12 +52,15 @@ void ServerConfig::clear()
 	readBufferSize = DEF_BUFFER_SIZE;
 	verbosity = 0;
 	daemonize = false;
+	logGWStatisticsFileName = "";
+	logDeviceStatisticsFileName = "";
 }
 
 ServerConfig::ServerConfig() 
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false),
 	identityStorageName(""), queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
-	messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0)
+	messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0), 
+	logGWStatisticsFileName(""), logDeviceStatisticsFileName("")
 {
 
 }
@@ -136,6 +139,20 @@ int ServerConfig::parse(
 			messageQueueDirFormat = vmessageQueueDirFormat.GetInt() & 3;
 	}
 
+	if (value.HasMember("logGWStatisticsFileName")) {
+		rapidjson::Value &jn = value["logGWStatisticsFileName"];
+		if (jn.IsString()) {
+			logGWStatisticsFileName = jn.GetString();
+		}
+	}
+
+	if (value.HasMember("logDeviceStatisticsFileName")) {
+		rapidjson::Value &jn = value["logDeviceStatisticsFileName"];
+		if (jn.IsString()) {
+			logDeviceStatisticsFileName = jn.GetString();
+		}
+	}
+
 	return 0;
 }
 
@@ -193,6 +210,14 @@ void ServerConfig::toJson(
 	std::string s2(messageQueueStorageType2String(messageQueueType));
 	vMessageQueuestorageType.SetString(s2.c_str(), s2.size(), allocator);
 	value.AddMember("messageQueueStorageType", vMessageQueuestorageType, allocator);
+
+	rapidjson::Value lgwsfn;
+	lgwsfn.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size(), allocator);
+	value.AddMember("logGWStatisticsFileName", lgwsfn, allocator);
+
+	rapidjson::Value ldsfn;
+	ldsfn.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size(), allocator);
+	value.AddMember("logDeviceStatisticsFileName", ldsfn, allocator);
 }
 
 int Configuration::parse(

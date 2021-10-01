@@ -426,6 +426,17 @@ public:
 	// authentication keys
 	DeviceId devId;
 
+	/**
+	 * Parse Semtech UDP packet gateway prefix
+	 * @return 0, ERR_CODE_PACKET_TOO_SHORT, ERR_CODE_INVALID_PROTOCOL_VERSION
+	 */ 
+	static int parsePrefixGw
+	(
+		SEMTECH_PREFIX_GW &retprefix,
+		const void *packetForwarderPacket,
+		int size
+	);
+
 	// return array of packets from Basic communication protocol packet
 	static int parse(
 		const struct sockaddr *gatewayAddress,

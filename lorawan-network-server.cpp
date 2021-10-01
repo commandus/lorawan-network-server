@@ -274,6 +274,34 @@ void onLog(
 		<< message << std::endl;
 }
 
+void onGatewayStatDump(
+	void *env,
+	GatewayStat *stat
+) {
+
+	Configuration *c = (Configuration *) env;
+	if (!env || !stat)
+		return;
+	if (c->serverConfig.logGWStatisticsFileName.empty())
+		return;
+	std::string s(stat->toJsonString() + "\n");
+	append2file(c->serverConfig.logGWStatisticsFileName, s);
+}
+
+void onDeviceStatDump(
+	void *env,
+	const semtechUDPPacket &value
+) {
+
+	Configuration *c = (Configuration *) env;
+	if (!env)
+		return;
+	if (c->serverConfig.logDeviceStatisticsFileName.empty())
+		return;
+	std::string s(value.toJsonString() + "\n");
+	append2file(c->serverConfig.logDeviceStatisticsFileName, s);
+}
+
 static void run()
 {
 	listener->listen();
@@ -305,6 +333,8 @@ int main(
 	listener = new UDPListener();
 
 	listener->setLogger(config->serverConfig.verbosity, onLog);
+	listener->setGatewayStatDumper(config, onGatewayStatDump);
+	listener->setDeviceStatDumper(config, onDeviceStatDump);
 
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);

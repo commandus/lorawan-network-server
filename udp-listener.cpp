@@ -13,7 +13,9 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	verbosity(0), stopped(false), onLog(NULL), handler(NULL), identityService(NULL), gatewayList(NULL)
+	verbosity(0), stopped(false), onLog(NULL), onGatewayStatDump(NULL), gwStatEnv(NULL),
+	onDeviceStatDump(NULL), deviceStatEnv(NULL),
+	handler(NULL), identityService(NULL), gatewayList(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -25,10 +27,6 @@ UDPListener::~UDPListener() {
 
 void UDPListener::setBufferSize(size_t value) {
 	buffer.resize(value);
-}
-
-void UDPListener::clearLogger() {
-	onLog = NULL;
 }
 
 void UDPListener::setLogger(
@@ -43,6 +41,28 @@ void UDPListener::setLogger(
 {
 	verbosity = averbosity;
 	onLog = value;
+}
+
+void UDPListener::setGatewayStatDumper(
+	void *gwStatEnvVal,
+	std::function<void(
+		void *env,
+		GatewayStat *gwStat
+)> value)
+{
+	gwStatEnv = gwStatEnvVal;
+	onGatewayStatDump = value;
+}
+
+void UDPListener::setDeviceStatDumper(
+	void *deviceStatEnvVal,
+	std::function<void(
+		void *env,
+		const semtechUDPPacket &packet
+)> value)
+{
+	deviceStatEnv = deviceStatEnvVal;
+	onDeviceStatDump = value;
 }
 
 void UDPListener::setHandler(
@@ -190,15 +210,15 @@ int UDPListener::listen() {
 					case SEMTECH_GW_PUSH_DATA:
 						pr = semtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
 						// send ACK immediately
-						if (pr == LORA_OK && handler) {
+						if (pr == LORA_OK && handler)
 							handler->ack(it->sock, (const sockaddr_in *) &gwAddress, dataprefix);
-						}
 						break;
 					case SEMTECH_GW_PULL_DATA:	// PULL_DATA
+						pr = semtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
+						if (pr != LORA_OK)
+							break;
 						// check is gateway in service
-						if (bytesReceived < sizeof(SEMTECH_PREFIX_GW))
-							pr = ERR_CODE_PACKET_TOO_SHORT;
-						else {
+						{
 							std::stringstream sse;
 							sse << strerror_lorawan_ns(pr)
 								<< " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress) 
@@ -224,17 +244,15 @@ int UDPListener::listen() {
 						break;
 					case SEMTECH_GW_TX_ACK:	// TX_ACK
 						//
-						if (bytesReceived < sizeof(SEMTECH_PREFIX_GW))
-							pr = ERR_CODE_PACKET_TOO_SHORT;
-						else {
-							SEMTECH_PREFIX_GW *prefixGw = (SEMTECH_PREFIX_GW *) buffer.c_str();
-
+						{
+							pr = semtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
+							if (pr != LORA_OK)
+								break;
 							ERR_CODE_TX r = extractTXAckCode(buffer.c_str(), bytesReceived);
 							std::stringstream ss;
-							ss << "TX ACK: " << getTXAckCodeName(r)
+							ss << "TX ACK " << getTXAckCodeName(r)
 								<< " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-								<< " gateway: " << DEVEUI2string(prefixGw->mac);
-								;
+								<< " gateway: " << DEVEUI2string(dataprefix.mac);
 							onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 							pr = LORA_OK;
 						}
@@ -299,6 +317,8 @@ int UDPListener::listen() {
 							}
 
 						}
+						if (onDeviceStatDump)
+							onDeviceStatDump(deviceStatEnv, *itp);
 					}
 					// reflect stat
 					if (gatewayStat.errcode == 0) {
@@ -308,6 +328,8 @@ int UDPListener::listen() {
 						ss << MSG_GATEWAY_STAT
 							<< gatewayStat.toString();
 						onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+						if (onGatewayStatDump)
+							onGatewayStatDump(gwStatEnv, &gatewayStat);
 					}
 					break;
 			}

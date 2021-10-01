@@ -40,6 +40,19 @@ bool string2file(
 	return true;
 }
 
+bool append2file(
+	const std::string &filename,
+	const std::string &value
+)
+{
+	FILE* f = fopen(filename.c_str(), "a");
+	if (!f)
+		return false;
+	fwrite(value.c_str(), value.size(), 1, f);
+	fclose(f);
+	return true;
+}
+
 // http://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
 struct HexCharStruct
 {

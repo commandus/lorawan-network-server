@@ -1127,6 +1127,27 @@ char *semtechUDPPacket::getSemtechJSONCharPtr
 }
 
 /**
+ * Parse Semtech UDP packet gateway prefix
+ * @return 0, ERR_CODE_PACKET_TOO_SHORT, ERR_CODE_INVALID_PROTOCOL_VERSION
+ */ 
+int semtechUDPPacket::parsePrefixGw
+(
+	SEMTECH_PREFIX_GW &retprefix,
+	const void *packetForwarderPacket,
+	int size
+)
+{
+	if (size < sizeof(SEMTECH_PREFIX_GW))
+		return ERR_CODE_PACKET_TOO_SHORT;
+	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_PREFIX_GW));
+	*(uint64_t *) &(retprefix.mac) = ntoh8(*(uint64_t *) &(retprefix.mac));
+	// check version
+	if (retprefix.version != 2)
+		return ERR_CODE_INVALID_PROTOCOL_VERSION;
+	return LORA_OK;
+}
+
+/**
  * Parse Semtech UDP packet
  * @return 0, ERR_CODE_PACKET_TOO_SHORT, ERR_CODE_INVALID_PROTOCOL_VERSION, ERR_CODE_NO_GATEWAY_STAT, ERR_CODE_INVALID_PACKET or ERR_CODE_INVALID_JSON
  */ 
@@ -1142,16 +1163,10 @@ int semtechUDPPacket::parse
 ) {
 	retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 
-	if (size < sizeof(SEMTECH_PREFIX_GW)) {
-		return ERR_CODE_PACKET_TOO_SHORT;
-	}
-	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_PREFIX_GW));
-	*(uint64_t *) &(retprefix.mac) = ntoh8(*(uint64_t *) &(retprefix.mac));
-	// check version
+	int r = parsePrefixGw(retprefix, packetForwarderPacket, size);
+	if (r)
+		return r;
 
-	if (retprefix.version != 2) {
-		return ERR_CODE_INVALID_PROTOCOL_VERSION;
-	}
 	char *json = getSemtechJSONCharPtr(packetForwarderPacket, size);
 	if (size == sizeof(SEMTECH_PREFIX_GW)) {
 		if (retprefix.tag == 2)
@@ -1185,8 +1200,6 @@ int semtechUDPPacket::parse
 	rapidjson::Value &rxpk = doc[METADATA_RX_NAMES[0]];
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
-
-	int r = LORA_OK;
 
 	for (int i = 0; i < rxpk.Size(); i++) {
 		rapidjson::Value &jm = rxpk[i];
