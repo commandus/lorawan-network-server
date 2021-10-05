@@ -360,7 +360,7 @@ int PacketQueue::ack
 /**
  * Send MAC command response, to the best gateway over UDP socket
  * @param item packet
- * @param t current time
+ * @param t current time, not used
  */
 int PacketQueue::replyMAC(
 	SemtechUDPPacketItem &item,
@@ -391,7 +391,7 @@ int PacketQueue::replyMAC(
 		return ERR_CODE_NO_MAC;
 	}
 	
-	// find out gateway statistics
+	// find out gateway statistics, required for last gateway port number to send reply
 	std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
 	if (gwit == gatewayList->gateways.end()) {
 		std::stringstream ss;
@@ -421,7 +421,6 @@ int PacketQueue::replyMAC(
 	if (onLog)
 		onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 	// make response
-	std::string macResponse;
 	int offset = 0;
 
 	// get identity for NwkS
@@ -429,10 +428,12 @@ int PacketQueue::replyMAC(
 	if (identityService)
 		identityService->get(item.packet.header.header.devaddr, id);
 	// Produce MAC command response in the item.packet
+	std::string macResponse;
 	while (int lastMACIndex = macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey, offset) != -1) {
 		offset = lastMACIndex;
 		std::string response = item.packet.mkPullResponse(macResponse, id.nwkSKey, internalTime, power);
-
+std::cerr << "==MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
+std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 		size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
 			(const struct sockaddr*) &gwit->second.sockaddr,
 			((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));

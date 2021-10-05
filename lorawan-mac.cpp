@@ -1919,11 +1919,67 @@ int MacPtr::mkResponseMAC(
 	for (int i = offset; i < mac.size(); i++) {
 		MAC_COMMAND rmac;
 		if (mkResponseMAC(rmac, mac[i], packet)) {
-			sfrmpayload << MAC_DATA2JSONString(rmac, true);
+			sfrmpayload << MAC_COMMAND2binary(rmac);
 		}
 	}
 	retval = sfrmpayload.str();
+std::cerr << "MacPtr::mkResponseMAC: " << hexString(retval) << std::endl;
 	if (retval.size() == 0)
 		return -1;
 	return mac.size();
+}
+
+std::string MAC_COMMAND2binary(
+	MAC_COMMAND &c
+)
+{
+	switch (c.command) {
+		case Reset:	// req
+			break;
+		case LinkCheck:
+			return std::string((const char *) &c, MAC_LINK_CHECK_SIZE);
+			break;
+		case LinkADR:
+			break;
+		case DutyCycle:
+			break;
+		case RXParamSetup:
+			break;
+		case DevStatus:
+			break;
+		case NewChannel:
+			break;
+		case RXTimingSetup:
+			break;
+		case TXParamSetup:
+			break;
+		case DLChannel:
+			break;
+		case Rekey:
+			break;
+		case ADRParamSetup:
+			break;
+		case DeviceTime:
+			break;
+		case ForceRejoin:
+			break;
+		case RejoinParamSetup:
+			break;
+		// Class-B Section 14
+		case PingSlotInfo:
+			break;
+		case PingSlotChannel:
+			break;
+		// 0x12 has been deprecated in 1.1
+		case BeaconTiming:
+			break;
+		case BeaconFreq:
+			break;
+		// Class-C
+		case DeviceMode:
+			break;
+		default:
+			break;
+	}
+	return "";
 }

@@ -397,7 +397,7 @@ public:
 		const std::string &value
 	);
 
-	std::string toString() const;
+	std::string toBinary() const;
 	std::string toJson() const;
 	bool parse(const std::string &value);
 };

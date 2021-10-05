@@ -17,18 +17,18 @@ void encryptPayload(
     aes_set_key(appSKey, sizeof(KEY128), &aesContext);
  
  	uint8_t a[16];
- 	a[0] = 1;	// 1- uplink, 0- downlink
+ 	a[0] = 1;	
 	a[1] = 0;
 	a[2] = 0;
 	a[3] = 0;
 	a[4] = 0;
-    a[5] = direction;
+    a[5] = direction;	// 1- uplink, 0- downlink
     a[6] = devAddr[0];
 	a[7] = devAddr[1];
 	a[8] = devAddr[2];
 	a[9] = devAddr[3];
-	a[10] = (frameCounter & 0x00FF);
-	a[11] = ((frameCounter >> 8) & 0x00FF);
+	a[10] = (frameCounter & 0x00ff);
+	a[11] = ((frameCounter >> 8) & 0x00ff);
 	a[12] = 0; // frame counter upper Bytes
 	a[13] = 0;
 	a[14] = 0;

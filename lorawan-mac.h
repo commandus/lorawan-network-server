@@ -1071,4 +1071,8 @@ class MacDataDeviceMode : public MacData {
 		MacDataDeviceMode(bool classC);	
 };
 
+std::string MAC_COMMAND2binary(
+	MAC_COMMAND &c
+);
+
 #endif

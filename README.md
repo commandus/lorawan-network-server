@@ -872,3 +872,16 @@ received packet {"activation":"ABP","class":"A","eui":"3434383566378112","nwkSKe
 Javascript error: uncaught: 'cannot read property \x27time5\x27 of ...' in 
 new Date(((field.packet46420.time5.day_month_year >> 9) & 0x7f) + 2000, ((field.packet46420.time5.day_month_year >> 5) & 0xf) - 1, (field.packet46420.time5.day_month_year & 0x1f), field.packet46420.time5.hour, field.packet46420.time5.minute, field.packet46420.time5.second, 00).getTime() / 1000
 Aborted
+
+## Implementation 
+
+### MAC processing chain
+
+udp-listener.cpp              UDPListener::listen()
+lora-packet-handler-impl.cpp  LoraPacketProcessor::put()
+lora-packet-handler-impl.cpp  LoraPacketProcessor::enqueueMAC()
+packet-queue.cpp              PacketQueue::push()
+packet-queue.cpp              PacketQueue::runner()
+packet-queue.cpp              PacketQueue::replyMAC()
+utillora.cpp                  semtechUDPPacket::mkPullResponse()
+utillora.cpp                  semtechUDPPacket::toTxImmediatelyJsonString()

@@ -39,7 +39,7 @@ std::string SemtechPullRespPacket::toString() {
 	// build radio packet, unconfirmed data up macHeader = 0x40;
 	// RFM header 8 bytes
     std::stringstream ss;
-	ss << header.toString() << header.fport;
+	ss << header.toBinary() << header.fport;
 
 	// load data
 	// encrypt data
