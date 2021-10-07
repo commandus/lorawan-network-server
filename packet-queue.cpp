@@ -431,7 +431,7 @@ int PacketQueue::replyMAC(
 	std::string macResponse;
 	while (int lastMACIndex = macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey, offset) != -1) {
 		offset = lastMACIndex;
-		std::string response = item.packet.mkPullResponse(macResponse, id.nwkSKey, internalTime, power);
+		std::string response = item.packet.mkPullResponse(macResponse, id, internalTime, power);
 std::cerr << "==MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
 std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 		size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,

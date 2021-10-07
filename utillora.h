@@ -262,6 +262,22 @@ typedef enum {
 	CLASS_C = 2
 } DEVICECLASS;
 
+typedef ALIGN struct {
+	uint8_t major: 2;		// always 1
+	uint8_t minor: 2;		// 0 or 1
+	uint8_t release: 4;		// no matter
+} PACKED LORAWAN_VERSION;	// 1 byte
+
+std::string LORAWAN_VERSION2string
+(
+	LORAWAN_VERSION value
+);
+
+LORAWAN_VERSION string2LORAWAN_VERSION
+(
+	const std::string &value
+);
+
 typedef struct {
 	// value, no key
 	ACTIVATION activation;	///< activation type: ABP or OTAA
@@ -269,6 +285,7 @@ typedef struct {
 	DEVEUI deviceEUI;		///< device identifier 8 bytes (ABP device may not store EUI)
 	KEY128 nwkSKey;			///< shared session key 16 bytes
 	KEY128 appSKey;			///< private key 16 bytes
+	LORAWAN_VERSION version;
 	// added for searching
 	DEVICENAME name;
 } DEVICEID;					// 44 bytes + 8 = 52
@@ -293,6 +310,7 @@ public:
 	DEVEUI deviceEUI;		///< device identifier
 	KEY128 nwkSKey;			///< shared session key
 	KEY128 appSKey;			///< private key
+	LORAWAN_VERSION version;
 	// added for searching
 	DEVICENAME name;
 	NetworkIdentity();
@@ -309,9 +327,10 @@ private:
 public:
 	ACTIVATION activation;	///< activation type: ABP or OTAA
 	DEVICECLASS deviceclass;
-	DEVEUI deviceEUI;	///< device identifier
-	KEY128 nwkSKey;		///< shared session key
-	KEY128 appSKey;		///< private key
+	DEVEUI deviceEUI;			///< device identifier
+	KEY128 nwkSKey;				///< shared session key
+	KEY128 appSKey;				///< private key
+	LORAWAN_VERSION version;	///< device LoraWAN version
 	// added for searching
 	DEVICENAME name;
 	
@@ -496,12 +515,13 @@ public:
 	/**
 	 * Make PULL_RESP Semtech UDP protocol packet repsonse
 	 * @param data payload
+	 * @param version LoraWAN version
 	 * @param key key
 	 * @param power transmission power
 	 */ 
 	std::string mkPullResponse(
 		const std::string &payload,
-		const KEY128 &key,
+		const DeviceId &deviceid,
 		uint32_t recievedTime,
 		const int power = 14
 	) const;

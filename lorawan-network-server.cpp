@@ -51,11 +51,14 @@
 #include "pkt2/str-pkt2.h"
 #include "db-any.h"
 
+#include "device-stat-service-json.h"
+
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_QUEUE_STORAGE_NAME "queue.js"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
+#define DEF_DEVICE_STAT_STORAGE_NAME "device-stat.h"
 #define DEF_DATABASE_CONFIG_FILE_NAME "dbs.js"
 #define DEF_PROTO_PATH "proto"
 
@@ -77,6 +80,8 @@ static RecieverQueueProcessor *recieverQueueProcessor = NULL;
 static LoraPacketProcessor *processor = NULL;
 // Database list
 static DatabaseByConfig *dbByConfig = NULL;
+// Device counters and last received
+static JsonFileDeviceStatService *deviceStatService = NULL;
 
 // pkt2 environment
 static void* pkt2env = NULL;
@@ -108,6 +113,8 @@ static void done()
 		recieverQueueProcessor = NULL;
 	}
 	if (identityService) {
+		// save
+		// identityService->flush();
 		delete identityService;
 		identityService = NULL;
 	}
@@ -119,6 +126,12 @@ static void done()
 		gatewayList->save();
 		delete gatewayList;
 		gatewayList = NULL;
+	}
+	if (deviceStatService) {
+		// save
+		deviceStatService->flush();
+		delete deviceStatService;
+		deviceStatService = NULL;
 	}
 
 	if (pkt2env)
@@ -187,7 +200,10 @@ int parseCmd(
 	struct arg_str *a_address4 = arg_strn(NULL, NULL, "<IPv4 address:port>", 0, 8, "listener IPv4 interface e.g. *:8003");
 	struct arg_str *a_address6 = arg_strn("6", "ipv6", "<IPv6 address:port>", 0, 8, "listener IPv6 interface e.g. :1700");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>",
-	 "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME ", queue storage ~/" DEF_QUEUE_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
+	 "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME 
+	", queue storage ~/" DEF_QUEUE_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME 
+	", device stat ~/" DEF_DEVICE_STAT_STORAGE_NAME 
+	);
 	struct arg_str *a_logfilename = arg_str0("l", "logfile", "<file>", "log file");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 7, "Set verbosity level 1- alert, 2-critical error, 3- error, 4- warning, 5- siginicant info, 6- info, 7- debug");
@@ -345,11 +361,15 @@ int main(
 	if (config->gatewaysFileName.empty()) {
 		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
+	if (config->serverConfig.deviceStatStorageName.empty()) {
+		config->serverConfig.deviceStatStorageName = getDefaultConfigFileName(DEF_DEVICE_STAT_STORAGE_NAME);
+	}
 	std::cerr << config->toString() << std::endl;
 
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
-	std::cerr << gatewayList->toJsonString() << std::endl;
+	if (config->serverConfig.verbosity > 2)
+		std::cerr << gatewayList->toJsonString() << std::endl;
 
 	// Start identity service
 	switch (config->serverConfig.storageType) {
@@ -366,6 +386,17 @@ int main(
 	}
 	identityService->init(config->serverConfig.identityStorageName, NULL);
 
+	if (config->serverConfig.verbosity > 3) {
+		std::vector<NetworkIdentity> identities;
+		std::cerr << MSG_DEVICES << std::endl;
+		identityService->list(identities, 0, 0);
+		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
+			std::cerr << DEVADDR2string(it->devaddr) << std::endl;
+		}
+	}
+
+	deviceStatService = new JsonFileDeviceStatService();
+	deviceStatService->init(config->serverConfig.deviceStatStorageName, NULL);
 	// Start recived message queue service
 	ReceiverQueueService *receiverQueueService;
 
@@ -452,6 +483,7 @@ int main(
 	processor->setIdentityService(identityService);
 	processor->setGatewayList(gatewayList);
 	processor->setReceiverQueueService(receiverQueueService);
+	processor->setDeviceStatService(deviceStatService);
 
 	// Set pkt2 environment
 	recieverQueueProcessor = new RecieverQueueProcessor();
@@ -466,6 +498,7 @@ int main(
 	listener->setHandler(processor);
 	listener->setGatewayList(gatewayList);
 	listener->setIdentityService(identityService);
+	listener->setDeviceStatService(deviceStatService);
 
 	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;

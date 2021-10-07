@@ -58,7 +58,8 @@ void ServerConfig::clear()
 
 ServerConfig::ServerConfig() 
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false),
-	identityStorageName(""), queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
+	identityStorageName(""), deviceStatStorageName(""), 
+	queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
 	messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0), 
 	logGWStatisticsFileName(""), logDeviceStatisticsFileName("")
 {
@@ -94,7 +95,12 @@ int ServerConfig::parse(
 			identityStorageName = jn.GetString();
 		}
 	}
-	
+	if (value.HasMember("deviceStatStorageName")) {
+		rapidjson::Value &jn = value["deviceStatStorageName"];
+		if (jn.IsString()) {
+			deviceStatStorageName = jn.GetString();
+		}
+	}
 	if (value.HasMember("queueStorageName")) {
 		rapidjson::Value &jn = value["queueStorageName"];
 		if (jn.IsString()) {
@@ -184,6 +190,10 @@ void ServerConfig::toJson(
 	rapidjson::Value n;
 	n.SetString(identityStorageName.c_str(), identityStorageName.size(), allocator);
 	value.AddMember("identityStorageName", n, allocator);
+
+	rapidjson::Value nds;
+	nds.SetString(deviceStatStorageName.c_str(), deviceStatStorageName.size(), allocator);
+	value.AddMember("deviceStatStorageName", nds, allocator);
 
 	rapidjson::Value nq;
 	nq.SetString(queueStorageName.c_str(), queueStorageName.size(), allocator);
@@ -315,7 +325,7 @@ std::string Configuration::toString() {
 
 	rapidjson::Value gwp;
 	gwp.SetInt(gatewayPort);
-	doc.AddMember("gatewPort", gwp, allocator);
+	doc.AddMember("gatewayPort", gwp, allocator);
 
 	doc.Accept(writer);
 	return std::string(buffer.GetString());

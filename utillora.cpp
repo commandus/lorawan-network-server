@@ -233,6 +233,7 @@ std::string NetworkIdentity::toString() const
 		<< " " << DEVEUI2string(deviceEUI)
 		<< " " << KEY2string(nwkSKey)
 		<< " " << KEY2string(appSKey)
+		<< " " << LORAWAN_VERSION2string(version)
 		<< " " << std::string(name, sizeof(DEVICENAME));
 	return ss.str();
 }
@@ -242,6 +243,9 @@ DeviceId::DeviceId() {
 	memset(&nwkSKey, 0, sizeof(KEY128));
 	memset(&appSKey, 0, sizeof(KEY128));
 	memset(&name, 0, sizeof(DEVICENAME));
+	version.major = 1;
+	version.minor = 0;
+	version.release = 0;
 }
 
 DeviceId::DeviceId(
@@ -251,6 +255,9 @@ DeviceId::DeviceId(
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
+	version.major = 1;
+	version.minor = 0;
+	version.release = 0;
 }
 
 DeviceId::DeviceId(
@@ -269,6 +276,7 @@ void DeviceId::set(
 	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
@@ -318,6 +326,7 @@ std::string DeviceId::toJsonString() const
 		<< "\",\"eui\":\"" << DEVEUI2string(deviceEUI)
 		<< "\",\"nwkSKey\":\"" << KEY2string(nwkSKey)
 		<< "\",\"appSKey\":\"" << KEY2string(appSKey)
+		<< "\",\"version\":\"" << LORAWAN_VERSION2string(version)
 		<< "\",\"name\":\"" << std::string(name, sizeof(DEVICENAME))
 		<< "\"}";
 	return ss.str();
@@ -332,6 +341,7 @@ void DeviceId::setProperties
 	retval["class"] = deviceclass2string(deviceclass);
 	retval["eui"] = DEVEUI2string(deviceEUI);
 	retval["name"] = std::string(name, sizeof(DEVICENAME));
+	retval["version"] = LORAWAN_VERSION2string(version);
 }
 
 void NetworkIdentity::set(
@@ -346,6 +356,7 @@ void NetworkIdentity::set(
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
+	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
 }
 
 // const std::string DEF_DATA_RATE = "SF7BW125";
@@ -1798,7 +1809,7 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString
 
 std::string semtechUDPPacket::mkPullResponse(
 	const std::string &data,
-	const KEY128 &key,
+	const DeviceId &deviceid,
 	uint32_t recievedTime,
 	const int power
 ) const
@@ -1810,8 +1821,8 @@ std::string semtechUDPPacket::mkPullResponse(
 	int direction = 1;	// downlink
 	std::string frmpayload(data);
 	size_t psize = frmpayload.size();
-	if (psize > 15) {
-		encryptPayload(frmpayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, key);	// network key
+	if (deviceid.version.minor == 1) {
+		encryptPayload(frmpayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);	// network key
 	}
 
 	std::stringstream smsg;
@@ -1821,10 +1832,12 @@ std::string semtechUDPPacket::mkPullResponse(
 	rfmHeader.header.fctrl.i = 0;
 
 	if (psize <= 15) {
+		// use FOpts
 		rfmHeader.header.fctrl.f.foptslen = psize;
 		rfmHeader.header.fctrl.f.adr = 1;
 		smsg << rfmHeader.toBinary();
 	} else {
+		// use FrmPayload
 		smsg << rfmHeader.toBinary();
 		smsg << (uint8_t) 0;	// fport 0- MAC payload
 	}
@@ -1835,10 +1848,9 @@ std::string semtechUDPPacket::mkPullResponse(
 	std::cerr << "==Header: " << hexString(rfmHeader.toBinary()) << std::endl;
 	std::cerr << "==Data: " << hexString(data) << std::endl;
 
-
 	std::string msg = smsg.str();
 	// calc mic
-	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, key);
+	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);
 	smsg << std::string((char *) &mic, 4);
 	return toTxImmediatelyJsonString(smsg.str(), recievedTime, power);
 }
@@ -2099,3 +2111,38 @@ const char *getTXAckCodeName
 {
 	return TxAckCodes[(int) code];
 }
+
+std::string LORAWAN_VERSION2string
+(
+	LORAWAN_VERSION value
+)
+{
+	std::stringstream ss;
+	ss 
+		<< (int) value.major 
+		<< "." << (int) value.minor
+		<< "." << (int) value.release;
+	return ss.str();
+}
+
+LORAWAN_VERSION string2LORAWAN_VERSION
+(
+	const std::string &value
+)
+{
+	std::stringstream ss(value);
+	int ma = 1, mi = 0, re = 0;
+    char dot;
+	if (!ss.eof ())
+		ss >> ma;
+	if (!ss.eof ())
+		ss >> dot;
+	if (!ss.eof ())
+		ss >> mi;
+	if (!ss.eof ())
+		ss >> dot;
+	if (!ss.eof ())
+		ss >> re;
+	LORAWAN_VERSION r = { (uint8_t) (ma & 3), (uint8_t) (mi & 3), (uint8_t) (re & 0xf) };
+	return r;
+  }

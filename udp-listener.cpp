@@ -15,7 +15,7 @@
 UDPListener::UDPListener() :
 	verbosity(0), stopped(false), onLog(NULL), onGatewayStatDump(NULL), gwStatEnv(NULL),
 	onDeviceStatDump(NULL), deviceStatEnv(NULL),
-	handler(NULL), identityService(NULL), gatewayList(NULL)
+	handler(NULL), identityService(NULL), gatewayList(NULL), deviceStatService(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -86,6 +86,13 @@ void UDPListener::setIdentityService
 	identityService = value;
 }
 
+void UDPListener::setDeviceStatService
+(
+	DeviceStatService *value
+)
+{
+	deviceStatService = value;
+}
 
 std::string UDPListener::toString() {
 	std::stringstream ss;
@@ -214,6 +221,7 @@ int UDPListener::listen() {
 							handler->ack(it->sock, (const sockaddr_in *) &gwAddress, dataprefix);
 						break;
 					case SEMTECH_GW_PULL_DATA:	// PULL_DATA
+						gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 						pr = semtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
 						if (pr != LORA_OK)
 							break;
@@ -244,6 +252,7 @@ int UDPListener::listen() {
 						break;
 					case SEMTECH_GW_TX_ACK:	// TX_ACK
 						//
+						gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 						{
 							pr = semtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
 							if (pr != LORA_OK)

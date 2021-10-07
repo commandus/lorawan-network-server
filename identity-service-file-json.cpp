@@ -15,7 +15,7 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_COUNT	7
+#define ATTRS_COUNT	8
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
 	"addr", 		// 0 network address (hex string, 4 bytes)
 	"activation",	// 1 ABP or OTAA
@@ -23,7 +23,8 @@ static const char *ATTR_NAMES[ATTRS_COUNT] = {
 	"nwkSKey",		// 3 shared session key (hex string, 16 bytes)
 	"appSKey",		// 4 private key (hex string, 16 bytes)
 	"class", 		// 5 A, B or C
-	"name"			// 6 added for search
+	"version",		// 6 LoraWAN version
+	"name"			// 7 added for search
 };
 
 static const char *ACTIVATION_NAMES[2] = {
@@ -134,7 +135,7 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		bool String(const char* str, rapidjson::SizeType length, bool copy) { 
 			std::string s; 
 			/*
-			 * 0- addr 1- activation 2- eui 3- nwkSKey 4- appSKey 5- class 6- name
+			 * 0- addr 1- activation 2- eui 3- nwkSKey 4- appSKey 5- class 6- version, 7- name
 			 */
 			switch(idx) {
 				case 0:
@@ -158,6 +159,9 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 					v.deviceclass = string2deviceclass(str);
 					break;
 				case 6:
+					v.version = string2LORAWAN_VERSION(str);
+					break;
+				case 7:
 					string2DEVICENAME(v.name, str);
 					break;
 				default:
@@ -167,6 +171,9 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		}
 		bool StartObject() { 
 			isNetworkIdentity = true;
+			v.version.major = 1;
+			v.version.minor = 0;
+			v.version.release = 0;
 			return true; 
 		}
 
@@ -224,23 +231,24 @@ int JsonFileIdentityService::save()
 {
 	std::fstream os;
 	os.open(path, std::ios::out);
-	os << "[";
+	os << "[" << std::endl;
 	bool addSeparator(false);
 	for (std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.begin(); it != storage.end(); it++) {
 		if (addSeparator)
 			os << ",";
-		os << "{\"" 
-			<< ATTR_NAMES[0] << "\":\"" << DEVADDRINT2string(it->first) << "\",\"" 
-			<< ATTR_NAMES[1] << "\":\"" << getActivationName(it->second.activation) << "\",\"" 
-			<< ATTR_NAMES[2] << "\":\"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
-			<< ATTR_NAMES[3] << "\":\"" << KEY2string(it->second.nwkSKey) << "\",\""
-			<< ATTR_NAMES[4] << "\":\"" << KEY2string(it->second.appSKey) << "\",\""
-			<< ATTR_NAMES[5] << "\":\"" << deviceclass2string(it->second.deviceclass) << "\",\""
-			<< ATTR_NAMES[6] << "\":\"" << std::string(it->second.name, sizeof(DEVICENAME)) << "\"}";
+		os << std::endl << "{\"" 
+			<< ATTR_NAMES[0] << "\": \"" << DEVADDRINT2string(it->first) << "\",\"" 
+			<< ATTR_NAMES[1] << "\": \"" << getActivationName(it->second.activation) << "\",\"" 
+			<< ATTR_NAMES[2] << "\": \"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
+			<< ATTR_NAMES[3] << "\": \"" << KEY2string(it->second.nwkSKey) << "\",\""
+			<< ATTR_NAMES[4] << "\": \"" << KEY2string(it->second.appSKey) << "\",\""
+			<< ATTR_NAMES[5] << "\": \"" << deviceclass2string(it->second.deviceclass) << "\",\""
+			<< ATTR_NAMES[6] << "\": \"" << LORAWAN_VERSION2string(it->second.version) << "\",\""
+			<< ATTR_NAMES[7] << "\": \"" << DEVICENAME2string(it->second.name) << "\"}";
 
 		addSeparator = true;
 	}
-	os << "]";
+	os << "]" << std::endl;
 	int r = os.bad() ? ERR_CODE_OPEN_DEVICE : 0;
 	os.close();
 	return r;
@@ -388,7 +396,7 @@ int JsonFileIdentityService::parseNames(
 				re = replaceAll(replaceAll(*it, "*", ".*"), "?", ".");
 			std::regex rex(re, std::regex_constants::grep);
 			for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
-				std::string s2 = std::string(dit->second.name, sizeof(DEVICENAME));
+				std::string s2 = DEVICENAME2string(dit->second.name);
 				if (std::regex_search(s2, rex))
 					retval.push_back(TDEVEUI(dit->second.deviceEUI));
 			}
@@ -417,7 +425,8 @@ std::string JsonFileIdentityService::toJsonString()
 			<< "\"" << ATTR_NAMES[3] << "\":\"" << KEY2string(dit->second.nwkSKey) << "\", "
 			<< "\"" << ATTR_NAMES[4] << "\":\"" << KEY2string(dit->second.appSKey) << "\", "
 			<< "\"" << ATTR_NAMES[5] << "\":\"" << deviceclass2string(dit->second.deviceclass) << "\", "
-			<< "\"" << ATTR_NAMES[6] << "\":\"" << std::string(dit->second.name, sizeof(DEVICENAME)) << "\"}";
+			<< "\"" << ATTR_NAMES[6] << "\":\"" << LORAWAN_VERSION2string(dit->second.version) << "\", "
+			<< "\"" << ATTR_NAMES[7] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"}";
 	}
 	ss << "]";
 	return ss.str();

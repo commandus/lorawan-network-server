@@ -101,21 +101,21 @@ int LoraPacketProcessor::put
 {
 	int r;
 	if (identityService) {
-		DEVADDR *addr = &packet.getHeader()->header.devaddr;
-		r = identityService->get(*addr, packet.devId);
+		DEVADDR addr;
+		memmove(&addr, &packet.getHeader()->header.devaddr, sizeof(DEVADDR));
+		r = identityService->get(addr, packet.devId);
 		if (r == 0) {
 			if (packet.hasApplicationPayload()) 
 				enqueuePayload(time, packet);
 			if (packet.hasMACPayload())
 				enqueueMAC(time, packet);
 		} else {
-			// device id NOT identified
+			// device id is NOT identified
 			if (onLog) {
 				// report error
 				std::stringstream ss;
-				ss << ERR_DEVICE_ADDRESS_NOTFOUND << r << ": " 
-					<< strerror_lorawan_ns(r) << " " 
-					<< ", " << MSG_DEVICE_EUI << DEVADDR2string(packet.getHeader()->header.devaddr)
+				ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r)
+					<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
 					<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
 				onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 			}
@@ -144,7 +144,7 @@ void LoraPacketProcessor::setGatewayList
 
 void LoraPacketProcessor::setReceiverQueueService
 (
-	ReceiverQueueService* value
+	ReceiverQueueService *value
 )
 {
 	receiverQueueService = value;
@@ -156,6 +156,13 @@ void LoraPacketProcessor::setReceiverQueueService
 	}
 }
 
+void LoraPacketProcessor::setDeviceStatService(
+	DeviceStatService *value
+)
+{
+	deviceStatService = value;
+}
+
 void LoraPacketProcessor::setLogger(
 	std::function<void(
 		void *env,
@@ -163,7 +170,8 @@ void LoraPacketProcessor::setLogger(
 		int modulecode,
 		int errorcode,
 		const std::string &message
-)> value) {
+)> value)
+{
 	onLog = value;
 	packetQueue.setLogger(value);
 }
