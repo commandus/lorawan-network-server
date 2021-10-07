@@ -8,6 +8,7 @@
 #include "utillora.h"
 #include "lora-packet-handler-abstract.h"
 #include "identity-service-abstract.h"
+#include "device-stat-service-abstract.h"
 #include "gateway-list.h"
 
 /**
@@ -27,7 +28,9 @@ private:
 	GatewayList *gatewayList;
 public:
 	int verbosity;
-	IdentityService* identityService;
+	IdentityService *identityService;
+	DeviceStatService *deviceStatService;
+
 	std::vector<UDPSocket> sockets;
 	bool stopped;
 	struct sockaddr_in6 remotePeerAddress;
@@ -73,7 +76,8 @@ public:
 		struct sockaddr *remotePeerAddr);
 
 	void setLastRemoteAddress(
-		struct sockaddr *value);
+		struct sockaddr *value
+	);
 
 	void setLogger(
 		int verbosity,
@@ -87,6 +91,7 @@ public:
 	void setHandler(LoraPacketHandler *value);
 	void setIdentityService(IdentityService* value);
 	void setGatewayList(GatewayList *value);
+	void setDeviceStatService(DeviceStatService *value);
 
 	void setGatewayStatDumper(
 		void *gwStatEnv,

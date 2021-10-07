@@ -18,7 +18,7 @@ class IdentityService {
 		// Remove entry
 		virtual void rm(DEVADDR &addr) = 0;
 		// List entries
-		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size);
+		virtual void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size) = 0;
 		// force save
 		virtual void flush() = 0;
 		// reload

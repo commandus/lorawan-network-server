@@ -88,6 +88,7 @@
 #define ERR_CODE_BEST_GATEWAY_NOT_FOUND		-572
 #define ERR_CODE_REPLY_MAC					-573
 #define ERR_CODE_NO_MAC			           	-574
+#define ERR_CODE_NO_DEVICE_STAT				-575
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -172,6 +173,7 @@
 #define ERR_BEST_GATEWAY_NOT_FOUND		"Best gateway not found"
 #define ERR_REPLY_MAC					"Error send MAC reply "
 #define ERR_NO_MAC			           	"No MAC command"
+#define ERR_NO_DEVICE_STAT				"No device statistics"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -186,6 +188,7 @@
 #define MSG_TIMEOUT						"Timeout"
 #define MSG_GATEWAY						"Gateway "
 #define MSG_DEVICE						"Device "
+#define MSG_DEVICES						"Devices:"
 #define MSG_DEVICE_EUI					"EUI "
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "

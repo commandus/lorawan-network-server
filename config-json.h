@@ -26,6 +26,7 @@ class ServerConfig {
 		bool daemonize;
 		std::string identityStorageName;
 		std::string queueStorageName;
+		std::string deviceStatStorageName;
 		IDENTITY_STORAGE storageType;
 		MESSAGE_QUEUE_STORAGE messageQueueType;
 		int messageQueueDirFormat;					// 0- bin, 1- hex, 2- base64
