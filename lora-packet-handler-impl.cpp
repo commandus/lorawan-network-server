@@ -105,6 +105,9 @@ int LoraPacketProcessor::put
 		memmove(&addr, &packet.getHeader()->header.devaddr, sizeof(DEVADDR));
 		r = identityService->get(addr, packet.devId);
 		if (r == 0) {
+			if (deviceStatService) {
+				deviceStatService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
+			}
 			if (packet.hasApplicationPayload()) 
 				enqueuePayload(time, packet);
 			if (packet.hasMACPayload())
@@ -161,6 +164,7 @@ void LoraPacketProcessor::setDeviceStatService(
 )
 {
 	deviceStatService = value;
+	packetQueue.setDeviceStatService(value);
 }
 
 void LoraPacketProcessor::setLogger(

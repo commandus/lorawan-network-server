@@ -56,9 +56,9 @@
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
-#define DEF_QUEUE_STORAGE_NAME "queue.js"
+#define DEF_QUEUE_STORAGE_NAME "queue.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
-#define DEF_DEVICE_STAT_STORAGE_NAME "device-stat.h"
+#define DEF_DEVICE_STAT_STORAGE_NAME "device-counters.json"
 #define DEF_DATABASE_CONFIG_FILE_NAME "dbs.js"
 #define DEF_PROTO_PATH "proto"
 
@@ -66,6 +66,8 @@ const std::string progname = "lorawan-network-server";
 
 #define DEF_BUFFER_SIZE 4096
 #define DEF_BUFFER_SIZE_S "4096"
+
+static int lastSysSignal = 0;
 
 static Configuration *config = NULL;
 static GatewayList *gatewayList = NULL;
@@ -86,11 +88,24 @@ static JsonFileDeviceStatService *deviceStatService = NULL;
 // pkt2 environment
 static void* pkt2env = NULL;
 
+ReceiverQueueService *receiverQueueService = NULL;
+
+
 #ifdef _MSC_VER
 #undef ENABLE_TERM_COLOR
 #else
 #define ENABLE_TERM_COLOR	1
 #endif
+
+static void flushFiles()
+{
+	if (receiverQueueService)
+		receiverQueueService->flush();
+	if (gatewayList)
+		gatewayList->save();
+	if (deviceStatService)
+		deviceStatService->flush();
+}
 
 static void done()
 {
@@ -111,6 +126,12 @@ static void done()
 	if (recieverQueueProcessor) {
 		delete recieverQueueProcessor;
 		recieverQueueProcessor = NULL;
+	}
+	if (receiverQueueService) {
+		// save
+		receiverQueueService->flush();
+		delete receiverQueueService;
+		receiverQueueService = NULL;
 	}
 	if (identityService) {
 		// save
@@ -133,7 +154,6 @@ static void done()
 		delete deviceStatService;
 		deviceStatService = NULL;
 	}
-
 	if (pkt2env)
 		donePkt2(pkt2env);
 
@@ -148,6 +168,7 @@ static void stop()
 
 void signalHandler(int signal)
 {
+	lastSysSignal = signal;
 	switch (signal)
 	{
 	case SIGINT:
@@ -163,6 +184,13 @@ void signalHandler(int signal)
 		backtrace_symbols_fd(t, size, STDERR_FILENO);
 		exit(ERR_CODE_SEGMENTATION_FAULT);
     }
+	case SIGHUP:
+		std::cerr << ERR_HANGUP_DETECTED << std::endl;
+		break;
+	case SIGUSR2:	// 12
+		std::cerr << MSG_SIG_FLUSH_FILES << std::endl;
+		// flushFiles();
+		break;
 	default:
 		break;
 	}
@@ -182,6 +210,8 @@ void setSignalHandler()
 	sigaction(SIGINT, &action, NULL);
 	sigaction(SIGHUP, &action, NULL);
 	sigaction(SIGSEGV, &action, NULL);
+	sigaction(SIGUSR2, &action, NULL);
+	
 }
 #endif
 
@@ -347,7 +377,8 @@ int main(
 	}
 	
 	listener = new UDPListener();
-
+	// check signal number when select() has been interrupted
+	listener->setSysSignalPtr(&lastSysSignal);
 	listener->setLogger(config->serverConfig.verbosity, onLog);
 	listener->setGatewayStatDumper(config, onGatewayStatDump);
 	listener->setDeviceStatDumper(config, onDeviceStatDump);
@@ -384,22 +415,33 @@ int main(
 		default:
 			identityService = new JsonFileIdentityService();
 	}
-	identityService->init(config->serverConfig.identityStorageName, NULL);
+	int rs = identityService->init(config->serverConfig.identityStorageName, NULL);
+	if (rs) {
+		std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs) 
+			<< " " << config->serverConfig.identityStorageName << std::endl;
+		exit(ERR_CODE_INIT_IDENTITY);
+	}
 
 	if (config->serverConfig.verbosity > 3) {
 		std::vector<NetworkIdentity> identities;
 		std::cerr << MSG_DEVICES << std::endl;
 		identityService->list(identities, 0, 0);
 		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
-			std::cerr << DEVADDR2string(it->devaddr) << std::endl;
+			std::cerr  << "\t" << DEVADDR2string(it->devaddr) << "\t" << DEVICENAME2string(it->name) << std::endl;
 		}
 	}
 
 	deviceStatService = new JsonFileDeviceStatService();
-	deviceStatService->init(config->serverConfig.deviceStatStorageName, NULL);
-	// Start recived message queue service
-	ReceiverQueueService *receiverQueueService;
+	// std::cerr << "Device stat name: " << config->serverConfig.deviceStatStorageName << std::endl;
+	rs = deviceStatService->init(config->serverConfig.deviceStatStorageName, NULL);
+	if (rs) {
+		std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs) 
+			<< " " << config->serverConfig.deviceStatStorageName << std::endl;
+		// That's ok, no problem at all
+		// exit(ERR_CODE_INIT_DEVICE_STAT);
+	}
 
+	// Start recived message queue service
 	void *options = NULL;
 	DirTxtReceiverQueueServiceOptions dirOptions;
 	switch (config->serverConfig.messageQueueType) {
@@ -418,8 +460,14 @@ int main(
 			
 		break;
 	}
-	receiverQueueService->init(config->serverConfig.queueStorageName, options);
-	
+	rs = receiverQueueService->init(config->serverConfig.queueStorageName, options);
+	if (rs) {
+		std::cerr << ERR_INIT_QUEUE << rs << ": " << strerror_lorawan_ns(rs)
+			<< " " << config->serverConfig.queueStorageName << std::endl;
+		// that's ok
+		// exit(ERR_CODE_INIT_QUEUE);
+	}
+
 	if (config->databaseConfigFileName.empty()) {
 		config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
 	}
@@ -439,13 +487,9 @@ int main(
 	bool dbOk = true;
 	for (std::vector<ConfigDatabase>::const_iterator it(configDatabases.dbs.begin()); it != configDatabases.dbs.end(); it++) {
 		DatabaseNConfig *dc = dbByConfig->find(it->name);
-		bool hasConn;
-		if (!dc) {
+		bool hasConn = dc != NULL;
+		if (!dc)
 			dbOk = false;
-			hasConn = false;
-		} else {
-			hasConn = true;
-		}
 		int r = dc->open();
 		hasConn = hasConn && (r == 0);
 		if (config->serverConfig.verbosity > 2) {
@@ -456,9 +500,8 @@ int main(
 			}
 		}
 		dc->close();
-		if (!hasConn) {
+		if (!hasConn)
 			dbOk = false;
-		}
 	}
 	// exit, if can not connected to the database
 	if (!dbOk) {

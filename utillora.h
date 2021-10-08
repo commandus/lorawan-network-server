@@ -523,6 +523,7 @@ public:
 		const std::string &payload,
 		const DeviceId &deviceid,
 		uint32_t recievedTime,
+		const int fcnt,
 		const int power = 14
 	) const;
 

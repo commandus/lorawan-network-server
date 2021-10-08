@@ -65,7 +65,8 @@ PacketQueue::PacketQueue()
 PacketQueue::PacketQueue(
 	int delayMillisSeconds
 )
-	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL), identityService(NULL), gatewayList(NULL)
+	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL), 
+	identityService(NULL), deviceStatService(NULL), gatewayList(NULL)
 {
 	setDelay(delayMillisSeconds);
 }
@@ -76,6 +77,14 @@ void PacketQueue::setIdentityService
 )
 {
 	identityService = value;
+}
+
+void PacketQueue::setDeviceStatService
+(
+	DeviceStatService *value
+)
+{
+	deviceStatService = value;
 }
 
 void PacketQueue::setGatewayList
@@ -429,14 +438,34 @@ int PacketQueue::replyMAC(
 		identityService->get(item.packet.header.header.devaddr, id);
 	// Produce MAC command response in the item.packet
 	std::string macResponse;
+	uint32_t fcntdown = 0;
+	if (deviceStatService) {
+		DeviceStat ds;
+		int rs = deviceStatService->get(item.packet.header.header.devaddr, ds);
+		if (rs == 0) {
+			fcntdown = ds.fcntdown;
+		} else {
+			if (onLog) {
+				ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
+				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
+			}
+		}
+	}
+
 	while (int lastMACIndex = macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey, offset) != -1) {
 		offset = lastMACIndex;
-		std::string response = item.packet.mkPullResponse(macResponse, id, internalTime, power);
+		fcntdown++;
+		std::string response = item.packet.mkPullResponse(macResponse, id, internalTime, fcntdown, power);
 std::cerr << "==MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
 std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 		size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
 			(const struct sockaddr*) &gwit->second.sockaddr,
 			((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+		
+		if (r == response.size()) {
+			if (deviceStatService)
+				deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
+		}
 
 		if (onLog) {
 			if (r != response.size()) {

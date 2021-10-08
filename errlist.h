@@ -89,6 +89,11 @@
 #define ERR_CODE_REPLY_MAC					-573
 #define ERR_CODE_NO_MAC			           	-574
 #define ERR_CODE_NO_DEVICE_STAT				-575
+#define ERR_CODE_INIT_DEVICE_STAT			-576
+#define ERR_CODE_INIT_IDENTITY				-577
+#define ERR_CODE_INIT_QUEUE					-578
+#define ERR_CODE_HANGUP_DETECTED			-579
+#define ERR_CODE_NO_FCNT_DOWN				-580
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -174,6 +179,11 @@
 #define ERR_REPLY_MAC					"Error send MAC reply "
 #define ERR_NO_MAC			           	"No MAC command"
 #define ERR_NO_DEVICE_STAT				"No device statistics"
+#define ERR_INIT_DEVICE_STAT			"Device counter initialization error "
+#define ERR_INIT_IDENTITY				"Device registry initialization error "
+#define ERR_INIT_QUEUE					"Message queue initialization error "
+#define ERR_HANGUP_DETECTED				"Hangup detected on controlling terminal or death of controlling process"
+#define ERR_NO_FCNT_DOWN				"No FCnt down stored"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -207,6 +217,7 @@
 #define MSG_BEST_GATEWAY				"best gateway "
 #define MSG_SEND_MAC_REPLY				"Send reply on MAC command(s)"
 #define MSG_GATEWAY_SNR					" SNR "
+#define MSG_SIG_FLUSH_FILES				"Signal to flush files received "
 
 #define ERROR							"Error "
 

@@ -5,6 +5,8 @@
 #include <sstream>
 #include <unistd.h>
 #include <syslog.h>
+#include <signal.h>
+#include <errno.h>
 #include <sys/select.h>
 
 #include "utilstring.h"
@@ -13,7 +15,7 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	verbosity(0), stopped(false), onLog(NULL), onGatewayStatDump(NULL), gwStatEnv(NULL),
+	sysSignalPtr(NULL), verbosity(0), stopped(false), onLog(NULL), onGatewayStatDump(NULL), gwStatEnv(NULL),
 	onDeviceStatDump(NULL), deviceStatEnv(NULL),
 	handler(NULL), identityService(NULL), gatewayList(NULL), deviceStatService(NULL)
 {
@@ -94,6 +96,17 @@ void UDPListener::setDeviceStatService
 	deviceStatService = value;
 }
 
+/**
+ * Set system signal last value pointer
+ */
+void UDPListener::setSysSignalPtr
+(
+	int *value
+)
+{
+	sysSignalPtr = value;
+}
+
 std::string UDPListener::toString() {
 	std::stringstream ss;
 	for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
@@ -156,11 +169,20 @@ int UDPListener::listen() {
 
         int rs = select(largestSocket() + 1, &readHandles, NULL, NULL, &timeoutInterval);
         if (rs == -1) {
+			int serrno = errno;
 			if (onLog) {
 				std::stringstream ss;
+
 				ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT 
-					<< ", errno " << errno << ": " << strerror(errno);
+					<< ", errno " << serrno << ": " << strerror(errno);
 				onLog(this, LOG_WARNING, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
+			}
+			if (serrno == EINTR)	// Interrupted system call
+			{
+				if (sysSignalPtr) {
+					if (*sysSignalPtr == 0 || *sysSignalPtr == SIGUSR2)
+						continue;
+				}
 			}
 			return ERR_CODE_SELECT;
 		}

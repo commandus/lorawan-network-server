@@ -402,6 +402,10 @@ You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
 - configFileName
 - gatewaysFileName
 
+## Trapped signals
+
+- SIGUSR2 (12) flush files to the disk
+
 ## Packet types sent by Semtech gateway
 
 Tag values:

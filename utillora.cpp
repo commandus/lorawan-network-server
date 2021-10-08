@@ -1811,6 +1811,7 @@ std::string semtechUDPPacket::mkPullResponse(
 	const std::string &data,
 	const DeviceId &deviceid,
 	uint32_t recievedTime,
+	const int fcnt,
 	const int power
 ) const
 {
@@ -1830,6 +1831,7 @@ std::string semtechUDPPacket::mkPullResponse(
 	// replace direction: MTYPE_UNCONFIRMED_DATA_UP to MTYPE_UNCONFIRMED_DATA_DOWN
 	rfmHeader.header.macheader.f.mtype = MTYPE_UNCONFIRMED_DATA_DOWN;
 	rfmHeader.header.fctrl.i = 0;
+	rfmHeader.header.fcnt = fcnt;
 
 	if (psize <= 15) {
 		// use FOpts
@@ -1844,9 +1846,10 @@ std::string semtechUDPPacket::mkPullResponse(
 	smsg << frmpayload;
 
 	std::cerr << "==Address: " << DEVADDR2string(rfmHeader.header.devaddr) << std::endl;
-	std::cerr << "==Header: " << rfmHeader.toJson() << std::endl;
-	std::cerr << "==Header: " << hexString(rfmHeader.toBinary()) << std::endl;
-	std::cerr << "==Data: " << hexString(data) << std::endl;
+	std::cerr << "==FCnt:  " << rfmHeader.header.fcnt << std::endl;
+	std::cerr << "=Header: " << rfmHeader.toJson() << std::endl;
+	std::cerr << "=Header: " << hexString(rfmHeader.toBinary()) << std::endl;
+	std::cerr << "==Data:  " << hexString(data) << std::endl;
 
 	std::string msg = smsg.str();
 	// calc mic

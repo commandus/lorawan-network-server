@@ -191,16 +191,16 @@ int JsonFileDeviceStatService::save()
 {
 	std::fstream os;
 	os.open(path, std::ios::out);
-	os << "[" << std::endl;
+	os << "[";
 	bool addSeparator(false);
 	for (std::map<DEVADDRINT, DEVICESTAT>::const_iterator it = storage.begin(); it != storage.end(); it++) {
 		if (addSeparator)
 			os << ",";
 		os << std::endl << "{\"" 
-			<< ATTR_NAMES[0] << "\": \"" << DEVADDRINT2string(it->first) << "\",\"" 
-			<< ATTR_NAMES[1] << "\": \"" << time2string(it->second.t) << "\",\"" 
-			<< ATTR_NAMES[2] << "\": " << it->second.fcntup << ",\""
-			<< ATTR_NAMES[3] << "\": \"" << it->second.fcntdown << "}" << std::endl;
+			<< ATTR_NAMES[0] << "\": \"" << DEVADDRINT2string(it->first) << "\", \"" 
+			<< ATTR_NAMES[1] << "\": \"" << time2string(it->second.t) << "\", \"" 
+			<< ATTR_NAMES[2] << "\": " << it->second.fcntup << ", \""
+			<< ATTR_NAMES[3] << "\":" << it->second.fcntdown << "}" << std::endl;
 		addSeparator = true;
 	}
 	os << "]" << std::endl;
@@ -257,24 +257,28 @@ void JsonFileDeviceStatService::put(
 
 void JsonFileDeviceStatService::putUp(
 	DEVADDR &devaddr,
-	uint32_t &value
+	time_t &tm,
+	uint32_t value
 )
 {
 	mutexMap.lock();
 	DEVICESTAT v = storage[devaddr];
 	v.fcntup = value;
+	v.t = tm;
 	storage[devaddr] = v;
 	mutexMap.unlock();
 }
 
 void JsonFileDeviceStatService::putDown(
 	DEVADDR &devaddr,
-	uint32_t &value
+	time_t &tm,
+	uint32_t value
 )
 {
 	mutexMap.lock();
 	DEVICESTAT v = storage[devaddr];
 	v.fcntdown = value;
+	v.t = tm;
 	storage[devaddr] = v;
 	mutexMap.unlock();
 }
