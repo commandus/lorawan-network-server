@@ -5,6 +5,7 @@
 		"identityStorageName": "identity.json",
 		"storageType": "json",
 		"queueStorageName": "queue.json",
+		"deviceStatStorageName": "device-counters.json",
 		"messageQueueStorageType": "json",
 		"listenAddressIPv4": [
 			"127.0.0.1:5000",

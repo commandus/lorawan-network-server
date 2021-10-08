@@ -138,7 +138,7 @@ mac_gw_SOURCES = \
 	config-json.cpp packet-queue.cpp device-stat.cpр gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
-	semtech-metadata-tx.cpp lora-rejoin.cpp \
+	semtech-metadata-tx.cpp lora-rejoin.cpp device-stat.cpp \
 	$(C_STORAGE) \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \

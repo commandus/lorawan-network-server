@@ -25,6 +25,7 @@ class UDPListener
 private:
 	std::string buffer;
 	int largestSocket();
+	int *sysSignalPtr;
 	GatewayList *gatewayList;
 public:
 	int verbosity;
@@ -92,6 +93,7 @@ public:
 	void setIdentityService(IdentityService* value);
 	void setGatewayList(GatewayList *value);
 	void setDeviceStatService(DeviceStatService *value);
+	void setSysSignalPtr(int *value);
 
 	void setGatewayStatDumper(
 		void *gwStatEnv,

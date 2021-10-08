@@ -27,8 +27,8 @@ class JsonFileDeviceStatService: public DeviceStatService {
 		~JsonFileDeviceStatService();
 		int get(DEVADDR &devaddr, DeviceStat &retval);
 		void put(DEVADDR &devaddr, DEVICESTAT &value);
-		void putUp(DEVADDR &devaddr, uint32_t &fcntup);
-		void putDown(DEVADDR &devaddr, uint32_t &fcntdown);
+		void putUp(DEVADDR &devaddr, time_t &time, uint32_t fcntup);
+		void putDown(DEVADDR &devaddr, time_t &time, uint32_t fcntdown);
 		void rm(DEVADDR &addr);
 		// List entries
 		void list(std::vector<DeviceStat> &retval, size_t offset, size_t size);
