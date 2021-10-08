@@ -93,7 +93,7 @@ class DeviceStatJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF
 					v.fcntup = u;
 					break;
 				case 3:
-					v.fcntup = u;
+					v.fcntdown = u;
 					break;
 				default:
 					break;

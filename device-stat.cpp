@@ -28,7 +28,7 @@ DeviceStat::DeviceStat(
 	addr = value.addr;			// network address
 	t = value.t;				// last session time
 	fcntup = value.fcntup;		// Last frame count sent by end device
-	fcntdown = value.fcntdown;	///< Last frame count sent by network service
+	fcntdown = value.fcntdown;	// Last frame count sent by network service
 }
 
 DeviceStat::DeviceStat
