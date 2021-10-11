@@ -1191,8 +1191,8 @@ int semtechUDPPacket::parse
 
 	// rapidjson::StringRef(METADATA_RX_NAMES[1]))
 
-	if (doc.HasMember("stat")) {
-		rapidjson::Value &jstat = doc["stat"];
+	if (doc.HasMember(METADATA_RX_NAMES[7])) {	// "stat"
+		rapidjson::Value &jstat = doc[METADATA_RX_NAMES[7]];
 		if (retgwstat.parse(jstat) == 0) {
 			// set gateway identifier
 			retgwstat.gatewayId = *(uint64_t *) &retprefix.mac;
@@ -1497,8 +1497,10 @@ std::string semtechUDPPacket::toDebugString() const
 	ss << "device " << DEVICENAME2string(devId.name)
 		<< ", addr: " << getDeviceAddrStr()
 		<< ", gw: " << DEVEUI2string(prefix.mac);
-	if (metadata.size() > 0)
-		ss << ", rssi: " << (int) metadata[0].rssi << "dBm";
+	if (metadata.size() > 0) {
+		ss << ", rssi: " << (int) metadata[0].rssi << "dBm, lsnr: "
+			<<  metadata[0].lsnr << "dB";
+	}
 	return ss.str();
 }
 
@@ -1662,15 +1664,19 @@ int semtechUDPPacket::parseData(
 			errcode = mic == micCalc ? LORA_OK : ERR_CODE_INVALID_MIC; 
 			if (errcode == LORA_OK) {
 				int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
-				// FHDR FPort Fopts
-				std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
-				KEY128 *key;
-				if (header.fport == 0)
-					key = &devId.nwkSKey;
-				else
-					key = &devId.appSKey;
-				decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
-				payload = p; 
+				if (payloadSize > 0) {
+					// FHDR FPort Fopts
+					std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
+					KEY128 *key;
+					if (header.fport == 0)
+						key = &devId.nwkSKey;
+					else
+						key = &devId.appSKey;
+					decryptPayload(p, header.header.fcnt, direction, header.header.devaddr, *key);
+					payload = p; 
+				} else {
+					payload = "";
+				}
 			}
 		} else {
 			// return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
