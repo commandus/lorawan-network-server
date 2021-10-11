@@ -218,9 +218,9 @@
 #define MSG_SEND_MAC_REPLY				"Send reply on MAC command(s)"
 #define MSG_GATEWAY_SNR					" SNR "
 #define MSG_SIG_FLUSH_FILES				"Signal to flush files received "
+#define MSG_PUSH_PACKET_QUEUE			"Push packet queue "
 
 #define ERROR							"Error "
-
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

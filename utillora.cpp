@@ -1711,8 +1711,9 @@ uint64_t semtechUDPPacket::getBestGatewayAddress(
 		{
 			f = it->lsnr;
 			r = it->gatewayId;
-			if (retvalLsnr)
+			if (retvalLsnr) {
 				*retvalLsnr = f;
+			}
 		}
 	}
 	return r;
@@ -1748,7 +1749,7 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString
 		uint32_t sendTime = recievedTime + 1000000;
 		ss << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
 	}
-	ss << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].freq / 1000000. // uency()
+	ss << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
 		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
 		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
 		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
@@ -1836,6 +1837,7 @@ std::string semtechUDPPacket::mkPullResponse(
 	if (psize <= 15) {
 		// use FOpts
 		rfmHeader.header.fctrl.f.foptslen = psize;
+		// device controled by service
 		rfmHeader.header.fctrl.f.adr = 1;
 		smsg << rfmHeader.toBinary();
 	} else {
@@ -2029,7 +2031,7 @@ std::string semtechDataPrefix2JsonString(
  * @see https://semtech.my.salesforce.com/sfc/p/#E0000000JelG/a/2R0000001Rbr/6EfVZUorrpoKFfvaF_Fkpgp5kzjiNyiAbqcpqh9qSjE
  * 
 */
-static float SpreadFactorToRequiredSNR[] = {
+static float SpreadFactorToRequiredSNR[13] = {
 	-5,	// 0
 	-5,
 	-5,
@@ -2049,7 +2051,7 @@ static float SpreadFactorToRequiredSNR[] = {
  * link margin, dB, range of 0..254
  * “0” - the frame was received at the demodulation floor
  * “20” - frame reached the gateway 20 dB above demodulation floor
- * @param spreadingFactor 6,.12
+ * @param spreadingFactor 6,.12, use always 6
  * @param loraSNR
  * @return 0..254
  */
@@ -2058,9 +2060,10 @@ uint8_t loraMargin(
 	float loraSNR
 )
 {
+	std::cerr << "loraMargin " << loraSNR << std::endl;
 	if (spreadingFactor >= 12)
 		spreadingFactor = 11;
-	int r = loraSNR - SpreadFactorToRequiredSNR[spreadingFactor];
+	int r = (loraSNR - SpreadFactorToRequiredSNR[spreadingFactor] + 0.5);	// round
 	if (r < 0)
 		r = 0;
 	if (r > 254)

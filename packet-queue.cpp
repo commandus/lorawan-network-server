@@ -129,8 +129,8 @@ void PacketQueue::push(
 ) {
 	if (onLog) {
 		std::stringstream ss;
-		ss << "Push packet queue " << timeval2string(time);
-		onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+		ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time);
+		onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
 	}
 
 	SemtechUDPPacketItem item(socket, mode, time, value);

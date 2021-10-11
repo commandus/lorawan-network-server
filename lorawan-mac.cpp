@@ -1888,7 +1888,7 @@ bool MacPtr::mkResponseMAC(
 	case LinkCheck:
 		// fill out
 		{
-			float lorasnr = 0.0;
+			float lorasnr;
 			uint64_t gwa = packet.getBestGatewayAddress(&lorasnr);
 			outMacCommand.data.linkcheck.gwcnt = packet.metadata.size();
 			outMacCommand.data.linkcheck.margin = loraMargin(6, lorasnr);

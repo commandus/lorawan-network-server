@@ -12,6 +12,9 @@
 // default queue timeout in microseconds
 #define DEF_TIMEOUT_US	1000
 
+// default queue timeout in microseconds
+#define TIMEOUT_IMMEDIATE	0
+
 int LoraPacketProcessor::enqueuePayload(
 	struct timeval &time,
 	semtechUDPPacket &value
@@ -50,7 +53,8 @@ int LoraPacketProcessor::enqueueMAC(
 		<< "payload: " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-	incTimeval(time, 0, DEF_TIMEOUT_US);
+	// immediately
+	// incTimeval(time, 0, DEF_TIMEOUT_US);
 	packetQueue.push(0, MODE_REPLY_MAC, time, value);
 	packetQueue.wakeUp();
 	return LORA_OK;
