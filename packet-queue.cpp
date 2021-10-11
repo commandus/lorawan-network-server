@@ -430,14 +430,12 @@ int PacketQueue::replyMAC(
 	if (onLog)
 		onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 	// make response
-	int offset = 0;
 
 	// get identity for NwkS
 	DeviceId id;
 	if (identityService)
 		identityService->get(item.packet.header.header.devaddr, id);
 	// Produce MAC command response in the item.packet
-	std::string macResponse;
 	uint32_t fcntdown = 0;
 	if (deviceStatService) {
 		DeviceStat ds;
@@ -452,39 +450,40 @@ int PacketQueue::replyMAC(
 		}
 	}
 
-	while (int lastMACIndex = macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey, offset) != -1) {
-		offset = lastMACIndex;
-		fcntdown++;
-		std::string response = item.packet.mkPullResponse(macResponse, id, internalTime, fcntdown, power);
+	std::stringstream macResponse;
+	macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey);
+
+	fcntdown++;
+	
+	std::string response = item.packet.mkPullResponse(macResponse.str(), id, internalTime, fcntdown, power);
 std::cerr << "==MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
 std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
-		size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
-			(const struct sockaddr*) &gwit->second.sockaddr,
-			((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
-		
-		if (r == response.size()) {
-			if (deviceStatService)
-				deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
-		}
+	size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
+		(const struct sockaddr*) &gwit->second.sockaddr,
+		((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+	
+	if (r == response.size()) {
+		if (deviceStatService)
+			deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
+	}
 
-		if (onLog) {
-			if (r != response.size()) {
-				std::stringstream ss;
-				ss << ERR_CODE_REPLY_MAC
-					<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
-				if (r == -1)
-					ss << ", sent " << r << " of " << response.size();
-				ss << ", errno: " << errno << ": " << strerror(errno);
-				if (onLog)
-					onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
-			} else {
-				std::stringstream ss;
-				ss << MSG_SENT_REPLY_TO
-					<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-					<< " payload: " << hexString(response) << ", size: " << response.size();
-				if (onLog)
-					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
-			}
+	if (onLog) {
+		if (r != response.size()) {
+			std::stringstream ss;
+			ss << ERR_CODE_REPLY_MAC
+				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
+			if (r == -1)
+				ss << ", sent " << r << " of " << response.size();
+			ss << ", errno: " << errno << ": " << strerror(errno);
+			if (onLog)
+				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
+		} else {
+			std::stringstream ss;
+			ss << MSG_SENT_REPLY_TO
+				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
+				<< " payload: " << hexString(response) << ", size: " << response.size();
+			if (onLog)
+				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	return LORA_OK;

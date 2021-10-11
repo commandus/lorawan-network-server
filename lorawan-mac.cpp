@@ -1901,7 +1901,33 @@ bool MacPtr::mkResponseMAC(
 }
 
 /**
- * Produce MAC command response, return MAC response payload in the retval parameter 
+ * Request MAC command from server side
+ * @param outMacCommand return MAC command
+ * @param inMacCommand MAC command to response
+ * @param packet Received Semtech packet to inject request
+ * @return true success
+ */
+bool MacPtr::mkRequestMAC(
+	MAC_COMMAND &outMacCommand,
+	const uint8_t macCommandCode,
+	semtechUDPPacket &packet
+)
+{
+	outMacCommand.command = macCommandCode;
+	switch (macCommandCode)
+	{
+	case DevStatus:
+		{
+		}
+		break;
+	default:
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Produce MAC command(s) response, return MAC response payload in the retval parameter 
  * @param retval JSON txpk string to be sent over Semtech gateway
  * @param packet Received Semtech packet to answer
  * @param key NwkSKey not AppSKey
@@ -1909,23 +1935,22 @@ bool MacPtr::mkResponseMAC(
  * @return -1 no more, otherwise count of MAC answered (response can be too long)
  */
 int MacPtr::mkResponseMAC(
-	std::string &retval,
+	std::ostream &retval,
 	semtechUDPPacket &packet,
 	KEY128 &key,	// NwkSKey not AppSKey
 	const int offset
 )
 {
-	std::stringstream sfrmpayload;
 	for (int i = offset; i < mac.size(); i++) {
 		MAC_COMMAND rmac;
 		if (mkResponseMAC(rmac, mac[i], packet)) {
-			sfrmpayload << MAC_COMMAND2binary(rmac);
+			std::string m = MAC_COMMAND2binary(rmac);
+			if (m.size() == 0)
+				return -1;
+			else
+				retval << m;
 		}
 	}
-	retval = sfrmpayload.str();
-std::cerr << "MacPtr::mkResponseMAC: " << hexString(retval) << std::endl;
-	if (retval.size() == 0)
-		return -1;
 	return mac.size();
 }
 
