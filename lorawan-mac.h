@@ -780,11 +780,11 @@ class MacPtr {
 		/**
 		 * Request MAC command from server side
 		 * @param outMacCommand return MAC command
-		 * @param inMacCommand MAC command to response
+		 * @param macCommandCode MAC command to response
 		 * @param packet Received Semtech packet to inject request
 		 * @return true success
 		 */
-		bool mkRequestMAC(
+		static bool mkRequestMAC(
 			MAC_COMMAND &outMacCommand,
 			const uint8_t macCommandCode,
 			semtechUDPPacket &packet
@@ -797,7 +797,7 @@ class MacPtr {
 		 * @param packet Received Semtech packet to answer
 		 * @return true if has answer
 		 */
-		bool mkResponseMAC(
+		static bool mkResponseMAC(
 			MAC_COMMAND &outMacCommand,
 			const MAC_COMMAND *inMacCommand,
 			semtechUDPPacket &packet
@@ -807,15 +807,22 @@ class MacPtr {
 		 * Produce MAC command response, return MAC response payload in the retval parameter 
 		 * @param retval JSON txpk string to be sent over Semtech gateway
 		 * @param packet Received Semtech packet to answer
-		 * @param key NwkSKey not AppSKey\
-		 * @param offset default 0
 		 * @return -1 no more, otherwise count of MAC answered (response can be too long)
 		 */
-		int mkResponseMAC(
+		int mkResponseMACs(
 			std::ostream &retval,
-			semtechUDPPacket &packet,
-			KEY128 &key,
-			const int offset = 0
+			semtechUDPPacket &packet
+		);
+
+		/**
+		 * Produce MAC command request, return MAC response payload in the retval parameter 
+		 * @param retval JSON txpk string to be sent over Semtech gateway
+		 * @param packet Received Semtech packet to answer
+		 * @return -1 no more, otherwise count of MAC answered (response can be too long)
+		 */
+		int mkRequestMACs(
+			std::ostream &retval,
+			semtechUDPPacket &packet
 		);
 };
 
@@ -1085,7 +1092,11 @@ class MacDataDeviceMode : public MacData {
 		MacDataDeviceMode(bool classC);	
 };
 
-std::string MAC_COMMAND2binary(
+std::string MAC_COMMANDResponse2binary(
+	MAC_COMMAND &c
+);
+
+std::string MAC_COMMANDRequest2binary(
 	MAC_COMMAND &c
 );
 

@@ -1072,8 +1072,15 @@ bool rfmHeader::parse(
 		sz = value.size();
 	if (sz > 0)
 		memcpy(&header, value.c_str(), sz);
-	if (value.size() > sizeof(RFM_HEADER))
-		memcpy(&fport, value.c_str() + sizeof(RFM_HEADER), 1);
+	// fopts, less than 15 bytes
+	uint8_t foptslen = header.fctrl.f.foptslen;
+	if (foptslen) {
+		if (value.size() >= sizeof(RFM_HEADER) + foptslen) {
+			memcpy(&fopts, value.c_str() + sizeof(RFM_HEADER), foptslen);	
+		}
+	}
+	if (value.size() > sizeof(RFM_HEADER) + foptslen)
+		memcpy(&fport, value.c_str() + sizeof(RFM_HEADER) + foptslen, 1);
 	return r;
 }
 
@@ -1688,6 +1695,10 @@ int semtechUDPPacket::parseData(
 
 bool semtechUDPPacket::hasMACPayload() const
 {
+	// Packet with payload can contains FOpts up to 15 bytes
+	if (header.header.fctrl.f.foptslen)
+		return true;
+	// Or MAC can be in the payload of type(FPort) 0
 	// fport 1..223 - application payload
 	// fport 224 - LoRaWAN test protocol
 	return (header.fport == 0) && (payload.size() > 0);

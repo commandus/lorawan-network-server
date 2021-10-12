@@ -1890,6 +1890,7 @@ bool MacPtr::mkResponseMAC(
 		{
 			float lorasnr;
 			uint64_t gwa = packet.getBestGatewayAddress(&lorasnr);
+			// gateways received packet
 			outMacCommand.data.linkcheck.gwcnt = packet.metadata.size();
 			outMacCommand.data.linkcheck.margin = loraMargin(6, lorasnr);
 		}
@@ -1917,8 +1918,6 @@ bool MacPtr::mkRequestMAC(
 	switch (macCommandCode)
 	{
 	case DevStatus:
-		{
-		}
 		break;
 	default:
 		return false;
@@ -1930,21 +1929,18 @@ bool MacPtr::mkRequestMAC(
  * Produce MAC command(s) response, return MAC response payload in the retval parameter 
  * @param retval JSON txpk string to be sent over Semtech gateway
  * @param packet Received Semtech packet to answer
- * @param key NwkSKey not AppSKey
  * @param offset default 0
  * @return -1 no more, otherwise count of MAC answered (response can be too long)
  */
-int MacPtr::mkResponseMAC(
+int MacPtr::mkResponseMACs(
 	std::ostream &retval,
-	semtechUDPPacket &packet,
-	KEY128 &key,	// NwkSKey not AppSKey
-	const int offset
+	semtechUDPPacket &packet
 )
 {
-	for (int i = offset; i < mac.size(); i++) {
+	for (int i = 0; i < mac.size(); i++) {
 		MAC_COMMAND rmac;
 		if (mkResponseMAC(rmac, mac[i], packet)) {
-			std::string m = MAC_COMMAND2binary(rmac);
+			std::string m = MAC_COMMANDResponse2binary(rmac);
 			if (m.size() == 0)
 				return -1;
 			else
@@ -1954,7 +1950,37 @@ int MacPtr::mkResponseMAC(
 	return mac.size();
 }
 
-std::string MAC_COMMAND2binary(
+/**
+ * Produce MAC command request, return MAC response payload in the retval parameter 
+ * @param retval JSON txpk string to be sent over Semtech gateway
+ * @param packet Received Semtech packet to answer
+ * @return -1 no more, otherwise count of MAC answered (response can be too long)
+ */
+int MacPtr::mkRequestMACs(
+	std::ostream &retval,
+	semtechUDPPacket &packet
+)
+{
+	std::vector<uint8_t> requestMacCommands;
+
+	// TODO
+	requestMacCommands.push_back(DevStatus);
+
+	for (std::vector<uint8_t>::const_iterator it(requestMacCommands.begin()); it != requestMacCommands.end(); it++) 
+	{
+		MAC_COMMAND rmac;
+		if (mkRequestMAC(rmac, *it, packet)) {
+			std::string m = MAC_COMMANDRequest2binary(rmac);
+			if (m.size() == 0)
+				return -1;
+			else
+				retval << m;
+		}
+	}
+	return mac.size();
+}
+
+std::string MAC_COMMANDResponse2binary(
 	MAC_COMMAND &c
 )
 {
@@ -2005,6 +2031,17 @@ std::string MAC_COMMAND2binary(
 			break;
 		default:
 			break;
+	}
+	return "";
+}
+
+std::string MAC_COMMANDRequest2binary(
+	MAC_COMMAND &c
+)
+{
+	switch (c.command) {
+		default:
+			return std::string((const char *) &c, 1);
 	}
 	return "";
 }

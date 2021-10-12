@@ -451,11 +451,18 @@ int PacketQueue::replyMAC(
 	}
 
 	std::stringstream macResponse;
-	macPtr.mkResponseMAC(macResponse, item.packet, id.nwkSKey);
+	// Get response on MAC commands
+	macPtr.mkResponseMACs(macResponse, item.packet);
+	// Add MAR request from server-side (if exists)
+	macPtr.mkRequestMACs(macResponse, item.packet);
+	std::string mrp = macResponse.str();
+
+	if (mrp.empty())
+		return LORA_OK;
 
 	fcntdown++;
-	
-	std::string response = item.packet.mkPullResponse(macResponse.str(), id, internalTime, fcntdown, power);
+
+	std::string response = item.packet.mkPullResponse(mrp, id, internalTime, fcntdown, power);
 std::cerr << "==MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
 std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 	size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,

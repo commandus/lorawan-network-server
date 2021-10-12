@@ -9,8 +9,8 @@
 // tme window delay, s
 #define DEF_TIME_WINDOW_1	1
 #define DEF_TIME_WINDOW_2	2
-// default queue timeout in microseconds
-#define DEF_TIMEOUT_US	1000
+// default queue timeout in microseconds, less than 1s, e.g. 1/4s
+#define DEF_TIMEOUT_US	250 * 1000
 
 // default queue timeout in microseconds
 #define TIMEOUT_IMMEDIATE	0
@@ -53,8 +53,8 @@ int LoraPacketProcessor::enqueueMAC(
 		<< "payload: " << hexString(p);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-	// immediately
-	// incTimeval(time, 0, DEF_TIMEOUT_US);
+	// wait until gateways all send packet
+	incTimeval(time, 0, DEF_TIMEOUT_US);
 	packetQueue.push(0, MODE_REPLY_MAC, time, value);
 	packetQueue.wakeUp();
 	return LORA_OK;
