@@ -23,6 +23,7 @@ class ServerConfig {
 		std::vector<std::string> listenAddressIPv6;
 		int readBufferSize;
 		int verbosity;
+		uint8_t controlFPort; // 0- no remote conttrol allowed, 1 .. 223
 		bool daemonize;
 		std::string identityStorageName;
 		std::string queueStorageName;

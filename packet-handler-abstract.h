@@ -11,12 +11,12 @@ class PacketHandler {
 	public:
 		// Return 0, retval = EUI and keys
 		virtual int enqueuePayload(
-			struct timeval &time,
+			const struct timeval &time,
 			semtechUDPPacket &value
 		) = 0;
 
 		virtual int enqueueMAC(
-			struct timeval &time,
+			const struct timeval &time,
 			semtechUDPPacket &value
 		) = 0;
 };
