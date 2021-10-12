@@ -45,7 +45,7 @@ int LoraPacketProcessor::enqueueMAC(
 )
 {
 	std::stringstream ss;
-	std::string p = value.payload;
+	std::string p = value.getMACs();
 	ss << MSG_MAC_COMMAND_RECEIVED 
 		<< UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
 		<< ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " 

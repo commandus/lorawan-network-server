@@ -1899,6 +1899,21 @@ uint32_t semtechUDPPacket::tmms()
 	return it->tmms();
 }
 
+std::string semtechUDPPacket::getMACs()
+{
+	if (header.header.fctrl.f.foptslen)
+		return std::string((const char *) &header.fopts, header.header.fctrl.f.foptslen);
+	// Or MAC can be in the payload of type(FPort) 0
+	// fport 1..223 - application payload
+	// fport 224 - LoRaWAN test protocol
+	if ((header.fport == 0) && (payload.size() > 0))
+	{
+		return payload;
+	}
+	return "";
+}
+
+
 uint64_t deveui2int(
 	const DEVEUI &value
 )

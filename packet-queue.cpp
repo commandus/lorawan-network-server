@@ -411,7 +411,7 @@ int PacketQueue::replyMAC(
 	}
 	
 	// get MAC commands
-	MacPtr macPtr(item.packet.payload);
+	MacPtr macPtr(item.packet.getMACs());
 	// print out
 	std::stringstream ss;
 	uint32_t internalTime = item.packet.tmst();
@@ -454,7 +454,7 @@ int PacketQueue::replyMAC(
 	// Get response on MAC commands
 	macPtr.mkResponseMACs(macResponse, item.packet);
 	// Add MAR request from server-side (if exists)
-	macPtr.mkRequestMACs(macResponse, item.packet);
+	// macPtr.mkRequestMACs(macResponse, item.packet);
 	std::string mrp = macResponse.str();
 
 	if (mrp.empty())
