@@ -17,7 +17,7 @@ class LoraPacketHandler {
 		) = 0;
 		// Return 0, retval = EUI and keys
 		virtual int put(
-			struct timeval &time,
+			const struct timeval &time,
 			semtechUDPPacket &packet
 		) = 0;
 };

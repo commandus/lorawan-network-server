@@ -72,6 +72,13 @@ public:
 	void clear();
 
 	int listen();
+	int parseBuffer(
+		const std::string &buffer,
+		size_t bytesReceived,
+		int socket,
+		const struct timeval &recievedTime,
+		const struct sockaddr_in6 &gwAddress
+	);
 
 	int peerAddrIndex(
 		struct sockaddr *remotePeerAddr);

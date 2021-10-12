@@ -16,7 +16,7 @@
 #define TIMEOUT_IMMEDIATE	0
 
 int LoraPacketProcessor::enqueuePayload(
-	struct timeval &time,
+	const struct timeval &time,
 	semtechUDPPacket &value
 )
 {
@@ -40,7 +40,7 @@ int LoraPacketProcessor::enqueuePayload(
  * @return 0- success
  */ 
 int LoraPacketProcessor::enqueueMAC(
-	struct timeval &time,
+	const struct timeval &time,
 	semtechUDPPacket &value
 )
 {
@@ -54,8 +54,11 @@ int LoraPacketProcessor::enqueueMAC(
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
 	// wait until gateways all send packet
-	incTimeval(time, 0, DEF_TIMEOUT_US);
-	packetQueue.push(0, MODE_REPLY_MAC, time, value);
+	struct timeval t;
+	t.tv_sec = time.tv_sec;
+	t.tv_usec = time.tv_usec;
+	incTimeval(t, 0, DEF_TIMEOUT_US);
+	packetQueue.push(0, MODE_REPLY_MAC, t, value);
 	packetQueue.wakeUp();
 	return LORA_OK;
 }
@@ -99,7 +102,7 @@ int LoraPacketProcessor::ack
  */ 
 int LoraPacketProcessor::put
 (
-	struct timeval &time,
+	const struct timeval &time,
 	semtechUDPPacket &packet
 )
 {

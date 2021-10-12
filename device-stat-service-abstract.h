@@ -15,9 +15,9 @@ class DeviceStatService {
 		virtual int get(DEVADDR &devaddr, DeviceStat &retval) = 0;
 		virtual void put(DEVADDR &devaddr, DEVICESTAT &value) = 0;
 		// Add or replace Address = FCntUo
-		virtual void putUp(DEVADDR &devaddr, time_t &time, uint32_t fcntup) = 0;
+		virtual void putUp(DEVADDR &devaddr, const time_t &time, uint32_t fcntup) = 0;
 		// Add or replace Address = FCntDown
-		virtual void putDown(DEVADDR &devaddr, time_t &time, uint32_t fcntdown) = 0;
+		virtual void putDown(DEVADDR &devaddr, const time_t &time, uint32_t fcntdown) = 0;
 		// Remove entry
 		virtual void rm(DEVADDR &addr) = 0;
 		// List entries

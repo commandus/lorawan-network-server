@@ -257,7 +257,7 @@ void JsonFileDeviceStatService::put(
 
 void JsonFileDeviceStatService::putUp(
 	DEVADDR &devaddr,
-	time_t &tm,
+	const time_t &tm,
 	uint32_t value
 )
 {
@@ -271,7 +271,7 @@ void JsonFileDeviceStatService::putUp(
 
 void JsonFileDeviceStatService::putDown(
 	DEVADDR &devaddr,
-	time_t &tm,
+	const time_t &tm,
 	uint32_t value
 )
 {

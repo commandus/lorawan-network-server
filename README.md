@@ -158,6 +158,7 @@ Server config:
 - readBufferSize UDP buffer size Default 4096.
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
 - daemonize false..true Indicates does network server starts as deamon or not
+- controlFPort 0: no remote control, 1..223- FPort values used by network service to control server
 - storageType
 
 configFileName can used to load configuration from different location. 

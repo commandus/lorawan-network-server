@@ -57,7 +57,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		 * Add packet to be processed
 		 */
 		int put(
-			struct timeval &time,
+			const struct timeval &time,
 			semtechUDPPacket &packet
 		);
 		void setLogger(
@@ -69,11 +69,11 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 				const std::string &message
 		) > value);
 		int enqueuePayload(
-			struct timeval &time,
+			const struct timeval &time,
 			semtechUDPPacket &value
 		);
 		int enqueueMAC(
-			struct timeval &time,
+			const struct timeval &time,
 			semtechUDPPacket &value
 		);
 	void setRecieverQueueProcessor(RecieverQueueProcessor *value);

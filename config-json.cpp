@@ -51,13 +51,14 @@ void ServerConfig::clear()
 	listenAddressIPv6.clear();
 	readBufferSize = DEF_BUFFER_SIZE;
 	verbosity = 0;
+	controlFPort = 0;
 	daemonize = false;
 	logGWStatisticsFileName = "";
 	logDeviceStatisticsFileName = "";
 }
 
 ServerConfig::ServerConfig() 
-	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), daemonize(false),
+	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), controlFPort(0), daemonize(false),
 	identityStorageName(""), deviceStatStorageName(""), 
 	queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
 	messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0), 
@@ -119,6 +120,11 @@ int ServerConfig::parse(
 		rapidjson::Value &verbose =  value["verbosity"];
 		if (verbose.IsInt())
 			verbosity = verbose.GetInt();
+	}
+	if (value.HasMember("controlFPort")) {
+		rapidjson::Value &cFPort =  value["controlFPort"];
+		if (cFPort.IsInt())
+			controlFPort = cFPort.GetInt();
 	}
 	if (value.HasMember("daemonize")) {
 		rapidjson::Value &daemon =  value["daemonize"];
@@ -206,6 +212,10 @@ void ServerConfig::toJson(
 	rapidjson::Value verbose;
 	verbose.SetInt(verbosity);
 	value.AddMember("verbosity", verbose, allocator);
+
+	rapidjson::Value cFPort;
+	cFPort.SetInt(controlFPort);
+	value.AddMember("controlFPort", cFPort, allocator);
 
 	rapidjson::Value deamon;
 	deamon.SetBool(daemonize);
