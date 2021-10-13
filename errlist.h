@@ -94,6 +94,7 @@
 #define ERR_CODE_INIT_QUEUE					-578
 #define ERR_CODE_HANGUP_DETECTED			-579
 #define ERR_CODE_NO_FCNT_DOWN				-580
+#define ERR_CODE_CONTROL_NOT_AUTHORIZED		-581
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -184,6 +185,7 @@
 #define ERR_INIT_QUEUE					"Message queue initialization error "
 #define ERR_HANGUP_DETECTED				"Hangup detected on controlling terminal or death of controlling process"
 #define ERR_NO_FCNT_DOWN				"No FCnt down stored"
+#define ERR_CONTROL_NOT_AUTHORIZED		"Identity is not authorized to control network service "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

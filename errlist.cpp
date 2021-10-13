@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 81
+#define ERR_COUNT 82
 
 // used by strerror_lorawan_ns()
 static const char *errlist[ERR_COUNT] = {
@@ -85,7 +85,8 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_INIT_IDENTITY,
 	ERR_INIT_QUEUE,
 	ERR_HANGUP_DETECTED,
-	ERR_NO_FCNT_DOWN
+	ERR_NO_FCNT_DOWN,
+	ERR_CONTROL_NOT_AUTHORIZED
 };
 
 const char *strerror_lorawan_ns

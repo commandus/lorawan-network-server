@@ -285,7 +285,10 @@ Server updates the gateway statistics on shutdown.
 - eui         device identifier (hex string, 8 bytes)
 - nwkSKey     shared session key (hex string, 16 bytes)
 - appSKey     private key (hex string, 16 bytes)
-- name         optional device name (max 8 chars)
+- class 	    LoraWAN class "A", "B" or "C"
+- name        optional device name (max 8 chars). If name longer than 8 characters, name is truncated.
+- version     LoraWAN version e.g. "1.0.0"
+- flags       default 0- no rights. 1- device can send "control service" messages to the network service
 
 Example:
 ```

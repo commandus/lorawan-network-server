@@ -527,11 +527,14 @@ int main(
 	processor->setGatewayList(gatewayList);
 	processor->setReceiverQueueService(receiverQueueService);
 	processor->setDeviceStatService(deviceStatService);
+	// FPort number reserved for messages controls network service. 0- no remote control allowed
+	processor->reserveFPort(config->serverConfig.controlFPort);
 
 	// Set pkt2 environment
 	recieverQueueProcessor = new RecieverQueueProcessor();
 	recieverQueueProcessor->setPkt2Env(pkt2env);
 	recieverQueueProcessor->setLogger(onLog);
+
 	// Set databases
 	recieverQueueProcessor->setDatabaseByConfig(dbByConfig);
 	// start processing queue

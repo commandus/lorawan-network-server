@@ -19,6 +19,7 @@
  */ 
 class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 	private:
+		uint8_t reservedFPort;
 		IdentityService *identityService;
 		DeviceStatService *deviceStatService;
 		GatewayList *gatewayList;
@@ -77,6 +78,11 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 			semtechUDPPacket &value
 		);
 	void setRecieverQueueProcessor(RecieverQueueProcessor *value);
+
+	// Reserve FPort number for network service purposes
+	void reserveFPort(
+		uint8_t value
+	);
 };
 
 #endif

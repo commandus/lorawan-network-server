@@ -12,10 +12,13 @@
 #include "utilstring.h"
 #include "errlist.h"
 
+// end-device identity right flags
+#define IDENTITY_FLAG_CAN_CONTROL_SERVICE	1
+
 /**
  * 	JSON attribute names
  */
-#define ATTRS_COUNT	8
+#define ATTRS_COUNT	9
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
 	"addr", 		// 0 network address (hex string, 4 bytes)
 	"activation",	// 1 ABP or OTAA
@@ -24,7 +27,9 @@ static const char *ATTR_NAMES[ATTRS_COUNT] = {
 	"appSKey",		// 4 private key (hex string, 16 bytes)
 	"class", 		// 5 A, B or C
 	"version",		// 6 LoraWAN version
-	"name"			// 7 added for search
+	"name",			// 7 added for search
+	// not copied to the storage
+	"flags"			// 8 if bit 0 is set it means allow control network service
 };
 
 static const char *ACTIVATION_NAMES[2] = {
@@ -96,12 +101,14 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		int idx;
 		DEVADDR k;
 		DEVICEID v;
+		uint32_t flags;
 	public:
 		IdentityJsonHandler(JsonFileIdentityService *svc)
 			: service(svc), isNetworkIdentity(false), idx(-1)
 		{
 			memset(&k, 0, sizeof(DEVADDR));
 			memset(&v, 0, sizeof(DEVICEID));
+			flags = 0;
 		}
 
 		bool Null() {
@@ -117,6 +124,14 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		}
 
 		bool Uint(unsigned u) {
+			switch(idx) {
+				case 8:
+					{
+						if (u)
+							flags = u;
+					}
+					break;
+			}
 			return true;
 		}
 
@@ -174,6 +189,7 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 			v.version.major = 1;
 			v.version.minor = 0;
 			v.version.release = 0;
+			flags = 0;
 			return true; 
 		}
 
@@ -184,8 +200,11 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		bool EndObject(rapidjson::SizeType memberCount)
 		{
 			isNetworkIdentity = false;
-			if (*((uint64_t *) &k))
+			if (*((uint64_t *) &k)) 
+			{
 				service->put(k, v);
+				service->setRightsMask(k, flags);
+			}
 			return true;
 		}
 
@@ -230,12 +249,13 @@ int JsonFileIdentityService::load()
 int JsonFileIdentityService::save()
 {
 	std::fstream os;
-	os.open(path, std::ios::out);
+	os.open(path.c_str(), std::ios::out);
 	os << "[" << std::endl;
 	bool addSeparator(false);
 	for (std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.begin(); it != storage.end(); it++) {
 		if (addSeparator)
 			os << ",";
+		uint32_t rightsMask = getRightsMask((DEVADDR &) (it->first.a));
 		os << std::endl << "{\"" 
 			<< ATTR_NAMES[0] << "\": \"" << DEVADDRINT2string(it->first) << "\",\"" 
 			<< ATTR_NAMES[1] << "\": \"" << getActivationName(it->second.activation) << "\",\"" 
@@ -244,8 +264,12 @@ int JsonFileIdentityService::save()
 			<< ATTR_NAMES[4] << "\": \"" << KEY2string(it->second.appSKey) << "\",\""
 			<< ATTR_NAMES[5] << "\": \"" << deviceclass2string(it->second.deviceclass) << "\",\""
 			<< ATTR_NAMES[6] << "\": \"" << LORAWAN_VERSION2string(it->second.version) << "\",\""
-			<< ATTR_NAMES[7] << "\": \"" << DEVICENAME2string(it->second.name) << "\"}";
-
+			<< ATTR_NAMES[7] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
+		if (rightsMask) {
+			os << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;
+		}
+		os << "}";
+			
 		addSeparator = true;
 	}
 	os << "]" << std::endl;
@@ -430,4 +454,41 @@ std::string JsonFileIdentityService::toJsonString()
 	}
 	ss << "]";
 	return ss.str();
+}
+
+uint32_t JsonFileIdentityService::getRightsMask
+(
+	const DEVADDR &addr
+)
+{
+	std::map<DEVADDRINT, uint32_t>::const_iterator it(rightsMask.find(DEVADDRINT(addr)));
+    if (it == rightsMask.end()) 
+		return 0;
+	uint32_t r = it->second;
+	return r;
+}
+
+void JsonFileIdentityService::setRightsMask
+(
+	const DEVADDR &addr,
+	uint32_t value
+)
+{
+	if (value)
+		rightsMask[DEVADDRINT(addr)] = value;
+	else {
+		// remove if exists
+		std::map<DEVADDRINT, uint32_t>::iterator it(rightsMask.find(DEVADDRINT(addr)));
+    	if (it != rightsMask.end()) 
+			rightsMask.erase(it);
+	}
+
+}
+
+bool JsonFileIdentityService::canControlService
+(
+	const DEVADDR &addr
+)
+{
+	return getRightsMask(addr) & IDENTITY_FLAG_CAN_CONTROL_SERVICE;
 }

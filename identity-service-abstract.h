@@ -37,6 +37,9 @@ class IdentityService {
 			const std::vector<std::string> &list,
 			bool useRegex
 		) = 0;
+		virtual bool canControlService(
+			const DEVADDR &addr
+		) = 0;
 };
 
 #endif

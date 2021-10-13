@@ -274,3 +274,11 @@ int LmdbIdentityService::parseNames(
 	}
 	return 0;
 }
+
+bool LmdbIdentityService::canControlService
+(
+	const DEVADDR &addr
+)
+{
+	return false;
+}

@@ -64,7 +64,7 @@ int LoraPacketProcessor::enqueueMAC(
 }
 
 LoraPacketProcessor::LoraPacketProcessor()
-	: identityService(NULL), gatewayList(NULL), onLog(NULL), receiverQueueService(NULL),
+	: reservedFPort(0), identityService(NULL), gatewayList(NULL), onLog(NULL), receiverQueueService(NULL),
 	recieverQueueProcessor(NULL)
 {
 	packetQueue.start(*this);
@@ -106,29 +106,56 @@ int LoraPacketProcessor::put
 	semtechUDPPacket &packet
 )
 {
-	int r;
-	if (identityService) {
-		DEVADDR addr;
-		memmove(&addr, &packet.getHeader()->header.devaddr, sizeof(DEVADDR));
-		r = identityService->get(addr, packet.devId);
-		if (r == 0) {
-			if (deviceStatService) {
-				deviceStatService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
-			}
-			if (packet.hasApplicationPayload()) 
-				enqueuePayload(time, packet);
-			if (packet.hasMACPayload())
-				enqueueMAC(time, packet);
-		} else {
-			// device id is NOT identified
-			if (onLog) {
+	DEVADDR addr;
+	memmove(&addr, &packet.getHeader()->header.devaddr, sizeof(DEVADDR));
+
+	if (!identityService) {
+		if (onLog) {
+			// report error
+			std::stringstream ss;
+			ss << ERR_MESSAGE << ERR_CODE_INIT_IDENTITY << ": " << ERR_INIT_IDENTITY
+				<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
+				<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
+			onLog(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+		}
+		return ERR_CODE_INIT_IDENTITY;
+	}
+
+	// try to identify end-device
+	int r = identityService->get(addr, packet.devId);
+	if (r == 0) {
+		if (reservedFPort != 0 && packet.header.fport == reservedFPort) {
+			// check is device authorized to s=control network service
+			if (identityService->canControlService(addr)) {
+
+			} else {
 				// report error
-				std::stringstream ss;
-				ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r)
-					<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
-					<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
-				onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
+				if (onLog) {
+					std::stringstream ss;
+					ss << ERR_MESSAGE << ERR_CODE_CONTROL_NOT_AUTHORIZED << ": " << ERR_CONTROL_NOT_AUTHORIZED
+						<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
+						<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
+					onLog(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+				}
 			}
+		} else {
+			// device has been identified
+			if (deviceStatService)				// collect statistics if statistics collector is running
+				deviceStatService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
+			if (packet.hasApplicationPayload()) // store payload to the database(s) if exists
+				enqueuePayload(time, packet);
+			if (packet.hasMACPayload())			// provide MAC reply to the end-device if MAC command present in the packet
+				enqueueMAC(time, packet);
+		}
+	} else {
+		// device id is NOT identified
+		if (onLog) {
+			// report error
+			std::stringstream ss;
+			ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r)
+				<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
+				<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
+			onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 		}
 	}
 	return r;
@@ -217,4 +244,13 @@ void LoraPacketProcessor::addTimeWindow2
 )
 {
 	incTimeval(value, DEF_TIME_WINDOW_2);
+}
+
+// Reserve FPort number for network service purposes
+void LoraPacketProcessor::reserveFPort
+(
+	uint8_t value
+)
+{
+	reservedFPort = value;
 }
