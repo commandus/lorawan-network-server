@@ -17,8 +17,10 @@ class JsonFileIdentityService: public IdentityService {
 	protected:
 		std::mutex mutexMap;
 		std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare> storage;
+		std::map<DEVADDRINT, uint32_t, DEVADDRINTCompare> rightsMask;
 		std::string path;
 		void clear();		
+
 	public:
 		JsonFileIdentityService();
 		~JsonFileIdentityService();
@@ -42,10 +44,23 @@ class JsonFileIdentityService: public IdentityService {
 			const std::vector<std::string> &list,
 			bool useRegex
 		);
+		bool canControlService(
+			const DEVADDR &addr
+		);
+
 		// debug only
 		std::string toJsonString();
 		int errcode;
 		std::string errmessage;
+
+				uint32_t getRightsMask(
+			const DEVADDR &addr
+		);
+		void setRightsMask(
+			const DEVADDR &addr,
+			uint32_t value
+		);
+
 };
 
 #endif

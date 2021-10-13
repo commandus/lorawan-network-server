@@ -34,6 +34,9 @@ class LmdbIdentityService: public IdentityService {
 			const std::vector<std::string> &list,
 			bool useRegex
 		);
+		bool canControlService(
+			const DEVADDR &addr
+		);
 };
 
 #endif

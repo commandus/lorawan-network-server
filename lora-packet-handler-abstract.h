@@ -20,6 +20,10 @@ class LoraPacketHandler {
 			const struct timeval &time,
 			semtechUDPPacket &packet
 		) = 0;
+		// Reserve FPort number for network service purposes
+		virtual void reserveFPort(
+			uint8_t value
+		) = 0;
 };
 
 #endif
