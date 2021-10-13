@@ -547,6 +547,15 @@ void PacketQueue::runner()
 			case MODE_REPLY_MAC:
 				replyMAC(item, t);
 				break;
+			case MODE_CONTROL_NS:
+				//
+				if (onLog) {
+					std::stringstream ss;
+					ss << "== Control message processing not implemented yet, mode: " << (int) mode
+						<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
+					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+				}
+				break;
 			default:
 				if (onLog) {
 					std::stringstream ss;

@@ -59,6 +59,8 @@ int LoraPacketProcessor::enqueueControl(
 	incTimeval(t, 0, DEF_TIMEOUT_US);
 //	controlQueue.push(t, value);
 //	controlQueue.wakeUp();
+	packetQueue.push(0, MODE_CONTROL_NS, t, value);
+	packetQueue.wakeUp();
 	return LORA_OK;
 }
 
