@@ -35,6 +35,34 @@ int LoraPacketProcessor::enqueuePayload(
 }
 
 /**
+ * Enqueue control network service message
+ * @param time receive time
+ * @param value Semtech packet
+ * @return 0- success
+ */ 
+int LoraPacketProcessor::enqueueControl(
+	const struct timeval &time,
+	semtechUDPPacket &value
+)
+{
+	std::stringstream ss;
+	ss << MSG_MAC_COMMAND_RECEIVED 
+		<< UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+		<< ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " 
+		<< "payload: " << hexString(value.payload);
+	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+
+	// wait until gateways all send packet
+	struct timeval t;
+	t.tv_sec = time.tv_sec;
+	t.tv_usec = time.tv_usec;
+	incTimeval(t, 0, DEF_TIMEOUT_US);
+//	controlQueue.push(t, value);
+//	controlQueue.wakeUp();
+	return LORA_OK;
+}
+
+/**
  * @param time receive time
  * @param value Semtech packet
  * @return 0- success
@@ -125,9 +153,17 @@ int LoraPacketProcessor::put
 	int r = identityService->get(addr, packet.devId);
 	if (r == 0) {
 		if (reservedFPort != 0 && packet.header.fport == reservedFPort) {
-			// check is device authorized to s=control network service
+			// check is device authorized to control network service
 			if (identityService->canControlService(addr)) {
-
+				// report 
+				if (onLog) {
+					std::stringstream ss;
+					ss << MSG_RECEIVED_CONTROL_FRAME
+						<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
+						<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
+					onLog(this, LOG_DEBUG, LOG_IDENTITY_SVC, 0, ss.str());
+					enqueueControl(time, packet);
+				}
 			} else {
 				// report error
 				if (onLog) {

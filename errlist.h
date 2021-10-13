@@ -221,6 +221,7 @@
 #define MSG_GATEWAY_SNR					" SNR "
 #define MSG_SIG_FLUSH_FILES				"Signal to flush files received "
 #define MSG_PUSH_PACKET_QUEUE			"Push packet queue "
+#define MSG_RECEIVED_CONTROL_FRAME		"Control network service message received "
 
 #define ERROR							"Error "
 

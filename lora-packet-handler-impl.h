@@ -77,6 +77,17 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 			const struct timeval &time,
 			semtechUDPPacket &value
 		);
+		/**
+		 * Enqueue control network service message
+		 * @param time receive time
+		 * @param value Semtech packet
+		 * @return 0- success
+		 */ 
+		int enqueueControl(
+			const struct timeval &time,
+			semtechUDPPacket &value
+		);
+
 	void setRecieverQueueProcessor(RecieverQueueProcessor *value);
 
 	// Reserve FPort number for network service purposes
