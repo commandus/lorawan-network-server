@@ -81,7 +81,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server mac-gw proto-db lora-print
+bin_PROGRAMS = lorawan-network-server mac-ns mac-gw proto-db lora-print
 
 commonlibs =
 
@@ -134,7 +134,7 @@ lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp errlist.cpp utilidentity.cpp \
-	utillora.cpp udp-socket.cpp udp-emitter.cpp \
+	utillora.cpp udp-socket.cpp \
 	config-json.cpp packet-queue.cpp device-stat.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
@@ -148,6 +148,23 @@ mac_gw_SOURCES = \
 
 mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB)
 mac_gw_CPPFLAGS = $(commoncppflags)
+
+mac_ns_SOURCES = \
+	mac-ns.cpp macgw-config-json.cpp errlist.cpp utilidentity.cpp \
+	utillora.cpp udp-socket.cpp \
+	config-json.cpp packet-queue.cpp device-stat.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
+	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
+	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
+	semtech-metadata-tx.cpp lora-rejoin.cpp \
+	$(C_STORAGE) \
+	db-any.cpp  $(BACKEND_DB_SRC) \
+	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
+	receiver-queue-processor.cpp \
+	third_party/argtable3/argtable3.c \
+	third_party/base64/base64.cpp $(SRC_AES)
+
+mac_ns_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB)
+mac_ns_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
 	proto-db.cpp utilstring.cpp utilidentity.cpp utillora.cpp utildate.cpp utilfile.cpp \

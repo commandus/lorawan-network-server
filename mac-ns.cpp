@@ -1,6 +1,6 @@
 /**
- * @brief Send MAC command(s) to the end-device class C directly over specified gateway
- * @file mac-gw.cpp
+ * @brief Send MAC command(s) to the end-device class C directly over specified network server
+ * @file mac-ns.cpp
  * Copyright (c) 2021 andrey.ivanov@ikfia.ysn.ru Yu.G. Shafer Institute of Cosmophysical Research and Aeronomy of Siberian Branch of the Russian Academy of Sciences
  * MIT license
  */
@@ -34,11 +34,12 @@
 #include "gateway-list.h"
 #include "config-filename.h"
 
-const std::string progname = "mac-gw";
-#define DEF_CONFIG_FILE_NAME "mac-gw.json"
+const std::string progname = "mac-ns";
+#define DEF_CONFIG_FILE_NAME "mac-ns.json"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_TIME_FORMAT "%FT%T"
+#define DEF_NS_PORT		5000
 
 static Configuration *config = NULL;
 static MacGwConfig *macGwConfig = NULL;
@@ -95,12 +96,14 @@ void setSignalHandler()
  *        2- output file does not exists or can not open to write
  **/
 int parseCmd(
+	std::string &retNetworkServiceAaddress,
 	Configuration *config,
 	MacGwConfig *macGwConfig,
 	int argc,
 	char *argv[])
 {
 	// device path
+	struct arg_str *a_ns_address = arg_str1("a", "address", "<address:port>", "Address or name of the network service and port number (default port 5000)");
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ./" DEF_CONFIG_FILE_NAME ". ~/" DEF_CONFIG_FILE_NAME);
 	//  ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
@@ -118,7 +121,7 @@ int parseCmd(
 	struct arg_end *a_end = arg_end(20);
 
 	void *argtable[] = {
-		a_config,
+		a_config, a_ns_address,
 		a_command, a_gatewayid, a_gatewayname, a_eui, a_devicename, a_payload_hex, a_gateway_port,
 		a_regex, a_verbosity, a_help, a_end};
 
@@ -142,6 +145,8 @@ int parseCmd(
 	config->serverConfig.verbosity = a_verbosity->count;
 
 	if (!nerrors) {
+		if (a_ns_address->count)
+			retNetworkServiceAaddress = a_ns_address->sval[0];
 		for (int i = 0; i < a_command->count; i++) {
 			macGwConfig->cmd.push_back(a_command->sval[i]);
 		}
@@ -215,7 +220,8 @@ int main(
 	config = new Configuration("");
 	macGwConfig = new MacGwConfig();
 	// load config file and get macGwConfig from the command line
-	if (parseCmd(config, macGwConfig, argc, argv) != 0) {
+	std::string networkServiceAaddress;
+	if (parseCmd(networkServiceAaddress, config, macGwConfig, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
 	// reload config if required
@@ -334,22 +340,25 @@ int main(
 		std::cerr << "MAC data: " << hexString(macdatabin) << ", " << macdatabin.size() << " bytes." <<  std::endl;
 	}
 
+	// open socket
+	std::string a = networkServiceAaddress;
+	if (a.find(":") == std::string::npos) {
+		// add port
+		std::stringstream ss;
+		ss << a << ":" << DEF_NS_PORT;
+		a = ss.str();
+	}
+
+	UDPSocket socket(a, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
+	
+	if (socket.errcode) {
+		std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_lorawan_ns(socket.errcode)
+			<< ", address: " << a
+			<< std::endl;
+		exit(socket.errcode);
+	}
+
 	for (int i = 0; i < macGwConfig->gatewayIds.size(); i++) {
-		// open socket
-		std::string a = gatewayList->getAddress(macGwConfig->gatewayIds[i]);
-		if (a.find(":") == std::string::npos) {
-			// add port
-			std::stringstream ss;
-			ss << a << ":" << config->gatewayPort;
-			a = ss.str();
-		}
-		UDPSocket socket(a, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
-		if (socket.errcode) {
-			std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_lorawan_ns(socket.errcode)
-				<< ", gateway " << std::hex << macGwConfig->gatewayIds[i] << std::dec << " address: " << a
-				<< std::endl;
-			exit(socket.errcode);
-		}
 		for (int d = 0; d < macGwConfig->euis.size(); d++) {
 			NetworkIdentity netId;
 			if (identityService.getNetworkIdentity(netId, macGwConfig->euis[i].eui) != 0) {
