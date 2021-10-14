@@ -243,11 +243,23 @@
 			"MIMode": "gdb"
 		},
 		{
-			"name": "mac-gw",
+			"name": "mac-gw 1",
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/mac-gw",
 			"args": ["-c", "./mac-gw.json", "-g", "6cc3743eed46", "-e", "3434383566378112", "-vvv", "ping"],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb"
+		},
+		{
+			"name": "mac-gw",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/mac-gw",
+			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],
