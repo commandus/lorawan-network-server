@@ -32,8 +32,17 @@ std::string getDefaultConfigFileName(const std::string &filename)
 /**
 * https://stackoverflow.com/questions/2910377/get-home-directory-in-linux-c
 */
-std::string getDefaultConfigFileName(const std::string &filename)
+std::string getDefaultConfigFileName
+(
+	const std::string &filename
+)
 {
+	// try to get in the current directory
+	if (access(filename.c_str(), F_OK ) == 0) {
+    	return filename;
+	}
+
+	// try to get in the $HOME directory
 	struct passwd *pw = getpwuid(getuid());
 	const char *homedir = pw->pw_dir;
 	std::string r(homedir);

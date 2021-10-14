@@ -36,7 +36,7 @@
 #include "config-filename.h"
 
 const std::string progname = "mac-gw";
-#define DEF_CONFIG_FILE_NAME ".mac-gw.json"
+#define DEF_CONFIG_FILE_NAME "mac-gw.json"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_TIME_FORMAT "%FT%T"
@@ -108,7 +108,8 @@ int parseCmd(
 {
 	// device path
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
-	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
+	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ./" DEF_CONFIG_FILE_NAME ". ~/" DEF_CONFIG_FILE_NAME);
+	//  ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
 	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 0, 100, "gateway identifier. Mask \"*\" - all");
 	struct arg_str *a_gatewayname = arg_strn("G", "gatewayname", "<name>", 0, 100, "gateway name. Mask \"*\" - all");
 	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 0, 100, "end-device identifier. Mask \"*\" - all");

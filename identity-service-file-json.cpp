@@ -126,10 +126,7 @@ class IdentityJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<
 		bool Uint(unsigned u) {
 			switch(idx) {
 				case 8:
-					{
-						if (u)
-							flags = u;
-					}
+					flags = u;
 					break;
 			}
 			return true;
@@ -439,7 +436,7 @@ std::string JsonFileIdentityService::toJsonString()
 	bool needComma = false;
 	for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
 		if (needComma)
-			ss << ", ";
+			ss << ", "  << std::endl;
 		else
 			needComma = true;
 		ss << "{"
@@ -450,7 +447,11 @@ std::string JsonFileIdentityService::toJsonString()
 			<< "\"" << ATTR_NAMES[4] << "\":\"" << KEY2string(dit->second.appSKey) << "\", "
 			<< "\"" << ATTR_NAMES[5] << "\":\"" << deviceclass2string(dit->second.deviceclass) << "\", "
 			<< "\"" << ATTR_NAMES[6] << "\":\"" << LORAWAN_VERSION2string(dit->second.version) << "\", "
-			<< "\"" << ATTR_NAMES[7] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"}";
+			<< "\"" << ATTR_NAMES[7] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"";
+		uint32_t rightsMask = getRightsMask((DEVADDR &) (dit->first.a));			
+		if (rightsMask)
+			ss << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;
+		ss << "}";
 	}
 	ss << "]";
 	return ss.str();
