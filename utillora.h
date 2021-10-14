@@ -337,6 +337,9 @@ public:
 	DeviceId();
 	DeviceId(const DeviceId &value);
 	DeviceId(const DEVICEID &value);
+	DeviceId& operator=(const DeviceId& other);
+	DeviceId& operator=(const NetworkIdentity& other);
+
 	void set(const DEVICEID &value);
 	void setEUIString(const std::string &value);
 	void setNwkSKeyString(const std::string &value);
@@ -494,6 +497,7 @@ public:
 	void setNetworkSessionKey(const std::string &value);
 	void setApplicationSessionKey(const std::string &value);
 	void setFrameCounter(uint16_t value);
+	void setFOpts(const std::string &fopts);
 
 	void setPayload(uint8_t port, const std::string &payload);
 	// Create ACK response to be send to the BS 

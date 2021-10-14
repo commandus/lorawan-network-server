@@ -267,6 +267,32 @@ DeviceId::DeviceId(
 	set(value);
 }
 
+DeviceId& DeviceId::operator=(const DeviceId& value)
+{
+	if (this == &value)
+		return *this;
+	activation = value.activation;	///< activation type: ABP or OTAA
+	deviceclass = value.deviceclass;
+	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
+	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+	version = value.version;		///< device LoraWAN version
+	memmove(&name, &value.name, sizeof(DEVICENAME));
+	return *this;
+}
+
+DeviceId& DeviceId::operator=(const NetworkIdentity& value)
+{
+	activation = value.activation;	///< activation type: ABP or OTAA
+	deviceclass = value.deviceclass;
+	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
+	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+	version = value.version;		///< device LoraWAN version
+	memmove(&name, &value.name, sizeof(DEVICENAME));
+	return *this;
+}
+
 void DeviceId::set(
 	const DEVICEID &value
 )
@@ -1597,8 +1623,26 @@ void semtechUDPPacket::setApplicationSessionKey(
 
 void semtechUDPPacket::setFrameCounter(
 	uint16_t value
-) {
+)
+{
 	header.header.fcnt = value;
+}
+
+void semtechUDPPacket::setFOpts
+(
+	const std::string &value
+)
+{
+	size_t sz = value.size();
+	if (sz > 15)
+	{
+		header.header.fctrl.f.foptslen = 0;
+		header.fport = 0;
+		payload = value;
+	} else {
+		header.header.fctrl.f.foptslen = sz;
+		memmove(&header.fopts, value.c_str(), sz);
+	}
 }
 
 std::string semtechUDPPacket::toJsonString() const

@@ -311,7 +311,7 @@ int main(
 	// form MAC data ?!!
 	std::vector<MacData> md;
 	for (int i = 0; i < macGwConfig->macCommands.list.size(); i++) {
-		std::cerr << macGwConfig->macCommands.list[i].toJSONString() << std::endl;
+		// std::cerr << macGwConfig->macCommands.list[i].toJSONString() << std::endl;
 		MacData d(macGwConfig->macCommands.list[i].toString(), true);
 		md.push_back(d);
 	}
@@ -322,6 +322,22 @@ int main(
 		for (int i = 0; i < macGwConfig->macCommands.list.size(); i++) {
 			std::cerr << macGwConfig->macCommands.toJSONString() << std::endl << std::endl;
 		}
+
+		std::cerr << "MAC: " << std::endl;
+		for (std::vector<MacData>::const_iterator it (md.begin()); it != md.end(); it++) {
+			std::cerr << "\t" << it->toJSONString() 
+				<< ", hex: " << hexString(it->toString())
+				<< std::endl;
+		}
+	}
+
+	std::stringstream ss;
+	for (std::vector<MacData>::const_iterator it (md.begin()); it != md.end(); it++) {
+		ss << it->toString();
+	}
+	std::string macdatabin = ss.str();
+	if (config->serverConfig.verbosity > 2) {
+		std::cerr << "MAC data: " << hexString(macdatabin) << ", " << macdatabin.size() << " bytes." <<  std::endl;
 	}
 
 	for (int i = 0; i < macGwConfig->gatewayIds.size(); i++) {
@@ -348,6 +364,12 @@ int main(
 			}
 			// compose packet
 			semtechUDPPacket packet;
+			packet.setFOpts(macdatabin);
+			memmove(packet.prefix.mac, netId.deviceEUI, sizeof(DEVEUI));
+			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));
+			packet.devId = netId;
+			//memmove(packet.devId.deviceEUI, netId.deviceEUI, sizeof(DEVEUI));
+
 			// TODO form correct data
 			// packet.setPayload();
 			std::string s = packet.toString();
@@ -355,7 +377,8 @@ int main(
 				std::cerr << MSG_SEND_TO 
 					<< UDPSocket::addrString(&socket.addrStorage)
 					<< " " << s.size() << " bytes, "
-					<< "packet: " << hexString(s)
+					<< "packet: " << packet.toJsonString()
+					<< ", hex: " << hexString(s)
 					<< std::endl;
 		}
 	}
