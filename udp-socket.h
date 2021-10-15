@@ -32,6 +32,13 @@ class UDPSocket {
     ~UDPSocket();
     std::string toString() const;
     static std::string addrString(const struct sockaddr *addr);
+    /**
+     * Trying parse I v6 address, then IPv4
+     * @param retval return address into struct sockaddr_in6 struct pointer
+     * @param value IPv8 or IPv4 address string
+     * @return true if success
+     */
+    static bool string2addr(struct sockaddr *retval, const std::string &value);
     int recv(void *retbuf, size_t size, void *peerAddress) const;
     bool isIPv6() const;
     bool isPeerAddr(struct sockaddr *remotePeerAddr) const;
