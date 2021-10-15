@@ -16,7 +16,8 @@
   "appSKey": "35003a003434383531374712656b7f47",
   "class": "C",
   "version": "1.0.0",
-  "name": "SI-13-23"
+  "name": "SI-13-23",
+  "flags": 1
 },
 {
   "addr": "34313235",
@@ -27,6 +28,6 @@
   "class": "A",
   "version": "1.0.0",
   "name": "pak811-1",
-  "flags": 1
+  "flags": 0
 }
 ]

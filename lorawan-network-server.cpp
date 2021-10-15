@@ -427,7 +427,10 @@ int main(
 		std::cerr << MSG_DEVICES << std::endl;
 		identityService->list(identities, 0, 0);
 		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
-			std::cerr  << "\t" << DEVADDR2string(it->devaddr) << "\t" << DEVICENAME2string(it->name) << std::endl;
+			std::cerr << "\t" << DEVADDR2string(it->devaddr) << "\t" << DEVICENAME2string(it->name);
+			if (identityService->canControlService(it->devaddr))
+				std::cerr << "\tcontrol";
+			std::cerr << std::endl;
 		}
 	}
 

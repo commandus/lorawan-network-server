@@ -381,7 +381,8 @@ int main(
 			semtechUDPPacket packet;
 			rfmMetaData rfmMD;
 			packet.metadata.push_back(rfmMD);
-			packet.setFOpts(macdatabin);
+			// packet.setFOpts(macdatabin);
+			packet.header.fport = fport;
 			memmove(packet.prefix.mac, netId.deviceEUI, sizeof(DEVEUI));
 			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));
 			packet.devId = netId;
