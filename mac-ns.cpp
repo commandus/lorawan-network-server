@@ -341,7 +341,7 @@ int main(
 		std::cerr << "MAC data: " << hexString(macdatabin) << ", " << macdatabin.size() << " bytes." <<  std::endl;
 	}
 
-	// open socket
+	// add default port value if missed
 	std::string address = networkServiceAaddress;
 	if (address.find(":") == std::string::npos) {
 		// add port
@@ -379,24 +379,26 @@ int main(
 			// TODO form correct data
 			// packet.setPayload();
 			std::string response = packet.toString();
-			if (config->serverConfig.verbosity > 0)
-				std::cerr << MSG_SEND_TO 
-					<< UDPSocket::addrString(&socket.addrStorage)
-					<< " " << response.size() << " bytes, "
-					<< "packet: " << packet.toJsonString()
-					<< ", hex: " << hexString(response)
-					<< std::endl;
-			struct sockaddr_in6 sa;		
-			UDPSocket::string2addr((struct sockaddr *) &sa, address);
 			ssize_t r = sendto(socket.sock, response.c_str(), response.size(), 0,
-				(const struct sockaddr*) &sa,
-				((sa.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+				&socket.addrStorage,
+				((socket.addrStorage.sa_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+
+			
 			if (r != response.size())
 				std::cerr << ERR_SOCKET_WRITE 
 					<< " " << UDPSocket::addrString(&socket.addrStorage)
 					<< " sendto() return " << r
 					<< " errno " << errno << ": " << strerror(errno)
 					<< std::endl;
+			else
+				if (config->serverConfig.verbosity > 0)
+					std::cerr << MSG_SEND_TO 
+						<< UDPSocket::addrString(&socket.addrStorage)
+						<< " " << r << " bytes, "
+						<< "packet: " << packet.toJsonString() << std::endl
+						<< ", hex: " << hexString(response)
+						<< std::endl;
+
 		}
 	}
 

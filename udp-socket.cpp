@@ -99,12 +99,12 @@ bool UDPSocket::string2addr
 	if (!splitAddress(address, port, value)) {
 		return false;
 	}
-	bool r = inet_pton(AF_INET6, address.c_str(), retval) == 1;
+	bool r = inet_pton(AF_INET6, address.c_str(), &((struct sockaddr_in6 *) retval)->sin6_addr) == 1;
 	if (r) {
 		((struct sockaddr_in6*) retval)->sin6_family = AF_INET6;
 		((struct sockaddr_in6*) retval)->sin6_port = htons(port);
 	} else {
-		r = inet_pton(AF_INET, address.c_str(), retval) == 1;
+		r = inet_pton(AF_INET, address.c_str(), &((struct sockaddr_in *) retval)->sin_addr) == 1;
 		if (r) {
 			((struct sockaddr_in*) retval)->sin_family = AF_INET;
 			((struct sockaddr_in*) retval)->sin_port = htons(port);
