@@ -12,6 +12,7 @@
 			"84.237.104.128:5000"
 		],
 		"logGWStatisticsFileName": "gateway-stat.json",
-		"logDeviceStatisticsFileName": "device-stat.json"
+		"logDeviceStatisticsFileName": "device-stat.json",
+		"controlFPort": 223
 	}
 }
