@@ -404,10 +404,10 @@ int PacketQueue::replyMAC(
 	std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
 	if (gwit == gatewayList->gateways.end()) {
 		std::stringstream ss;
-		ss << ERR_NO_GATEWAY_STAT << " " << gatewayId2str(gwa);
+		ss << ERR_GATEWAY_NOT_FOUND << gatewayId2str(gwa);
 		if (onLog)
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
-		return ERR_CODE_NO_GATEWAY_STAT;
+			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
+		return ERR_CODE_GATEWAY_NOT_FOUND;
 	}
 	
 	// get MAC commands

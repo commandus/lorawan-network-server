@@ -96,8 +96,10 @@ void setSignalHandler()
  *        1- show help and exit, or command syntax error
  *        2- output file does not exists or can not open to write
  **/
-int parseCmd(
+int parseCmd
+(
 	std::string &retNetworkServiceAaddress,
+	int &retFPort, 
 	Configuration *config,
 	MacGwConfig *macGwConfig,
 	int argc,
@@ -107,6 +109,7 @@ int parseCmd(
 	struct arg_str *a_ns_address = arg_str1("a", "address", "<address:port>", "Address or name of the network service and port number (default port 5000)");
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ./" DEF_CONFIG_FILE_NAME ". ~/" DEF_CONFIG_FILE_NAME);
+	struct arg_int *a_fport = arg_int0("f", "fpoty", "<1..223>", "FPort reserved by service, default 223");
 	//  ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
 	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 0, 100, "gateway identifier. Mask \"*\" - all");
 	struct arg_str *a_gatewayname = arg_strn("G", "gatewayname", "<name>", 0, 100, "gateway name. Mask \"*\" - all");
@@ -122,7 +125,7 @@ int parseCmd(
 	struct arg_end *a_end = arg_end(20);
 
 	void *argtable[] = {
-		a_config, a_ns_address,
+		a_config, a_ns_address, a_fport,
 		a_command, a_gatewayid, a_gatewayname, a_eui, a_devicename, a_payload_hex, a_gateway_port,
 		a_regex, a_verbosity, a_help, a_end};
 
@@ -145,6 +148,9 @@ int parseCmd(
 	config->serverConfig.daemonize = false;
 	config->serverConfig.verbosity = a_verbosity->count;
 
+	retNetworkServiceAaddress = "";
+	retFPort = 223;
+
 	if (!nerrors) {
 		if (a_ns_address->count)
 			retNetworkServiceAaddress = a_ns_address->sval[0];
@@ -166,9 +172,13 @@ int parseCmd(
 		if (a_payload_hex->count) {
 			macGwConfig->payload = hex2string(*a_payload_hex->sval);
 		}
-		
 		if (a_gateway_port->count) {
 			config->gatewayPort = (*a_gateway_port->ival);
+		}
+		if (a_fport->count) {
+			retFPort = (*a_fport->ival);
+			if ((retFPort <= 0) || (retFPort > 223))
+				nerrors++;
 		}
 	}
 
@@ -222,7 +232,8 @@ int main(
 	macGwConfig = new MacGwConfig();
 	// load config file and get macGwConfig from the command line
 	std::string networkServiceAaddress;
-	if (parseCmd(networkServiceAaddress, config, macGwConfig, argc, argv) != 0) {
+	int fport;
+	if (parseCmd(networkServiceAaddress, fport, config, macGwConfig, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
 	// reload config if required

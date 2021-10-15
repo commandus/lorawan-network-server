@@ -153,13 +153,18 @@ make
 Server config:
 
 - identityStorageName end-device list file. Default is ~/identity.json
-- listenAddressIPv4 IPv4address:port
-- listenAddressIPv6 IPv6address:port
+- storageType e.g. "json"
+- queueStorageName e.g. "queue.json",
+- messageQueueStorageType e.g. "json"
+- deviceStatStorageName e.g. "device-counters.json"
+- listenAddressIPv4 array of IPv4address:port e.g. ["127.0.0.1:5000","84.237.104.128:5000"]
+- listenAddressIPv6 array of IPv6address:port
+- logGWStatisticsFileName e.g. log gateway statistics file name "gateway-stat.json"
+- logDeviceStatisticsFileName e.g. log device statistics file name "device-stat.json"
 - readBufferSize UDP buffer size Default 4096.
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
 - daemonize false..true Indicates does network server starts as deamon or not
-- controlFPort 0: no remote control, 1..223- FPort values used by network service to control server
-- storageType
+- controlFPort 0: no remote control, 1..223- FPort values used by network service to control server. Default 0.
 
 configFileName can used to load configuration from different location. 
 Do not use this parameter except when you really need it.
