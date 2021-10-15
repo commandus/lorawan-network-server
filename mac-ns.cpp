@@ -35,7 +35,8 @@
 #include "config-filename.h"
 
 const std::string progname = "mac-ns";
-#define DEF_CONFIG_FILE_NAME "mac-ns.json"
+// same config as mac-gw
+#define DEF_CONFIG_FILE_NAME "mac-gw.json"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_TIME_FORMAT "%FT%T"
@@ -341,19 +342,19 @@ int main(
 	}
 
 	// open socket
-	std::string a = networkServiceAaddress;
-	if (a.find(":") == std::string::npos) {
+	std::string address = networkServiceAaddress;
+	if (address.find(":") == std::string::npos) {
 		// add port
 		std::stringstream ss;
-		ss << a << ":" << DEF_NS_PORT;
-		a = ss.str();
+		ss << address << ":" << DEF_NS_PORT;
+		address = ss.str();
 	}
 
-	UDPSocket socket(a, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
+	UDPSocket socket(address, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
 	
 	if (socket.errcode) {
 		std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_lorawan_ns(socket.errcode)
-			<< ", address: " << a
+			<< ", address: " << address
 			<< std::endl;
 		exit(socket.errcode);
 	}
@@ -367,6 +368,8 @@ int main(
 			}
 			// compose packet
 			semtechUDPPacket packet;
+			rfmMetaData rfmMD;
+			packet.metadata.push_back(rfmMD);
 			packet.setFOpts(macdatabin);
 			memmove(packet.prefix.mac, netId.deviceEUI, sizeof(DEVEUI));
 			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));
@@ -375,13 +378,24 @@ int main(
 
 			// TODO form correct data
 			// packet.setPayload();
-			std::string s = packet.toString();
+			std::string response = packet.toString();
 			if (config->serverConfig.verbosity > 0)
 				std::cerr << MSG_SEND_TO 
 					<< UDPSocket::addrString(&socket.addrStorage)
-					<< " " << s.size() << " bytes, "
+					<< " " << response.size() << " bytes, "
 					<< "packet: " << packet.toJsonString()
-					<< ", hex: " << hexString(s)
+					<< ", hex: " << hexString(response)
+					<< std::endl;
+			struct sockaddr_in6 sa;		
+			UDPSocket::string2addr((struct sockaddr *) &sa, address);
+			ssize_t r = sendto(socket.sock, response.c_str(), response.size(), 0,
+				(const struct sockaddr*) &sa,
+				((sa.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+			if (r != response.size())
+				std::cerr << ERR_SOCKET_WRITE 
+					<< " " << UDPSocket::addrString(&socket.addrStorage)
+					<< " sendto() return " << r
+					<< " errno " << errno << ": " << strerror(errno)
 					<< std::endl;
 		}
 	}

@@ -64,6 +64,55 @@ std::string UDPSocket::addrString(
 	return ss.str();
 }
 
+/**
+ * ADRESS:PORT
+ */ 
+static bool splitAddress(
+	std::string &retAddress,
+	int &retPort,
+	const std::string &address
+)
+{
+	size_t pos = address.find_last_of(":");
+	if (pos == std::string::npos)
+		return false;
+	retAddress = address.substr(0, pos);
+	std::string p(address.substr(pos + 1));
+	retPort = atoi(p.c_str());
+	return true;
+}
+
+/**
+ * Trying parse I v6 address, then IPv4
+ * @param retval return address into struct sockaddr_in6 struct pointer
+ * @param value IPv8 or IPv4 address string
+ * @return true if success
+ */
+bool UDPSocket::string2addr
+(
+	struct sockaddr *retval,
+	const std::string &value
+)
+{
+	std::string address;
+	int port;
+	if (!splitAddress(address, port, value)) {
+		return false;
+	}
+	bool r = inet_pton(AF_INET6, address.c_str(), retval) == 1;
+	if (r) {
+		((struct sockaddr_in6*) retval)->sin6_family = AF_INET6;
+		((struct sockaddr_in6*) retval)->sin6_port = htons(port);
+	} else {
+		r = inet_pton(AF_INET, address.c_str(), retval) == 1;
+		if (r) {
+			((struct sockaddr_in*) retval)->sin_family = AF_INET;
+			((struct sockaddr_in*) retval)->sin_port = htons(port);
+		}
+	}
+	return r;
+}
+
 std::string UDPSocket::toString() const {
 	char buf[INET6_ADDRSTRLEN];
 	int port;
@@ -162,23 +211,6 @@ static int addressFamily(
    	freeaddrinfo(res);
    	return r;
 }
-/**
- * ADRESS:PORT
- */ 
-static bool splitAddress(
-	std::string &retAddress,
-	int &retPort,
-	const std::string &address
-)
-{
-	size_t pos = address.find_last_of(":");
-	if (pos == std::string::npos)
-		return false;
-	retAddress = address.substr(0, pos);
-	std::string p(address.substr(pos + 1));
-	retPort = atoi(p.c_str());
-	return true;
-}
 
 UDPSocket::UDPSocket(
 	const std::string &address,
@@ -204,34 +236,30 @@ UDPSocket::UDPSocket(
 		return;
 	}
 
-	if (mode == MODE_OPEN_SOCKET_LISTEN) {
-		// bind
-		if (f == AF_INET6) {
-			sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	if (f == AF_INET6) {
+		sock = socket(PF_INET6, SOCK_DGRAM, 0);
+		if (sock < 0) {
+			errcode = ERR_CODE_SOCKET_CREATE;
+			lasterrno = errno;
+			return;
+		}
+	} else {
+		if (f == AF_INET) {
+			sock = socket(PF_INET, SOCK_DGRAM, 0);
 			if (sock < 0) {
 				errcode = ERR_CODE_SOCKET_CREATE;
 				lasterrno = errno;
 				return;
 			}
-			if (bind(sock, (struct sockaddr *) &addrStorage, addr.ai_addrlen) < 0) {
-				errcode = ERR_CODE_SOCKET_BIND;
-				lasterrno = errno;
-				return;
-			}
-		} else {
-			if (f == AF_INET) {
-				sock = socket(PF_INET, SOCK_DGRAM, 0);
-				if (sock < 0) {
-					errcode = ERR_CODE_SOCKET_CREATE;
-					lasterrno = errno;
-					return;
-				}
-				if (bind(sock, (struct sockaddr *) &addrStorage, addr.ai_addrlen) < 0) {
-					errcode = ERR_CODE_SOCKET_BIND;
-					lasterrno = errno;
-					return;
-				}
-			} 
+		} 
+	}
+
+	if (mode == MODE_OPEN_SOCKET_LISTEN) {
+		// bind
+		if (bind(sock, (struct sockaddr *) &addrStorage, addr.ai_addrlen) < 0) {
+			errcode = ERR_CODE_SOCKET_BIND;
+			lasterrno = errno;
+			return;
 		}
 	}
 }

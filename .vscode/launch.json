@@ -266,7 +266,18 @@
 			"externalConsole": false,
 			"MIMode": "gdb"
 		},
-		
+		{
+			"name": "mac-ns",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/mac-ns",
+			"args": ["-a", "84.237.104.128:5000", "-g", "6cc3743eed46", "-E", "SI-13-23", "s", "-vvv"],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb"
+		},
 		{
 			"name": "test-fb",
 			"type": "cppdbg",
