@@ -52,14 +52,14 @@ AM_CONDITIONAL([ENABLE_MDBX], [test x$enable_mdbx = xtrue])
 
 # backend databases
 
-# by default SQLite is on
+# by default SQLite is off
 AC_ARG_ENABLE([db-sqlite],
 [  --enable-db-sqlite    Turn on SQLite backend],
 [case "${enableval}" in
   yes) enable_db_sqlite=true ;;
   no)  enable_db_sqlite=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-sqlite]) ;;
-esac],[enable_db_sqlite=true])
+esac],[enable_db_sqlite=false])
 AM_CONDITIONAL([ENABLE_DB_SQLITE], [test x$enable_db_sqlite = xtrue])
 
 AC_ARG_ENABLE([db-postgres],
