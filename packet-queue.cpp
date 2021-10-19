@@ -11,6 +11,7 @@
 #include "udp-socket.h"
 #include "lorawan-mac.h"
 #include "identity-service-abstract.h"
+#include "control-packet.h"
 
 SemtechUDPPacketItem::SemtechUDPPacketItem()
 	: processMode(MODE_NONE)
@@ -505,6 +506,7 @@ int PacketQueue::replyControl(
 	SemtechUDPPacketItem &item,
 	struct timeval &t
 ) {
+
 	// to reply via closest gateway, find out gatewsy with best SNR
 	float snr;
 	int power = 14;
@@ -521,6 +523,32 @@ int PacketQueue::replyControl(
 	// .. gateway
 	if (!gatewayList)
 		return ERR_CODE_WRONG_PARAM;
+
+
+	size_t sz = item.packet.payload.size();
+	if (sz < sizeof(CONTROL_DEVICE_PACKET)) {
+		if (onLog) {
+			std::stringstream ss;
+			ss << ERR_INVALID_CONTROL_PACKET << ", size: " << sz << " is too small";
+			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+		}
+		return ERR_CODE_INVALID_CONTROL_PACKET;
+	}
+
+	CONTROL_DEVICE_PACKET *packet = (CONTROL_DEVICE_PACKET *) item.packet.payload.c_str();
+
+	size_t macpayloadsize = sz - sizeof(CONTROL_DEVICE_HEADER);
+
+	std::string macPayload = std::string((const char *) packet->data, macpayloadsize);
+	if (onLog) {
+		std::stringstream ss;
+		ss << "Control packet EUI: " << DEVEUI2string(packet->header.eui)
+			<< ", gateway id: " << uint64_t2string(packet->header.gwid)
+			<< ", tag: " << (int) packet->header.tag
+			<< ", MAC payload size: " << macpayloadsize
+			<< ", MAC payload: " << hexString(macPayload);
+			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+	}
 	// .. MAC
 	if (!item.packet.hasMACPayload()){
 		std::stringstream ss;
