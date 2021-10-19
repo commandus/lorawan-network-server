@@ -33,6 +33,7 @@
 
 #include "gateway-list.h"
 #include "config-filename.h"
+#include "control-packet.h"
 
 const std::string progname = "mac-ns";
 // same config as mac-gw
@@ -41,6 +42,8 @@ const std::string progname = "mac-ns";
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_TIME_FORMAT "%FT%T"
 #define DEF_NS_PORT		5000
+#define DEF_FPORT		223
+#define DEF_S_FPORT		"223"
 
 static Configuration *config = NULL;
 static MacGwConfig *macGwConfig = NULL;
@@ -100,6 +103,8 @@ int parseCmd
 (
 	std::string &retNetworkServiceAaddress,
 	int &retFPort, 
+	std::string &master_eui,
+	std::string &master_devicename,
 	Configuration *config,
 	MacGwConfig *macGwConfig,
 	int argc,
@@ -109,12 +114,17 @@ int parseCmd
 	struct arg_str *a_ns_address = arg_str1("a", "address", "<address:port>", "Address or name of the network service and port number (default port 5000)");
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ./" DEF_CONFIG_FILE_NAME ". ~/" DEF_CONFIG_FILE_NAME);
-	struct arg_int *a_fport = arg_int0("f", "fpoty", "<1..223>", "FPort reserved by service, default 223");
+	struct arg_int *a_fport = arg_int0("f", "fport", "<1..223>", "FPort reserved by service, default " DEF_S_FPORT);
 	//  ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
 	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 0, 100, "gateway identifier. Mask \"*\" - all");
 	struct arg_str *a_gatewayname = arg_strn("G", "gatewayname", "<name>", 0, 100, "gateway name. Mask \"*\" - all");
+	
+	struct arg_str *a_master_eui = arg_str0("m", "master-eui", "<id>", "end-device identifier.");
+	struct arg_str *a_master_devicename = arg_str0("M", "master-devicename", "<name>", "end-device name.");
+
 	struct arg_str *a_eui = arg_strn("e", "eui", "<id>", 0, 100, "end-device identifier. Mask \"*\" - all");
 	struct arg_str *a_devicename = arg_strn("E", "devicename", "<name>", 0, 100, "end-device name. Mask \"*\" - all");
+
 	struct arg_str *a_payload_hex = arg_str0("x", "payload", "<hex>", "payload bytes, in hex");
 
 	struct arg_int *a_gateway_port = arg_int0("p", "port", "<1..65535>", "gateway port, default 4242");
@@ -126,7 +136,13 @@ int parseCmd
 
 	void *argtable[] = {
 		a_config, a_ns_address, a_fport,
-		a_command, a_gatewayid, a_gatewayname, a_eui, a_devicename, a_payload_hex, a_gateway_port,
+		a_command, a_gatewayid, a_gatewayname,
+		
+		a_master_eui,
+		a_master_devicename,
+
+		a_eui, a_devicename,
+		a_payload_hex, a_gateway_port,
 		a_regex, a_verbosity, a_help, a_end};
 
 	int nerrors;
@@ -149,7 +165,7 @@ int parseCmd
 	config->serverConfig.verbosity = a_verbosity->count;
 
 	retNetworkServiceAaddress = "";
-	retFPort = 223;
+	retFPort = DEF_FPORT;
 
 	if (!nerrors) {
 		if (a_ns_address->count)
@@ -163,6 +179,14 @@ int parseCmd
 		for (int i = 0; i < a_gatewayname->count; i++) {
 			macGwConfig->gatewayNames.push_back(a_gatewayname->sval[i]);
 		}
+
+		if (a_master_eui->count) {
+			master_eui = *a_master_eui->sval;
+		}
+		if (a_master_devicename->count) {
+			master_devicename = *a_master_devicename->sval;
+		}
+
 		for (int i = 0; i < a_eui->count; i++) {
 			macGwConfig->euiMasks.push_back(a_eui->sval[i]);
 		}
@@ -233,7 +257,14 @@ int main(
 	// load config file and get macGwConfig from the command line
 	std::string networkServiceAaddress;
 	int fport;
-	if (parseCmd(networkServiceAaddress, fport, config, macGwConfig, argc, argv) != 0) {
+	std::string master_eui = "";
+	std::string master_devicename = "";
+	// master device identifier, only one
+	std::vector<TDEVEUI> masterDevEUIs;
+
+	if (parseCmd(networkServiceAaddress, fport, 
+		master_eui, master_devicename,
+		config, macGwConfig, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
 	// reload config if required
@@ -284,6 +315,32 @@ int main(
 	}
 	if (config->serverConfig.verbosity > 2)
 		std::cerr << "Devices: " << std::endl <<identityService.toJsonString() << std::endl;
+
+
+	// try to find out master EUI
+	if (!master_eui.empty()) {
+		std::vector <std::string> master_euis;
+		master_euis.push_back(master_eui);
+		if (identityService.parseIdentifiers(masterDevEUIs, master_euis, false)) {
+			std::cerr << ERR_INVALID_DEVICE_EUI << " " << master_eui << std::endl;
+			exit(ERR_CODE_INVALID_DEVICE_EUI);
+		}
+	}
+
+	// .. or by name
+	if (!master_devicename.empty()) {
+		std::vector <std::string> master_devicenames;
+		master_devicenames.push_back(master_devicename);
+		if (identityService.parseNames(masterDevEUIs, master_devicenames, false)) {
+			std::cerr << ERR_INVALID_DEVICE_EUI << " " << master_eui << std::endl;
+			exit(ERR_CODE_INVALID_DEVICE_EUI);
+		}
+	}
+
+	if (masterDevEUIs.empty()) {
+		std::cerr << ERR_CONTROL_DEVICE_NOT_FOUND << std::endl;
+		exit(ERR_CODE_CONTROL_DEVICE_NOT_FOUND);
+	}
 
 	// parse device ids, expand regex
 	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks, macGwConfig->useRegex)) {
@@ -370,20 +427,33 @@ int main(
 		exit(socket.errcode);
 	}
 
-	for (int i = 0; i < macGwConfig->gatewayIds.size(); i++) {
-		for (int d = 0; d < macGwConfig->euis.size(); d++) {
+	// master device
+	NetworkIdentity masterNetId;
+	if (identityService.getNetworkIdentity(masterNetId, masterDevEUIs[0].eui) != 0) {
+		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
+		exit(ERR_CODE_INVALID_DEVICE_EUI);
+	}
+
+	for (int d = 0; d < macGwConfig->euis.size(); d++) {
+		for (int g = 0; g < macGwConfig->gatewayIds.size(); g++) {
+			// target device
 			NetworkIdentity netId;
-			if (identityService.getNetworkIdentity(netId, macGwConfig->euis[i].eui) != 0) {
+			if (identityService.getNetworkIdentity(netId, macGwConfig->euis[d].eui) != 0) {
 				std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
 				exit(ERR_CODE_INVALID_DEVICE_EUI);
 			}
+
 			// compose packet
 			semtechUDPPacket packet;
 			rfmMetaData rfmMD;
 			packet.metadata.push_back(rfmMD);
 			// packet.setFOpts(macdatabin);
 			packet.header.fport = fport;
-			memmove(packet.prefix.mac, netId.deviceEUI, sizeof(DEVEUI));
+
+
+			packet.payload = mkControlPacket(macGwConfig->euis[d].eui, macGwConfig->gatewayIds[g], macdatabin);
+
+			memmove(packet.prefix.mac, macGwConfig->euis[d].eui, sizeof(DEVEUI));
 			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));
 			packet.devId = netId;
 			//memmove(packet.devId.deviceEUI, netId.deviceEUI, sizeof(DEVEUI));

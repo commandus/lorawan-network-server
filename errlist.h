@@ -96,6 +96,7 @@
 #define ERR_CODE_NO_FCNT_DOWN				-580
 #define ERR_CODE_CONTROL_NOT_AUTHORIZED		-581
 #define ERR_CODE_GATEWAY_NOT_FOUND			-582
+#define ERR_CODE_CONTROL_DEVICE_NOT_FOUND	-583
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -188,6 +189,7 @@
 #define ERR_NO_FCNT_DOWN				"No FCnt down stored"
 #define ERR_CONTROL_NOT_AUTHORIZED		"Identity is not authorized to control network service "
 #define ERR_GATEWAY_NOT_FOUND			"Gateway not found "
+#define ERR_CONTROL_DEVICE_NOT_FOUND	"Control device not found "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

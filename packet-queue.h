@@ -82,6 +82,10 @@ class PacketQueue {
 			SemtechUDPPacketItem &item,
 			struct timeval &t
 		);
+		int replyControl(
+			SemtechUDPPacketItem &item,
+			struct timeval &t
+		);
 		void runner();
 	public:
 		std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare> packets;

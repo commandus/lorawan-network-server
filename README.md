@@ -76,10 +76,17 @@ Automake, autoconf, libtool, gcc or cmake must be installed first.
 To do automake installed first, run:
 
 ```
-apt install autoconf build-essential libtool
+apt install autoconf build-essential libtool 
 ```
 
-To do cmake installed first, run:
+Also you can install backend database libraries:
+
+```
+sudo apt install liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev
+```
+
+To do cmake installed first run:
+
 ```
 apt install cmake
 ```

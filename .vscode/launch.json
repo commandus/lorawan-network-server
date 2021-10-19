@@ -271,7 +271,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/mac-ns",
-			"args": ["-a", "84.237.104.128:5000", "-g", "6cc3743eed46", "-E", "SI-13-23", "s", "-vvv"],
+			"args": ["-a", "84.237.104.128:5000", "-g", "6cc3743eed46", "-M", "SI-13-23", "-E", "SI-13-23", "s", "-vvv"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

@@ -334,9 +334,9 @@ int main(
 		std::cerr << "MAC data: " << hexString(macdatabin) << ", " << macdatabin.size() << " bytes." <<  std::endl;
 	}
 
-	for (int i = 0; i < macGwConfig->gatewayIds.size(); i++) {
+	for (int g = 0; g < macGwConfig->gatewayIds.size(); g++) {
 		// open socket
-		std::string a = gatewayList->getAddress(macGwConfig->gatewayIds[i]);
+		std::string a = gatewayList->getAddress(macGwConfig->gatewayIds[g]);
 		if (a.find(":") == std::string::npos) {
 			// add port
 			std::stringstream ss;
@@ -346,13 +346,13 @@ int main(
 		UDPSocket socket(a, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
 		if (socket.errcode) {
 			std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_lorawan_ns(socket.errcode)
-				<< ", gateway " << std::hex << macGwConfig->gatewayIds[i] << std::dec << " address: " << a
+				<< ", gateway " << std::hex << macGwConfig->gatewayIds[g] << std::dec << " address: " << a
 				<< std::endl;
 			exit(socket.errcode);
 		}
 		for (int d = 0; d < macGwConfig->euis.size(); d++) {
 			NetworkIdentity netId;
-			if (identityService.getNetworkIdentity(netId, macGwConfig->euis[i].eui) != 0) {
+			if (identityService.getNetworkIdentity(netId, macGwConfig->euis[d].eui) != 0) {
 				std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
 				exit(ERR_CODE_INVALID_DEVICE_EUI);
 			}

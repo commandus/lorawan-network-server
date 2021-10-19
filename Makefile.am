@@ -104,7 +104,7 @@ nobase_dist_include_HEADERS = \
 	identity-service-abstract.h identity-service-file-json.h \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
-	lora-rejoin.h utilidentity.h \
+	lora-rejoin.h utilidentity.h control-packet.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -161,7 +161,8 @@ mac_ns_SOURCES = \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
-	third_party/base64/base64.cpp $(SRC_AES)
+	third_party/base64/base64.cpp $(SRC_AES) \
+	control-packet.cpp
 
 mac_ns_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB)
 mac_ns_CPPFLAGS = $(commoncppflags)
