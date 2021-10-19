@@ -71,18 +71,36 @@ You can use
 
 build system.
 
+Make sure you have automake installed:
+```
+apt install autoconf build-essential libtool libprotobuf-dev
+```
+
+Before you start, first you need download  [pkt2 library](https://github.com/commandus/pkt2.git) ([git](git@github.com:commandus/pkt2.git) 
+
+Then install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev dependencies:
+```
+apt install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
+```
+
+Finally
+
+```
+make libpkt2.a
+```
+
 Automake, autoconf, libtool, gcc or cmake must be installed first.
 
-To do automake installed first, run:
 
-```
-apt install autoconf build-essential libtool 
-```
-
-Also you can install backend database libraries:
+Also must install at leat one backend database library, ot insttl all of them:
 
 ```
 sudo apt install liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev
+```
+
+Full set of libraries:
+```
+sudo apt install autoconf build-essential libtool libprotobuf-dev liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
 ```
 
 To do cmake installed first run:
