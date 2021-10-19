@@ -86,7 +86,7 @@ apt install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-de
 Finally
 
 ```
-make libpkt2.a
+make libpkt2.a libpkt2util.a
 ```
 
 Automake, autoconf, libtool, gcc or cmake must be installed first.

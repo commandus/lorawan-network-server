@@ -478,7 +478,7 @@ int main(
 	ConfigDatabases configDatabases(config->databaseConfigFileName);
 	if (configDatabases.dbs.size() == 0) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
-		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
+		// exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 
 	if (config->serverConfig.verbosity > 2)

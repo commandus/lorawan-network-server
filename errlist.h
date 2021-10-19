@@ -155,7 +155,7 @@
 #define ERR_INVALID_REGEX               "Invalid regular expression"
 #define ERR_NO_DATABASE               	"No database support enabled"
 #define ERR_LOAD_PROTO					"Error loading proto files"
-#define ERR_LOAD_DATABASE_CONFIG		"Error loading database config file"
+#define ERR_LOAD_DATABASE_CONFIG		"Database config file does not exists, invalid or empty"
 #define ERR_DB_SELECT					"Error SQL select from table "
 #define ERR_DB_DATABASE_NOT_FOUND		"Database not found "
 #define ERR_DB_DATABASE_OPEN			"Error open database "
