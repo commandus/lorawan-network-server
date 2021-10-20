@@ -548,15 +548,7 @@ int PacketQueue::replyControl(
 			<< ", MAC payload: " << hexString(macPayload);
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 	}
-	// .. MAC
-	if (!item.packet.hasMACPayload()){
-		std::stringstream ss;
-		ss << ERR_NO_MAC;
-		if (onLog)
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
-		return ERR_CODE_NO_MAC;
-	}
-	
+
 	// find out gateway statistics, required for last gateway port number to send reply
 	std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
 	if (gwit == gatewayList->gateways.end()) {
@@ -568,13 +560,11 @@ int PacketQueue::replyControl(
 	}
 	
 	// get MAC commands
-	MacPtr macPtr(item.packet.getMACs());
+	MacPtr macPtr(macPayload, true);
 	// print out
 	std::stringstream ss;
-	uint32_t internalTime = item.packet.tmst();
 	ss << MSG_SEND_MAC_REPLY
-		<< " tmst: " << internalTime
-		<< ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId) 
+		<< MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId) 
 		<< " (" << gwit->second.name << ")"
 		<< MSG_GATEWAY_SNR  << snr << ", address: "
 		<< UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
@@ -589,14 +579,14 @@ int PacketQueue::replyControl(
 	// make response
 
 	// get identity for NwkS
-	DeviceId id;
+	NetworkIdentity nid;
 	if (identityService)
-		identityService->get(item.packet.header.header.devaddr, id);
+		identityService->getNetworkIdentity(nid, controlPacket->header.eui);
 	// Produce MAC command response in the item.packet
 	uint32_t fcntdown = 0;
 	if (deviceStatService) {
 		DeviceStat ds;
-		int rs = deviceStatService->get(item.packet.header.header.devaddr, ds);
+		int rs = deviceStatService->get(nid.devaddr, ds);
 		if (rs == 0) {
 			fcntdown = ds.fcntdown;
 		} else {
@@ -606,38 +596,25 @@ int PacketQueue::replyControl(
 			}
 		}
 	}
-
-	std::stringstream macResponse;
-	// Get response on MAC commands
-	macPtr.mkResponseMACs(macResponse, item.packet);
-	// Add MAR request from server-side (if exists)
-	// macPtr.mkRequestMACs(macResponse, item.packet);
-	std::string mrp = macResponse.str();
-
-	if (mrp.empty())
-		return LORA_OK;
-
 	fcntdown++;
 
-	std::string response = item.packet.mkPullResponse(mrp, id, internalTime, fcntdown, power);
-std::cerr << "==MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
-std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
-	size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
+std::cerr << "==SEND MAC command: " << "device addr: " << DEVADDR2string(nid.devaddr) << std::endl;
+	size_t r = sendto(gwit->second.socket, macPayload.c_str(), macPayload.size(), 0,
 		(const struct sockaddr*) &gwit->second.sockaddr,
 		((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 	
-	if (r == response.size()) {
+	if (r == macPayload.size()) {
 		if (deviceStatService)
 			deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
 	}
 
 	if (onLog) {
-		if (r != response.size()) {
+		if (r != macPayload.size()) {
 			std::stringstream ss;
 			ss << ERR_CODE_REPLY_MAC
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
 			if (r == -1)
-				ss << ", sent " << r << " of " << response.size();
+				ss << ", sent " << r << " of " << macPayload.size();
 			ss << ", errno: " << errno << ": " << strerror(errno);
 			if (onLog)
 				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
@@ -645,7 +622,7 @@ std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 			std::stringstream ss;
 			ss << MSG_SENT_REPLY_TO
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-				<< " payload: " << hexString(response) << ", size: " << response.size();
+				<< " payload: " << hexString(macPayload) << ", size: " << macPayload.size();
 			if (onLog)
 				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}

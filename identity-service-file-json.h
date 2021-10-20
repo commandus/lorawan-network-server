@@ -53,7 +53,7 @@ class JsonFileIdentityService: public IdentityService {
 		int errcode;
 		std::string errmessage;
 
-				uint32_t getRightsMask(
+		uint32_t getRightsMask(
 			const DEVADDR &addr
 		);
 		void setRightsMask(
