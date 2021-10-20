@@ -524,7 +524,6 @@ int PacketQueue::replyControl(
 	if (!gatewayList)
 		return ERR_CODE_WRONG_PARAM;
 
-
 	size_t sz = item.packet.payload.size();
 	if (sz < sizeof(CONTROL_DEVICE_PACKET)) {
 		if (onLog) {
@@ -535,16 +534,16 @@ int PacketQueue::replyControl(
 		return ERR_CODE_INVALID_CONTROL_PACKET;
 	}
 
-	CONTROL_DEVICE_PACKET *packet = (CONTROL_DEVICE_PACKET *) item.packet.payload.c_str();
+	CONTROL_DEVICE_PACKET *controlPacket = (CONTROL_DEVICE_PACKET *) item.packet.payload.c_str();
 
 	size_t macpayloadsize = sz - sizeof(CONTROL_DEVICE_HEADER);
 
-	std::string macPayload = std::string((const char *) packet->data, macpayloadsize);
+	std::string macPayload = std::string((const char *) controlPacket->data, macpayloadsize);
 	if (onLog) {
 		std::stringstream ss;
-		ss << "Control packet EUI: " << DEVEUI2string(packet->header.eui)
-			<< ", gateway id: " << uint64_t2string(packet->header.gwid)
-			<< ", tag: " << (int) packet->header.tag
+		ss << "Control packet EUI: " << DEVEUI2string(controlPacket->header.eui)
+			<< ", gateway id: " << uint64_t2string(controlPacket->header.gwid)
+			<< ", tag: " << (int) controlPacket->header.tag
 			<< ", MAC payload size: " << macpayloadsize
 			<< ", MAC payload: " << hexString(macPayload);
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());

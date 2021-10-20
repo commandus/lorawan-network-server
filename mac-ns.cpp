@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <limits.h>
 #include <errno.h>
+#include <sys/select.h>
 
 #include "argtable3/argtable3.h"
 #include "platform.h"
@@ -44,6 +45,7 @@ const std::string progname = "mac-ns";
 #define DEF_NS_PORT		5000
 #define DEF_FPORT		223
 #define DEF_S_FPORT		"223"
+#define MAX_RECV_BUFFER_SIZE	4096
 
 static Configuration *config = NULL;
 static MacGwConfig *macGwConfig = NULL;
@@ -248,6 +250,83 @@ static void run()
 	}
 }
 
+int recvACK
+(
+	UDPSocket &socket,
+	uint64_t token,
+	int timeoutSec
+)
+{
+	fd_set readHandles;
+	FD_ZERO(&readHandles);
+	FD_SET(socket.sock, &readHandles);
+
+	struct timeval timeoutInterval;
+	timeoutInterval.tv_sec = timeoutSec;
+	timeoutInterval.tv_usec = 0;
+
+	int rs = select(socket.sock + 1, &readHandles, NULL, NULL, &timeoutInterval);
+	// error or timeout
+
+	if (rs <= 0)
+		return rs;
+
+	std::string recvBuffer;
+	recvBuffer.resize(MAX_RECV_BUFFER_SIZE + 1);
+	struct sockaddr_in6 cliAddr;
+	socklen_t cliAddrLen = sizeof(cliAddr);
+	int rr = recvfrom(socket.sock, (void*) recvBuffer.c_str(), MAX_RECV_BUFFER_SIZE, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
+	if (rr < 0) { 
+		std::cerr << ERR_SOCKET_READ
+			<< " " << UDPSocket::addrString(&socket.addrStorage)
+			<< " errno " << errno << ": " << strerror(errno)
+			<< std::endl;
+		return ERR_CODE_SOCKET_READ;
+	}
+	
+	if (rr != sizeof(SEMTECH_ACK)) { 
+		std::cerr << ERR_INVALID_PACKET
+			<< " " << UDPSocket::addrString(&socket.addrStorage)
+			<< " wrong size " << rr 
+			<< std::endl;
+		return ERR_CODE_INVALID_PACKET;
+	}
+	
+	SEMTECH_ACK *ack = (SEMTECH_ACK *) recvBuffer.c_str();			// 4 bytes
+	if (ack->version != 2) {
+		std::cerr << ERR_INVALID_PACKET
+			<< " " << UDPSocket::addrString(&socket.addrStorage)
+			<< " wrong version " << (int) ack->version 
+			<< std::endl;
+		return ERR_CODE_INVALID_PACKET;
+	}
+
+	if (!(ack->tag == 1 || ack->tag == 4)) {
+		std::cerr << ERR_INVALID_PACKET
+			<< " " << UDPSocket::addrString(&socket.addrStorage)
+			<< " wrong tag " << (int) ack->tag 
+			<< std::endl;
+		return ERR_CODE_INVALID_PACKET;
+	}
+
+	if (!(ack->tag == 1 || ack->tag == 4)) {
+		std::cerr << ERR_INVALID_PACKET
+			<< " " << UDPSocket::addrString(&socket.addrStorage)
+			<< " wrong tag " << (int) ack->tag 
+			<< std::endl;
+		return ERR_CODE_INVALID_PACKET;
+	}
+
+	if (ack->token != token) {
+		std::cerr << ERR_INVALID_PACKET
+			<< " " << UDPSocket::addrString(&socket.addrStorage)
+			<< " wrong token " << (int) ack->tag 
+			<< std::endl;
+		return ERR_CODE_INVALID_PACKET;
+	}
+	return LORA_OK;
+}
+
 int main(
 	int argc,
 	char *argv[])
@@ -450,7 +529,6 @@ int main(
 			// packet.setFOpts(macdatabin);
 			packet.header.fport = fport;
 
-
 			packet.payload = mkControlPacket(macGwConfig->euis[d].eui, macGwConfig->gatewayIds[g], macdatabin);
 			std::cerr << "==Payload: " << hexString(packet.payload) << std::endl;
 
@@ -482,6 +560,12 @@ int main(
 						<< ", hex: " << hexString(response)
 						<< std::endl;
 
+			
+			// read ACK response
+			if (recvACK(socket, packet.prefix.token, 1) == 0) {
+				std::cerr << "Received ACK successfully"
+					<< std::endl;
+			}
 		}
 	}
 
