@@ -510,14 +510,6 @@ int PacketQueue::replyControl(
 	// to reply via closest gateway, find out gatewsy with best SNR
 	float snr;
 	int power = 14;
-	uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
-	if (gwa == 0) {
-		std::stringstream ss;
-		ss << ERR_BEST_GATEWAY_NOT_FOUND;
-		if (onLog)
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
-		return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
-	}
 
 	// check just in case
 	// .. gateway
@@ -550,10 +542,10 @@ int PacketQueue::replyControl(
 	}
 
 	// find out gateway statistics, required for last gateway port number to send reply
-	std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
+	std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(controlPacket->header.gwid);
 	if (gwit == gatewayList->gateways.end()) {
 		std::stringstream ss;
-		ss << ERR_GATEWAY_NOT_FOUND << gatewayId2str(gwa);
+		ss << ERR_GATEWAY_NOT_FOUND << gatewayId2str(controlPacket->header.gwid);
 		if (onLog)
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
 		return ERR_CODE_GATEWAY_NOT_FOUND;
