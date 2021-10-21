@@ -1921,6 +1921,59 @@ std::string semtechUDPPacket::mkPullResponse(
 	return toTxImmediatelyJsonString(smsg.str(), recievedTime, power);
 }
 
+std::string semtechUDPPacket::mkMACRequest(
+	const std::string &data,
+	const NetworkIdentity &networkId,
+	uint32_t recievedTime,
+	const int fcnt,
+	const int power
+) const
+{
+	rfmHeader rfmHeader;
+
+	// encrypt frame payload
+	int direction = 0;	// uplink
+	std::string frmpayload(data);
+	size_t psize = frmpayload.size();
+
+	rfmHeader.header.fcnt = fcnt;
+	rfmHeader.header.macheader.f.mtype = MTYPE_UNCONFIRMED_DATA_DOWN;
+	rfmHeader.header.fctrl.i = 0;
+
+	if (networkId.version.minor == 1) {
+		encryptPayload(frmpayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, networkId.nwkSKey);	// network key
+	}
+
+	std::stringstream smsg;
+	// replace direction: MTYPE_UNCONFIRMED_DATA_UP to MTYPE_UNCONFIRMED_DATA_DOWN
+
+	if (psize <= 15) {
+		// use FOpts
+		rfmHeader.header.fctrl.f.foptslen = psize;
+		// device controled by service
+		rfmHeader.header.fctrl.f.adr = 1;
+		smsg << rfmHeader.toBinary();
+	} else {
+		// use FrmPayload
+		smsg << rfmHeader.toBinary();
+		smsg << (uint8_t) 0;	// fport 0- MAC payload
+	}
+	smsg << frmpayload;
+
+	std::cerr << "==Address: " << DEVADDR2string(rfmHeader.header.devaddr) << std::endl;
+	std::cerr << "==FCnt:  " << rfmHeader.header.fcnt << std::endl;
+	std::cerr << "=Header: " << rfmHeader.toJson() << std::endl;
+	std::cerr << "=Header: " << hexString(rfmHeader.toBinary()) << std::endl;
+	std::cerr << "==Data:  " << hexString(data) << std::endl;
+
+	std::string msg = smsg.str();
+	// calc mic
+	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt,
+		direction, rfmHeader.header.devaddr, networkId.nwkSKey);
+	smsg << std::string((char *) &mic, 4);
+	return toTxImmediatelyJsonString(smsg.str(), recievedTime, power);
+}
+
 /**
  * @return received time from interal counter, microsends
  */

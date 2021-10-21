@@ -234,7 +234,7 @@ test_udp_listen_CPPFLAGS = $(commoncppflags)
 test_packet_queue_SOURCES = \
 	tests/test-packet-queue.cpp \
 	packet-queue.cpp utillora.cpp errlist.cpp \
-	utilstring.cpp utildate.cpp \
+	utilstring.cpp utildate.cpp udp-socket.cpp \
 	device-stat.cpp gateway-stat.cpp lora-encrypt.cpp lorawan-mac.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_packet_queue_LDADD = -lpthread
@@ -250,7 +250,7 @@ test_mac_gw_LDADD =
 test_mac_gw_CPPFLAGS = $(commoncppflags)
 
 test_file_watch_SOURCES = \
-	tests/test-file-watch.cpp
+	tests/test-file-watch.cpp utilstring.cpp utilfile.cpp
 test_file_watch_LDADD = -lpthread
 test_file_watch_CPPFLAGS = $(commoncppflags)
 

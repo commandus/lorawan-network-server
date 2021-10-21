@@ -590,7 +590,10 @@ int PacketQueue::replyControl(
 	}
 	fcntdown++;
 
-std::cerr << "==SEND MAC command: " << "device addr: " << DEVADDR2string(nid.devaddr) << std::endl;
+std::cerr << "==SEND MAC command to device addr: " << DEVADDR2string(nid.devaddr) << std::endl;
+	
+	std::string response = item.packet.mkMACRequest(macPayload, nid, fcntdown, power);
+
 	size_t r = sendto(gwit->second.socket, macPayload.c_str(), macPayload.size(), 0,
 		(const struct sockaddr*) &gwit->second.sockaddr,
 		((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
@@ -601,20 +604,21 @@ std::cerr << "==SEND MAC command: " << "device addr: " << DEVADDR2string(nid.dev
 	}
 
 	if (onLog) {
-		if (r != macPayload.size()) {
+		if (r != response.size()) {
 			std::stringstream ss;
 			ss << ERR_CODE_REPLY_MAC
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
 			if (r == -1)
-				ss << ", sent " << r << " of " << macPayload.size();
-			ss << ", errno: " << errno << ": " << strerror(errno);
+				ss << ", sent " << r << " of " << response.size()
+					<< ", errno: " << errno << ": " << strerror(errno)
+					<< ", payload: " << hexString(response);
 			if (onLog)
 				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
 		} else {
 			std::stringstream ss;
 			ss << MSG_SENT_REPLY_TO
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-				<< " payload: " << hexString(macPayload) << ", size: " << macPayload.size();
+				<< " payload: " << hexString(response) << ", size: " << response.size();
 			if (onLog)
 				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}

@@ -531,6 +531,14 @@ public:
 		const int power = 14
 	) const;
 
+	std::string mkMACRequest(
+		const std::string &payload,
+		const NetworkIdentity &networkId,
+		uint32_t recievedTime,
+		const int fcnt,
+		const int power = 14
+	) const;
+
 	uint32_t tmst();	// return received time in microsends
 	uint32_t tmms();	// return received GPS time, can be 0
 
