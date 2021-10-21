@@ -8,17 +8,21 @@
  * @see https://stackoverflow.com/questions/15260879/c-simple-ipv6-udp-server-using-select-to-listen-on-multiple-ports-receiving-m
  */
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/select.h>
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
 
-#include "udp-socket.h"
-#include "errlist.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/select.h>
 
-int t2()
+#include "errlist.h"
+#include "udp-socket.h"
+
+int t2
+(
+	int timeoutsec
+)
 {
 	// UDPSocket s6("::1:9000", MODE_OPEN_SOCKET_LISTEN, MODE_FAMILY_HINT_IPV6);
 	UDPSocket s6(":9000", MODE_OPEN_SOCKET_LISTEN, MODE_FAMILY_HINT_IPV6);
@@ -39,16 +43,16 @@ int t2()
 		FD_SET(s4.sock, &read_handles);
 
 		struct timeval timeout_interval;
-        timeout_interval.tv_sec = 2;
+        timeout_interval.tv_sec = timeoutsec;
         timeout_interval.tv_usec = 0;
         int rs = select(s4.sock + 1, &read_handles, NULL, NULL, &timeout_interval);
         switch (rs) {
 			case -1: 
-				printf("Select error\n");
-				break;
+				std::cerr << "Select error" << std::endl;
+				return rs;
 			case 0:
-            	// printf("timeout\n");
-				break;
+            	std::cerr << "Timeout" << std::endl;
+				return rs;
         	default:
 			{
 				struct sockaddr_in client_address4;
@@ -75,7 +79,10 @@ int t2()
     }
 }
 
-int main(int argc, char **argv) {
-	int r = t2();
-	std::cerr << r << ": " << strerror_client(r) << std::endl;
+int main(int argc, char **argv) 
+{
+	int timeoutsec = 2;
+	int r = t2(timeoutsec);
+	std::cerr << r << ": " << strerror_lorawan_ns(r) << std::endl;
+	return r;
 }

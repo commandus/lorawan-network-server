@@ -9,6 +9,7 @@
 #include "identity-service-file-json.h"
 #include "errlist.h"
 #include "utilstring.h"
+#include "utillora.h"
 #include "utildate.h"
 
 int main(int argc, char** argv)
@@ -43,7 +44,7 @@ int main(int argc, char** argv)
 
 	std::vector<semtechUDPPacket> packets;
 	// get packets
-	SEMTECH_DATA_PREFIX dataprefix;
+	SEMTECH_PREFIX_GW dataprefix;
 	GatewayStat gatewayStat;
 	JsonFileIdentityService identityService;
 	identityService.init("identity.json", NULL);
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
 	struct sockaddr_in6 clientAddress;
 	int r = semtechUDPPacket::parse((const struct sockaddr *) &clientAddress, dataprefix, gatewayStat, packets, packet.c_str(), packet.size(), &identityService);
 	packets[0].devId = deviceId;
-	std::string payload = packets[0].getPayload();
+	std::string payload = packets[0].payload;
 
 	timeval timeval;
 	
@@ -78,10 +79,6 @@ int main(int argc, char** argv)
 	for (std::vector<ReceiverQueueEntry>::const_iterator it(entries.begin()); it != entries.end(); it++ ) {
 		std::cerr << it->toJsonString() << std::endl;
 	}
-
-	std::cout << "Enter \"q\"to quit" << std::endl;
-	std::string v;
-	std::cin >> v;
 
 	// stop processor
 	recieverQueueProcessor->stop();

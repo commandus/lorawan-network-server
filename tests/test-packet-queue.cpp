@@ -33,8 +33,12 @@ int putSomePackets()
 			// std::cerr << ss.str() << std::endl;
 			packetAddress++;
 			v.setDeviceAddr(ss.str());
+			ITEM_PROCESS_MODE mode = MODE_NONE;
+			timeval tv;
+			tv.tv_sec = time(NULL);
+			tv.tv_usec = 0;
 			for (int j = 0; j < 2; j++) {
-				q.put(v);
+				q.push(0, mode, tv, v);
 			}
 			packetsSent++;
 		}
@@ -47,10 +51,10 @@ void readPackets()
 {
 	while (!stopped) {
 		if (q.count()) {
-			semtechUDPPacket p;
+			SemtechUDPPacketItem item;
 			struct timeval t;
 			gettimeofday(&t, NULL);
-			while (q.getFirstExpired(p, t)) {
+			while (q.getFirstExpired(item, t)) {
 				/*
 				std::cerr << timeval2string(t) << " "  << p.getDeviceAddrStr() << " "
 					<< p.metadataToJsonString() << std::endl;
@@ -100,14 +104,14 @@ void t1() {
 	stopped = false;
 	int r = putSomePackets();
 	if (r) {
-		std::cerr << r << ": " << strerror_client(r) << std::endl;
+		std::cerr << r << ": " << strerror_lorawan_ns(r) << std::endl;
 		exit(r);
 	}
 	while (q.count()) {
-		semtechUDPPacket p;
+		SemtechUDPPacketItem item;
 		struct timeval t;
 		gettimeofday(&t, NULL);
-		if (q.getFirstExpired(p, t)) {
+		if (q.getFirstExpired(item, t)) {
 		}
 	}
 }
@@ -123,13 +127,11 @@ void printStat() {
 	}
 }
 
-
 class PacketHandlerTest : public PacketHandler {
 	public:
 		// Return 0, retval = EUI and keys
 		int enqueuePayload(
-			struct timeval &time,
-			DeviceId id,
+			const struct timeval &time,
 			semtechUDPPacket &value
 		)  {
 			packetsRead++;
@@ -137,8 +139,7 @@ class PacketHandlerTest : public PacketHandler {
 		}
 
 		virtual int enqueueMAC(
-			struct timeval &time,
-			DeviceId id,
+			const struct timeval &time,
 			semtechUDPPacket &value
 		) {
 

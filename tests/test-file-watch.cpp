@@ -2,6 +2,8 @@
 #include <regex>
 #include <iostream>
 #include "filewatch.hpp"
+#include "utilstring.h"
+#include "utilfile.h"
 
 /**
  * @see https://github.com/ThomasMonkman/filewatch
@@ -31,7 +33,9 @@ int main(int argc, char **argv) {
 		};
 	}
 	);
-	std::cout << "Enter 'q' to quit" << std::endl;
-	std::string s;
-	std::cin >> s;
+
+	const std::string fn("test-file-watch.tmp.json");
+	string2file(fn, "1");
+	config::rmFile(fn);
+	sleep(1);
 }

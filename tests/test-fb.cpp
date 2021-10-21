@@ -1,6 +1,14 @@
+#include <iostream>
+
 #ifndef ENABLE_DB_FIREBIRD
-#error "No firebird support is on. Enable it by ./configure --enable-db-firebird=yes"
-#endif
+// #error "No firebird support is on. Enable it by ./configure --enable-db-firebird=yes"
+int main(int argc, char** argv)
+{
+	std::cerr << "No firebird support is on. Enable it by ./configure --enable-db-firebird=yes" << std::endl;
+    return 0;
+}            
+
+#else
 
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +16,6 @@
 #include <ibase.h>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "errlist.h"
 
@@ -199,3 +206,5 @@ int main(int argc, char** argv)
 
     return 0;
 }            
+
+#endif

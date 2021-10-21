@@ -187,7 +187,7 @@ void decodeTest(
 			<< std::endl;
 
 		std::string msg = v.substr(0, v.size() - sizeof(uint32_t));
-		uint32_t mic = calculateMIC(msg, hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
+		uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
 		std::cout 
 			<< " MIC: " << std::hex << mic
 			<< std::endl;
@@ -255,7 +255,7 @@ void decodeTest2()
 		<< " hdr.header.fcnt: " << hdr.header.fcnt
 		
 		<< std::endl;
-	uint32_t mic = calculateMIC(msg, hdr.header.fcnt, direction, hdr.header.devaddr, nwkSKey);
+	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), hdr.header.fcnt, direction, hdr.header.devaddr, nwkSKey);
 	std::cout 
 		<< " MIC: " << std::hex << mic
 		<< std::endl;
@@ -318,7 +318,7 @@ void decodeTest3(
 			<< std::endl;
 
 		std::string msg = v.substr(0, v.size() - sizeof(uint32_t));
-		uint32_t mic = calculateMIC(msg, hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
+		uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
 		std::cout 
 			<< " MIC: " << std::hex << mic
 			<< std::endl;

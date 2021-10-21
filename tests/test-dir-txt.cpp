@@ -106,7 +106,7 @@ void decodeTest(
 			<< std::endl;
 
 		std::string msg = v.substr(0, v.size() - sizeof(uint32_t));
-		uint32_t mic = calculateMIC(msg, hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
+		uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), hdr.header.fcnt, direction, hdr.header.devaddr, id.nwkSKey);
 		std::cout 
 			<< " MIC: " << std::hex << mic
 			<< std::endl;
@@ -193,7 +193,4 @@ int main(int argc, char **argv) {
 	// decodeTest(s, 0x01450330, "YAFFAzAABVwAj7fiZ+K9xg==");
 	
 	// decodeTest2();
-	std::cout << "Enter 'q' to quit" << std::endl;
-	std::string v;
-	std::cin >> v;
 }
