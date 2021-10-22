@@ -151,8 +151,7 @@ void RecieverQueueProcessor::processQueue()
 		ReceiverQueueEntry entry;
 		for (int i = 0; i < databaseByConfig->count(); i++) {
 			DatabaseNConfig *db = databaseByConfig->get(i);
-			int dbId = db->config->id;
-			if (!db) {
+            if (!db) {
 				if (onLog) {
 					std::stringstream ss;
 					ss <<  ERR_DB_DATABASE_NOT_FOUND << " " << i;
@@ -168,8 +167,12 @@ void RecieverQueueProcessor::processQueue()
 				}
 				continue;
 			}
-			
-			if (receiverQueueService->peek(dbId, entry) != 0)
+
+            if (db->config->active)
+                continue;
+            int dbId = db->config->id;
+
+            if (receiverQueueService->peek(dbId, entry) != 0)
 				continue;
 
 			int r = db->open();

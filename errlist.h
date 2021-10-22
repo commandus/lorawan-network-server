@@ -150,7 +150,7 @@
 #define ERR_MAC_TOO_SHORT				"MAC is too short"
 #define ERR_MAC_INVALID					"Invalid MAC command"
 #define ERR_MAC_UNKNOWN_EXTENSION		"Unknown MAC command extension"
-#define ERR_PARAM_INVALID				"Invalid paramater"
+#define ERR_PARAM_INVALID				"Invalid parameter"
 #define ERR_INSUFFICIENT_PARAMS			"Insufficient parameters"
 #define ERR_NO_MAC_NO_PAYLOAD           "No MAC command(s) and/or payload"
 #define ERR_INVALID_REGEX               "Invalid regular expression"
