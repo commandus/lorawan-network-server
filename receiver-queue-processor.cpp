@@ -157,18 +157,10 @@ void RecieverQueueProcessor::processQueue()
 					ss <<  ERR_DB_DATABASE_NOT_FOUND << " " << i;
 					onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 				}
-				// remove database from queue
-				if (receiverQueueService->pop(dbId, entry) != 0) {
-					if (onLog) {
-						std::stringstream ss;
-						ss << "Database: " << dbId << " " << db->config->name << " pop() error";
-						onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
-					}
-				}
 				continue;
 			}
 
-            if (db->config->active)
+            if (!db->config->active)
                 continue;
             int dbId = db->config->id;
 
