@@ -489,6 +489,8 @@ int main(
 	// check out database connectivity
 	bool dbOk = true;
 	for (std::vector<ConfigDatabase>::const_iterator it(configDatabases.dbs.begin()); it != configDatabases.dbs.end(); it++) {
+        if (!it->active)
+            continue;
 		DatabaseNConfig *dc = dbByConfig->find(it->name);
 		bool hasConn = dc != NULL;
 		if (!dc)
@@ -513,7 +515,7 @@ int main(
 	}
 
 	if (config->protoPath.empty()) {
-		// if proto path is not specidfied, try use default ./proto/ path
+		// if proto path is not specified, try use default ./proto/ path
 		config->protoPath = DEF_PROTO_PATH;
 	}
 

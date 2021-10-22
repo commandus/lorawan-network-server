@@ -18,10 +18,10 @@
 
 DatabaseNConfig::DatabaseNConfig
 (
-	const ConfigDatabase *aconfig
+	const ConfigDatabase *aConfig
 )
 {
-	config = aconfig;
+	config = aConfig;
 	// unknown database type
 	db = NULL;
 	if (config->type == "sqlite3")

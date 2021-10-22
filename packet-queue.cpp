@@ -498,7 +498,7 @@ std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 }
 
 /**
- * Send MAC command response, to the best gateway over UDP socket
+ * Send MAC command response over specified gateway
  * @param item packet
  * @param t current time, not used
  */
@@ -507,7 +507,7 @@ int PacketQueue::replyControl(
 	struct timeval &t
 ) {
 
-	// to reply via closest gateway, find out gatewsy with best SNR
+	// to reply via the closest gateway, find out gateway with best SNR
 	float snr;
 	int power = 14;
 
@@ -528,16 +528,37 @@ int PacketQueue::replyControl(
 
 	CONTROL_DEVICE_PACKET *controlPacket = (CONTROL_DEVICE_PACKET *) item.packet.payload.c_str();
 
-	size_t macpayloadsize = sz - sizeof(CONTROL_DEVICE_HEADER);
+	size_t macPayloadSize = sz - sizeof(CONTROL_DEVICE_HEADER);
 
-	std::string macPayload = std::string((const char *) controlPacket->data, macpayloadsize);
+	std::string macPayload = std::string((const char *) controlPacket->data, macPayloadSize);
+
+    if (controlPacket->header.gwid == 0) {  // special case gateway id = 0 means use the best gateway
+        // find out best gateway
+        float snr;
+        controlPacket->header.gwid = item.packet.getBestGatewayAddress(&snr);
+        if (controlPacket->header.gwid == 0) {
+            if (onLog) {
+                std::stringstream ss;
+                ss << ERR_BEST_GATEWAY_NOT_FOUND;
+                onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
+            }
+            return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
+        } else {
+            if (onLog) {
+                std::stringstream ss;
+                ss << MSG_GATEWAY_SNR << snr << ", gateway: " << uint64_t2string(controlPacket->header.gwid);
+                onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
+            }
+        }
+    }
+
 	if (onLog) {
 		std::stringstream ss;
 		ss << "Control packet EUI: " << DEVEUI2string(controlPacket->header.eui)
-			<< ", gateway id: " << uint64_t2string(controlPacket->header.gwid)
-			<< ", tag: " << (int) controlPacket->header.tag
-			<< ", MAC payload size: " << macpayloadsize
-			<< ", MAC payload: " << hexString(macPayload);
+            << ", gateway id: " << uint64_t2string(controlPacket->header.gwid)
+            << ", tag: " << (int) controlPacket->header.tag
+            << ", MAC payload size: " << macPayloadSize
+            << ", MAC payload: " << hexString(macPayload);
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 	}
 
@@ -558,7 +579,7 @@ int PacketQueue::replyControl(
 	ss << MSG_SEND_MAC_REPLY
 		<< MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId) 
 		<< " (" << gwit->second.name << ")"
-		<< MSG_GATEWAY_SNR  << snr << ", address: "
+		<< ", address: "
 		<< UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
 
 	ss << ", \"mac\": " << macPtr.toJSONString();
@@ -575,12 +596,12 @@ int PacketQueue::replyControl(
 	if (identityService)
 		identityService->getNetworkIdentity(nid, controlPacket->header.eui);
 	// Produce MAC command response in the item.packet
-	uint32_t fcntdown = 0;
+	uint32_t fCntDown = 0;
 	if (deviceStatService) {
 		DeviceStat ds;
 		int rs = deviceStatService->get(nid.devaddr, ds);
 		if (rs == 0) {
-			fcntdown = ds.fcntdown;
+            fCntDown = ds.fcntdown;
 		} else {
 			if (onLog) {
 				ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
@@ -588,11 +609,11 @@ int PacketQueue::replyControl(
 			}
 		}
 	}
-	fcntdown++;
+	fCntDown++;
 
 std::cerr << "==SEND MAC command to device addr: " << DEVADDR2string(nid.devaddr) << std::endl;
 	
-	std::string response = item.packet.mkMACRequest(macPayload, nid, fcntdown, power);
+	std::string response = item.packet.mkMACRequest(macPayload, nid, fCntDown, power);
 
 	size_t r = sendto(gwit->second.socket, macPayload.c_str(), macPayload.size(), 0,
 		(const struct sockaddr*) &gwit->second.sockaddr,
@@ -600,7 +621,7 @@ std::cerr << "==SEND MAC command to device addr: " << DEVADDR2string(nid.devaddr
 	
 	if (r == macPayload.size()) {
 		if (deviceStatService)
-			deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
+			deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fCntDown);
 	}
 
 	if (onLog) {
@@ -678,7 +699,7 @@ void PacketQueue::runner()
 				replyMAC(item, t);
 				break;
 			case MODE_CONTROL_NS:
-				//
+				// control packet
 				if (onLog) {
 					std::stringstream ss;
 					ss << "== Control message processing, payload: "

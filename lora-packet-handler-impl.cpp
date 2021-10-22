@@ -12,9 +12,6 @@
 // default queue timeout in microseconds, less than 1s, e.g. 1/4s
 #define DEF_TIMEOUT_US	250 * 1000
 
-// default queue timeout in microseconds
-#define TIMEOUT_IMMEDIATE	0
-
 int LoraPacketProcessor::enqueuePayload(
         const struct timeval &time,
         SemtechUDPPacket &value
@@ -35,14 +32,15 @@ int LoraPacketProcessor::enqueuePayload(
 }
 
 /**
- * Enqueue control network service message
+ * Enqueue control network service message to send MAC commands to the destination device
+ * or control network service itself
  * @param time receive time
  * @param value Semtech packet
  * @return 0- success
  */ 
 int LoraPacketProcessor::enqueueControl(
-        const struct timeval &time,
-        SemtechUDPPacket &value
+    const struct timeval &time,
+    SemtechUDPPacket &value
 )
 {
 	std::stringstream ss;
@@ -57,8 +55,6 @@ int LoraPacketProcessor::enqueueControl(
 	t.tv_sec = time.tv_sec;
 	t.tv_usec = time.tv_usec;
 	incTimeval(t, 0, DEF_TIMEOUT_US);
-//	controlQueue.push(t, value);
-//	controlQueue.wakeUp();
 	packetQueue.push(0, MODE_CONTROL_NS, t, value);
 	packetQueue.wakeUp();
 	return LORA_OK;
@@ -126,8 +122,8 @@ int LoraPacketProcessor::ack
 }
 
 /**
- * Identify device, if device identified sucessfully, enqueue packet or MAC 
- * @param time recived time
+ * Identify device, if device identified successfully, enqueue packet or MAC
+ * @param time received time
  * @param packet Semtech gateway packet
  */ 
 int LoraPacketProcessor::put
@@ -155,19 +151,22 @@ int LoraPacketProcessor::put
 	int r = identityService->get(addr, packet.devId);
 	if (r == 0) {
 		if (reservedFPort != 0 && packet.header.fport == reservedFPort) {
+            // reserved for control packet FPort number matched
 			// check is device authorized to control network service
 			if (identityService->canControlService(addr)) {
-				// report 
+				// device granted
 				if (onLog) {
+                    // log event
 					std::stringstream ss;
 					ss << MSG_RECEIVED_CONTROL_FRAME
 						<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
 						<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
 					onLog(this, LOG_DEBUG, LOG_IDENTITY_SVC, 0, ss.str());
+                    // enqueue packet route to the target device or network server itself
 					enqueueControl(time, packet);
 				}
 			} else {
-				// report error
+				// device denied, report error
 				if (onLog) {
 					std::stringstream ss;
 					ss << ERR_MESSAGE << ERR_CODE_CONTROL_NOT_AUTHORIZED << ": " << ERR_CONTROL_NOT_AUTHORIZED

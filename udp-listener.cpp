@@ -342,13 +342,13 @@ int UDPListener::listen() {
 		struct timeval recievedTime;
 		gettimeofday(&recievedTime, NULL);
 		
-		// By default two sockets: one for IPv4, second for IPv6
+		// By default, two sockets: one for IPv4, second for IPv6
 		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
 			if (!FD_ISSET(it->sock, &readHandles))
 				continue;
 			struct sockaddr_in6 gwAddress;
 			int bytesReceived = it->recv((void *) buffer.c_str(), buffer.size() - 1, &gwAddress);	// add extra trailing byte for null-terminated string
-			if (bytesReceived <=0) {
+			if (bytesReceived <= 0) {
 				if (onLog) {
 					std::stringstream ss;
 					ss << ERR_MESSAGE << ERR_CODE_SOCKET_READ << " "

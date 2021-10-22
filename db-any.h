@@ -10,7 +10,7 @@ public:
 	const ConfigDatabase *config;
 	DatabaseIntf* db;
 
-	DatabaseNConfig(const ConfigDatabase *cd);
+	DatabaseNConfig(const ConfigDatabase *aConfig);
 	~DatabaseNConfig();
 	std::string tableName(__attribute__((unused)) void *env, const std::string &message) const;
 	std::string selectClause(void *env, const std::string &message);

@@ -1,7 +1,11 @@
 # lorawan-network-server
 
 
-lorawan-network-server is lightweigth LoRaWAN network server.
+lorawan-network-server is lightweight monolith LoRaWAN network server.
+
+The payload is parsed according to the description of the data structure of the packet
+sent by the end-device and is stored to the database in the table specified in the 
+configuration file.
 
 ## Components
 
@@ -76,9 +80,11 @@ Make sure you have automake installed:
 apt install autoconf build-essential libtool libprotobuf-dev
 ```
 
-Before you start, first you need download  [pkt2 library](https://github.com/commandus/pkt2.git) ([git](git@github.com:commandus/pkt2.git) 
+Before you start, first you need download  [pkt2 library](https://github.com/commandus/pkt2.git)
+([git](git@github.com:commandus/pkt2.git) 
 
-Then install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev dependencies:
+Then install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev 
+libprotoc-dev libunwind-dev dependencies:
 ```
 apt install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
 ```
@@ -216,13 +222,13 @@ Option "storageType" values are:
 
 Default value is "json". The identifiers are stored in memory.
 
-Option "lmdb" is a little bit safer and suitable for low-memory installations.
+Option "lmdb" is a little safer and suitable for low-memory installations.
 
 Option "txt" is slow and useful for debug only.
 
 #### Message queue
 
-Received messages are send to the database(s) as soon as possible. In case the database system is not avaliable
+Received messages are sent to the database(s) as soon as possible. In case the database system is not avaliable
 for some reason, received messages stay in the queue until database has up.
 
 Option "messageQueueStorageName" set name of file name (or directory name).
@@ -241,7 +247,7 @@ If lorawan-network-server is down, queue are stored to the file.
 
 When lorawan-network-server is up, queue loaded from the file.
 
-Option "lmdb" is a little bit safer. You can avoid meory consumption in case of 
+Option "lmdb" is a little safer. You can avoid memory consumption in case of 
 external database is down.
 
 Option "txt" is slow and useful for debug only.
@@ -267,7 +273,7 @@ lorawan-network-server try to parse payload and insert parsed data to database(s
 
 Gateways list gateways.
 
-Each entry has an gateway identifier, address, name and gateway statistics.
+Each entry has a gateway identifier, address, name and gateway statistics.
 
   - gwid Gateway identifier (hex number string)
   - addr gateway address:port (IPv4 or IPv6).
@@ -347,10 +353,10 @@ Parameters:
 
 Options:
 
--x --regex use regilar expresseion in -g, -e options instead of wildcards ('*', '?').
+-x --regex use regular expression in -g, -e options instead of wildcards ('*', '?').
 
-Options -g, -e can contain "*" and "?" wildcards, or regular expression lile ".*" if -x option is set.
-Regular expressions grammar is similar to the grep.
+Options -g, -e can contain "*" and "?" wildcards, or regular expression like ".*" if -x option is set.
+Regular expressions' grammar is similar to the grep.
 
 Option -p requires hex string, for instance "0faa0167" is valid parameter value.
 
@@ -362,7 +368,7 @@ For example, "linkadr" command has 5 parameters:
 ```
 linkadr 2 7 255 1 0
 ```
-where 2 is tx power, 7- data rate, 255- channel mask, 1-  transmissions per messege, 0- mask control.
+where 2 is tx power, 7- data rate, 255- channel mask, 1-  transmissions per message, 0- mask control.
 
 There are special parameter value "asis" for the first two parameters of the "linkadr" command , you can use it as shown:
 
@@ -455,7 +461,7 @@ BS identifier 00006cc3743eed46
 - PV protocol version 1 byte
 - TOKE token 2 bytes long
 - TG tag 1 byte
-- GatewayIdentifie gateway identifier
+- GatewayId gateway identifier
 
 ### Ping?
 
@@ -505,7 +511,7 @@ Connection for database type "postgresql" looks like:
 
 postgresql://irthermometer:************@localhost:5432/irthermometer",
 
-See [Connection URIs](https://www.postgresql.org/docs/10/libpq-connect.html)
+See [PostgreSQL Connection URIs](https://www.postgresql.org/docs/10/libpq-connect.html)
 
 table_aliases is an array of array of two elements. First element is protobuf package.message.
 Second element is an alias used in the database for table name.
@@ -605,7 +611,7 @@ If proto defines some fields as timestamp, proto-db utility return MySQL error
 Error insert record into SQL table 1 database mysql: Data truncated for column 'recvtime' at row 1
 ```
 
-Change table's field type in the dstabase like this:
+Change table's field type in the database like this:
 
 ```
 ALTER TABLE iridium_packet drop column recvtime;
@@ -628,7 +634,7 @@ ALTER TABLE "iridium_packet" add "gps_time" VARCHAR(32);
 
 Each table's row must have unique identifier.
 
-You need manually add column id and tnen make column "autoincrment".
+You need manually add column id of "autoincrement" type.
 
 For instance, for column id create sequence generator:
 
@@ -636,7 +642,7 @@ For instance, for column id create sequence generator:
 create sequence gen_vega_id
 ```
 
-Then in the trigger before insert put genetrated value to the "id" column:
+Then in the trigger before insert put generated value to the "id" column:
 
 Add create time. Add column:
 
@@ -917,7 +923,7 @@ Aborted
 
 udp-listener.cpp              UDPListener::listen()
 lora-packet-handler-impl.cpp  LoraPacketProcessor::put()
-lora-packet-handler-impl.cpp  LoraPacketProcessor::enqueueMAC()
+lora-packet-handler-impl.cpp  LoraPacketProcessor::enqueueMAC() LoraPacketProcessor::enqueueControl()
 packet-queue.cpp              PacketQueue::push()
 packet-queue.cpp              PacketQueue::runner()
 packet-queue.cpp              PacketQueue::replyMAC()
