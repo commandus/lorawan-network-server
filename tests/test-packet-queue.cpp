@@ -27,7 +27,7 @@ int putSomePackets()
 {
 	while (!stopped) {
 		for (int i = 0; i < 16; i++) {
-			semtechUDPPacket v;
+			SemtechUDPPacket v;
 			std::stringstream ss;
 			ss << std::hex << std::setw(8) << std::setfill('0') << packetAddress;
 			// std::cerr << ss.str() << std::endl;
@@ -131,16 +131,16 @@ class PacketHandlerTest : public PacketHandler {
 	public:
 		// Return 0, retval = EUI and keys
 		int enqueuePayload(
-			const struct timeval &time,
-			semtechUDPPacket &value
+                const struct timeval &time,
+                SemtechUDPPacket &value
 		)  {
 			packetsRead++;
 			// std::cerr << value.getDeviceAddrStr() << " " << value.metadataToJsonString() << std::endl;
 		}
 
 		virtual int enqueueMAC(
-			const struct timeval &time,
-			semtechUDPPacket &value
+                const struct timeval &time,
+                SemtechUDPPacket &value
 		) {
 
 		}

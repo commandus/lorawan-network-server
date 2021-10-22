@@ -12,15 +12,15 @@ public:
 
 	DatabaseNConfig(const ConfigDatabase *cd);
 	~DatabaseNConfig();
-	std::string tableName(void *env, const std::string &message);
+	std::string tableName(__attribute__((unused)) void *env, const std::string &message) const;
 	std::string selectClause(void *env, const std::string &message);
-	std::string createClause(void *env, const std::string &message);
+	std::string createClause(void *env, const std::string &message) const;
 	std::string insertClause(void *env, const std::string &message, int inputFormat, const std::string &data, const std::map<std::string, std::string> *properties);
 	int createTable(void *env, const std::string &message);
 	int insert(void *env, const std::string &message, int inputFormat, const std::string &data, const std::map<std::string, std::string> *properties);
 	int open();
-	int close();
-	int exec(const std::string &statement);
+	int close() const;
+	int exec(const std::string &statement) const;
 	int select(std::vector<std::vector<std::string>> &retval, const std::string &statement);
 };
 

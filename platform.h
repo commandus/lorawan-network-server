@@ -3,14 +3,14 @@
 
 #ifdef _MSC_VER
 #define	SYSLOG(msg)
-#define OPENSYSLOG()
-#define CLOSESYSLOG()
+#define OPEN_SYSLOG()
+#define CLOSE_SYSLOG()
 #else
 #include <syslog.h>
 #include <sstream>
 #define	SYSLOG(msg) { syslog (LOG_ALERT, "%s", msg); }
-#define OPENSYSLOG() { setlogmask (LOG_UPTO(LOG_NOTICE)); openlog("semtech_udp_packet_emitter", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1); }
-#define CLOSESYSLOG() closelog();
+#define OPEN_SYSLOG() { setlogmask (LOG_UPTO(LOG_NOTICE)); openlog("semtech_udp_packet_emitter", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1); }
+#define CLOSE_SYSLOG() closelog();
 #endif
 
 #ifdef _MSC_VER
@@ -22,13 +22,13 @@
 #endif
 
 #if BYTE_ORDER == BIG_ENDIAN
-#define ntoh2(x) (x)
-#define ntoh4(x) (x)
-#define ntoh8(x) (x)
+#define NTOH2(x) (x)
+#define NTOH4(x) (x)
+#define NTOH8(x) (x)
 #else
-#define ntoh2(x) be16toh(x)
-#define ntoh4(x) be32toh(x)
-#define ntoh8(x) be64toh(x)
+#define NTOH2(x) be16toh(x)
+#define NTOH4(x) be32toh(x)
+#define NTOH8(x) be64toh(x)
 #endif
 
 #ifdef __MACH__

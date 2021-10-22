@@ -45,9 +45,9 @@ class RecieverQueueProcessor {
 		RecieverQueueProcessor();
 		~RecieverQueueProcessor();
 		int onPacket(
-			struct timeval &time,
-			DeviceId id,
-			semtechUDPPacket &value
+                struct timeval &time,
+                DeviceId id,
+                SemtechUDPPacket &value
 		);
 		void setLogger(
 			std::function<void(

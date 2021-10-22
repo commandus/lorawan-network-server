@@ -101,7 +101,7 @@ class ReceiverQueueService {
 		std::vector<int> dbs;
 		int next();
 		bool isDuplicated(
-			const semtechUDPPacket &packet,
+			const SemtechUDPPacket &packet,
 			const time_t &received
 		);
 	public:
@@ -124,7 +124,7 @@ class ReceiverQueueService {
 		
 		// Add entry
 		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
-		void push(const semtechUDPPacket &packet, const timeval &time);
+		void push(const SemtechUDPPacket &packet, const timeval &time);
 		// brute-force push payload
 		void pushForce(const DeviceId &deviceId, const std::string &payload, const timeval &time);
 		

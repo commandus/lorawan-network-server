@@ -19,7 +19,7 @@ SemtechUDPPacketItem::SemtechUDPPacketItem()
 }
 
 SemtechUDPPacketItem::SemtechUDPPacketItem(
-	const semtechUDPPacket &apacket
+	const SemtechUDPPacket &apacket
 )
 	: processMode(MODE_NONE), packet(apacket)
 {
@@ -30,7 +30,7 @@ SemtechUDPPacketItem::SemtechUDPPacketItem(
 	int socket,
 	ITEM_PROCESS_MODE mode,
 	const struct timeval &time,
-	const semtechUDPPacket &apacket
+	const SemtechUDPPacket &apacket
 )
 	: processMode(mode), timeAdded(time), packet(apacket)
 {
@@ -126,7 +126,7 @@ void PacketQueue::push(
 	int socket,
 	ITEM_PROCESS_MODE mode,
 	const struct timeval &time,
-	const semtechUDPPacket &value
+	const SemtechUDPPacket &value
 ) {
 	if (onLog) {
 		std::stringstream ss;

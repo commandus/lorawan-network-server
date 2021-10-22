@@ -52,7 +52,7 @@ public:
 
 	std::function<void(
 			void *env,
-			const semtechUDPPacket &value
+			const SemtechUDPPacket &value
 	)> onDeviceStatDump;
 	void *deviceStatEnv;
 
@@ -114,7 +114,7 @@ public:
 		void *deviceStatEnv,
 		std::function<void(
 			void *env,
-			const semtechUDPPacket &value
+			const SemtechUDPPacket &value
 	)> onDeviceStatDump);
 };
 

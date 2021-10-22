@@ -70,14 +70,14 @@ inline HexCharStruct hex(unsigned char c)
 	return HexCharStruct(c);
 }
 
-static void bufferPrintHex(std::ostream &sout, const void* value, size_t size)
+static void bufferPrintHex(std::ostream &ostream, const void* value, size_t size)
 {
 	if (value == NULL)
 		return;
 	unsigned char *p = (unsigned char*) value;
 	for (size_t i = 0; i < size; i++)
 	{
-		sout << hex(*p);
+		ostream << hex(*p);
 		p++;
 	}
 }

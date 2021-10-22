@@ -36,9 +36,9 @@
 #include <unistd.h>
 
 int RecieverQueueProcessor::onPacket(
-	struct timeval &time,
-	DeviceId id,
-	semtechUDPPacket &value
+        struct timeval &time,
+        DeviceId id,
+        SemtechUDPPacket &value
 )
 {
 	std::stringstream ss;

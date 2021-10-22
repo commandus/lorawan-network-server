@@ -36,19 +36,19 @@ typedef enum {
 class SemtechUDPPacketItem {
 	public:
 		struct timeval timeAdded;
-		semtechUDPPacket packet;
+		SemtechUDPPacket packet;
 		ITEM_PROCESS_MODE processMode;
 		// socket
 		int socket;
 		// device address actually is gatreway address
 		DEVADDRINT getAddr() const;
 		SemtechUDPPacketItem();
-		SemtechUDPPacketItem(const semtechUDPPacket &packet);
+		SemtechUDPPacketItem(const SemtechUDPPacket &packet);
 		SemtechUDPPacketItem(
 			int socket,
 			ITEM_PROCESS_MODE mode,
 			const struct timeval &time,
-			const semtechUDPPacket &packet
+			const SemtechUDPPacket &packet
 		);
 		std::string toString() const;
 };
@@ -109,7 +109,7 @@ class PacketQueue {
 			int socket,
 			ITEM_PROCESS_MODE mode,
 			const struct timeval &time,
-			const semtechUDPPacket &value
+			const SemtechUDPPacket &value
 		);
 		size_t count();
 		/**

@@ -16,8 +16,8 @@
 #define TIMEOUT_IMMEDIATE	0
 
 int LoraPacketProcessor::enqueuePayload(
-	const struct timeval &time,
-	semtechUDPPacket &value
+        const struct timeval &time,
+        SemtechUDPPacket &value
 )
 {
 	std::stringstream ss;
@@ -41,8 +41,8 @@ int LoraPacketProcessor::enqueuePayload(
  * @return 0- success
  */ 
 int LoraPacketProcessor::enqueueControl(
-	const struct timeval &time,
-	semtechUDPPacket &value
+        const struct timeval &time,
+        SemtechUDPPacket &value
 )
 {
 	std::stringstream ss;
@@ -70,8 +70,8 @@ int LoraPacketProcessor::enqueueControl(
  * @return 0- success
  */ 
 int LoraPacketProcessor::enqueueMAC(
-	const struct timeval &time,
-	semtechUDPPacket &value
+        const struct timeval &time,
+        SemtechUDPPacket &value
 )
 {
 	std::stringstream ss;
@@ -117,7 +117,7 @@ int LoraPacketProcessor::ack
 {
 	packetQueue.ack(socket, (struct sockaddr *) gwAddress, dataprefix);
 	/*
-	semtechUDPPacket p((const struct sockaddr *) gwAddress, &dataprefix, NULL, "", identityService);
+	SemtechUDPPacket p((const struct sockaddr *) gwAddress, &dataprefix, NULL, "", identityService);
 	struct timeval t = { 0, 0 };
 	packetQueue.push(socket, MODE_ACK, t, p);
 	packetQueue.wakeUp();
@@ -132,8 +132,8 @@ int LoraPacketProcessor::ack
  */ 
 int LoraPacketProcessor::put
 (
-	const struct timeval &time,
-	semtechUDPPacket &packet
+        const struct timeval &time,
+        SemtechUDPPacket &packet
 )
 {
 	DEVADDR addr;

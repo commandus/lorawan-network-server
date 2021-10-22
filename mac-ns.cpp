@@ -523,7 +523,7 @@ int main(
 			}
 
 			// compose packet
-			semtechUDPPacket packet;
+			SemtechUDPPacket packet;
 			rfmMetaData rfmMD;
 			packet.metadata.push_back(rfmMD);
 			// packet.setFOpts(macdatabin);

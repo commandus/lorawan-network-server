@@ -283,9 +283,9 @@ int main(
 
 	SEMTECH_PREFIX_GW dataprefix;
 	GatewayStat gatewayStat;
-	std::vector<semtechUDPPacket> packets;
+	std::vector<SemtechUDPPacket> packets;
 
-	int r = semtechUDPPacket::parse(NULL, dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
+	int r = SemtechUDPPacket::parse(NULL, dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
 	
 	if (r) {
 		std::cerr << strerror_lorawan_ns(r) << std::endl;
@@ -294,7 +294,7 @@ int main(
 	if (gatewayStat.errcode == 0) {
 		std::cout << gatewayStat.toJsonString() << std::endl;
 	}
-	for (std::vector<semtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
+	for (std::vector<SemtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
 		if (it->errcode) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << std::endl;
 			continue;

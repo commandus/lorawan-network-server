@@ -104,8 +104,8 @@ void setSignalHandler()
 #endif
 
 /**
- * Parse command line
- * Return 0- success
+ * @brief Parse command line
+ * @return 0- success
  *        1- show help and exit, or command syntax error
  *        2- output file does not exists or can not open to write
  **/
@@ -466,7 +466,8 @@ void doPrint
 
 int main(
 	int argc,
-	char *argv[])
+	char *argv[]
+)
 {
 #ifdef _MSC_VER
 #else
@@ -557,7 +558,6 @@ int main(
 		if (identityService)
 			delete identityService;
 	}
-
 
 	donePkt2(env);
 	return 0;

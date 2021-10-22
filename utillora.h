@@ -392,30 +392,30 @@ public:
 	void setCodr(const std::string &value);			// LoRa datarate identifier e.g. "SF7BW125"
 };
 
-class rfmHeader {
+class RFMHeader {
 public:	
 	RFM_HEADER header;
 	FOPTS fopts;
 	uint8_t fport;
 
-	rfmHeader();
-	rfmHeader(
+	RFMHeader();
+	RFMHeader(
 		const RFM_HEADER &headerRADIO
 	);
-	rfmHeader(
+	RFMHeader(
 		const DEVADDR &addr
 	);
-	rfmHeader(
+	RFMHeader(
 		const DEVADDR &addr,
 		uint16_t frameCounter
 	);
-	rfmHeader(
+	RFMHeader(
 		const DEVADDR &addr,
 		uint16_t frameCounter,
 		uint8_t framePort
 	);
 	
-	rfmHeader(
+	RFMHeader(
 		const std::string &value
 	);
 
@@ -424,19 +424,19 @@ public:
 	bool parse(const std::string &value);
 };
 
-class semtechUDPPacket {
+class SemtechUDPPacket {
 private:
 	void clearPrefix();
 	int parseData(const std::string &data, IdentityService *identityService);
 	std::string toTxImmediatelyJsonString(
-		const std::string &payload,
+		const std::string &payloadString,
 		uint32_t recievedTime,
 		const int power = 14
 	) const;
 protected:
 public:
 	std::string payload;
-	rfmHeader header;
+	RFMHeader header;
 	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	struct sockaddr_in6 gatewayAddress;
 	// parse error code
@@ -464,16 +464,16 @@ public:
 		const struct sockaddr *gatewayAddress,
 		SEMTECH_PREFIX_GW &retprefix,
 		GatewayStat &retgwstat,
-		std::vector<semtechUDPPacket> &retPackets, 
+		std::vector<SemtechUDPPacket> &retPackets,
 		const void *packetForwarderPacket, 
 		int size,
 		IdentityService *identityService
 	);
-	semtechUDPPacket();
+	SemtechUDPPacket();
 	// Called from parse()
-	semtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_PREFIX_GW *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
+	SemtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_PREFIX_GW *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
 	// TODO I dont remember what is it for
-	semtechUDPPacket(const struct sockaddr *gatewayAddress, const std::string &data, const std::string &devaddr, const std::string &appskey);
+	SemtechUDPPacket(const struct sockaddr *gatewayAddress, const std::string &data, const std::string &devaddr, const std::string &appskey);
 	
 	std::string serialize2RfmPacket() const;
 	std::string toString() const;
@@ -482,7 +482,7 @@ public:
 	std::string toJsonString() const;
 
 	const RFM_HEADER *getRfmHeader() const;
-	rfmHeader *getHeader();
+	RFMHeader *getHeader();
 	void setRfmHeader(const RFM_HEADER &value);
 
 	std::string getDeviceEUI() const;

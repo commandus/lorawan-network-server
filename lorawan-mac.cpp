@@ -1877,9 +1877,9 @@ std::string MacPtr::toJSONString() const
  * @return true if has answer
  */
 bool MacPtr::mkResponseMAC(
-	MAC_COMMAND &outMacCommand,
-	const MAC_COMMAND *inMacCommand,
-	semtechUDPPacket &packet
+        MAC_COMMAND &outMacCommand,
+        const MAC_COMMAND *inMacCommand,
+        SemtechUDPPacket &packet
 )
 {
 	outMacCommand.command = inMacCommand->command;
@@ -1909,9 +1909,9 @@ bool MacPtr::mkResponseMAC(
  * @return true success
  */
 bool MacPtr::mkRequestMAC(
-	MAC_COMMAND &outMacCommand,
-	const uint8_t macCommandCode,
-	semtechUDPPacket &packet
+        MAC_COMMAND &outMacCommand,
+        const uint8_t macCommandCode,
+        SemtechUDPPacket &packet
 )
 {
 	outMacCommand.command = macCommandCode;
@@ -1933,8 +1933,8 @@ bool MacPtr::mkRequestMAC(
  * @return -1 no more, otherwise count of MAC answered (response can be too long)
  */
 int MacPtr::mkResponseMACs(
-	std::ostream &retval,
-	semtechUDPPacket &packet
+        std::ostream &retval,
+        SemtechUDPPacket &packet
 )
 {
 	for (int i = 0; i < mac.size(); i++) {
@@ -1957,8 +1957,8 @@ int MacPtr::mkResponseMACs(
  * @return -1 no more, otherwise count of MAC answered (response can be too long)
  */
 int MacPtr::mkRequestMACs(
-	std::ostream &retval,
-	semtechUDPPacket &packet
+        std::ostream &retval,
+        SemtechUDPPacket &packet
 )
 {
 	std::vector<uint8_t> requestMacCommands;

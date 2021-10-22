@@ -58,8 +58,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		 * Add packet to be processed
 		 */
 		int put(
-			const struct timeval &time,
-			semtechUDPPacket &packet
+                const struct timeval &time,
+                SemtechUDPPacket &packet
 		);
 		void setLogger(
 			std::function<void(
@@ -70,12 +70,12 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 				const std::string &message
 		) > value);
 		int enqueuePayload(
-			const struct timeval &time,
-			semtechUDPPacket &value
+                const struct timeval &time,
+                SemtechUDPPacket &value
 		);
 		int enqueueMAC(
-			const struct timeval &time,
-			semtechUDPPacket &value
+                const struct timeval &time,
+                SemtechUDPPacket &value
 		);
 		/**
 		 * Enqueue control network service message
@@ -84,8 +84,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		 * @return 0- success
 		 */ 
 		int enqueueControl(
-			const struct timeval &time,
-			semtechUDPPacket &value
+                const struct timeval &time,
+                SemtechUDPPacket &value
 		);
 
 	void setRecieverQueueProcessor(RecieverQueueProcessor *value);

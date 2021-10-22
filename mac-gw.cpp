@@ -357,7 +357,7 @@ int main(
 				exit(ERR_CODE_INVALID_DEVICE_EUI);
 			}
 			// compose packet
-			semtechUDPPacket packet;
+			SemtechUDPPacket packet;
 			packet.setFOpts(macdatabin);
 			memmove(packet.prefix.mac, netId.deviceEUI, sizeof(DEVEUI));
 			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));

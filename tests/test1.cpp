@@ -3,7 +3,7 @@
 #include "utilstring.h"
 
 int main(int argc, char **argv) {
-	semtechUDPPacket packet;
+	SemtechUDPPacket packet;
 	packet.setGatewayId("00006cc3743eed46");
 
 	packet.setDeviceEUI("1122334455667788");

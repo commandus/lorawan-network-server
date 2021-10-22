@@ -171,7 +171,7 @@
 #ifdef RAPIDJSON_DOXYGEN_RUNNING
 #define RAPIDJSON_NO_INT64DEFINE
 #endif
-#endif // RAPIDJSON_NO_INT64TYPEDEF
+#endif // RAPIDJSON_DOXYGEN_RUNNING
 
 ///////////////////////////////////////////////////////////////////////////////
 // RAPIDJSON_FORCEINLINE

@@ -1,8 +1,6 @@
 #include "udp-listener.h"
 #include <iostream>
 #include <cstring>
-#include <cstdlib>
-#include <sstream>
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
@@ -60,7 +58,7 @@ void UDPListener::setDeviceStatDumper(
 	void *deviceStatEnvVal,
 	std::function<void(
 		void *env,
-		const semtechUDPPacket &packet
+		const SemtechUDPPacket &packet
 )> value)
 {
 	deviceStatEnv = deviceStatEnvVal;
@@ -159,7 +157,7 @@ int UDPListener::parseBuffer
 	const struct timeval &recievedTime,
 	const struct sockaddr_in6 &gwAddress
 ) {
-	std::vector<semtechUDPPacket> packets;
+	std::vector<SemtechUDPPacket> packets;
 	// get packets
 	SEMTECH_PREFIX_GW dataprefix;
 	GatewayStat gatewayStat;
@@ -170,14 +168,14 @@ int UDPListener::parseBuffer
 		SEMTECH_PREFIX *prefix = (SEMTECH_PREFIX *) buffer.c_str();
 		switch (prefix->tag) {
 			case SEMTECH_GW_PUSH_DATA:
-				pr = semtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
+				pr = SemtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
 				// send ACK immediately
 				if (pr == LORA_OK && handler)
 					handler->ack(socket, (const sockaddr_in *) &gwAddress, dataprefix);
 				break;
 			case SEMTECH_GW_PULL_DATA:	// PULL_DATA
 				gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
-				pr = semtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
+				pr = SemtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
 				if (pr != LORA_OK)
 					break;
 				// check is gateway in service
@@ -209,7 +207,7 @@ int UDPListener::parseBuffer
 				//
 				gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 				{
-					pr = semtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
+					pr = SemtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
 					if (pr != LORA_OK)
 						break;
 					ERR_CODE_TX r = extractTXAckCode(buffer.c_str(), bytesReceived);
@@ -252,7 +250,7 @@ int UDPListener::parseBuffer
 			break;
 		default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue
 			// process data packets if exists
-			for (std::vector<semtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
+			for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
 				if (itp->errcode) {
 					std::string v = std::string(buffer.c_str(), bytesReceived);
 					std::stringstream ss;
@@ -364,7 +362,7 @@ int UDPListener::listen() {
 			// rapidjson operates with \0 terminated string, just in case add terminator. Extra space is reserved
 			buffer[bytesReceived] = '\0';
 			std::stringstream ss;
-			char *json = semtechUDPPacket::getSemtechJSONCharPtr(buffer.c_str(), bytesReceived);
+			char *json = SemtechUDPPacket::getSemtechJSONCharPtr(buffer.c_str(), bytesReceived);
 			ss << MSG_RECEIVED
 				<< UDPSocket::addrString((const struct sockaddr *) &gwAddress)
 				<< " (" << bytesReceived

@@ -2,7 +2,7 @@
 
 #include "lora-encrypt.h"
 
-SemtechPullRespPacket::SemtechPullRespPacket(
+SemtechPullResponsePacket::SemtechPullResponsePacket(
     const NetworkIdentity &aidentity,
     const std::vector<MacData> &aMacData,
     const std::string &apayload,
@@ -13,7 +13,7 @@ SemtechPullRespPacket::SemtechPullRespPacket(
 
 }
 
-std::string SemtechPullRespPacket::toString() {
+std::string SemtechPullResponsePacket::toString() {
     uint16_t token;
     // radio prefix
     SEMTECH_PREFIX_GW prefix = { 2, token, 2 };
@@ -51,7 +51,7 @@ std::string SemtechPullRespPacket::toString() {
 	// calc MIC
 	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(), rs.size(), header.header.fcnt, direction, header.header.devaddr, identity.nwkSKey);	// nwkSKey
 	// load MIC in package
-	// mic = ntoh4(mic);
+	// mic = NTOH4(mic);
 	ss << std::string((char *) &mic, 4);
     std::string d(ss.str());
 

@@ -246,7 +246,7 @@ void ReceiverQueueService::setDbs
  */
 bool ReceiverQueueService::isDuplicated
 (
-	const semtechUDPPacket &packet,
+	const SemtechUDPPacket &packet,
 	const time_t &received
 )
 {
@@ -303,7 +303,7 @@ void ReceiverQueueService::pushForce
 
 void ReceiverQueueService::push
 (
-	const semtechUDPPacket &packet,
+	const SemtechUDPPacket &packet,
 	const timeval &timeval
 )
 {

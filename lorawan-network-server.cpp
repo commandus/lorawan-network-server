@@ -336,7 +336,7 @@ void onGatewayStatDump(
 
 void onDeviceStatDump(
 	void *env,
-	const semtechUDPPacket &value
+	const SemtechUDPPacket &value
 ) {
 
 	Configuration *c = (Configuration *) env;
@@ -572,9 +572,9 @@ int main(
 		std::string progpath = getcwd(wd, PATH_MAX);
 		if (config->serverConfig.verbosity > 1)
 			std::cerr << MSG_DAEMON_STARTED << progpath << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
-		OPENSYSLOG()
+		OPEN_SYSLOG()
 		Daemonize daemonize(progname, progpath, run, stop, done);
-		// CLOSESYSLOG()
+		// CLOSE_SYSLOG()
 	}
 	else
 	{

@@ -785,9 +785,9 @@ class MacPtr {
 		 * @return true success
 		 */
 		static bool mkRequestMAC(
-			MAC_COMMAND &outMacCommand,
-			const uint8_t macCommandCode,
-			semtechUDPPacket &packet
+                MAC_COMMAND &outMacCommand,
+                const uint8_t macCommandCode,
+                SemtechUDPPacket &packet
 		);
 
 		/**
@@ -798,9 +798,9 @@ class MacPtr {
 		 * @return true if has answer
 		 */
 		static bool mkResponseMAC(
-			MAC_COMMAND &outMacCommand,
-			const MAC_COMMAND *inMacCommand,
-			semtechUDPPacket &packet
+                MAC_COMMAND &outMacCommand,
+                const MAC_COMMAND *inMacCommand,
+                SemtechUDPPacket &packet
 		);
 
 		/**
@@ -810,8 +810,8 @@ class MacPtr {
 		 * @return -1 no more, otherwise count of MAC answered (response can be too long)
 		 */
 		int mkResponseMACs(
-			std::ostream &retval,
-			semtechUDPPacket &packet
+                std::ostream &retval,
+                SemtechUDPPacket &packet
 		);
 
 		/**
@@ -821,8 +821,8 @@ class MacPtr {
 		 * @return -1 no more, otherwise count of MAC answered (response can be too long)
 		 */
 		int mkRequestMACs(
-			std::ostream &retval,
-			semtechUDPPacket &packet
+                std::ostream &retval,
+                SemtechUDPPacket &packet
 		);
 };
 

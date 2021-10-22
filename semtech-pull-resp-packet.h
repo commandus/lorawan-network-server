@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-class SemtechPullRespPacket {
+class SemtechPullResponsePacket {
 private:
     NetworkIdentity identity;
-	rfmHeader header;
+	RFMHeader header;
 	std::vector<MacData> macdata;
 
     std::string toString();
@@ -21,7 +21,7 @@ public:
 	std::string payload;
 	// authentication keys
 	
-	SemtechPullRespPacket(
+	SemtechPullResponsePacket(
 		const NetworkIdentity &identity,
 		const std::vector<MacData> &macdata,
 		const std::string &payload,

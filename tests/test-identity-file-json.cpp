@@ -137,7 +137,7 @@ void decodeTest(
 	int2DEVADDR(a, address);
 	if (s.get(a, id) == 0) {
 		std::string v = base64_decode(base64Value);
-		rfmHeader hdr;
+		RFMHeader hdr;
 		hdr.parse(v);
 		std::cout 
 			<< " hex encoded: " << hexString(v) 
@@ -205,7 +205,7 @@ void decodeTest2()
 	string2KEY(appSKey, "0A501524F8EA5FCBF9BDB5AD7D126F75");
 	// string2KEY(appSKey, "756f127dadb5bdf9cb5feaf82415500a");
 	std::string v = base64_decode("QDADRQGAvQYCr/WbeIJ/+r95BvZus+xszlkT4Lrr6d91/KnQ5Q==");	// QK4TBCaAAAABb4ldmIEHFOMmgpU=
-	rfmHeader hdr;
+	RFMHeader hdr;
 	hdr.parse(v);
 	std::cout 
 		<< " hex encoded: " << hexString(v) 
@@ -272,7 +272,7 @@ void decodeTest3(
 	int2DEVADDR(a, address);
 	if (s.get(a, id) == 0) {
 		std::string v = hex2string(base64Value);
-		rfmHeader hdr;
+		RFMHeader hdr;
 		hdr.parse(v);
 		std::cout 
 			<< " hex encoded: " << hexString(v) 

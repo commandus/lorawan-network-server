@@ -62,9 +62,9 @@ DatabaseNConfig::~DatabaseNConfig()
 }
 
 std::string DatabaseNConfig::tableName(
-	void *env,
+    __attribute__((unused)) void *env,
 	const std::string &message
-)
+) const
 {
 	std::map<std::string, std::string>::const_iterator it(config->tableAliases.find(message));
 	if (it == config->tableAliases.end())
@@ -77,7 +77,7 @@ std::string DatabaseNConfig::createClause
 (
 	void *env,
 	const std::string &message
-)
+) const
 {
 	return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, config->getDialect(), 
 		&config->tableAliases, &config->fieldAliases, &config->properties);
@@ -115,7 +115,7 @@ int DatabaseNConfig::insert(
 )
 {
 	std::string clause = insertClause(env, message, inputFormat, data, properties);
-	if (clause.size() == 0)
+	if (clause.empty())
 		return ERR_CODE_INVALID_PACKET;
 	return db->exec(clause);
 }
@@ -130,7 +130,7 @@ int DatabaseNConfig::select(
 
 int DatabaseNConfig::exec(
 	const std::string &statement
-)
+) const
 {
 	return db->exec(statement);
 }
@@ -143,7 +143,7 @@ int DatabaseNConfig::open()
 		config->db, config->port);
 }
 
-int DatabaseNConfig::close()
+int DatabaseNConfig::close() const
 {
 	if (!db)
 		return ERR_CODE_NO_DATABASE;

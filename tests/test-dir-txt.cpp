@@ -52,7 +52,7 @@ void decodeTest(
 	int2DEVADDR(a, address);
 	if (s.get(a, id) == 0) {
 		std::string v = base64_decode(base64Value);
-		rfmHeader hdr;
+		RFMHeader hdr;
 		hdr.parse(v);
 		std::cout 
 			<< " hex encoded: " << hexString(v) 

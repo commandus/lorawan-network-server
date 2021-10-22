@@ -1,5 +1,5 @@
 /*
- * utilfile.h
+ * @file utilfile.h
  */
 #ifndef UTIL_FILE_H
 #define UTIL_FILE_H     1

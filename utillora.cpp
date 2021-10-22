@@ -55,7 +55,7 @@ std::string deviceclass2string(
 			return "B";
 		default:
 			return "C";
-	};
+	}
 }
 
 DEVICECLASS string2deviceclass
@@ -742,7 +742,7 @@ void string2DEVADDR(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVADDR))
 		memset(&retval + len, 0, sizeof(DEVADDR) - len);
-	*((uint32_t*) &retval) = ntoh4(*((uint32_t*) &retval));
+	*((uint32_t*) &retval) = NTOH4(*((uint32_t*) &retval));
 }
 
 void string2DEVEUI(
@@ -757,7 +757,7 @@ void string2DEVEUI(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVEUI))
 		memset(&retval + len, 0, sizeof(DEVEUI) - len);
-	*((uint64_t*) &retval) = ntoh8(*((uint64_t*) &retval));
+	*((uint64_t*) &retval) = NTOH8(*((uint64_t*) &retval));
 }
 
 void string2KEY(
@@ -801,7 +801,7 @@ void int2DEVADDR(
 	uint32_t value
 )
 {
-	// *((uint32_t*) &retval) = ntoh4(value);
+	// *((uint32_t*) &retval) = NTOH4(value);
 	*((uint32_t*) &retval) = value;
 }
 
@@ -812,7 +812,7 @@ std::string DEVADDR2string(
 	uint32_t v;
 	memmove(&v, &value, sizeof(v));
 	// hex string is MSB first, swap if need it
-	v = ntoh4(v);
+	v = NTOH4(v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -822,7 +822,7 @@ std::string uint64_t2string(
 	uint64_t v;
 	memmove(&v, &value, sizeof(v));
 	// hex string is MSB first, swap if need it
-	v = ntoh8(v);
+	v = NTOH8(v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -832,7 +832,7 @@ std::string DEVADDRINT2string(
 {
 	DEVADDRINT v;
 	memmove(&v.a, &value.a, sizeof(DEVADDR));
-	v.a = ntoh4(*((uint32_t*) &v.a));
+	v.a = NTOH4(*((uint32_t*) &v.a));
 	return hexString(&v, sizeof(DEVADDR));
 }
 
@@ -844,7 +844,7 @@ std::string DEVEUI2string(
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
 	// hex string is MSB first, swap if need it
-	v = ntoh8(v);
+	v = NTOH8(v);
 	return hexString(&v, sizeof(v));
 }
 
@@ -1041,17 +1041,17 @@ std::string rfmMetaData::toJsonString(
 	return ss.str();
 }
 
-rfmHeader::rfmHeader() {
+RFMHeader::RFMHeader() {
 	memset(&header, 0, sizeof(RFM_HEADER));
 }
 
-rfmHeader::rfmHeader(
+RFMHeader::RFMHeader(
 	const RFM_HEADER &hdr
 ) {
 	memmove(&header, &hdr, sizeof(RFM_HEADER));
 }
 
-rfmHeader::rfmHeader(
+RFMHeader::RFMHeader(
 	const DEVADDR &addr
 ) {
 	memset(&header, 0, sizeof(RFM_HEADER));
@@ -1059,7 +1059,7 @@ rfmHeader::rfmHeader(
 	header.macheader.i = 0x40;
 }
 
-rfmHeader::rfmHeader(
+RFMHeader::RFMHeader(
 	const DEVADDR &addr,
 	uint16_t fcnt
 ) {
@@ -1070,7 +1070,7 @@ rfmHeader::rfmHeader(
 	header.macheader.i = 0x40;
 }
 
-rfmHeader::rfmHeader(
+RFMHeader::RFMHeader(
 	const DEVADDR &addr,
 	uint16_t frameCounter,
 	uint8_t framePort
@@ -1082,13 +1082,13 @@ rfmHeader::rfmHeader(
 	header.fctrl.i = 0;
 }
 
-rfmHeader::rfmHeader(
+RFMHeader::RFMHeader(
 	const std::string &value
 ) {
 	parse(value);
 }
 
-bool rfmHeader::parse(
+bool RFMHeader::parse(
 	const std::string &value
 ) 
 {
@@ -1113,14 +1113,14 @@ bool rfmHeader::parse(
 /**
  * Serialize MHDR + FHDR
  */ 
-std::string rfmHeader::toBinary() const {
+std::string RFMHeader::toBinary() const {
 	RFM_HEADER h(header);
-	// *((uint32_t*) &h.devaddr) = ntoh4(*((uint32_t *) &header.devaddr));
-	// h.fcnt = ntoh2(header.fcnt);
+	// *((uint32_t*) &h.devaddr) = NTOH4(*((uint32_t *) &header.devaddr));
+	// h.fcnt = NTOH2(header.fcnt);
 	return std::string((const char *) &h, sizeof(RFM_HEADER));
 }
 
-std::string rfmHeader::toJson() const
+std::string RFMHeader::toJson() const
 {
 	std::stringstream ss;
 	ss << "{\"fport\": "  << (int) fport
@@ -1137,7 +1137,7 @@ std::string rfmHeader::toJson() const
 	return ss.str();
 }
 
-semtechUDPPacket::semtechUDPPacket() 
+SemtechUDPPacket::SemtechUDPPacket()
 	: errcode(0), downlink(false)
 {
 	prefix.version = 2;
@@ -1155,7 +1155,7 @@ semtechUDPPacket::semtechUDPPacket()
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
 }
 
-char *semtechUDPPacket::getSemtechJSONCharPtr
+char *SemtechUDPPacket::getSemtechJSONCharPtr
 (
 	const void *packet,
 	size_t size
@@ -1171,7 +1171,7 @@ char *semtechUDPPacket::getSemtechJSONCharPtr
  * Parse Semtech UDP packet gateway prefix
  * @return 0, ERR_CODE_PACKET_TOO_SHORT, ERR_CODE_INVALID_PROTOCOL_VERSION
  */ 
-int semtechUDPPacket::parsePrefixGw
+int SemtechUDPPacket::parsePrefixGw
 (
 	SEMTECH_PREFIX_GW &retprefix,
 	const void *packetForwarderPacket,
@@ -1181,7 +1181,7 @@ int semtechUDPPacket::parsePrefixGw
 	if (size < sizeof(SEMTECH_PREFIX_GW))
 		return ERR_CODE_PACKET_TOO_SHORT;
 	memmove(&retprefix, packetForwarderPacket, sizeof(SEMTECH_PREFIX_GW));
-	*(uint64_t *) &(retprefix.mac) = ntoh8(*(uint64_t *) &(retprefix.mac));
+	*(uint64_t *) &(retprefix.mac) = NTOH8(*(uint64_t *) &(retprefix.mac));
 	// check version
 	if (retprefix.version != 2)
 		return ERR_CODE_INVALID_PROTOCOL_VERSION;
@@ -1192,12 +1192,12 @@ int semtechUDPPacket::parsePrefixGw
  * Parse Semtech UDP packet
  * @return 0, ERR_CODE_PACKET_TOO_SHORT, ERR_CODE_INVALID_PROTOCOL_VERSION, ERR_CODE_NO_GATEWAY_STAT, ERR_CODE_INVALID_PACKET or ERR_CODE_INVALID_JSON
  */ 
-int semtechUDPPacket::parse
+int SemtechUDPPacket::parse
 (
 	const struct sockaddr *gwAddress,
 	SEMTECH_PREFIX_GW &retprefix,
 	GatewayStat &retgwstat,
-	std::vector<semtechUDPPacket> &retPackets,
+	std::vector<SemtechUDPPacket> &retPackets,
 	const void *packetForwarderPacket,
 	int size,
 	IdentityService *identityService
@@ -1252,7 +1252,7 @@ int semtechUDPPacket::parse
 		int rr = m.parse(sz, data, jm);
 		if (rr)
 			return rr;
-		semtechUDPPacket packet(gwAddress, &retprefix, &m, data, identityService);
+		SemtechUDPPacket packet(gwAddress, &retprefix, &m, data, identityService);
 		if (packet.errcode == 0)
 			retPackets.push_back(packet);
 		else
@@ -1275,9 +1275,9 @@ int semtechUDPPacket::parse
  * @return -1 on error, or result (max (sizeof(long)*8)-1 bits)
  */
 static int hexdec(unsigned char *value) {
-	int r;
+	int r = 0;
 	if (!*value)
-		return 0;
+		return r;
 	if (*value >= '0' && *value <= '9') 
 		r = *value - '0';
     else
@@ -1306,7 +1306,7 @@ static void setAddr(
 	const std::string &value
 ) {
 	if (value.size() == sizeof(DEVADDR)) {
-		*(uint32_t*) retval = ntoh4(*(uint32_t *) value.c_str());
+		*(uint32_t*) retval = NTOH4(*(uint32_t *) value.c_str());
 		return;
 	}
 	memset(retval, 0, sizeof(DEVADDR));
@@ -1331,7 +1331,7 @@ static void setMAC(
 	const std::string &value
 ) {
 	if (value.size() == sizeof(DEVEUI)) {
-		*(uint64_t*) retval = ntoh8(*(uint64_t *) value.c_str());
+		*(uint64_t*) retval = NTOH8(*(uint64_t *) value.c_str());
 		return;
 	}
 	if (value.size() < sizeof(DEVEUI) * 2)
@@ -1357,7 +1357,7 @@ void setKey(
 ) {
 	if (value.size() == sizeof(KEY128)) {
 		memcpy(retval, value.c_str(), sizeof(KEY128));
-		swap16(retval);
+		swap16(retval)
 		return;
 	}
 	if (value.size() < sizeof(KEY128) * 2)
@@ -1379,7 +1379,7 @@ void setKey(
 /**
  * format = 0 hex
  */ 
-semtechUDPPacket::semtechUDPPacket(
+SemtechUDPPacket::SemtechUDPPacket(
 	const struct sockaddr *gwAddress,
 	const std::string &data,
 	const std::string &devaddr,
@@ -1410,7 +1410,7 @@ semtechUDPPacket::semtechUDPPacket(
 	parseData(data, NULL);
 }
 
-void semtechUDPPacket::clearPrefix()
+void SemtechUDPPacket::clearPrefix()
 {
 	prefix.version = 2;
 	prefix.token = 0;
@@ -1418,7 +1418,7 @@ void semtechUDPPacket::clearPrefix()
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
 }
 
-semtechUDPPacket::semtechUDPPacket(
+SemtechUDPPacket::SemtechUDPPacket(
 	const struct sockaddr *gwAddress,
 	const SEMTECH_PREFIX_GW *aprefix,
 	const rfmMetaData *ametadata,
@@ -1454,19 +1454,19 @@ static std::string getMAC(
 	return hexString(&value, sizeof(DEVEUI));
 }
 
-const RFM_HEADER *semtechUDPPacket::getRfmHeader() const
+const RFM_HEADER *SemtechUDPPacket::getRfmHeader() const
 {
 	return (const RFM_HEADER *) &header.header;
 }
 
-rfmHeader *semtechUDPPacket::getHeader() {
+RFMHeader *SemtechUDPPacket::getHeader() {
 	return &header;
 }
 
-void semtechUDPPacket::setRfmHeader(
+void SemtechUDPPacket::setRfmHeader(
 	const RFM_HEADER &value
 ) {
-	header = rfmHeader(value);
+	header = RFMHeader(value);
 }
 
 /**
@@ -1488,7 +1488,7 @@ void semtechUDPPacket::setRfmHeader(
  
  * 
  */
-std::string semtechUDPPacket::serialize2RfmPacket() const
+std::string SemtechUDPPacket::serialize2RfmPacket() const
 {
 	std::stringstream ss;
 	std::string p(payload);
@@ -1510,12 +1510,12 @@ std::string semtechUDPPacket::serialize2RfmPacket() const
 	const KEY128 *key = &devId.nwkSKey;
 	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(), rs.size(), header.header.fcnt, direction, header.header.devaddr, *key);
 	// load MIC in package
-	// mic = ntoh4(mic);
+	// mic = NTOH4(mic);
 	ss << std::string((char *) &mic, 4);
 	return ss.str();
 }
 
-std::string semtechUDPPacket::toString() const
+std::string SemtechUDPPacket::toString() const
 {
 	std::stringstream ss;
 	// prefix 12 bytes, metadata + payload
@@ -1524,7 +1524,7 @@ std::string semtechUDPPacket::toString() const
 	return ss.str();
 }
 
-std::string semtechUDPPacket::toDebugString() const
+std::string SemtechUDPPacket::toDebugString() const
 {
 	std::stringstream ss;
 	ss << "device " << DEVICENAME2string(devId.name)
@@ -1537,7 +1537,7 @@ std::string semtechUDPPacket::toDebugString() const
 	return ss.str();
 }
 
-std::string semtechUDPPacket::metadataToJsonString() const
+std::string SemtechUDPPacket::metadataToJsonString() const
 {
 	std::string d(serialize2RfmPacket());
 	std::stringstream ss;
@@ -1553,18 +1553,18 @@ std::string semtechUDPPacket::metadataToJsonString() const
 	return ss.str();
 }
 
-void semtechUDPPacket::setGatewayId(
+void SemtechUDPPacket::setGatewayId(
 	const std::string &value
 ) {
 	setMAC(prefix.mac, value);
 }
 
-std::string semtechUDPPacket::getDeviceEUI() const
+std::string SemtechUDPPacket::getDeviceEUI() const
 {
 	return DEVEUI2string(devId.deviceEUI);
 }
 
-void semtechUDPPacket::setDeviceEUI(
+void SemtechUDPPacket::setDeviceEUI(
 	const std::string &value
 ) {
 	string2DEVEUI(devId.deviceEUI, value);
@@ -1574,8 +1574,8 @@ void semtechUDPPacket::setDeviceEUI(
  * 0- strongest, -120- nothing
  * @return INT16_MIN if N/A
  */
-int16_t semtechUDPPacket::getStrongesSignalLevel(int &idx) const {
-	int16_t r = INT16_MIN;;
+int16_t SemtechUDPPacket::getStrongesSignalLevel(int &idx) const {
+	int16_t r = INT16_MIN;
 	idx = -1;
 	for (int i = 0; i < metadata.size(); i++) {
 		if (metadata[0].rssi > r) {
@@ -1586,49 +1586,49 @@ int16_t semtechUDPPacket::getStrongesSignalLevel(int &idx) const {
 	return r;
 }
 
-std::string semtechUDPPacket::getDeviceAddrStr() const 
+std::string SemtechUDPPacket::getDeviceAddrStr() const
 {
 	return DEVADDR2string(header.header.devaddr);
 }
 
-DEVADDRINT semtechUDPPacket::getDeviceAddr() const {
+DEVADDRINT SemtechUDPPacket::getDeviceAddr() const {
 	DEVADDRINT r = static_cast<DEVADDRINT>(header.header.devaddr);
 	return r;
 }
 
-void semtechUDPPacket::getDeviceAddr(
+void SemtechUDPPacket::getDeviceAddr(
 	DEVADDR &retval
 ) const
 {
 	memmove(&retval, header.header.devaddr, sizeof(DEVADDR));
 }
 
-void semtechUDPPacket::setDeviceAddr(
+void SemtechUDPPacket::setDeviceAddr(
 	const std::string &value
 ) {
 	setAddr(header.header.devaddr, value);
 }
 
-void semtechUDPPacket::setNetworkSessionKey(
+void SemtechUDPPacket::setNetworkSessionKey(
 	const std::string &value
 ) {
 	setKey(devId.nwkSKey, value);
 }
 
-void semtechUDPPacket::setApplicationSessionKey(
+void SemtechUDPPacket::setApplicationSessionKey(
 	const std::string &value
 ) {
 	setKey(devId.appSKey, value);
 }
 
-void semtechUDPPacket::setFrameCounter(
+void SemtechUDPPacket::setFrameCounter(
 	uint16_t value
 )
 {
 	header.header.fcnt = value;
 }
 
-void semtechUDPPacket::setFOpts
+void SemtechUDPPacket::setFOpts
 (
 	const std::string &value
 )
@@ -1645,7 +1645,7 @@ void semtechUDPPacket::setFOpts
 	}
 }
 
-std::string semtechUDPPacket::toJsonString() const
+std::string SemtechUDPPacket::toJsonString() const
 {
 	std::stringstream ss;
 	ss << "{\"prefix\": "
@@ -1670,7 +1670,7 @@ std::string semtechUDPPacket::toJsonString() const
 	return ss.str();
 }
 
-void semtechUDPPacket::setPayload(
+void SemtechUDPPacket::setPayload(
 	uint8_t port,
 	const std::string &value
 ) {
@@ -1679,7 +1679,7 @@ void semtechUDPPacket::setPayload(
 	payload = value;
 }
 
-void semtechUDPPacket::ack(SEMTECH_ACK *retval) {	// 4 bytes
+void SemtechUDPPacket::ack(SEMTECH_ACK *retval) {	// 4 bytes
 	retval->version = 2;
 	retval->token = prefix.token;
 	retval->tag = 1;	// PUSH_ACK
@@ -1696,7 +1696,7 @@ std::string key2string(
 	return ss.str();
 }
 
-int semtechUDPPacket::parseData(
+int SemtechUDPPacket::parseData(
 	const std::string &data,
 	IdentityService *identityService
 ) {
@@ -1737,7 +1737,7 @@ int semtechUDPPacket::parseData(
 	return errcode;
 }
 
-bool semtechUDPPacket::hasMACPayload() const
+bool SemtechUDPPacket::hasMACPayload() const
 {
 	// Packet with payload can contains FOpts up to 15 bytes
 	if (header.header.fctrl.f.foptslen)
@@ -1748,7 +1748,7 @@ bool semtechUDPPacket::hasMACPayload() const
 	return (header.fport == 0) && (payload.size() > 0);
 }
 
-bool semtechUDPPacket::hasApplicationPayload() const
+bool SemtechUDPPacket::hasApplicationPayload() const
 {
 	// fport 1..223 - application payload
 	// fport 224 - LoRaWAN test protocol
@@ -1760,7 +1760,7 @@ bool semtechUDPPacket::hasApplicationPayload() const
  * @param retvalLsnr if provided, return SNR
  * @return 0 if not found
  */
-uint64_t semtechUDPPacket::getBestGatewayAddress(
+uint64_t SemtechUDPPacket::getBestGatewayAddress(
 	float *retvalLsnr
 ) const
 {
@@ -1781,14 +1781,14 @@ uint64_t semtechUDPPacket::getBestGatewayAddress(
 }
 
 /**
- * @param payload RFM header and encrypted data
+ * @param payloadString RFM header and encrypted data
  * @param receivedTime time when gateway recived, microseconds, internal counter
  * @param power transmission power
- * @return JSON serialized metadata and payload
+ * @return JSON serialized metadata and payloadString
  */
-std::string semtechUDPPacket::toTxImmediatelyJsonString
+std::string SemtechUDPPacket::toTxImmediatelyJsonString
 (
-	const std::string &payload,
+	const std::string &payloadString,
 	uint32_t recievedTime,
 	const int power
 ) const
@@ -1811,33 +1811,33 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString
 		ss << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
 	}
 	ss << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
-		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
+        << ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
 		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
 		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
 		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
-		<< "\",\"" << METADATA_TX_NAMES[9] << "\":\"" << metadata[metadataIdx].codr()
-		<< "\",\"" << METADATA_TX_NAMES[11] << "\":true" 									// Lora modulation polarization inversion
+        << "\",\"" << METADATA_TX_NAMES[9] << "\":\"" << metadata[metadataIdx].codr()
+        << "\",\"" << METADATA_TX_NAMES[11] << "\":true" 									// Lora modulation polarization inversion
 		<< ",\"" << METADATA_TX_NAMES[15] << "\":false" 									// Check CRC
-		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payload.size()
-		<< ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payload) << "\"}}";
+		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payloadString.size()
+        << ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payloadString) << "\"}}";
 	
-	std::cerr << "semtechUDPPacket::toTxImmediatelyJsonString {\"txpk\":{" ;
+	std::cerr << "SemtechUDPPacket::toTxImmediatelyJsonString {\"txpk\":{" ;
 	if (recievedTime == 0)	
 		std::cerr << "\"" << METADATA_TX_NAMES[1] << "\":true";
 	else {
 		uint32_t sendTime = recievedTime + 1000000;
 		std::cerr << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
 	}
-	std::cerr << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].freq / 1000000. // uency()
+	std::cerr << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
 		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfch		// Concentrator "RF chain" used for TX (unsigned integer)
 		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
 		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
 		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
-		<< "\",\"" << METADATA_TX_NAMES[9] << "\":\"" << metadata[metadataIdx].codr()
-		<< "\",\"" << METADATA_TX_NAMES[11] << "\":true" 									// Lora modulation polarization inversion
+              << "\",\"" << METADATA_TX_NAMES[9] << "\":\"" << metadata[metadataIdx].codr()
+              << "\",\"" << METADATA_TX_NAMES[11] << "\":true" 									// Lora modulation polarization inversion
 		<< ",\"" << METADATA_TX_NAMES[15] << "\":false" 									// Check CRC
-		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payload.size()
-		<< ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payload) << "\"}}" << std::endl;
+		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payloadString.size()
+              << ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payloadString) << "\"}}" << std::endl;
 
 	return ss.str();
 }
@@ -1869,7 +1869,7 @@ std::string semtechUDPPacket::toTxImmediatelyJsonString
    10014503307fc51700a81ba59df88bc0a30603db696d2a5bfe6e01ec795579ddea1d62e74748dce3d04af776b87f975066c534
 */
 
-std::string semtechUDPPacket::mkPullResponse(
+std::string SemtechUDPPacket::mkPullResponse(
 	const std::string &data,
 	const DeviceId &deviceid,
 	uint32_t recievedTime,
@@ -1878,7 +1878,7 @@ std::string semtechUDPPacket::mkPullResponse(
 ) const
 {
 	// copy macheader, addr, fcnt form received packet
-	rfmHeader rfmHeader(*getRfmHeader());
+	RFMHeader rfmHeader(*getRfmHeader());
 
 	// encrypt frame payload
 	int direction = 1;	// downlink
@@ -1921,7 +1921,7 @@ std::string semtechUDPPacket::mkPullResponse(
 	return toTxImmediatelyJsonString(smsg.str(), recievedTime, power);
 }
 
-std::string semtechUDPPacket::mkMACRequest(
+std::string SemtechUDPPacket::mkMACRequest(
 	const std::string &data,
 	const NetworkIdentity &networkId,
 	uint32_t recievedTime,
@@ -1929,7 +1929,7 @@ std::string semtechUDPPacket::mkMACRequest(
 	const int power
 ) const
 {
-	rfmHeader rfmHeader;
+	RFMHeader rfmHeader;
 
 	// encrypt frame payload
 	int direction = 0;	// uplink
@@ -1977,7 +1977,7 @@ std::string semtechUDPPacket::mkMACRequest(
 /**
  * @return received time from interal counter, microsends
  */
-uint32_t semtechUDPPacket::tmst()
+uint32_t SemtechUDPPacket::tmst()
 {
 	std::vector<rfmMetaData>::const_iterator it(metadata.begin());
 	if (it == metadata.end())
@@ -1988,7 +1988,7 @@ uint32_t semtechUDPPacket::tmst()
 /**
  * @return received GPS time, can be 0
  */
-uint32_t semtechUDPPacket::tmms()
+uint32_t SemtechUDPPacket::tmms()
 {
 	std::vector<rfmMetaData>::const_iterator it(metadata.begin());
 	if (it == metadata.end())
@@ -1996,7 +1996,7 @@ uint32_t semtechUDPPacket::tmms()
 	return it->tmms();
 }
 
-std::string semtechUDPPacket::getMACs()
+std::string SemtechUDPPacket::getMACs()
 {
 	if (header.header.fctrl.f.foptslen)
 		return std::string((const char *) &header.fopts, header.header.fctrl.f.foptslen);
@@ -2017,13 +2017,13 @@ uint64_t deveui2int(
 {
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
-	return ntoh8(v);
+	return NTOH8(v);
 }
 
 uint32_t getMic(const std::string &v)
 {
 	uint32_t r = *((uint32_t *) (v.c_str() + v.size() - 4));
-	return r; //ntoh4(r);
+	return r; //NTOH4(r);
 }
 
 uint64_t str2gatewayId(const char *value) {
@@ -2074,7 +2074,7 @@ std::string mtype2string
 			return "proprietary-radio";
 		default:
 			return "";
-	};
+	}
 }
 
 MTYPE string2mtype(
