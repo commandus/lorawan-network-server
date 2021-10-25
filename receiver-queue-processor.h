@@ -14,7 +14,7 @@
 #define DB_MIN_DELAY_MS 200
 
 // queue default timeout
-#define DB_DEF_TIMEOUT_MS 500
+#define DB_DEF_TIMEOUT_MS 1 * 1000
 
 /**
  * ReceiverQueueService enqueue aplication data payload,

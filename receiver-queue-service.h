@@ -48,7 +48,7 @@ class ReceiverQueueValue {
 		ReceiverQueueValue(const ReceiverQueueValue &value);
 
 		bool setJsonPayload(const std::string &jsonValue);
-		int popDbId(int dbid);	/// return remaining database count
+		int popDbId(int dbId);	/// return remaining database count
 		bool hasDbId(int dbid);	/// @return true if database exists
  		void clear();
 		void setProperties(
@@ -124,7 +124,13 @@ class ReceiverQueueService {
 		
 		// Add entry
 		virtual void pushEntry(ReceiverQueueEntry &value) = 0;
-		void push(const SemtechUDPPacket &packet, const timeval &time);
+        /**
+         * Enqueue packet to be insterted into database(s)
+         * @param packet packet to be insert
+         * @param time received time
+         * @return true if successful, false if packet duplicated
+         */
+		bool push(const SemtechUDPPacket &packet, const timeval &time);
 		// brute-force push payload
 		void pushForce(const DeviceId &deviceId, const std::string &payload, const timeval &time);
 		

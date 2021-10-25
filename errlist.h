@@ -98,6 +98,7 @@
 #define ERR_CODE_GATEWAY_NOT_FOUND			-582
 #define ERR_CODE_CONTROL_DEVICE_NOT_FOUND	-583
 #define ERR_CODE_INVALID_CONTROL_PACKET		-584
+#define ERR_CODE_DUPLICATED_PACKET			-585
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -145,7 +146,7 @@
 #define ERR_SEND_ACK					"Send ACK error "
 #define ERR_NO_GATEWAY_STAT				"No gateway statistics provided"
 #define ERR_INVALID_PROTOCOL_VERSION	"Invalid protocol version"
-#define ERR_PACKET_TOO_SHORT			"Protocol packet is too short"
+#define ERR_PACKET_TOO_SHORT			"Semtech protocol packet is too short"
 #define ERR_PARAM_NO_INTERFACE			"No interface specified"
 #define ERR_MAC_TOO_SHORT				"MAC is too short"
 #define ERR_MAC_INVALID					"Invalid MAC command"
@@ -192,6 +193,7 @@
 #define ERR_GATEWAY_NOT_FOUND			"Gateway not found "
 #define ERR_CONTROL_DEVICE_NOT_FOUND	"Control device not found "
 #define ERR_INVALID_CONTROL_PACKET		"Invalid control packet"
+#define ERR_DUPLICATED_PACKET			"Packet is duplicated"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -228,8 +230,8 @@
 #define MSG_SIG_FLUSH_FILES				"Signal to flush files received "
 #define MSG_PUSH_PACKET_QUEUE			"Push packet queue "
 #define MSG_RECEIVED_CONTROL_FRAME		"Control network service message received "
-
-#define ERROR							"Error "
+#define MSG_DB_INSERT                   "Insert payload to the database successful"
+#define MSG_ENQUEUE_DB                  "Enqueue payload to the database"
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

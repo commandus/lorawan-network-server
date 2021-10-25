@@ -19,15 +19,27 @@ int LoraPacketProcessor::enqueuePayload(
 {
 	std::stringstream ss;
 	std::string p = value.payload;
-	ss << timeval2string(time)
-		<< " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-//		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) 
-		<< " " << value.devId.toJsonString() << ": " << hexString(p);
-	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
-
 	// ReceiverQueueService deduplicate repeated packets received from gateways and then store data to the database asynchronously
 	if (receiverQueueService)
-		receiverQueueService->push(value, time);
+		if (receiverQueueService->push(value, time)) {
+            if (onLog) {
+                ss << MSG_ENQUEUE_DB
+                    << " (queue size: " << receiverQueueService->count()
+                    << ") " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI)
+                   << " " << value.devId.toJsonString() << ": " << hexString(p);
+                onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+            }
+        } else {
+            if (onLog) {
+                std::stringstream ss;
+                ss << ERR_DUPLICATED_PACKET
+                   << " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI)
+                   << " " << value.devId.toJsonString() << ": " << hexString(p);
+                onLog(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss.str());
+            }
+        }
 	return 0;
 }
 

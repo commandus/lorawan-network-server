@@ -81,16 +81,17 @@ void ReceiverQueueValue::clear()
 }
 
 /**
- * @return remaining database count
+ * @param dbId database identifier
+ * @return remaining database count, if error, return negative number
  */
 int ReceiverQueueValue::popDbId
 (
-	int dbid
+	int dbId
 )
 {
 	for (std::vector<int>::iterator it(dbids.begin()); it != dbids.end(); it++)
 	{
-		if (*it == dbid) {
+		if (*it == dbId) {
         	dbids.erase(it);
 			return dbids.size();
 		}
@@ -301,14 +302,14 @@ void ReceiverQueueService::pushForce
 	pushEntry(e);
 }
 
-void ReceiverQueueService::push
+bool ReceiverQueueService::push
 (
 	const SemtechUDPPacket &packet,
 	const timeval &timeval
 )
 {
 	if (isDuplicated(packet, timeval.tv_sec))
-		return;
+		return false;
 	ReceiverQueueEntry e;
 	e.key.id = next();
 	e.key.time = timeval;
@@ -322,4 +323,5 @@ void ReceiverQueueService::push
 	// garbage collector ;)
 	if (e.key.id % CLEAR_COUNT == CLEAR_COUNT - 1)
 		clearFcnts();
+    return true;
 }
