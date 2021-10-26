@@ -1,0 +1,26 @@
+#ifndef GATEWAY_STAT_SERVICE_ABSTRACT_H_
+#define GATEWAY_STAT_SERVICE_ABSTRACT_H_ 1
+
+#include "gateway-stat.h"
+
+typedef enum {
+    GW_STAT_NONE = 0,
+    GW_STAT_FILE_JSON = 1,
+    GW_STAT_POST = 2,
+} GW_STAT_STORAGE;
+
+/**
+ * Gateway statistics service interface
+ */
+class GatewayStatService {
+	public:
+		virtual void put(GatewayStat *stat) = 0;
+		// force save
+		virtual void flush() = 0;
+		// reload
+		virtual int init(const std::string &option, void *data) = 0;
+		// close resources
+		virtual void done() = 0;
+};
+
+#endif
