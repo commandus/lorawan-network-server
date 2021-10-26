@@ -187,7 +187,8 @@ Server config:
 - storageType e.g. "json"
 - queueStorageName e.g. "queue.json",
 - messageQueueStorageType e.g. "json"
-- deviceStatStorageName e.g. "device-counters.json"
+- deviceStatStorageType device statistics storage type, "file" or "post". Default none
+- deviceHistoryStorageName e.g. "device-counters.json"
 - listenAddressIPv4 array of IPv4address:port e.g. ["127.0.0.1:5000","84.237.104.128:5000"]
 - listenAddressIPv6 array of IPv6address:port
 - gwStatStorageType log gateway statistics storage type, "file" or "post". Default none
@@ -228,7 +229,7 @@ Option "lmdb" is a little safer and suitable for low-memory installations.
 
 Option "txt" is slow and useful for debug only.
 
-Option "gwStatStorageType" values are
+Options "gwStatStorageType", "deviceStatStorageType" values are
 
 - file
 - post 

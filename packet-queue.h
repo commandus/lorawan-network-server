@@ -15,7 +15,7 @@
 
 #include "utillora.h"
 #include "packet-handler-abstract.h"
-#include "device-stat-service-abstract.h"
+#include "device-history-service-abstract.h"
 #include "gateway-list.h"
 
 // default delay in ms
@@ -76,7 +76,7 @@ class PacketQueue {
 
 		int fdWakeup;
 		IdentityService *identityService;
-		DeviceStatService *deviceStatService;
+		DeviceHistoryService *deviceStatService;
 		GatewayList *gatewayList;
 		int replyMAC(
 			SemtechUDPPacketItem &item,
@@ -97,7 +97,7 @@ class PacketQueue {
 		PacketQueue(int delayMilliSeconds);
 		~PacketQueue();
 		void setIdentityService(IdentityService* identityService);
-		void setDeviceStatService(DeviceStatService *deviceStatService);
+		void setDeviceStatService(DeviceHistoryService *deviceStatService);
 		void setGatewayList(GatewayList *value);
 		void setDelay(int delayMilliSeconds);
 		int ack(

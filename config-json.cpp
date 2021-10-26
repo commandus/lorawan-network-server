@@ -59,11 +59,11 @@ void ServerConfig::clear()
 
 ServerConfig::ServerConfig() 
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), controlFPort(0), daemonize(false),
-	identityStorageName(""), deviceStatStorageName(""), 
-	queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
-    gwStatStorageType(GW_STAT_NONE),
-	messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0), 
-	logGWStatisticsFileName(""), logDeviceStatisticsFileName("")
+      identityStorageName(""), deviceHistoryStorageName(""),
+      queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
+      gwStatStorageType(GW_STAT_NONE), deviceStatStorageType(DEVICE_STAT_NONE),
+      messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0),
+      logGWStatisticsFileName(""), logDeviceStatisticsFileName("")
 {
 
 }
@@ -97,10 +97,10 @@ int ServerConfig::parse(
 			identityStorageName = jn.GetString();
 		}
 	}
-	if (value.HasMember("deviceStatStorageName")) {
-		rapidjson::Value &jn = value["deviceStatStorageName"];
+	if (value.HasMember("deviceHistoryStorageName")) {
+		rapidjson::Value &jn = value["deviceHistoryStorageName"];
 		if (jn.IsString()) {
-			deviceStatStorageName = jn.GetString();
+            deviceHistoryStorageName = jn.GetString();
 		}
 	}
 	if (value.HasMember("queueStorageName")) {
@@ -143,6 +143,12 @@ int ServerConfig::parse(
         if (vgwStatStorageType.IsString())
             gwStatStorageType = string2gwStatStorageType(vgwStatStorageType.GetString());
     }
+
+	if (value.HasMember("deviceStatStorageType")) {
+		rapidjson::Value &vdeviceStatStorageType =  value["deviceStatStorageType"];
+		if (vdeviceStatStorageType.IsString())
+			deviceStatStorageType = string2deviceStatStorageType(vdeviceStatStorageType.GetString());
+	}
 
 	if (value.HasMember("messageQueueStorageType")) {
 		rapidjson::Value &vstorageType =  value["messageQueueStorageType"];
@@ -206,8 +212,8 @@ void ServerConfig::toJson(
 	value.AddMember("identityStorageName", n, allocator);
 
 	rapidjson::Value nds;
-	nds.SetString(deviceStatStorageName.c_str(), deviceStatStorageName.size(), allocator);
-	value.AddMember("deviceStatStorageName", nds, allocator);
+	nds.SetString(deviceHistoryStorageName.c_str(), deviceHistoryStorageName.size(), allocator);
+	value.AddMember("deviceHistoryStorageName", nds, allocator);
 
 	rapidjson::Value nq;
 	nq.SetString(queueStorageName.c_str(), queueStorageName.size(), allocator);
@@ -235,9 +241,14 @@ void ServerConfig::toJson(
 	value.AddMember("storageType", vstorageType, allocator);
 
     rapidjson::Value vgwStatStorageType;
-    std::string s1(gwStatStorageType2String(gwStatStorageType));
-    vgwStatStorageType.SetString(s1.c_str(), s1.size(), allocator);
+    std::string s0(gwStatStorageType2String(gwStatStorageType));
+    vgwStatStorageType.SetString(s0.c_str(), s0.size(), allocator);
     value.AddMember("gwStatStorageType", vgwStatStorageType, allocator);
+
+	rapidjson::Value vdeviceStatStorageType;
+	std::string s1(deviceStatStorageType2String(deviceStatStorageType));
+	vdeviceStatStorageType.SetString(s1.c_str(), s1.size(), allocator);
+	value.AddMember("deviceStatStorageType", vdeviceStatStorageType, allocator);
 
 	rapidjson::Value vMessageQueuestorageType;
 	std::string s2(messageQueueStorageType2String(messageQueueType));

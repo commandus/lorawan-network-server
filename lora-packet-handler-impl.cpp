@@ -243,7 +243,7 @@ void LoraPacketProcessor::setReceiverQueueService
 }
 
 void LoraPacketProcessor::setDeviceStatService(
-	DeviceStatService *value
+        DeviceHistoryService *value
 )
 {
 	deviceStatService = value;

@@ -10,6 +10,8 @@
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
 #include "gateway-stat-service-abstract.h"
+#include "device-stat-service-abstract.h"
+#include "device-history-service-abstract.h"
 
 #pragma clang diagnostic pop
 
@@ -29,9 +31,10 @@ class ServerConfig {
 		bool daemonize;
 		std::string identityStorageName;
 		std::string queueStorageName;
-		std::string deviceStatStorageName;
+		std::string deviceHistoryStorageName;
 		IDENTITY_STORAGE storageType;
         GW_STAT_STORAGE gwStatStorageType;
+		DEVICE_STAT_STORAGE deviceStatStorageType;
 		MESSAGE_QUEUE_STORAGE messageQueueType;
 		int messageQueueDirFormat;					// 0- bin, 1- hex, 2- base64
 		std::string logGWStatisticsFileName;

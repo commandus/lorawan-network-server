@@ -1,19 +1,19 @@
-#ifndef DEVICE_STAT_SERVICE_ABSTRACT_H_
-#define DEVICE_STAT_SERVICE_ABSTRACT_H_ 1
+#ifndef DEVICE_HISTORY_SERVICE_ABSTRACT_H_
+#define DEVICE_HISTORY_SERVICE_ABSTRACT_H_ 1
 
 #include <map>
-#include "device-stat.h"
+#include "device-history-item.h"
 #include "utillora.h"
 
 /**
- * Identity service interface
- * Get device statistics by the network address
+ * Device counters and last received time service interface
+ * Access by the network address
  */ 
-class DeviceStatService {
+class DeviceHistoryService {
 	public:
-		// Return 0, retval = DeviceStat and keys
-		virtual int get(DEVADDR &devaddr, DeviceStat &retval) = 0;
-		virtual void put(DEVADDR &devaddr, DEVICESTAT &value) = 0;
+		// Return 0, retval = DeviceHistoryItem and keys
+		virtual int get(DEVADDR &devaddr, DeviceHistoryItem &retval) = 0;
+		virtual void put(DEVADDR &devaddr, DEVICE_HISTORY_ITEM &value) = 0;
 		// Add or replace Address = FCntUo
 		virtual void putUp(DEVADDR &devaddr, const time_t &time, uint32_t fcntup) = 0;
 		// Add or replace Address = FCntDown
@@ -21,7 +21,7 @@ class DeviceStatService {
 		// Remove entry
 		virtual void rm(DEVADDR &addr) = 0;
 		// List entries
-		void list(std::vector<DeviceStat> &retval, size_t offset, size_t size);
+		void list(std::vector<DeviceHistoryItem> &retval, size_t offset, size_t size);
 		// force save
 		virtual void flush() = 0;
 		// reload

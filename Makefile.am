@@ -99,7 +99,7 @@ nobase_dist_include_HEADERS = \
 	utillora.h udp-socket.h udp-emitter.h udp-listener.h lora-encrypt.h \
 	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
-	errlist.h daemonize.h device-stat.h gateway-stat.h gateway-list.h lorawan-mac.h \
+	errlist.h daemonize.h device-history-item.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
 	identity-service-abstract.h identity-service-file-json.h \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
@@ -112,7 +112,7 @@ nobase_dist_include_HEADERS = \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
 	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h \
-	receiver-queue-processor.h device-stat-service-abstract.h device-stat-service-json.h \
+	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -120,12 +120,13 @@ lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp errlist.cpp daemonize.cpp \
 	utillora.cpp udp-socket.cpp udp-listener.cpp \
 	config-json.cpp lora-packet-handler-impl.cpp \
-	packet-queue.cpp device-stat.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
+	packet-queue.cpp device-history-item.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp config-filename.cpp \
 	utilidentity.cpp semtech-pull-resp-packet.cpp lora-encrypt.cpp \
-	semtech-metadata-tx.cpp lora-rejoin.cpp device-stat-service-json.cpp \
+	semtech-metadata-tx.cpp lora-rejoin.cpp \
 	receiver-queue-service.cpp identity-service-dir-txt.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
 	gateway-stat-service-abstract.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp \
+	device-stat-service-abstract.cpp device-history-service-json.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
@@ -137,7 +138,7 @@ lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp errlist.cpp utilidentity.cpp \
 	utillora.cpp udp-socket.cpp \
-	config-json.cpp packet-queue.cpp device-stat.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
+	config-json.cpp packet-queue.cpp device-history-item.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp \
@@ -145,7 +146,7 @@ mac_gw_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	receiver-queue-processor.cpp \
-	gateway-stat-service-abstract.cpp \
+	gateway-stat-service-abstract.cpp device-stat-service-abstract.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
@@ -155,7 +156,7 @@ mac_gw_CPPFLAGS = $(commoncppflags)
 mac_ns_SOURCES = \
 	mac-ns.cpp macgw-config-json.cpp errlist.cpp utilidentity.cpp \
 	utillora.cpp udp-socket.cpp \
-	config-json.cpp packet-queue.cpp device-stat.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
+	config-json.cpp packet-queue.cpp device-history-item.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp \
@@ -163,7 +164,7 @@ mac_ns_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	receiver-queue-processor.cpp \
-	gateway-stat-service-abstract.cpp \
+	gateway-stat-service-abstract.cpp device-stat-service-abstract.cpp device-history-service-json.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES) \
 	control-packet.cpp
@@ -174,7 +175,7 @@ mac_ns_CPPFLAGS = $(commoncppflags)
 proto_db_SOURCES = \
 	proto-db.cpp utilstring.cpp utilidentity.cpp utillora.cpp utildate.cpp utilfile.cpp \
 	lorawan-mac.cpp errlist.cpp \
-	device-stat.cpp gateway-stat.cpp lora-encrypt.cpp identity-service-dir-txt.cpp $(C_STORAGE) \
+	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp identity-service-dir-txt.cpp $(C_STORAGE) \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -186,7 +187,7 @@ lora_print_SOURCES = \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES) \
-	device-stat.cpp gateway-stat.cpp utillora.cpp utildate.cpp utilfile.cpp lora-encrypt.cpp \
+	device-history-item.cpp gateway-stat.cpp utillora.cpp utildate.cpp utilfile.cpp lora-encrypt.cpp \
 	errlist.cpp \
 	identity-service-dir-txt.cpp $(C_STORAGE)
 lora_print_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
@@ -206,7 +207,7 @@ dist_config_DATA = \
 test_1_SOURCES = \
 	tests/test1.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp lorawan-mac.cpp \
-	lora-encrypt.cpp device-stat.cpp gateway-stat.cpp errlist.cpp \
+	lora-encrypt.cpp device-history-item.cpp gateway-stat.cpp errlist.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_1_LDADD = $(commonlibs)
 test_1_CPPFLAGS = $(commoncppflags)
@@ -215,7 +216,7 @@ test_identity_file_json_SOURCES = \
 	tests/test-identity-file-json.cpp \
 	identity-service-file-json.cpp lorawan-mac.cpp errlist.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp \
-	device-stat.cpp gateway-stat.cpp lora-encrypt.cpp lora-rejoin.cpp \
+	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_identity_file_json_LDADD = 
 test_identity_file_json_CPPFLAGS = $(commoncppflags)
@@ -223,7 +224,7 @@ test_identity_file_json_CPPFLAGS = $(commoncppflags)
 test_identity_lmdb_SOURCES = \
 	tests/test-identity-lmdb.cpp lora-encrypt.cpp \
 	$(C_STORAGE) db-identity.cpp identity-service-lmdb.cpp \
-	device-stat.cpp gateway-stat.cpp \
+	device-history-item.cpp gateway-stat.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp errlist.cpp lorawan-mac.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_identity_lmdb_LDADD = $(LIB_STORAGE) -llmdb
@@ -239,7 +240,7 @@ test_packet_queue_SOURCES = \
 	tests/test-packet-queue.cpp \
 	packet-queue.cpp utillora.cpp errlist.cpp \
 	utilstring.cpp utildate.cpp udp-socket.cpp \
-	device-stat.cpp gateway-stat.cpp lora-encrypt.cpp lorawan-mac.cpp \
+	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp lorawan-mac.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_packet_queue_LDADD = -lpthread
 test_packet_queue_CPPFLAGS = $(commoncppflags)
@@ -248,7 +249,7 @@ test_mac_gw_SOURCES = \
 	tests/test-mac-gw.cpp utillora.cpp \
 	macgw-config-json.cpp lorawan-mac.cpp errlist.cpp \
 	utilstring.cpp utildate.cpp lora-encrypt.cpp \
-	device-stat.cpp gateway-stat.cpp \
+	device-history-item.cpp gateway-stat.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_mac_gw_LDADD =
 test_mac_gw_CPPFLAGS = $(commoncppflags)
@@ -262,7 +263,7 @@ test_dir_txt_SOURCES = \
 	tests/test-dir-txt.cpp lorawan-mac.cpp errlist.cpp \
 	identity-service-file-json.cpp identity-service-dir-txt.cpp \
 	utilstring.cpp utildate.cpp utillora.cpp utilfile.cpp \
-	lora-encrypt.cpp device-stat.cpp gateway-stat.cpp lora-rejoin.cpp \
+	lora-encrypt.cpp device-history-item.cpp gateway-stat.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_dir_txt_LDADD = -lpthread
 test_dir_txt_CPPFLAGS = $(commoncppflags)
@@ -271,7 +272,7 @@ test_join_accept_decrypt_SOURCES = \
 	tests/test-join-accept-decrypt.cpp lorawan-mac.cpp errlist.cpp \
 	identity-service-file-json.cpp identity-service-dir-txt.cpp \
 	utilstring.cpp utildate.cpp utillora.cpp utilfile.cpp \
-	lora-encrypt.cpp device-stat.cpp gateway-stat.cpp lora-rejoin.cpp \
+	lora-encrypt.cpp device-history-item.cpp gateway-stat.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
 test_join_accept_decrypt_LDADD = -lpthread
 test_join_accept_decrypt_CPPFLAGS = $(commoncppflags)
@@ -295,7 +296,7 @@ test_message_queue_SOURCES = \
 	tests/test-message-queue.cpp \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	utilstring.cpp utilfile.cpp utillora.cpp utildate.cpp $(SRC_AES) \
-	device-stat.cpp gateway-stat.cpp lora-encrypt.cpp \
+	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp \
 	lorawan-mac.cpp third_party/base64/base64.cpp errlist.cpp
 test_message_queue_LDADD = 
 test_message_queue_CPPFLAGS = $(commoncppflags)
@@ -306,7 +307,7 @@ test_queue_processor_SOURCES = \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp \
 	lorawan-mac.cpp db-any.cpp $(BACKEND_DB_SRC) \
 	utilstring.cpp utilfile.cpp utillora.cpp utildate.cpp $(SRC_AES) \
-	device-stat.cpp gateway-stat.cpp lora-encrypt.cpp \
+	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp \
 	third_party/base64/base64.cpp
 test_queue_processor_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
 test_queue_processor_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)

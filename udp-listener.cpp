@@ -88,7 +88,7 @@ void UDPListener::setIdentityService
 
 void UDPListener::setDeviceStatService
 (
-	DeviceStatService *value
+        DeviceHistoryService *value
 )
 {
 	deviceStatService = value;

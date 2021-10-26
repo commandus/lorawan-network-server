@@ -18,25 +18,25 @@ typedef ALIGN struct {
 	time_t t;				///< last session time
 	uint32_t fcntup;		///< Last frame count sent by end device
 	uint32_t fcntdown;		///< Last frame count sent by network service
-} PACKED DEVICESTAT;		// 4 bytes
+} PACKED DEVICE_HISTORY_ITEM;		// 4 bytes
 
 /** 
  * Device stat keep FCntUp and FCntDown counter values.
  * Gateway identified by the network address.
  */
-class DeviceStat {
+class DeviceHistoryItem {
 public:
 	uint32_t addr;		///< network address
 	time_t t;				///< last session time
 	uint32_t fcntup;		///< Last frame count sent by end device
 	uint32_t fcntdown;		///< Last frame count sent by network service
 
-	DeviceStat();
-	DeviceStat(const DeviceStat &value);
+	DeviceHistoryItem();
+	DeviceHistoryItem(const DeviceHistoryItem &value);
 
-	DeviceStat(const uint32_t &addr, const DEVICESTAT &value);
-	void set(const uint32_t &addr, const DEVICESTAT &value);
-	bool operator==(DeviceStat &rhs) const;
+	DeviceHistoryItem(const uint32_t &addr, const DEVICE_HISTORY_ITEM &value);
+	void set(const uint32_t &addr, const DEVICE_HISTORY_ITEM &value);
+	bool operator==(DeviceHistoryItem &rhs) const;
 
 	void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator) const;
 	int parse(

@@ -51,7 +51,7 @@
 #include "pkt2/str-pkt2.h"
 #include "db-any.h"
 
-#include "device-stat-service-json.h"
+#include "device-history-service-json.h"
 
 #include "gateway-stat-service-file.h"
 #include "gateway-stat-service-post.h"
@@ -87,7 +87,7 @@ static LoraPacketProcessor *processor = NULL;
 // Database list
 static DatabaseByConfig *dbByConfig = NULL;
 // Device counters and last received
-static JsonFileDeviceStatService *deviceStatService = NULL;
+static DeviceHistoryService *deviceHistoryService = NULL;
 
 // pkt2 environment
 static void* pkt2env = NULL;
@@ -107,8 +107,8 @@ static void flushFiles()
 		receiverQueueService->flush();
 	if (gatewayList)
 		gatewayList->save();
-	if (deviceStatService)
-		deviceStatService->flush();
+	if (deviceHistoryService)
+		deviceHistoryService->flush();
 }
 
 static void done()
@@ -156,11 +156,11 @@ static void done()
 		delete gatewayList;
 		gatewayList = NULL;
 	}
-	if (deviceStatService) {
+	if (deviceHistoryService) {
 		// save
-		deviceStatService->flush();
-		delete deviceStatService;
-		deviceStatService = NULL;
+		deviceHistoryService->flush();
+		delete deviceHistoryService;
+        deviceHistoryService = NULL;
 	}
 	if (pkt2env)
 		donePkt2(pkt2env);
@@ -340,14 +340,6 @@ void onDeviceStatDump(
 	void *env,
 	const SemtechUDPPacket &value
 ) {
-
-	Configuration *c = (Configuration *) env;
-	if (!env)
-		return;
-	if (c->serverConfig.logDeviceStatisticsFileName.empty())
-		return;
-	std::string s(value.toJsonString() + "\n");
-	append2file(c->serverConfig.logDeviceStatisticsFileName, s);
 }
 
 static void run()
@@ -383,7 +375,6 @@ int main(
 	listener->setSysSignalPtr(&lastSysSignal);
 	listener->setLogger(config->serverConfig.verbosity, onLog);
 	listener->setGatewayStatDumper(config, onGatewayStatDump);
-	listener->setDeviceStatDumper(config, onDeviceStatDump);
 
 	if (config->serverConfig.identityStorageName.empty()) {
 		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
@@ -394,8 +385,8 @@ int main(
 	if (config->gatewaysFileName.empty()) {
 		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
-	if (config->serverConfig.deviceStatStorageName.empty()) {
-		config->serverConfig.deviceStatStorageName = getDefaultConfigFileName(DEF_DEVICE_STAT_STORAGE_NAME);
+	if (config->serverConfig.deviceHistoryStorageName.empty()) {
+		config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(DEF_DEVICE_STAT_STORAGE_NAME);
 	}
 	std::cerr << config->toString() << std::endl;
 
@@ -453,15 +444,24 @@ int main(
 		}
 	}
 
-	deviceStatService = new JsonFileDeviceStatService();
-	// std::cerr << "Device stat name: " << config->serverConfig.deviceStatStorageName << std::endl;
-	rs = deviceStatService->init(config->serverConfig.deviceStatStorageName, NULL);
-	if (rs) {
-		std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs) 
-			<< " " << config->serverConfig.deviceStatStorageName << std::endl;
-		// That's ok, no problem at all
-		// exit(ERR_CODE_INIT_DEVICE_STAT);
-	}
+    switch (config->serverConfig.deviceStatStorageType) {
+        case DEVICE_STAT_FILE_JSON:
+        case DEVICE_STAT_POST:
+            listener->setDeviceStatDumper(config, onDeviceStatDump);
+            break;
+        default:
+            break;
+    }
+
+    // std::cerr << "Device stat name: " << config->serverConfig.deviceHistoryStorageName << std::endl;
+    deviceHistoryService = new JsonFileDeviceHistoryService();
+    rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, NULL);
+    if (rs) {
+        std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
+                  << " " << config->serverConfig.deviceHistoryStorageName << std::endl;
+        // That's ok, no problem at all
+        // exit(ERR_CODE_INIT_DEVICE_STAT);
+    }
 
 	// Start recived message queue service
 	void *options = NULL;
@@ -550,7 +550,7 @@ int main(
 	processor->setIdentityService(identityService);
 	processor->setGatewayList(gatewayList);
 	processor->setReceiverQueueService(receiverQueueService);
-	processor->setDeviceStatService(deviceStatService);
+	processor->setDeviceStatService(deviceHistoryService);
 	// FPort number reserved for messages controls network service. 0- no remote control allowed
 	processor->reserveFPort(config->serverConfig.controlFPort);
 
@@ -568,7 +568,7 @@ int main(
 	listener->setHandler(processor);
 	listener->setGatewayList(gatewayList);
 	listener->setIdentityService(identityService);
-	listener->setDeviceStatService(deviceStatService);
+	listener->setDeviceStatService(deviceHistoryService);
 
 	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;

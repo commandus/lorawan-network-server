@@ -1,6 +1,5 @@
-#include "device-stat.h"
+#include "device-history-item.h"
 #include <sstream>
-#include <iomanip>
 
 #include "utildate.h"
 #include "utilstring.h"
@@ -9,7 +8,7 @@
 /**
  * Create empty gateway statistics
  */
-DeviceStat::DeviceStat()
+DeviceHistoryItem::DeviceHistoryItem()
 	: addr(0),		// network address
 	t(0),				// last session time
 	fcntup(0),			// Last frame count sent by end device
@@ -21,8 +20,8 @@ DeviceStat::DeviceStat()
 /**
  * Copy gateway statistics
  */
-DeviceStat::DeviceStat(
-	const DeviceStat &value
+DeviceHistoryItem::DeviceHistoryItem(
+	const DeviceHistoryItem &value
 )
 {
 	addr = value.addr;			// network address
@@ -31,20 +30,20 @@ DeviceStat::DeviceStat(
 	fcntdown = value.fcntdown;	// Last frame count sent by network service
 }
 
-DeviceStat::DeviceStat
+DeviceHistoryItem::DeviceHistoryItem
 (
 	const uint32_t &aaddr,
-	const DEVICESTAT &value
+	const DEVICE_HISTORY_ITEM &value
 )
 	: addr(aaddr), t(value.t), fcntup(value.fcntup), fcntdown(value.fcntdown)
 {
 
 }
 
-void DeviceStat::set
+void DeviceHistoryItem::set
 (
 	const uint32_t &aaddr,
-	const DEVICESTAT &value
+	const DEVICE_HISTORY_ITEM &value
 )
 {
 	addr = aaddr;				// network address
@@ -56,8 +55,8 @@ void DeviceStat::set
 /**
  * 8-bit gateway Identifier
  */
-bool DeviceStat::operator==(
-	DeviceStat &rhs
+bool DeviceHistoryItem::operator==(
+        DeviceHistoryItem &rhs
 ) const {
 	return addr == rhs.addr;
 }
@@ -65,7 +64,7 @@ bool DeviceStat::operator==(
 /**
  * Statistics property names
  */
-static const char* STAT_NAMES[13] = {
+static const char* DEVICE_HISTORY_ITEM_NAMES[13] = {
 	"id",		// 0 string id (reserved)
 	"addr",		// 1 string address
 	"time", 	// 2 string | UTC time of pkt RX, us precision, ISO 8601 'compact' format
@@ -76,7 +75,7 @@ static const char* STAT_NAMES[13] = {
 /**
  * Serialize device statistics
  */
-void DeviceStat::toJSON(
+void DeviceHistoryItem::toJSON(
 	rapidjson::Value &value,
 	rapidjson::Document::AllocatorType& allocator
 ) const
@@ -87,37 +86,37 @@ void DeviceStat::toJSON(
 	ss << std::hex << id;
 	std::string ssr = ss.str();
 	vId.SetString(ssr.c_str(), ssr.length(), allocator);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[0])), vId, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(DEVICE_HISTORY_ITEM_NAMES[0])), vId, allocator);
 	*/
 
 	std::string haddr = DEVADDR2string(*(DEVADDR*) &addr);
 	rapidjson::Value v1(rapidjson::kStringType);
 	v1.SetString(haddr.c_str(), haddr.length(), allocator);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[1])), v1, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(DEVICE_HISTORY_ITEM_NAMES[1])), v1, allocator);
 
 	std::string dt = ltimeString(t, -1, "%F %T %Z");
 	rapidjson::Value v2(rapidjson::kStringType);
 	v1.SetString(dt.c_str(), dt.length(), allocator);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[2])), v2, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(DEVICE_HISTORY_ITEM_NAMES[2])), v2, allocator);
 
 	rapidjson::Value v3(fcntup);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[3])), v3, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(DEVICE_HISTORY_ITEM_NAMES[3])), v3, allocator);
 
 	rapidjson::Value v4(fcntdown);
-	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[4])), v4, allocator);
+	value.AddMember(rapidjson::Value(rapidjson::StringRef(DEVICE_HISTORY_ITEM_NAMES[4])), v4, allocator);
 }
 
 /**
  * Parse JSON
  */
-int DeviceStat::parse(
+int DeviceHistoryItem::parse(
 	rapidjson::Value &value
 )
 {
 	int cnt = 0;
 	/*
-	if (value.HasMember(STAT_NAMES[0])) {
-		rapidjson::Value &v = value[STAT_NAMES[0]];
+	if (value.HasMember(DEVICE_HISTORY_ITEM_NAMES[0])) {
+		rapidjson::Value &v = value[DEVICE_HISTORY_ITEM_NAMES[0]];
 		if (v.IsUint64()) {
 			id = v.GetUint64();
 		} else if (v.IsString()) {
@@ -127,32 +126,32 @@ int DeviceStat::parse(
 	}
 	*/
 
-	if (value.HasMember(STAT_NAMES[1])) {
-		rapidjson::Value &v = value[STAT_NAMES[1]];
+	if (value.HasMember(DEVICE_HISTORY_ITEM_NAMES[1])) {
+		rapidjson::Value &v = value[DEVICE_HISTORY_ITEM_NAMES[1]];
 		if (v.IsString()) {
 			string2DEVADDR(*(DEVADDR*) &addr, v.GetString());
 			cnt++;
 		}
 	}
 
-	if (value.HasMember(STAT_NAMES[2])) {
-		rapidjson::Value &v = value[STAT_NAMES[3]];
+	if (value.HasMember(DEVICE_HISTORY_ITEM_NAMES[2])) {
+		rapidjson::Value &v = value[DEVICE_HISTORY_ITEM_NAMES[3]];
 		if (v.IsString()) {
 			t = parseDate(v.GetString());
 			cnt++;
 		}
 	}
 
-	if (value.HasMember(STAT_NAMES[3])) {
-		rapidjson::Value &v = value[STAT_NAMES[3]];
+	if (value.HasMember(DEVICE_HISTORY_ITEM_NAMES[3])) {
+		rapidjson::Value &v = value[DEVICE_HISTORY_ITEM_NAMES[3]];
 		if (v.IsUint()) {
 			fcntup = v.GetUint();
 			cnt++;
 		}
 	}
 
-	if (value.HasMember(STAT_NAMES[4])) {
-		rapidjson::Value &v = value[STAT_NAMES[4]];
+	if (value.HasMember(DEVICE_HISTORY_ITEM_NAMES[4])) {
+		rapidjson::Value &v = value[DEVICE_HISTORY_ITEM_NAMES[4]];
 		if (v.IsUint()) {
 			fcntdown = v.GetUint();
 			cnt++;
@@ -165,7 +164,7 @@ int DeviceStat::parse(
 /**
  * Serialize JSON string
  */
-std::string DeviceStat::toJsonString() const
+std::string DeviceHistoryItem::toJsonString() const
 {
 		std::stringstream ss;
 		ss << "{"
@@ -181,7 +180,7 @@ std::string DeviceStat::toJsonString() const
 /**
  * debug string
  */
-std::string DeviceStat::toString() const
+std::string DeviceHistoryItem::toString() const
 {
 		std::stringstream ss;
 		ss 

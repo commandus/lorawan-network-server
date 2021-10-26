@@ -82,7 +82,7 @@ void PacketQueue::setIdentityService
 
 void PacketQueue::setDeviceStatService
 (
-	DeviceStatService *value
+        DeviceHistoryService *value
 )
 {
 	deviceStatService = value;
@@ -439,7 +439,7 @@ int PacketQueue::replyMAC(
 	// Produce MAC command response in the item.packet
 	uint32_t fcntdown = 0;
 	if (deviceStatService) {
-		DeviceStat ds;
+		DeviceHistoryItem ds;
 		int rs = deviceStatService->get(item.packet.header.header.devaddr, ds);
 		if (rs == 0) {
 			fcntdown = ds.fcntdown;
@@ -598,7 +598,7 @@ int PacketQueue::replyControl(
 	// Produce MAC command response in the item.packet
 	uint32_t fCntDown = 0;
 	if (deviceStatService) {
-		DeviceStat ds;
+		DeviceHistoryItem ds;
 		int rs = deviceStatService->get(nid.devaddr, ds);
 		if (rs == 0) {
             fCntDown = ds.fcntdown;

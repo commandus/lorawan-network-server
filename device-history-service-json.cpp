@@ -8,7 +8,7 @@
 #include "rapidjson/error/en.h"
 #pragma clang diagnostic pop
  
-#include "device-stat-service-json.h"
+#include "device-history-service-json.h"
 #include "utilstring.h"
 #include "utildate.h"
 #include "errlist.h"
@@ -36,13 +36,13 @@ static int getAttrByName(
 	return r;
 }
 
-JsonFileDeviceStatService::JsonFileDeviceStatService() 
+JsonFileDeviceHistoryService::JsonFileDeviceHistoryService()
 	: path(""), errcode(0), errmessage("")
 {
 
 }
 
-JsonFileDeviceStatService::~JsonFileDeviceStatService() 
+JsonFileDeviceHistoryService::~JsonFileDeviceHistoryService()
 {
 	done();
 }
@@ -62,17 +62,17 @@ JsonFileDeviceStatService::~JsonFileDeviceStatService()
  */ 
 class DeviceStatJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, DeviceStatJsonHandler> {
 	private:
-		JsonFileDeviceStatService *service;
+		JsonFileDeviceHistoryService *service;
 		bool isNetworkIdentity;
 		int idx;
 		DEVADDR k;
-		DEVICESTAT v;
+		DEVICE_HISTORY_ITEM v;
 	public:
-		DeviceStatJsonHandler(JsonFileDeviceStatService *svc)
+		DeviceStatJsonHandler(JsonFileDeviceHistoryService *svc)
 			: service(svc), isNetworkIdentity(false), idx(-1)
 		{
 			memset(&k, 0, sizeof(DEVADDR));
-			memset(&v, 0, sizeof(DEVICESTAT));
+			memset(&v, 0, sizeof(DEVICE_HISTORY_ITEM));
 		}
 
 		bool Null() {
@@ -158,12 +158,12 @@ class DeviceStatJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF
 		}
 };
 
-void JsonFileDeviceStatService::clear()
+void JsonFileDeviceHistoryService::clear()
 {
 	storage.clear();
 }
 
-int JsonFileDeviceStatService::load()
+int JsonFileDeviceHistoryService::load()
 {
 	clear();
     DeviceStatJsonHandler handler(this);
@@ -187,13 +187,13 @@ int JsonFileDeviceStatService::load()
 	return r.IsError() ? ERR_CODE_INVALID_JSON : 0;
 } 
 
-int JsonFileDeviceStatService::save()
+int JsonFileDeviceHistoryService::save()
 {
 	std::fstream os;
 	os.open(path, std::ios::out);
 	os << "[";
 	bool addSeparator(false);
-	for (std::map<DEVADDRINT, DEVICESTAT>::const_iterator it = storage.begin(); it != storage.end(); it++) {
+	for (std::map<DEVADDRINT, DEVICE_HISTORY_ITEM>::const_iterator it = storage.begin(); it != storage.end(); it++) {
 		if (addSeparator)
 			os << ",";
 		os << std::endl << "{\"" 
@@ -209,13 +209,13 @@ int JsonFileDeviceStatService::save()
 	return r;
 }
 
-int JsonFileDeviceStatService::get(
-	DEVADDR &devaddr,
-	DeviceStat &retval
+int JsonFileDeviceHistoryService::get(
+        DEVADDR &devaddr,
+        DeviceHistoryItem &retval
 ) 
 {
 	mutexMap.lock();
-	std::map<DEVADDRINT, DEVICESTAT>::const_iterator it(storage.find(DEVADDRINT(devaddr)));
+	std::map<DEVADDRINT, DEVICE_HISTORY_ITEM>::const_iterator it(storage.find(DEVADDRINT(devaddr)));
     if (it == storage.end()) {
 		mutexMap.unlock();
 		return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
@@ -226,28 +226,28 @@ int JsonFileDeviceStatService::get(
 }
 
 // List entries
-void JsonFileDeviceStatService::list(
-	std::vector<DeviceStat> &retval,
+void JsonFileDeviceHistoryService::list(
+	std::vector<DeviceHistoryItem> &retval,
 	size_t offset,
 	size_t size
 ) {
 	int64_t c = -1;
 	if (size == 0)
 		size = UINT64_MAX;
-	for (std::map<DEVADDRINT, DEVICESTAT>::const_iterator it(storage.begin()); it != storage.end(); it++) {
+	for (std::map<DEVADDRINT, DEVICE_HISTORY_ITEM>::const_iterator it(storage.begin()); it != storage.end(); it++) {
 		c++;
 		if (c < offset)
 			continue;
 		if (c >= size)
 			break;
-		DeviceStat v(it->first.a, it->second);
+		DeviceHistoryItem v(it->first.a, it->second);
 		retval.push_back(v);
 	}
 }
 
-void JsonFileDeviceStatService::put(
-	DEVADDR &devaddr,
-	DEVICESTAT &value
+void JsonFileDeviceHistoryService::put(
+        DEVADDR &devaddr,
+        DEVICE_HISTORY_ITEM &value
 )
 {
 	mutexMap.lock();
@@ -255,35 +255,35 @@ void JsonFileDeviceStatService::put(
 	mutexMap.unlock();
 }
 
-void JsonFileDeviceStatService::putUp(
+void JsonFileDeviceHistoryService::putUp(
 	DEVADDR &devaddr,
 	const time_t &tm,
 	uint32_t value
 )
 {
 	mutexMap.lock();
-	DEVICESTAT v = storage[devaddr];
+	DEVICE_HISTORY_ITEM v = storage[devaddr];
 	v.fcntup = value;
 	v.t = tm;
 	storage[devaddr] = v;
 	mutexMap.unlock();
 }
 
-void JsonFileDeviceStatService::putDown(
+void JsonFileDeviceHistoryService::putDown(
 	DEVADDR &devaddr,
 	const time_t &tm,
 	uint32_t value
 )
 {
 	mutexMap.lock();
-	DEVICESTAT v = storage[devaddr];
+	DEVICE_HISTORY_ITEM v = storage[devaddr];
 	v.fcntdown = value;
 	v.t = tm;
 	storage[devaddr] = v;
 	mutexMap.unlock();
 }
 
-void JsonFileDeviceStatService::rm(
+void JsonFileDeviceHistoryService::rm(
 	DEVADDR &addr
 )
 {
@@ -292,7 +292,7 @@ void JsonFileDeviceStatService::rm(
 	mutexMap.unlock();
 }
 
-int JsonFileDeviceStatService::init(
+int JsonFileDeviceHistoryService::init(
 	const std::string &option, 
 	void *data
 )
@@ -301,22 +301,22 @@ int JsonFileDeviceStatService::init(
 	return load();
 }
 
-void JsonFileDeviceStatService::flush()
+void JsonFileDeviceHistoryService::flush()
 {
 	save();
 }
 
-void JsonFileDeviceStatService::done()
+void JsonFileDeviceHistoryService::done()
 {
 
 }
 
-std::string JsonFileDeviceStatService::toJsonString()
+std::string JsonFileDeviceHistoryService::toJsonString()
 {
 	std::stringstream ss;
 	ss << "[" << std::endl;;
 	bool needComma = false;
-	for (std::map<DEVADDRINT, DEVICESTAT, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
+	for (std::map<DEVADDRINT, DEVICE_HISTORY_ITEM, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
 		if (needComma)
 			ss << ", ";
 		else

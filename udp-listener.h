@@ -8,7 +8,7 @@
 #include "utillora.h"
 #include "lora-packet-handler-abstract.h"
 #include "identity-service-abstract.h"
-#include "device-stat-service-abstract.h"
+#include "device-history-service-abstract.h"
 #include "gateway-list.h"
 
 /**
@@ -30,7 +30,7 @@ private:
 public:
 	int verbosity;
 	IdentityService *identityService;
-	DeviceStatService *deviceStatService;
+	DeviceHistoryService *deviceStatService;
 
 	std::vector<UDPSocket> sockets;
 	bool stopped;
@@ -99,7 +99,7 @@ public:
 	void setHandler(LoraPacketHandler *value);
 	void setIdentityService(IdentityService* value);
 	void setGatewayList(GatewayList *value);
-	void setDeviceStatService(DeviceStatService *value);
+	void setDeviceStatService(DeviceHistoryService *value);
 	void setSysSignalPtr(int *value);
 
 	void setGatewayStatDumper(
