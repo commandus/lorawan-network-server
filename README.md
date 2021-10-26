@@ -196,14 +196,14 @@ Server config:
 
 - readBufferSize UDP buffer size Default 4096.
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
-- daemonize false..true Indicates does network server starts as deamon or not
+- daemonize false..true Indicates does network server starts as daemon or not
 - controlFPort 0: no remote control, 1..223- FPort values used by network service to control server. Default 0.
 
 configFileName can used to load configuration from different location. 
 Do not use this parameter except when you really need it.
 
 identityStorageName is property of the server because network server is responsible for end-device.
-In contrast gatewaysFileName property points to the gateways list which send messages to one or more network servers.
+In contrast, gatewaysFileName property points to the gateways list which send messages to one or more network servers.
 
 Example of lorawan-network-server.json:
 ```
@@ -227,6 +227,23 @@ Default value is "json". The identifiers are stored in memory.
 Option "lmdb" is a little safer and suitable for low-memory installations.
 
 Option "txt" is slow and useful for debug only.
+
+Option "gwStatStorageType" values are
+
+- file
+- post 
+
+File example:
+```
+        "gwStatStorageType": "file",
+        "logGWStatisticsFileName": "gw-stat.json"
+```
+
+post example:
+```
+        "gwStatStorageType": "post",
+        "logGWStatisticsFileName": "http://localhost:50002/post.php"
+```
 
 #### Message queue
 

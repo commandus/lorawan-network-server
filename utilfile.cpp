@@ -272,7 +272,7 @@ time_t fileModificationTime(
 {
 #ifdef _MSC_VER
 	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-	GetFileAttributesEx(fileName.c_str(), GetFileExInfoStandard, (void *)&fileInfo);
+	GetFileAttributesEx(storageName.c_str(), GetFileExInfoStandard, (void *)&fileInfo);
 	return filetime2time_t(fileInfo.ftLastWriteTime);
 #else
 	struct stat attrib;

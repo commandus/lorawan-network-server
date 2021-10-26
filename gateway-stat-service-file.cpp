@@ -27,7 +27,7 @@ void GatewayStatServiceFile::put(GatewayStat *stat)
 // force save
 void GatewayStatServiceFile::flush()
 {
-    save2File();
+    save();
 }
 
 // reload
@@ -37,7 +37,7 @@ int GatewayStatServiceFile::init(
 )
 {
     state = 1;  // 0- stopped, 1- run, 2- stop request
-    fileName = aFileName;
+    storageName = aFileName;
     threadRun = new std::thread(&GatewayStatServiceFile::runner, this);
 }
 
@@ -66,7 +66,7 @@ void GatewayStatServiceFile::runner()
             case 0:
                 // timeout
                 tuneDelay();
-                save2File();
+                save();
                 continue;
             default:
                 break;
@@ -94,7 +94,7 @@ void GatewayStatServiceFile::tuneDelay()
     }
 }
 
-void GatewayStatServiceFile::save2File()
+void GatewayStatServiceFile::save()
 {
     if (list.empty())
         return;
@@ -107,5 +107,5 @@ void GatewayStatServiceFile::save2File()
     for (std::vector<GatewayStat>::iterator it (copyList.begin()); it != copyList.end(); it++) {
         ss << it->toJsonString() << std::endl;
     }
-    append2file(fileName, ss.str());
+    append2file(storageName, ss.str());
 }

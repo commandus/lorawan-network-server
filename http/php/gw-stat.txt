@@ -1,2 +1,7 @@
---{"k": "v"}
-{"k": "v2"}
+[{"gwid":"6cc3743eed46", "addr":"84.237.104.16:55928", "name":"vega", "time":"2021-10-26T04:12:07+09", "lati":62.02774, "long":129.72883, "alti":0, "rxnb":0, "rxok":0, "rxfw":0, "ackr":0.0, "dwnb":0, "txnb":0}
+, {"gwid":"6cc3743eed46", "addr":"84.237.104.16:55928", "name":"vega", "time":"2021-10-26T04:12:37+09", "lati":62.02774, "long":129.72883, "alti":0, "rxnb":1, "rxok":1, "rxfw":1, "ackr":0.0, "dwnb":0, "txnb":0}
+][{"gwid":"6cc3743eed46", "addr":"84.237.104.16:55928", "name":"vega", "time":"2021-10-26T04:13:07+09", "lati":62.02774, "long":129.72883, "alti":0, "rxnb":0, "rxok":0, "rxfw":0, "ackr":0.0, "dwnb":0, "txnb":0}
+, {"gwid":"6cc3743eed46", "addr":"84.237.104.16:55928", "name":"vega", "time":"2021-10-26T04:13:37+09", "lati":62.02774, "long":129.72883, "alti":0, "rxnb":2, "rxok":1, "rxfw":1, "ackr":0.0, "dwnb":0, "txnb":0}
+, {"gwid":"6cc3743eed46", "addr":"84.237.104.16:55928", "name":"vega", "time":"2021-10-26T04:14:07+09", "lati":62.02774, "long":129.72883, "alti":0, "rxnb":0, "rxok":0, "rxfw":0, "ackr":0.0, "dwnb":0, "txnb":0}
+, {"gwid":"6cc3743eed46", "addr":"84.237.104.16:55928", "name":"vega", "time":"2021-10-26T04:14:37+09", "lati":62.02774, "long":129.72883, "alti":0, "rxnb":0, "rxok":0, "rxfw":0, "ackr":0.0, "dwnb":0, "txnb":0}
+]

@@ -19,8 +19,9 @@ class GatewayStatServiceFile : public GatewayStatService {
 private:
         int state;  // 0- stopped, 1- run, 2- stop request
         int timeoutSeconds;
-        std::string fileName;
         std::thread *threadRun;
+    protected:
+        std::string storageName;
         std::vector<GatewayStat> list;
         std::mutex listMutex;
 	public:
@@ -35,7 +36,7 @@ private:
 
     void runner();
 
-    void save2File();
+    virtual void save();
 
     void tuneDelay();
 };
