@@ -14,7 +14,7 @@ std::string gwStatStorageType2String(
     GW_STAT_STORAGE value
 ) {
     switch(value) {
-        case GW_STAT_STORAGE:
+        case GW_STAT_FILE_JSON:
             return "file";
         case GW_STAT_POST:
             return "post";

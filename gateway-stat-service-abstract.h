@@ -23,4 +23,13 @@ class GatewayStatService {
 		virtual void done() = 0;
 };
 
+GW_STAT_STORAGE string2gwStatStorageType(
+        const std::string &value
+);
+
+std::string gwStatStorageType2String
+(
+        GW_STAT_STORAGE value
+);
+
 #endif

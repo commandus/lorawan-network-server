@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 86
+#define ERR_COUNT 87
 
 // used by strerror_lorawan_ns()
 static const char *errlist[ERR_COUNT] = {
@@ -90,7 +90,8 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_GATEWAY_NOT_FOUND,
 	ERR_CONTROL_DEVICE_NOT_FOUND,
 	ERR_INVALID_CONTROL_PACKET,
-    ERR_DUPLICATED_PACKET
+    ERR_DUPLICATED_PACKET,
+    ERR_INIT_GW_STAT
 };
 
 const char *strerror_lorawan_ns

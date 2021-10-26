@@ -9,6 +9,8 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
+#include "gateway-stat-service-abstract.h"
+
 #pragma clang diagnostic pop
 
 typedef enum {
@@ -29,6 +31,7 @@ class ServerConfig {
 		std::string queueStorageName;
 		std::string deviceStatStorageName;
 		IDENTITY_STORAGE storageType;
+        GW_STAT_STORAGE gwStatStorageType;
 		MESSAGE_QUEUE_STORAGE messageQueueType;
 		int messageQueueDirFormat;					// 0- bin, 1- hex, 2- base64
 		std::string logGWStatisticsFileName;

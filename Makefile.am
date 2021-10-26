@@ -104,6 +104,7 @@ nobase_dist_include_HEADERS = \
 	identity-service-abstract.h identity-service-file-json.h \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
+	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
 	lora-rejoin.h utilidentity.h control-packet.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
@@ -124,6 +125,7 @@ lorawan_network_server_SOURCES = \
 	utilidentity.cpp semtech-pull-resp-packet.cpp lora-encrypt.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp device-stat-service-json.cpp \
 	receiver-queue-service.cpp identity-service-dir-txt.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
+	gateway-stat-service-abstract.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
@@ -143,6 +145,7 @@ mac_gw_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	receiver-queue-processor.cpp \
+	gateway-stat-service-abstract.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
@@ -160,6 +163,7 @@ mac_ns_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	receiver-queue-processor.cpp \
+	gateway-stat-service-abstract.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES) \
 	control-packet.cpp

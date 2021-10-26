@@ -53,6 +53,9 @@
 
 #include "device-stat-service-json.h"
 
+#include "gateway-stat-service-file.h"
+#include "gateway-stat-service-post.h"
+
 const std::string progname = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
@@ -71,6 +74,7 @@ static int lastSysSignal = 0;
 
 static Configuration *config = NULL;
 static GatewayList *gatewayList = NULL;
+static GatewayStatService *gatewayStatService = NULL;
 
 // Listen UDP port(s) for packets sent by Semtech's gateway
 static UDPListener *listener = NULL;
@@ -139,6 +143,10 @@ static void done()
 		delete identityService;
 		identityService = NULL;
 	}
+    if (gatewayStatService) {
+        delete gatewayStatService;
+        gatewayStatService = NULL;
+    }
 	if (dbByConfig) {
 		delete dbByConfig;
 		dbByConfig = NULL;
@@ -324,14 +332,8 @@ void onGatewayStatDump(
 	void *env,
 	GatewayStat *stat
 ) {
-
-	Configuration *c = (Configuration *) env;
-	if (!env || !stat)
-		return;
-	if (c->serverConfig.logGWStatisticsFileName.empty())
-		return;
-	std::string s(stat->toJsonString() + "\n");
-	append2file(c->serverConfig.logGWStatisticsFileName, s);
+    if (gatewayStatService)
+        gatewayStatService->put(stat);
 }
 
 void onDeviceStatDump(
@@ -407,7 +409,7 @@ int main(
 		case IDENTITY_STORAGE_LMDB:
 #ifdef ENABLE_LMDB
 			identityService = new LmdbIdentityService();
-#endif			
+#endif
 			break;
 		case IDENTITY_STORAGE_DIR_TEXT:
 			identityService = new DirTxtIdentityService();
@@ -415,12 +417,29 @@ int main(
 		default:
 			identityService = new JsonFileIdentityService();
 	}
-	int rs = identityService->init(config->serverConfig.identityStorageName, NULL);
-	if (rs) {
-		std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs) 
-			<< " " << config->serverConfig.identityStorageName << std::endl;
-		exit(ERR_CODE_INIT_IDENTITY);
-	}
+
+
+    // Start gateway statistics service
+    switch (config->serverConfig.gwStatStorageType) {
+        case GW_STAT_FILE_JSON:
+            gatewayStatService = new GatewayStatServiceFile();
+            break;
+        case GW_STAT_POST:
+            gatewayStatService = new GatewayStatServicePost();
+            break;
+        default:
+            gatewayStatService = NULL;
+    }
+
+	int rs = LORA_OK;
+    if (gatewayStatService) {
+        rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, NULL);
+        if (rs) {
+            std::cerr << ERR_INIT_GW_STAT << rs << ": " << strerror_lorawan_ns(rs)
+                      << " " << config->serverConfig.identityStorageName << std::endl;
+            exit(ERR_CODE_INIT_GW_STAT);
+        }
+    }
 
 	if (config->serverConfig.verbosity > 3) {
 		std::vector<NetworkIdentity> identities;

@@ -144,8 +144,8 @@ void RecieverQueueProcessor::processQueue()
 	if (!receiverQueueService)
 		return;
 	size_t cnt = receiverQueueService->count();
-	if (cnt > 1024)
-		cnt = 1024;
+	if (cnt > MAX_QUEUE_CNT_PER_STEP)
+		cnt = MAX_QUEUE_CNT_PER_STEP;
 	for (int i = 0; i < cnt; i++) {	// do not use while(!receiverQueueService->count()) to prevent endless loop
 		ReceiverQueueEntry entry;
 		for (int i = 0; i < databaseByConfig->count(); i++) {

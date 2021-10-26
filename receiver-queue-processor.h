@@ -11,8 +11,9 @@
 #include "receiver-queue-service.h"
 
 // default delay in ms
-#define DB_MIN_DELAY_MS 200
-
+#define DB_MIN_DELAY_MS         200
+// default maximum insertions into the database per one step
+#define MAX_QUEUE_CNT_PER_STEP  1024
 // queue default timeout
 #define DB_DEF_TIMEOUT_MS 1 * 1000
 

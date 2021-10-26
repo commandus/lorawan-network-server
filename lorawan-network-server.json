@@ -13,6 +13,8 @@
 		],
 		"logGWStatisticsFileName": "gateway-stat.json",
 		"logDeviceStatisticsFileName": "device-stat.json",
+		"gwStatStorageType": "file",
+		"gwStatStorageName": "gw-stat.json",
 		"controlFPort": 223
 	}
 }

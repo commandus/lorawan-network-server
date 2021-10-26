@@ -61,6 +61,7 @@ ServerConfig::ServerConfig()
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), controlFPort(0), daemonize(false),
 	identityStorageName(""), deviceStatStorageName(""), 
 	queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
+    gwStatStorageType(GW_STAT_NONE),
 	messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0), 
 	logGWStatisticsFileName(""), logDeviceStatisticsFileName("")
 {
@@ -136,6 +137,13 @@ int ServerConfig::parse(
 		if (vstorageType.IsString())
 			storageType = string2storageType(vstorageType.GetString());
 	}
+
+    if (value.HasMember("gwStatStorageType")) {
+        rapidjson::Value &vgwStatStorageType =  value["gwStatStorageType"];
+        if (vgwStatStorageType.IsString())
+            gwStatStorageType = string2gwStatStorageType(vgwStatStorageType.GetString());
+    }
+
 	if (value.HasMember("messageQueueStorageType")) {
 		rapidjson::Value &vstorageType =  value["messageQueueStorageType"];
 		if (vstorageType.IsString())
@@ -165,7 +173,7 @@ int ServerConfig::parse(
 		}
 	}
 
-	return 0;
+	return LORA_OK;
 }
 
 void ServerConfig::toJson(
@@ -225,6 +233,11 @@ void ServerConfig::toJson(
 	std::string s(storageType2String(storageType));
 	vstorageType.SetString(s.c_str(), s.size(), allocator);
 	value.AddMember("storageType", vstorageType, allocator);
+
+    rapidjson::Value vgwStatStorageType;
+    std::string s1(gwStatStorageType2String(gwStatStorageType));
+    vgwStatStorageType.SetString(s1.c_str(), s1.size(), allocator);
+    value.AddMember("gwStatStorageType", vgwStatStorageType, allocator);
 
 	rapidjson::Value vMessageQueuestorageType;
 	std::string s2(messageQueueStorageType2String(messageQueueType));

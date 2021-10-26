@@ -99,6 +99,7 @@
 #define ERR_CODE_CONTROL_DEVICE_NOT_FOUND	-583
 #define ERR_CODE_INVALID_CONTROL_PACKET		-584
 #define ERR_CODE_DUPLICATED_PACKET			-585
+#define ERR_CODE_INIT_GW_STAT   			-586
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -194,6 +195,8 @@
 #define ERR_CONTROL_DEVICE_NOT_FOUND	"Control device not found "
 #define ERR_INVALID_CONTROL_PACKET		"Invalid control packet"
 #define ERR_DUPLICATED_PACKET			"Packet is duplicated"
+#define ERR_INIT_GW_STAT   			    "Gateway statistics log initialization error "
+
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
