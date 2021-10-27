@@ -55,33 +55,31 @@
 
 #include "gateway-stat-service-file.h"
 #include "gateway-stat-service-post.h"
+#include "device-stat-service-file.h"
+#include "device-stat-service-post.h"
 
-const std::string progname = "lorawan-network-server";
+const std::string programName = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_QUEUE_STORAGE_NAME "queue.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
-#define DEF_DEVICE_STAT_STORAGE_NAME "device-counters.json"
+#define DEF_DEVICE_HISTORY_STORAGE_NAME "device-history.json"
 #define DEF_DATABASE_CONFIG_FILE_NAME "dbs.js"
 #define DEF_PROTO_PATH "proto"
-
-#define DEF_TIME_FORMAT "%FT%T"
-
-#define DEF_BUFFER_SIZE 4096
-#define DEF_BUFFER_SIZE_S "4096"
 
 static int lastSysSignal = 0;
 
 static Configuration *config = NULL;
 static GatewayList *gatewayList = NULL;
 static GatewayStatService *gatewayStatService = NULL;
+static DeviceStatService *deviceStatService = NULL;
 
 // Listen UDP port(s) for packets sent by Semtech's gateway
 static UDPListener *listener = NULL;
 // Device identity service
 static IdentityService *identityService = NULL;
-// RecieverQueueProcessor get payload from the queue, parse and put parsed data 
-static RecieverQueueProcessor *recieverQueueProcessor = NULL;
+// ReceiverQueueProcessor get payload from the queue, parse and put parsed data
+static ReceiverQueueProcessor *receiverQueueProcessor = NULL;
 // LoraPacketProcessor handles uplink messages
 static LoraPacketProcessor *processor = NULL;
 // Database list
@@ -94,7 +92,6 @@ static void* pkt2env = NULL;
 
 ReceiverQueueService *receiverQueueService = NULL;
 
-
 #ifdef _MSC_VER
 #undef ENABLE_TERM_COLOR
 #else
@@ -103,7 +100,9 @@ ReceiverQueueService *receiverQueueService = NULL;
 
 static void flushFiles()
 {
-	if (receiverQueueService)
+    // save
+    // identityService->flush();
+    if (receiverQueueService)
 		receiverQueueService->flush();
 	if (gatewayList)
 		gatewayList->save();
@@ -127,19 +126,19 @@ static void done()
 		delete processor;
 		processor = NULL;
 	}
-	if (recieverQueueProcessor) {
-		delete recieverQueueProcessor;
-		recieverQueueProcessor = NULL;
+	if (receiverQueueProcessor) {
+		delete receiverQueueProcessor;
+        receiverQueueProcessor = NULL;
 	}
-	if (receiverQueueService) {
-		// save
-		receiverQueueService->flush();
+
+    // save changes
+    flushFiles();
+
+    if (receiverQueueService) {
 		delete receiverQueueService;
 		receiverQueueService = NULL;
 	}
 	if (identityService) {
-		// save
-		// identityService->flush();
 		delete identityService;
 		identityService = NULL;
 	}
@@ -147,18 +146,19 @@ static void done()
         delete gatewayStatService;
         gatewayStatService = NULL;
     }
-	if (dbByConfig) {
+    if (deviceStatService) {
+        delete deviceStatService;
+        deviceStatService = NULL;
+    }
+    if (dbByConfig) {
 		delete dbByConfig;
 		dbByConfig = NULL;
 	}
 	if (gatewayList) {
-		gatewayList->save();
 		delete gatewayList;
 		gatewayList = NULL;
 	}
 	if (deviceHistoryService) {
-		// save
-		deviceHistoryService->flush();
 		delete deviceHistoryService;
         deviceHistoryService = NULL;
 	}
@@ -238,9 +238,9 @@ int parseCmd(
 	struct arg_str *a_address4 = arg_strn(NULL, NULL, "<IPv4 address:port>", 0, 8, "listener IPv4 interface e.g. *:8003");
 	struct arg_str *a_address6 = arg_strn("6", "ipv6", "<IPv6 address:port>", 0, 8, "listener IPv6 interface e.g. :1700");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>",
-	 "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME 
+                                        "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME
 	", queue storage ~/" DEF_QUEUE_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME 
-	", device stat ~/" DEF_DEVICE_STAT_STORAGE_NAME 
+	", device history ~/" DEF_DEVICE_HISTORY_STORAGE_NAME
 	);
 	struct arg_str *a_logfilename = arg_str0("l", "logfile", "<file>", "log file");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
@@ -253,16 +253,14 @@ int parseCmd(
 		a_address4, a_address6,
 		a_logfilename, a_daemonize, a_verbosity, a_help, a_end};
 
-	int nerrors;
-
 	// verify the argtable[] entries were allocated successfully
 	if (arg_nullcheck(argtable) != 0)
 	{
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-		return 1;
+		return ERR_CODE_PARAM_INVALID;
 	}
 	// Parse the command line as defined by argtable[]
-	nerrors = arg_parse(argc, argv, argtable);
+	int nErrors = arg_parse(argc, argv, argtable);
 
 	if (a_config->count)
 		config->configFileName = *a_config->sval;
@@ -272,7 +270,7 @@ int parseCmd(
 	config->serverConfig.daemonize = (a_daemonize->count > 0);
 	config->serverConfig.verbosity = a_verbosity->count;
 
-	if (!nerrors)
+	if (!nErrors)
 	{
 		for (int i = 0; i < a_address4->count; i++)
 		{
@@ -285,20 +283,20 @@ int parseCmd(
 	}
 
 	// special case: '--help' takes precedence over error reporting
-	if ((a_help->count) || nerrors)
+	if ((a_help->count) || nErrors)
 	{
-		if (nerrors)
-			arg_print_errors(stderr, a_end, progname.c_str());
-		std::cerr << "Usage: " << progname << std::endl;
+		if (nErrors)
+			arg_print_errors(stderr, a_end, programName.c_str());
+		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
 		std::cerr << MSG_PROG_NAME << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-		return 1;
+		return ERR_CODE_PARAM_INVALID;
 	}
 
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-	return 0;
+	return LORA_OK;
 }
 
 void onLog(
@@ -340,6 +338,8 @@ void onDeviceStatDump(
 	void *env,
 	const SemtechUDPPacket &value
 ) {
+    if (deviceStatService)
+        deviceStatService->put(&value);
 }
 
 static void run()
@@ -386,7 +386,7 @@ int main(
 		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
 	}
 	if (config->serverConfig.deviceHistoryStorageName.empty()) {
-		config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(DEF_DEVICE_STAT_STORAGE_NAME);
+		config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(DEF_DEVICE_HISTORY_STORAGE_NAME);
 	}
 	std::cerr << config->toString() << std::endl;
 
@@ -437,7 +437,28 @@ int main(
         }
     }
 
-	if (config->serverConfig.verbosity > 3) {
+    // Start device statistics service
+    switch (config->serverConfig.deviceStatStorageType) {
+        case DEVICE_STAT_FILE_JSON:
+            deviceStatService = new DeviceStatServiceFile();
+            break;
+        case DEVICE_STAT_POST:
+            deviceStatService = new DeviceStatServicePost();
+            break;
+        default:
+            deviceStatService = NULL;
+    }
+
+    if (deviceStatService) {
+        rs = deviceStatService->init(config->serverConfig.logDeviceStatisticsFileName, NULL);
+        if (rs) {
+            std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
+                      << " " << config->serverConfig.logDeviceStatisticsFileName << std::endl;
+            exit(ERR_CODE_INIT_DEVICE_STAT);
+        }
+    }
+
+    if (config->serverConfig.verbosity > 3) {
 		std::vector<NetworkIdentity> identities;
 		std::cerr << MSG_DEVICES << std::endl;
 		identityService->list(identities, 0, 0);
@@ -470,7 +491,7 @@ int main(
         // exit(ERR_CODE_INIT_DEVICE_STAT);
     }
 
-	// Start recived message queue service
+	// Start received message queue service
 	void *options = NULL;
 	DirTxtReceiverQueueServiceOptions dirOptions;
 	switch (config->serverConfig.messageQueueType) {
@@ -562,14 +583,14 @@ int main(
 	processor->reserveFPort(config->serverConfig.controlFPort);
 
 	// Set pkt2 environment
-	recieverQueueProcessor = new RecieverQueueProcessor();
-	recieverQueueProcessor->setPkt2Env(pkt2env);
-	recieverQueueProcessor->setLogger(onLog);
+	receiverQueueProcessor = new ReceiverQueueProcessor();
+	receiverQueueProcessor->setPkt2Env(pkt2env);
+	receiverQueueProcessor->setLogger(onLog);
 
 	// Set databases
-	recieverQueueProcessor->setDatabaseByConfig(dbByConfig);
+	receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
 	// start processing queue
-	processor->setRecieverQueueProcessor(recieverQueueProcessor);
+	processor->setRecieverQueueProcessor(receiverQueueProcessor);
 	
 	// Set up listener
 	listener->setHandler(processor);
@@ -599,9 +620,9 @@ int main(
 		char wd[PATH_MAX];
 		std::string progpath = getcwd(wd, PATH_MAX);
 		if (config->serverConfig.verbosity > 1)
-			std::cerr << MSG_DAEMON_STARTED << progpath << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
+			std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
 		OPEN_SYSLOG()
-		Daemonize daemonize(progname, progpath, run, stop, done);
+		Daemonize daemonize(programName, progpath, run, stop, done);
 		// CLOSE_SYSLOG()
 	}
 	else

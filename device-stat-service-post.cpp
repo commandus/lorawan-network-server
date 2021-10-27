@@ -1,16 +1,17 @@
 #include <sstream>
 #include "utilcurl.h"
-#include "gateway-stat-service-post.h"
+#include "device-stat-service-post.h"
+
 
 /**
  * Device statistics service append statistics to the file
  * specified in the option parameter of init() method
  */
-void GatewayStatServicePost::save()
+void DeviceStatServicePost::save()
 {
     if (list.empty())
         return;
-    std::vector<GatewayStat> copyList;
+    std::vector<SemtechUDPPacket> copyList;
     listMutex.lock();
     copyList = list;
     list.clear();
@@ -19,7 +20,7 @@ void GatewayStatServicePost::save()
     std::stringstream ss;
     bool needComma = false;
     ss << "[";
-    for (std::vector<GatewayStat>::iterator it (copyList.begin()); it != copyList.end(); it++) {
+    for (std::vector<SemtechUDPPacket>::iterator it (copyList.begin()); it != copyList.end(); it++) {
         if (needComma)
             ss << ", ";
         else

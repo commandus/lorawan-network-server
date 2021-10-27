@@ -265,7 +265,7 @@ void LoraPacketProcessor::setLogger(
 
 void LoraPacketProcessor::setRecieverQueueProcessor
 (
-	RecieverQueueProcessor *value
+        ReceiverQueueProcessor *value
 )
 {
 	if (recieverQueueProcessor)

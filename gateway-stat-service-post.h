@@ -5,7 +5,7 @@
 
 /**
  * Gateway statistics service append statistics to the web service
- * specified in the option paramater of init() method
+ * specified in the option parameter of init() method
  */
 class GatewayStatServicePost : public GatewayStatServiceFile {
 	public:

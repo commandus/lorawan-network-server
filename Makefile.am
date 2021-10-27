@@ -113,6 +113,7 @@ nobase_dist_include_HEADERS = \
 	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
+	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -125,10 +126,10 @@ lorawan_network_server_SOURCES = \
 	utilidentity.cpp semtech-pull-resp-packet.cpp lora-encrypt.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp \
 	receiver-queue-service.cpp identity-service-dir-txt.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
-	gateway-stat-service-abstract.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp \
-	device-stat-service-abstract.cpp device-history-service-json.cpp \
+	gateway-stat-service-abstract.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp utilcurl.cpp \
+	device-stat-service-abstract.cpp device-stat-service-file.cpp device-stat-service-post.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
-	receiver-queue-processor.cpp \
+	device-history-service-json.cpp receiver-queue-processor.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 

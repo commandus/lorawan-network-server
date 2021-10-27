@@ -1,48 +1,48 @@
 #include <sstream>
-#include "gateway-stat-service-file.h"
+#include "device-stat-service-file.h"
 #include "utilstring.h"
 
 /**
- * Gateway statistics service append statistics to the file
+ * Dewice statistics service append statistics to the file
  * specified in the option parameter of init() method
  */
-GatewayStatServiceFile::GatewayStatServiceFile()
-    : state(0), timeoutSeconds(DEF_GW_STAT_TIMEOUT_SECONDS), threadRun(NULL)
+DeviceStatServiceFile::DeviceStatServiceFile()
+    : state(0), timeoutSeconds(DEF_DEVICE_STAT_TIMEOUT_SECONDS), threadRun(NULL)
 {
 
 }
 
-void GatewayStatServiceFile::put(GatewayStat *stat)
+void DeviceStatServiceFile::put(const SemtechUDPPacket *packet)
 {
-    if (list.size() > MAX_GW_STAT_BUFFER_SIZE) {
+    if (list.size() > MAX_DEVICE_STAT_BUFFER_SIZE) {
         // TODO
         flush();
     }
 
     listMutex.lock();
-    list.push_back(*stat);
+    list.push_back(*packet);
     listMutex.unlock();
 }
 
 // force save
-void GatewayStatServiceFile::flush()
+void DeviceStatServiceFile::flush()
 {
     save();
 }
 
 // reload
-int GatewayStatServiceFile::init(
+int DeviceStatServiceFile::init(
 	const std::string &aFileName,
 	void *data
 )
 {
     state = 1;  // 0- stopped, 1- run, 2- stop request
     storageName = aFileName;
-    threadRun = new std::thread(&GatewayStatServiceFile::runner, this);
+    threadRun = new std::thread(&DeviceStatServiceFile::runner, this);
 }
 
 // close resources
- void GatewayStatServiceFile::done()
+ void DeviceStatServiceFile::done()
  {
     if (threadRun && (state == 1)) {
         state = 2;  // 0- stopped, 1- run, 2- stop request
@@ -50,13 +50,13 @@ int GatewayStatServiceFile::init(
  }
 
 // close resources
-void GatewayStatServiceFile::runner()
+void DeviceStatServiceFile::runner()
 {
-    // MAX_GW_STAT_TIMEOUT_SECONDS
+    // MAX_DEVICE_STAT_TIMEOUT_SECONDS
     while (state == 1) { // 0- stopped, 1- run, 2- stop request
         struct timeval timeout;
         if (timeoutSeconds <= 0)
-            timeoutSeconds = MIN_GW_STAT_TIMEOUT_SECONDS;
+            timeoutSeconds = MIN_DEVICE_STAT_TIMEOUT_SECONDS;
         timeout.tv_sec = timeoutSeconds;
         timeout.tv_usec = 0;
         int r = select(0, NULL, NULL, NULL, &timeout);
@@ -76,10 +76,10 @@ void GatewayStatServiceFile::runner()
         threadRun = NULL;
 }
 
-void GatewayStatServiceFile::tuneDelay()
+void DeviceStatServiceFile::tuneDelay()
 {
     size_t count = list.size();
-    if (count < GW_SIZE_PER_STEP) {
+    if (count < DEVICE_SIZE_PER_STEP) {
         // increase
         timeoutSeconds *= 2;
     } else {
@@ -87,24 +87,24 @@ void GatewayStatServiceFile::tuneDelay()
         timeoutSeconds /= 2;
     }
     if (timeoutSeconds == 0)
-        timeoutSeconds = MIN_GW_STAT_TIMEOUT_SECONDS;
+        timeoutSeconds = MIN_DEVICE_STAT_TIMEOUT_SECONDS;
     else {
-        if (timeoutSeconds > MAX_GW_STAT_TIMEOUT_SECONDS)
-            timeoutSeconds = MAX_GW_STAT_TIMEOUT_SECONDS;
+        if (timeoutSeconds > MAX_DEVICE_STAT_TIMEOUT_SECONDS)
+            timeoutSeconds = MAX_DEVICE_STAT_TIMEOUT_SECONDS;
     }
 }
 
-void GatewayStatServiceFile::save()
+void DeviceStatServiceFile::save()
 {
     if (list.empty())
         return;
-    std::vector<GatewayStat> copyList;
+    std::vector<SemtechUDPPacket> copyList;
     listMutex.lock();
     copyList = list;
     list.clear();
     listMutex.unlock();
     std::stringstream ss;
-    for (std::vector<GatewayStat>::iterator it (copyList.begin()); it != copyList.end(); it++) {
+    for (std::vector<SemtechUDPPacket>::iterator it (copyList.begin()); it != copyList.end(); it++) {
         ss << it->toJsonString() << std::endl;
     }
     append2file(storageName, ss.str());

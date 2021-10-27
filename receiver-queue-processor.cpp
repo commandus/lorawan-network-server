@@ -7,20 +7,20 @@
  * // create queue
  * receiverQueueService = new JsonFileReceiverQueueService();
  * // create processor to serve queue
- * recieverQueueProcessor = new RecieverQueueProcessor();
+ * receiverQueueProcessor = new ReceiverQueueProcessor();
  * // create protobuf declarations
  * void *pkt2env = initPkt2("proto", 0);
- * recieverQueueProcessor->setPkt2Env(pkt2env);
+ * receiverQueueProcessor->setPkt2Env(pkt2env);
  * // load database config
  * ConfigDatabases configDatabases("dbs.js");
  * // create helper object
  * DatabaseByConfig *dbByConfig = new DatabaseByConfig(&configDatabases);
  * // add helper object to the processor
- * recieverQueueProcessor->setDatabaseByConfig(dbByConfig);	
+ * receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
  * // run processor
- * recieverQueueProcessor->start(receiverQueueService);
+ * receiverQueueProcessor->start(receiverQueueService);
  * // stop processor
- * recieverQueueProcessor->stop();
+ * receiverQueueProcessor->stop();
  * 
  */
 #include "receiver-queue-processor.h"
@@ -35,7 +35,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-int RecieverQueueProcessor::onPacket(
+int ReceiverQueueProcessor::onPacket(
         struct timeval &time,
         DeviceId id,
         SemtechUDPPacket &value
@@ -49,17 +49,17 @@ int RecieverQueueProcessor::onPacket(
 	return 0;
 }
 
-RecieverQueueProcessor::RecieverQueueProcessor()
+ReceiverQueueProcessor::ReceiverQueueProcessor()
 	: isStarted(false), isDone(false), threadDb(NULL), onLog(NULL), 
 	pkt2env(NULL), databaseByConfig(NULL)
 {
 }
 
-RecieverQueueProcessor::~RecieverQueueProcessor()
+ReceiverQueueProcessor::~ReceiverQueueProcessor()
 {
 }
 
-void RecieverQueueProcessor::setLogger(
+void ReceiverQueueProcessor::setLogger(
 	std::function<void(
 		void *env,
 		int level,
@@ -70,7 +70,7 @@ void RecieverQueueProcessor::setLogger(
 	onLog = value;
 }
 
-void RecieverQueueProcessor::setPkt2Env
+void ReceiverQueueProcessor::setPkt2Env
 (
 	void *value
 )
@@ -78,7 +78,7 @@ void RecieverQueueProcessor::setPkt2Env
 	pkt2env = value;
 }
 
-void RecieverQueueProcessor::setDatabaseByConfig
+void ReceiverQueueProcessor::setDatabaseByConfig
 (
 	DatabaseByConfig *value
 )
@@ -86,7 +86,7 @@ void RecieverQueueProcessor::setDatabaseByConfig
 	databaseByConfig = value;
 }
 
-void RecieverQueueProcessor::start(
+void ReceiverQueueProcessor::start(
 	ReceiverQueueService *rQueueService
 )
 {
@@ -98,10 +98,10 @@ void RecieverQueueProcessor::start(
 	std::vector<int> ids;
 	this->databaseByConfig->getIds(ids);
 	receiverQueueService->setDbs(ids);
-	threadDb = new std::thread(&RecieverQueueProcessor::runner, this);
+	threadDb = new std::thread(&ReceiverQueueProcessor::runner, this);
 }
 
-void RecieverQueueProcessor::stop()
+void ReceiverQueueProcessor::stop()
 {
 	if (!isStarted)
 		return;
@@ -111,7 +111,7 @@ void RecieverQueueProcessor::stop()
 	}
 }
 
-void RecieverQueueProcessor::runner()
+void ReceiverQueueProcessor::runner()
 {
 	while (isStarted) {
 		struct timeval timeout;
@@ -135,7 +135,7 @@ void RecieverQueueProcessor::runner()
 /**
  * Called from runner()
  */ 
-void RecieverQueueProcessor::processQueue()
+void ReceiverQueueProcessor::processQueue()
 {
 	if (!pkt2env)
 		return;

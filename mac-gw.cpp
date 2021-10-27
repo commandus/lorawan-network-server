@@ -34,7 +34,7 @@
 #include "gateway-list.h"
 #include "config-filename.h"
 
-const std::string progname = "mac-gw";
+const std::string programName = "mac-gw";
 #define DEF_CONFIG_FILE_NAME "mac-gw.json"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
@@ -171,8 +171,8 @@ int parseCmd(
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
 		if (nerrors)
-			arg_print_errors(stderr, a_end, progname.c_str());
-		std::cerr << "Usage: " << progname << std::endl;
+			arg_print_errors(stderr, a_end, programName.c_str());
+		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
 		std::cerr << MSG_PROG_NAME << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");

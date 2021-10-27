@@ -33,7 +33,7 @@
 
 #include "config-filename.h"
 
-const std::string progname = "proto-db";
+const std::string programName = "proto-db";
 #define DEF_CONFIG_FILE_NAME ".proto-db.json"
 #define DEF_IDENTITY_STORAGE_NAME	"identity.json"
 #define DEF_IDENTITY_STORAGE_TYPE	"json"
@@ -264,8 +264,8 @@ int parseCmd(
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
 		if (nerrors)
-			arg_print_errors(stderr, a_end, progname.c_str());
-		std::cerr << "Usage: " << progname << std::endl;
+			arg_print_errors(stderr, a_end, programName.c_str());
+		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
 		std::cerr << MSG_PROTO_DB_PROG_NAME << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");

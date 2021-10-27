@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 	// create queue
 	JsonFileReceiverQueueService *receiverQueueService = new JsonFileReceiverQueueService();
 	// create processor to serve queue
-	RecieverQueueProcessor *recieverQueueProcessor = new RecieverQueueProcessor();
+	ReceiverQueueProcessor *recieverQueueProcessor = new ReceiverQueueProcessor();
 
 	void *pkt2env = initPkt2("proto", 0);
 	if (!pkt2env) {

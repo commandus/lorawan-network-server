@@ -26,8 +26,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 
 		// ReceiverQueueService enque data payload packets received from gateways (with deduplication)
 		ReceiverQueueService *receiverQueueService;
-		// RecieverQueueProcessor get payload from the queue, parse and put parsed data 
-		RecieverQueueProcessor *recieverQueueProcessor;
+		// ReceiverQueueProcessor get payload from the queue, parse and put parsed data
+		ReceiverQueueProcessor *recieverQueueProcessor;
 		PacketQueue packetQueue;
 
 		std::function<void(
@@ -88,7 +88,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
                 SemtechUDPPacket &value
 		);
 
-	void setRecieverQueueProcessor(RecieverQueueProcessor *value);
+	void setRecieverQueueProcessor(ReceiverQueueProcessor *value);
 
 	// Reserve FPort number for network service purposes
 	void reserveFPort(

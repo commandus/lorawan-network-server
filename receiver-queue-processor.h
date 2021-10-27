@@ -1,5 +1,5 @@
-#ifndef QUEUE_PROCESSOR_H
-#define QUEUE_PROCESSOR_H 1
+#ifndef RECEIVER_QUEUE_PROCESSOR_H
+#define RECEIVER_QUEUE_PROCESSOR_H 1
 
 #include <map>
 #include <functional>
@@ -18,11 +18,11 @@
 #define DB_DEF_TIMEOUT_MS 1 * 1000
 
 /**
- * ReceiverQueueService enqueue aplication data payload,
- * RecieverQueueProcessor get payload from the queue, parse and put parsed data 
+ * ReceiverQueueService enqueue application data payload,
+ * ReceiverQueueProcessor get payload from the queue, parse and put parsed data
  * to the database(s) async
  */ 
-class RecieverQueueProcessor {
+class ReceiverQueueProcessor {
 	private:
 		bool isStarted;
 		bool isDone;
@@ -43,8 +43,8 @@ class RecieverQueueProcessor {
 		void runner();
 		void processQueue();
 	public:
-		RecieverQueueProcessor();
-		~RecieverQueueProcessor();
+		ReceiverQueueProcessor();
+		~ReceiverQueueProcessor();
 		int onPacket(
                 struct timeval &time,
                 DeviceId id,

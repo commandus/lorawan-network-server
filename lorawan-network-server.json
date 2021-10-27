@@ -5,16 +5,19 @@
 		"identityStorageName": "identity.json",
 		"storageType": "json",
 		"queueStorageName": "queue.json",
-		"deviceStatStorageName": "device-counters.json",
 		"messageQueueStorageType": "json",
 		"listenAddressIPv4": [
 			"127.0.0.1:5000",
 			"84.237.104.128:5000"
 		],
 		"deviceHistoryStorageName": "device-history.json",
+		
+		"deviceStatStorageType": "post",
+		"logDeviceStatisticsFileName": "http://localhost:50002/post.php",
+
+		"gwStatStorageType": "post",
 		"logGWStatisticsFileName": "http://localhost:50002/post.php",
-		"logDeviceStatisticsFileName": "device-history.json",
-        "gwStatStorageType": "post",
+
         "controlFPort": 223
 	}
 }
