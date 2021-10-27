@@ -13,9 +13,9 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPListener::UDPListener() :
-	sysSignalPtr(NULL), verbosity(0), stopped(false), onLog(NULL), onGatewayStatDump(NULL), gwStatEnv(NULL),
-	onDeviceStatDump(NULL), deviceStatEnv(NULL),
-	handler(NULL), identityService(NULL), gatewayList(NULL), deviceStatService(NULL)
+        sysSignalPtr(NULL), verbosity(0), stopped(false), onLog(NULL), onGatewayStatDump(NULL), gwStatEnv(NULL),
+        onDeviceStatDump(NULL), deviceStatEnv(NULL),
+        handler(NULL), identityService(NULL), gatewayList(NULL), deviceHistoryService(NULL)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -86,12 +86,12 @@ void UDPListener::setIdentityService
 	identityService = value;
 }
 
-void UDPListener::setDeviceStatService
+void UDPListener::setDeviceHistoryService
 (
         DeviceHistoryService *value
 )
 {
-	deviceStatService = value;
+    deviceHistoryService = value;
 }
 
 /**

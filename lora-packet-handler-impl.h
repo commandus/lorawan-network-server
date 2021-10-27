@@ -21,7 +21,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 	private:
 		uint8_t reservedFPort;
 		IdentityService *identityService;
-		DeviceHistoryService *deviceStatService;
+		DeviceHistoryService *deviceHistoryService;
 		GatewayList *gatewayList;
 
 		// ReceiverQueueService enque data payload packets received from gateways (with deduplication)
@@ -43,7 +43,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		LoraPacketProcessor();
 		~LoraPacketProcessor();
 		void setIdentityService(IdentityService* identityService);
-		void setDeviceStatService(DeviceHistoryService *deviceStatService);
+		void setDeviceHistoryService(DeviceHistoryService *aDeviceHistoryService);
 
 		void setGatewayList(GatewayList *value);
 		void setReceiverQueueService(ReceiverQueueService* value);

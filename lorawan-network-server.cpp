@@ -409,6 +409,12 @@ int main(
 			identityService = new JsonFileIdentityService();
 	}
 
+    int rs = identityService->init(config->serverConfig.identityStorageName, NULL);
+    if (rs) {
+        std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs)
+                  << " " << config->serverConfig.identityStorageName << std::endl;
+        exit(ERR_CODE_INIT_IDENTITY);
+    }
 
     // Start gateway statistics service
     switch (config->serverConfig.gwStatStorageType) {
@@ -422,12 +428,11 @@ int main(
             gatewayStatService = NULL;
     }
 
-	int rs = LORA_OK;
     if (gatewayStatService) {
         rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, NULL);
         if (rs) {
             std::cerr << ERR_INIT_GW_STAT << rs << ": " << strerror_lorawan_ns(rs)
-                      << " " << config->serverConfig.identityStorageName << std::endl;
+                      << " " << config->serverConfig.logGWStatisticsFileName << std::endl;
             exit(ERR_CODE_INIT_GW_STAT);
         }
     }
@@ -437,9 +442,11 @@ int main(
 		std::cerr << MSG_DEVICES << std::endl;
 		identityService->list(identities, 0, 0);
 		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
-			std::cerr << "\t" << DEVADDR2string(it->devaddr) << "\t" << DEVICENAME2string(it->name);
-			if (identityService->canControlService(it->devaddr))
-				std::cerr << "\tcontrol";
+			std::cerr << "\t" << DEVADDR2string(it->devaddr)
+                << "\t" << DEVEUI2string(it->deviceEUI)
+                << "\t" << DEVICENAME2string(it->name);
+            if (identityService->canControlService(it->devaddr))
+				std::cerr << "\tmaster";
 			std::cerr << std::endl;
 		}
 	}
@@ -453,7 +460,7 @@ int main(
             break;
     }
 
-    // std::cerr << "Device stat name: " << config->serverConfig.deviceHistoryStorageName << std::endl;
+    // std::cerr << "Device history name: " << config->serverConfig.deviceHistoryStorageName << std::endl;
     deviceHistoryService = new JsonFileDeviceHistoryService();
     rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, NULL);
     if (rs) {
@@ -550,7 +557,7 @@ int main(
 	processor->setIdentityService(identityService);
 	processor->setGatewayList(gatewayList);
 	processor->setReceiverQueueService(receiverQueueService);
-	processor->setDeviceStatService(deviceHistoryService);
+    processor->setDeviceHistoryService(deviceHistoryService);
 	// FPort number reserved for messages controls network service. 0- no remote control allowed
 	processor->reserveFPort(config->serverConfig.controlFPort);
 
@@ -568,7 +575,7 @@ int main(
 	listener->setHandler(processor);
 	listener->setGatewayList(gatewayList);
 	listener->setIdentityService(identityService);
-	listener->setDeviceStatService(deviceHistoryService);
+    listener->setDeviceHistoryService(deviceHistoryService);
 
 	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;

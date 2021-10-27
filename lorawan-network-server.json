@@ -11,8 +11,9 @@
 			"127.0.0.1:5000",
 			"84.237.104.128:5000"
 		],
+		"deviceHistoryStorageName": "device-history.json",
 		"logGWStatisticsFileName": "http://localhost:50002/post.php",
-		"logDeviceStatisticsFileName": "device-stat.json",
+		"logDeviceStatisticsFileName": "device-history.json",
         "gwStatStorageType": "post",
         "controlFPort": 223
 	}

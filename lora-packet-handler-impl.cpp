@@ -189,8 +189,8 @@ int LoraPacketProcessor::put
 			}
 		} else {
 			// device has been identified
-			if (deviceStatService)				// collect statistics if statistics collector is running
-				deviceStatService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
+			if (deviceHistoryService)				// collect statistics if statistics collector is running
+				deviceHistoryService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
 			if (packet.hasApplicationPayload()) // store payload to the database(s) if exists
 				enqueuePayload(time, packet);
 			if (packet.hasMACPayload())			// provide MAC reply to the end-device if MAC command present in the packet
@@ -242,12 +242,12 @@ void LoraPacketProcessor::setReceiverQueueService
 	}
 }
 
-void LoraPacketProcessor::setDeviceStatService(
-        DeviceHistoryService *value
+void LoraPacketProcessor::setDeviceHistoryService(
+        DeviceHistoryService *aDeviceHistoryService
 )
 {
-	deviceStatService = value;
-	packetQueue.setDeviceStatService(value);
+    deviceHistoryService = aDeviceHistoryService;
+    packetQueue.setDeviceHistoryService(aDeviceHistoryService);
 }
 
 void LoraPacketProcessor::setLogger(

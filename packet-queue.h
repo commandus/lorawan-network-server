@@ -76,7 +76,7 @@ class PacketQueue {
 
 		int fdWakeup;
 		IdentityService *identityService;
-		DeviceHistoryService *deviceStatService;
+		DeviceHistoryService *deviceHistoryService;
 		GatewayList *gatewayList;
 		int replyMAC(
 			SemtechUDPPacketItem &item,
@@ -97,7 +97,7 @@ class PacketQueue {
 		PacketQueue(int delayMilliSeconds);
 		~PacketQueue();
 		void setIdentityService(IdentityService* identityService);
-		void setDeviceStatService(DeviceHistoryService *deviceStatService);
+		void setDeviceHistoryService(DeviceHistoryService *deviceStatService);
 		void setGatewayList(GatewayList *value);
 		void setDelay(int delayMilliSeconds);
 		int ack(

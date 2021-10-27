@@ -66,8 +66,8 @@ PacketQueue::PacketQueue()
 PacketQueue::PacketQueue(
 	int delayMillisSeconds
 )
-	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL), 
-	identityService(NULL), deviceStatService(NULL), gatewayList(NULL)
+	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL),
+      identityService(NULL), deviceHistoryService(NULL), gatewayList(NULL)
 {
 	setDelay(delayMillisSeconds);
 }
@@ -80,12 +80,12 @@ void PacketQueue::setIdentityService
 	identityService = value;
 }
 
-void PacketQueue::setDeviceStatService
+void PacketQueue::setDeviceHistoryService
 (
-        DeviceHistoryService *value
+        DeviceHistoryService *aDeviceStatService
 )
 {
-	deviceStatService = value;
+    deviceHistoryService = aDeviceStatService;
 }
 
 void PacketQueue::setGatewayList
@@ -438,9 +438,9 @@ int PacketQueue::replyMAC(
 		identityService->get(item.packet.header.header.devaddr, id);
 	// Produce MAC command response in the item.packet
 	uint32_t fcntdown = 0;
-	if (deviceStatService) {
+	if (deviceHistoryService) {
 		DeviceHistoryItem ds;
-		int rs = deviceStatService->get(item.packet.header.header.devaddr, ds);
+		int rs = deviceHistoryService->get(item.packet.header.header.devaddr, ds);
 		if (rs == 0) {
 			fcntdown = ds.fcntdown;
 		} else {
@@ -471,8 +471,8 @@ std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 		((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 	
 	if (r == response.size()) {
-		if (deviceStatService)
-			deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
+		if (deviceHistoryService)
+			deviceHistoryService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
 	}
 
 	if (onLog) {
@@ -597,9 +597,9 @@ int PacketQueue::replyControl(
 		identityService->getNetworkIdentity(nid, controlPacket->header.eui);
 	// Produce MAC command response in the item.packet
 	uint32_t fCntDown = 0;
-	if (deviceStatService) {
+	if (deviceHistoryService) {
 		DeviceHistoryItem ds;
-		int rs = deviceStatService->get(nid.devaddr, ds);
+		int rs = deviceHistoryService->get(nid.devaddr, ds);
 		if (rs == 0) {
             fCntDown = ds.fcntdown;
 		} else {
@@ -620,8 +620,8 @@ std::cerr << "==SEND MAC command to device addr: " << DEVADDR2string(nid.devaddr
 		((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 	
 	if (r == macPayload.size()) {
-		if (deviceStatService)
-			deviceStatService->putDown(item.packet.header.header.devaddr, t.tv_sec, fCntDown);
+		if (deviceHistoryService)
+			deviceHistoryService->putDown(item.packet.header.header.devaddr, t.tv_sec, fCntDown);
 	}
 
 	if (onLog) {

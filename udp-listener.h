@@ -30,7 +30,7 @@ private:
 public:
 	int verbosity;
 	IdentityService *identityService;
-	DeviceHistoryService *deviceStatService;
+	DeviceHistoryService *deviceHistoryService;
 
 	std::vector<UDPSocket> sockets;
 	bool stopped;
@@ -99,7 +99,7 @@ public:
 	void setHandler(LoraPacketHandler *value);
 	void setIdentityService(IdentityService* value);
 	void setGatewayList(GatewayList *value);
-	void setDeviceStatService(DeviceHistoryService *value);
+	void setDeviceHistoryService(DeviceHistoryService *value);
 	void setSysSignalPtr(int *value);
 
 	void setGatewayStatDumper(
