@@ -76,7 +76,7 @@ public:
 		const std::string &buffer,
 		size_t bytesReceived,
 		int socket,
-		const struct timeval &recievedTime,
+		const struct timeval &receivedTime,
 		const struct sockaddr_in6 &gwAddress
 	);
 

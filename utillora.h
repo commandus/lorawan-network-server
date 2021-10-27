@@ -429,8 +429,9 @@ private:
 	void clearPrefix();
 	int parseData(const std::string &data, IdentityService *identityService);
 	std::string toTxImmediatelyJsonString(
+        const DEVEUI *gwId,
 		const std::string &payloadString,
-		uint32_t recievedTime,
+		uint32_t receivedTime,
 		const int power = 14
 	) const;
 protected:
@@ -532,10 +533,11 @@ public:
 	) const;
 
 	std::string mkMACRequest(
+        const DEVEUI *gwId,
 		const std::string &payload,
 		const NetworkIdentity &networkId,
-		uint32_t recievedTime,
-		const int fcnt,
+		uint32_t receivedTime,
+		const int fCnt,
 		const int power = 14
 	) const;
 

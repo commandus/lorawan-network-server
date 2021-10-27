@@ -367,9 +367,22 @@ Example:
 ]
 ```
 
-## mac-gw utility
+## mac-gw, mac-ns utilities
 
-Send a command to a class C device bypassing the network server directly through the selected gateway.
+mac-gw send a command to a class C device bypassing the network server directly through the selected gateway.
+
+mac-ns send a command to a class C device via the network server through the selected gateway. 
+If gateway is not specified in the mac-ns command line parameters, network server use the best gateway.
+
+For example, this command
+```
+./mac-ns -a 84.237.104.128:5000 -g "6cc3743eed46" -M "SI-13-2" -E "SI-13-23" s -vvv
+```
+send "devstatus" command via network server to the device named "SI-13-23".
+
+Option -M "SI-13-2" set credentials from "master" device.
+
+Network server accept "control" messages from "master" device(s).   
 
 Parameters:
 

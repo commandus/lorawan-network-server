@@ -154,12 +154,12 @@ int UDPListener::parseBuffer
 	const std::string &buffer,
 	size_t bytesReceived,
 	int socket,
-	const struct timeval &recievedTime,
+	const struct timeval &receivedTime,
 	const struct sockaddr_in6 &gwAddress
 ) {
 	std::vector<SemtechUDPPacket> packets;
 	// get packets
-	SEMTECH_PREFIX_GW dataprefix;
+	SEMTECH_PREFIX_GW dataPrefix;
 	GatewayStat gatewayStat;
 	int pr = LORA_OK;
 	if (bytesReceived < sizeof(SEMTECH_PREFIX)) 
@@ -168,34 +168,34 @@ int UDPListener::parseBuffer
 		SEMTECH_PREFIX *prefix = (SEMTECH_PREFIX *) buffer.c_str();
 		switch (prefix->tag) {
 			case SEMTECH_GW_PUSH_DATA:
-				pr = SemtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataprefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
+				pr = SemtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataPrefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
 				// send ACK immediately
 				if (pr == LORA_OK && handler)
-					handler->ack(socket, (const sockaddr_in *) &gwAddress, dataprefix);
+					handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
 				break;
 			case SEMTECH_GW_PULL_DATA:	// PULL_DATA
 				gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
-				pr = SemtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
+				pr = SemtechUDPPacket::parsePrefixGw(dataPrefix, buffer.c_str(), bytesReceived);
 				if (pr != LORA_OK)
 					break;
 				// check is gateway in service
 				{
 					std::stringstream sse;
 					sse << strerror_lorawan_ns(pr)
-						<< " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress) 
-						<< ", token: " << std::hex << dataprefix.token;
+                        << " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
+                        << ", token: " << std::hex << dataPrefix.token;
 					onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
 					// send PULL ACK immediately
 					if (handler) {
-						handler->ack(socket, (const sockaddr_in *) &gwAddress, dataprefix);
+						handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
 					}
 					if (gatewayList) {
-						if (!gatewayList->setSocketAddress(dataprefix.mac, socket, (const struct sockaddr_in *) &gwAddress)) {
+						if (!gatewayList->setSocketAddress(dataPrefix.mac, socket, (const struct sockaddr_in *) &gwAddress)) {
 							std::stringstream ss;
 							ss << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": "
 								<< ERR_INVALID_GATEWAY_ID
 								<< " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-								<< " gateway: " << DEVEUI2string(dataprefix.mac);
+								<< " gateway: " << DEVEUI2string(dataPrefix.mac);
 								;
 							onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
 							break;
@@ -207,14 +207,14 @@ int UDPListener::parseBuffer
 				//
 				gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 				{
-					pr = SemtechUDPPacket::parsePrefixGw(dataprefix, buffer.c_str(), bytesReceived);
+					pr = SemtechUDPPacket::parsePrefixGw(dataPrefix, buffer.c_str(), bytesReceived);
 					if (pr != LORA_OK)
 						break;
 					ERR_CODE_TX r = extractTXAckCode(buffer.c_str(), bytesReceived);
 					std::stringstream ss;
 					ss << "TX ACK " << getTXAckCodeName(r)
 						<< " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-						<< " gateway: " << DEVEUI2string(dataprefix.mac);
+						<< " gateway: " << DEVEUI2string(dataPrefix.mac);
 					onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 					pr = LORA_OK;
 				}
@@ -267,7 +267,7 @@ int UDPListener::parseBuffer
 						onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 					}
 					if (handler) {
-						handler->put(recievedTime, *itp);
+						handler->put(receivedTime, *itp);
 					} else {
 						if (onLog) {
 							std::stringstream ss;

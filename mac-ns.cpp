@@ -392,32 +392,45 @@ int main(
 	if (identityService.init(config->serverConfig.identityStorageName, NULL) != 0) {
 		std::cerr << ERR_MESSAGE << identityService.errmessage << std::endl;
 	}
-	if (config->serverConfig.verbosity > 2)
-		std::cerr << "Devices: " << std::endl <<identityService.toJsonString() << std::endl;
 
+    if (config->serverConfig.verbosity > 2) {
+        std::vector<NetworkIdentity> identities;
+        std::cerr << MSG_DEVICES << std::endl;
+        identityService.list(identities, 0, 0);
+        for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
+            std::cerr << "\t" << DEVADDR2string(it->devaddr)
+                      << "\t" << DEVEUI2string(it->deviceEUI)
+                      << "\t" << DEVICENAME2string(it->name);
+            if (identityService.canControlService(it->devaddr))
+                std::cerr << "\tmaster";
+            std::cerr << std::endl;
+        }
+    }
 
 	// try to find out master EUI
 	if (!master_eui.empty()) {
 		std::vector <std::string> master_euis;
 		master_euis.push_back(master_eui);
 		if (identityService.parseIdentifiers(masterDevEUIs, master_euis, false)) {
-			std::cerr << ERR_INVALID_DEVICE_EUI << " " << master_eui << std::endl;
+			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_DEVICE_EUI << ": " << ERR_INVALID_DEVICE_EUI << " " << master_eui << std::endl;
 			exit(ERR_CODE_INVALID_DEVICE_EUI);
 		}
 	}
 
 	// .. or by name
 	if (!master_devicename.empty()) {
-		std::vector <std::string> master_devicenames;
-		master_devicenames.push_back(master_devicename);
-		if (identityService.parseNames(masterDevEUIs, master_devicenames, false)) {
-			std::cerr << ERR_INVALID_DEVICE_EUI << " " << master_eui << std::endl;
-			exit(ERR_CODE_INVALID_DEVICE_EUI);
+		std::vector <std::string> masterDeviceNames;
+		masterDeviceNames.push_back(master_devicename);
+		if (identityService.parseNames(masterDevEUIs, masterDeviceNames, false)) {
+            std::cerr << ERR_MESSAGE << ERR_CODE_DEVICE_NAME_NOT_FOUND << ": "
+                << ERR_DEVICE_NAME_NOT_FOUND << " (name: " << master_devicename << ")" << std::endl;
+			exit(ERR_CODE_DEVICE_NAME_NOT_FOUND);
 		}
 	}
 
 	if (masterDevEUIs.empty()) {
-		std::cerr << ERR_CONTROL_DEVICE_NOT_FOUND << std::endl;
+        std::cerr << ERR_MESSAGE << ERR_CODE_CONTROL_DEVICE_NOT_FOUND << ": " << ERR_CONTROL_DEVICE_NOT_FOUND
+            << "(" << master_eui << master_devicename << ")" << std::endl;
 		exit(ERR_CODE_CONTROL_DEVICE_NOT_FOUND);
 	}
 
@@ -509,7 +522,7 @@ int main(
 	// master device
 	NetworkIdentity masterNetId;
 	if (identityService.getNetworkIdentity(masterNetId, masterDevEUIs[0].eui) != 0) {
-		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
+		std::cerr << ERR_MESSAGE <<  ERR_CODE_INVALID_DEVICE_EUI << ": " << ERR_INVALID_DEVICE_EUI << std::endl;
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
 	}
 
