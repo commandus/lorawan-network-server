@@ -428,8 +428,7 @@ class SemtechUDPPacket {
 private:
 	void clearPrefix();
 	int parseData(const std::string &data, IdentityService *identityService);
-	std::string toTxImmediatelyJsonString(
-        const DEVEUI *gwId,
+	std::string toTxJsonString(
 		const std::string &payloadString,
 		uint32_t receivedTime,
 		const int power = 14

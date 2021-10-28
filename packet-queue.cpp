@@ -410,7 +410,15 @@ int PacketQueue::replyMAC(
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
 		return ERR_CODE_GATEWAY_NOT_FOUND;
 	}
-	
+
+    if (gwit->second.socket == 0) {
+        std::stringstream ss;
+        ss << ERR_GATEWAY_NO_YET_PULL_DATA << gatewayId2str(gwa);
+        if (onLog)
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NO_YET_PULL_DATA, ss.str());
+        return ERR_CODE_GATEWAY_NO_YET_PULL_DATA;
+    }
+
 	// get MAC commands
 	MacPtr macPtr(item.packet.getMACs());
 	// print out
@@ -478,8 +486,8 @@ std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 	if (onLog) {
 		if (r != response.size()) {
 			std::stringstream ss;
-			ss << ERR_CODE_REPLY_MAC
-				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
+			ss << ERR_MESSAGE << ERR_CODE_REPLY_MAC << ERR_REPLY_MAC
+				<< " socket " << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
 			if (r == -1)
 				ss << ", sent " << r << " of " << response.size();
 			ss << ", errno: " << errno << ": " << strerror(errno);

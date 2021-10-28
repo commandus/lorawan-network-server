@@ -538,6 +538,7 @@ int main(
 			// compose packet
 			SemtechUDPPacket packet;
 			rfmMetaData rfmMD;
+            rfmMD.setDatr("SF7BW125");
 			packet.metadata.push_back(rfmMD);
 			// packet.setFOpts(macdatabin);
 			packet.header.fport = fport;

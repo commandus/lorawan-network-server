@@ -101,6 +101,7 @@
 #define ERR_CODE_DUPLICATED_PACKET			-585
 #define ERR_CODE_INIT_GW_STAT   			-586
 #define ERR_CODE_DEVICE_NAME_NOT_FOUND      -587
+#define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -588
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -198,6 +199,7 @@
 #define ERR_DUPLICATED_PACKET			"Packet is duplicated"
 #define ERR_INIT_GW_STAT   			    "Gateway statistics log initialization error "
 #define ERR_DEVICE_NAME_NOT_FOUND       "Device name not found"
+#define ERR_GATEWAY_NO_YET_PULL_DATA    "Gateway does not sent PULL_DATA request, can not send to gateway "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

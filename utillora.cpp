@@ -465,6 +465,7 @@ std::string rfmMetaData::datr() const
 			break;
 	}
 	std::stringstream ss;
+    // e.g. SF7BW203
 	ss << "SF" << (int) spreadingFactor 
 		<< "BW"  << bandwithValue;
 	return ss.str();
@@ -708,7 +709,7 @@ const char* METADATA_TX_NAMES[16] = {
 	"rfch", // 5 number   Concentrator "RF chain" used for TX (unsigned integer)
 	"powe", // 6 number   TX output power in dBm (unsigned integer, dBm precision)
 	"modu", // 7 string   Modulation identifier "LORA" or "FSK"
-	"datr", // 8 string or number  LoRa datarate identifier (eg. SF12BW500) or FSK datarate (unsigned, in bits per second)
+	"datr", // 8 string or number  LoRa data rate identifier (eg. SF12BW500) or FSK datarate (unsigned, in bits per second)
 	"codr", // 9 string  LoRa ECC coding rate identifier
 	"fdev", // 10 number FSK frequency deviation (unsigned integer, in Hz) 
 	"ipol", // 11 bool   Lora modulation polarization inversion
@@ -1787,9 +1788,8 @@ uint64_t SemtechUDPPacket::getBestGatewayAddress(
  * @param power transmission power
  * @return JSON serialized metadata and payloadString
  */
-std::string SemtechUDPPacket::toTxImmediatelyJsonString
+std::string SemtechUDPPacket::toTxJsonString
 (
-    const DEVEUI *gwId,
 	const std::string &payloadString,
 	uint32_t receivedTime,
 	const int power
@@ -1799,14 +1799,12 @@ std::string SemtechUDPPacket::toTxImmediatelyJsonString
 		return "";
 	int rfCh = 0;
 	int metadataIdx = 0;
-	SEMTECH_PREFIX_GW pullPrefix;
-	memmove(&pullPrefix, &prefix, sizeof(SEMTECH_PREFIX_GW));
+	SEMTECH_PREFIX pullPrefix;
+	memmove(&pullPrefix, &prefix, sizeof(SEMTECH_PREFIX));
 	pullPrefix.tag = 3; // PULL_RESP, after receiving PULL_DATA
-    if (gwId)
-        memmove(&pullPrefix.mac, gwId, sizeof(DEVEUI));
-	
+
 	std::stringstream ss;
-	ss << std::string((const char *) &pullPrefix, gwId ? sizeof(SEMTECH_PREFIX_GW) : sizeof(SEMTECH_PREFIX))
+	ss << std::string((const char *) &pullPrefix, sizeof(SEMTECH_PREFIX))
 		<< "{\"txpk\":{";
 	if (receivedTime == 0)
 		ss << "\"" << METADATA_TX_NAMES[1] << "\":true";
@@ -1814,8 +1812,9 @@ std::string SemtechUDPPacket::toTxImmediatelyJsonString
 		uint32_t sendTime = receivedTime + 1000000;
 		ss << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
 	}
-	ss << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
-        << ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfCh		// Concentrator "RF chain" used for TX (unsigned integer)
+
+	ss << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()       // "868.900"
+        << ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfCh	// Concentrator "RF chain" used for TX (unsigned integer)
 		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
 		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
 		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
@@ -1825,7 +1824,7 @@ std::string SemtechUDPPacket::toTxImmediatelyJsonString
 		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payloadString.size()
         << ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payloadString) << "\"}}";
 	
-	std::cerr << "SemtechUDPPacket::toTxImmediatelyJsonString {\"txpk\":{" ;
+	std::cerr << "SemtechUDPPacket::toTxJsonString {\"txpk\":{" ;
 	if (receivedTime == 0)
 		std::cerr << "\"" << METADATA_TX_NAMES[1] << "\":true";
 	else {
@@ -1886,13 +1885,13 @@ std::string SemtechUDPPacket::mkPullResponse(
 
 	// encrypt frame payload
 	int direction = 1;	// downlink
-	std::string frmpayload(data);
-	size_t psize = frmpayload.size();
+	std::string frmPayload(data);
+	size_t psize = frmPayload.size();
 	if (deviceid.version.minor == 1) {
-		encryptPayload(frmpayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);	// network key
+		encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);	// network key
 	}
 
-	std::stringstream smsg;
+	std::stringstream sMsg;
 
 	// replace direction: MTYPE_UNCONFIRMED_DATA_UP to MTYPE_UNCONFIRMED_DATA_DOWN
 	rfmHeader.header.macheader.f.mtype = MTYPE_UNCONFIRMED_DATA_DOWN;
@@ -1902,15 +1901,15 @@ std::string SemtechUDPPacket::mkPullResponse(
 	if (psize <= 15) {
 		// use FOpts
 		rfmHeader.header.fctrl.f.foptslen = psize;
-		// device controled by service
+		// device controlled by service
 		rfmHeader.header.fctrl.f.adr = 1;
-		smsg << rfmHeader.toBinary();
+		sMsg << rfmHeader.toBinary();
 	} else {
 		// use FrmPayload
-		smsg << rfmHeader.toBinary();
-		smsg << (uint8_t) 0;	// fport 0- MAC payload
+		sMsg << rfmHeader.toBinary();
+		sMsg << (uint8_t) 0;	// fport 0- MAC payload
 	}
-	smsg << frmpayload;
+	sMsg << frmPayload;
 
 	std::cerr << "==Address: " << DEVADDR2string(rfmHeader.header.devaddr) << std::endl;
 	std::cerr << "==FCnt:  " << rfmHeader.header.fcnt << std::endl;
@@ -1918,11 +1917,11 @@ std::string SemtechUDPPacket::mkPullResponse(
 	std::cerr << "=Header: " << hexString(rfmHeader.toBinary()) << std::endl;
 	std::cerr << "==Data:  " << hexString(data) << std::endl;
 
-	std::string msg = smsg.str();
+	std::string msg = sMsg.str();
 	// calc mic
 	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);
-	smsg << std::string((char *) &mic, 4);
-	return toTxImmediatelyJsonString(NULL, smsg.str(), recievedTime, power);
+	sMsg << std::string((char *) &mic, 4);
+	return toTxJsonString(sMsg.str(), recievedTime, power);
 }
 
 /**
@@ -1948,7 +1947,7 @@ std::string SemtechUDPPacket::mkMACRequest(
 	// encrypt frame payload
 	int direction = 0;	// uplink
 	std::string frmPayload(data);
-	size_t psize = frmPayload.size();
+	size_t pSize = frmPayload.size();
 
 	rfmHeader.header.fcnt = fCnt;
 	rfmHeader.header.macheader.f.mtype = MTYPE_UNCONFIRMED_DATA_DOWN;
@@ -1961,9 +1960,9 @@ std::string SemtechUDPPacket::mkMACRequest(
 	std::stringstream ssMsg;
 	// replace direction: MTYPE_UNCONFIRMED_DATA_UP to MTYPE_UNCONFIRMED_DATA_DOWN
 
-	if (psize <= 15) {
+	if (pSize <= 15) {
 		// use FOpts
-		rfmHeader.header.fctrl.f.foptslen = psize;
+		rfmHeader.header.fctrl.f.foptslen = pSize;
 		// device controlled by service
 		rfmHeader.header.fctrl.f.adr = 1;
 		ssMsg << rfmHeader.toBinary();
@@ -1985,7 +1984,7 @@ std::string SemtechUDPPacket::mkMACRequest(
 	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt,
 		direction, rfmHeader.header.devaddr, networkId.nwkSKey);
 	ssMsg << std::string((char *) &mic, 4);
-	return toTxImmediatelyJsonString(gwId, ssMsg.str(), receivedTime, power);
+	return toTxJsonString(ssMsg.str(), 0, power);
 }
 
 /**
