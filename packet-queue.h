@@ -48,7 +48,7 @@ class SemtechUDPPacketItem {
 			int socket,
 			ITEM_PROCESS_MODE mode,
 			const struct timeval &time,
-			const SemtechUDPPacket &packet
+			const SemtechUDPPacket &aPacket
 		);
 		std::string toString() const;
 };

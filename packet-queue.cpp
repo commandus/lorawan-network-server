@@ -30,9 +30,9 @@ SemtechUDPPacketItem::SemtechUDPPacketItem(
 	int socket,
 	ITEM_PROCESS_MODE mode,
 	const struct timeval &time,
-	const SemtechUDPPacket &apacket
+	const SemtechUDPPacket &aPacket
 )
-	: processMode(mode), timeAdded(time), packet(apacket)
+	: processMode(mode), timeAdded(time), packet(aPacket)
 {
 	
 }
@@ -133,8 +133,8 @@ void PacketQueue::push(
 		ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time);
 		onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
 	}
+    SemtechUDPPacketItem item(socket, mode, time, value);
 
-	SemtechUDPPacketItem item(socket, mode, time, value);
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();
 	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
@@ -152,10 +152,13 @@ void PacketQueue::push(
 			{
 				if (itp->packet.header.fport == value.header.fport) 
 				{
-					// we need metadata only for calc best gateway with strongest signal
-					if (value.metadata.size())
-						// copy gateway MAC address
-						itp->packet.metadata.push_back(rfmMetaData(&value.prefix, value.metadata[0]));
+					// we need metadata only for calc the best gateway with the strongest signal
+					if (value.metadata.size()) {
+                        // copy gateway MAC address
+                        itp->packet.metadata.push_back(rfmMetaData(&value.prefix, value.metadata[0]));
+                        itp->packet.header.fopts = item.packet.header.fopts;
+                        itp->packet.header.header.fctrl.f.foptslen = item.packet.header.header.fctrl.f.foptslen;
+                    }
 					found = true;
 					break;
 				}

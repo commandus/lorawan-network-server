@@ -72,6 +72,33 @@ int LoraPacketProcessor::enqueueControl(
 	return LORA_OK;
 }
 
+
+/**
+ * @param time receive time
+ * @param value Semtech packet
+ * @return 0- success
+ */
+int LoraPacketProcessor::putMACRequests(
+        const struct timeval &time,
+        SemtechUDPPacket &value
+)
+{
+    value.header.fport = 0;
+    std::string ms = "\6";
+    size_t sz = ms.size();
+    value.header.header.fctrl.f.foptslen = sz;
+    memmove(&value.header.fopts, ms.c_str(), sz);
+
+    std::stringstream ss;
+    ss << "Put MAC commands size " << sz << " data "
+        << hexString(value.getMACs())  << " from "
+       << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+       << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI);
+    onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+
+    return LORA_OK;
+}
+
 /**
  * @param time receive time
  * @param value Semtech packet
@@ -83,12 +110,14 @@ int LoraPacketProcessor::enqueueMAC(
 )
 {
 	std::stringstream ss;
-	std::string p = value.getMACs();
-	ss << MSG_MAC_COMMAND_RECEIVED 
+	std::string macs = value.getMACs();
+    value.payload = "";
+	ss << MSG_MAC_COMMAND_RECEIVED
 		<< UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
 		<< ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " 
-		// << " " << value.devId.toJsonString() << ", " 
-		<< "payload: " << hexString(p);
+		// << " " << value.devId.toJsonString()
+        << ", payload: " << hexString(value.payload)
+        << ", MACs: " << hexString(macs);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
 	// wait until gateways all send packet
@@ -191,8 +220,11 @@ int LoraPacketProcessor::put
 			// device has been identified
 			if (deviceHistoryService)				// collect statistics if statistics collector is running
 				deviceHistoryService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
-			if (packet.hasApplicationPayload()) // store payload to the database(s) if exists
-				enqueuePayload(time, packet);
+			if (packet.hasApplicationPayload()) {   // store payload to the database(s) if exists
+                enqueuePayload(time, packet);
+                putMACRequests(time, packet);
+            }
+
 			if (packet.hasMACPayload())			// provide MAC reply to the end-device if MAC command present in the packet
 				enqueueMAC(time, packet);
 		}

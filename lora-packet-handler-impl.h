@@ -77,6 +77,10 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
                 const struct timeval &time,
                 SemtechUDPPacket &value
 		);
+        int putMACRequests(
+                const struct timeval &time,
+                SemtechUDPPacket &value
+        );
 		/**
 		 * Enqueue control network service message
 		 * @param time receive time

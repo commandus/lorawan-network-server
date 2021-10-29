@@ -399,8 +399,11 @@ public:
 	uint8_t fport;
 
 	RFMHeader();
+    RFMHeader(
+            const RFMHeader &rfmHeader
+    );
 	RFMHeader(
-		const RFM_HEADER &headerRADIO
+		const RFM_HEADER &rfmHeader
 	);
 	RFMHeader(
 		const DEVADDR &addr
@@ -470,6 +473,7 @@ public:
 		IdentityService *identityService
 	);
 	SemtechUDPPacket();
+    SemtechUDPPacket(const SemtechUDPPacket &value);
 	// Called from parse()
 	SemtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_PREFIX_GW *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
 	// TODO I dont remember what is it for

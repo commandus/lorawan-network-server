@@ -1044,12 +1044,23 @@ std::string rfmMetaData::toJsonString(
 
 RFMHeader::RFMHeader() {
 	memset(&header, 0, sizeof(RFM_HEADER));
+    memset(&fopts, 0, sizeof(FOPTS));
+    fport = 0;
+}
+
+RFMHeader::RFMHeader(
+        const RFMHeader &value
+) {
+    memmove(&header, &value.header, sizeof(RFM_HEADER));
+    memmove(&fopts, &value.fopts, sizeof(FOPTS));
+    fport = value.fport;
 }
 
 RFMHeader::RFMHeader(
 	const RFM_HEADER &hdr
 ) {
 	memmove(&header, &hdr, sizeof(RFM_HEADER));
+    fport = 0;
 }
 
 RFMHeader::RFMHeader(
@@ -1058,6 +1069,7 @@ RFMHeader::RFMHeader(
 	memset(&header, 0, sizeof(RFM_HEADER));
 	memcpy(&header.devaddr, &addr, sizeof(DEVADDR));
 	header.macheader.i = 0x40;
+    fport = 0;
 }
 
 RFMHeader::RFMHeader(
@@ -1154,6 +1166,18 @@ SemtechUDPPacket::SemtechUDPPacket()
 
 	memset(&header.header.devaddr, 0, sizeof(DEVADDR));
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
+}
+
+SemtechUDPPacket::SemtechUDPPacket(const SemtechUDPPacket &value)
+{
+    payload = value.payload;
+    header = value.header;
+    metadata  = value.metadata;
+    memmove(&gatewayAddress, &value.gatewayAddress, sizeof(struct sockaddr_in6));
+    errcode = value.errcode;
+    downlink = value.downlink;
+    memmove(&prefix, &value.prefix, sizeof(SEMTECH_PREFIX_GW));
+    devId = value.devId;
 }
 
 char *SemtechUDPPacket::getSemtechJSONCharPtr
@@ -1741,7 +1765,7 @@ int SemtechUDPPacket::parseData(
 
 bool SemtechUDPPacket::hasMACPayload() const
 {
-	// Packet with payload can contains FOpts up to 15 bytes
+	// Packet with payload can contain FOpts up to 15 bytes
 	if (header.header.fctrl.f.foptslen)
 		return true;
 	// Or MAC can be in the payload of type(FPort) 0
