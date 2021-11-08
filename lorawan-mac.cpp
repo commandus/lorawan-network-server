@@ -1826,6 +1826,7 @@ void MacPtr::parse(
 {
 	MAC_COMMAND *m;
 	int r;
+    std::cerr << "MacPtr::parse " << hexString(parseData) << std::endl;
 	const char *p = parseData.c_str();
 	size_t sz = parseData.size();
 	while (sz > 0)

@@ -547,7 +547,7 @@ public:
 	uint32_t tmst();	// return received time in microsends
 	uint32_t tmms();	// return received GPS time, can be 0
 
-	std::string getMACs();
+	std::string getMACs() const;
 
 };
 

@@ -133,7 +133,9 @@ void PacketQueue::push(
 		ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time);
 		onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
 	}
+    std::cerr << "=== push value: " << value.toJsonString() << std::endl;
     SemtechUDPPacketItem item(socket, mode, time, value);
+    std::cerr << "=== item: " << item.packet.toJsonString() << std::endl;
 
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();
@@ -168,7 +170,7 @@ void PacketQueue::push(
 				packets[a].packets.push_back(item);
 		}
 	} else {
-		// this is first packet recieved from the device
+		// this is first packet received from the device
 		packets[a].packets.push_back(item);
 		addrs.push_back(a);
 	}
@@ -398,7 +400,7 @@ int PacketQueue::replyMAC(
 	// .. MAC
 	if (!item.packet.hasMACPayload()){
 		std::stringstream ss;
-		ss << ERR_NO_MAC;
+		ss << ERR_NO_MAC << ", packet: " << item.packet.toJsonString();
 		if (onLog)
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 		return ERR_CODE_NO_MAC;

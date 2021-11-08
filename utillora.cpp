@@ -1683,7 +1683,7 @@ std::string SemtechUDPPacket::toJsonString() const
 			<< ", \"payload_size\": " << payload.size();
 
 	if (hasMACPayload()) {
-		MacPtr macPtr(payload);
+		MacPtr macPtr(getMACs());
 		ss << ", \"mac\": " << (macPtr.toJSONString());
 		if (macPtr.errorcode) {
 			ss << ", \"mac_error_code\": " << macPtr.errorcode
@@ -2033,8 +2033,7 @@ uint32_t SemtechUDPPacket::tmms()
 	return it->tmms();
 }
 
-std::string SemtechUDPPacket::getMACs()
-{
+std::string SemtechUDPPacket::getMACs() const {
 	if (header.header.fctrl.f.foptslen)
 		return std::string((const char *) &header.fopts, header.header.fctrl.f.foptslen);
 	// Or MAC can be in the payload of type(FPort) 0
