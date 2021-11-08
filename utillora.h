@@ -547,8 +547,10 @@ public:
 	uint32_t tmst();	// return received time in microsends
 	uint32_t tmms();	// return received GPS time, can be 0
 
+    bool isPayloadMAC() const;
 	std::string getMACs() const;
 
+    void appendMACs(const std::string &macsString);
 };
 
 uint64_t deveui2int(const DEVEUI &value);

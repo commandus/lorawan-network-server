@@ -133,9 +133,7 @@ void PacketQueue::push(
 		ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time);
 		onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
 	}
-    std::cerr << "=== push value: " << value.toJsonString() << std::endl;
     SemtechUDPPacketItem item(socket, mode, time, value);
-    std::cerr << "=== item: " << item.packet.toJsonString() << std::endl;
 
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();

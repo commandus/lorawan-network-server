@@ -2033,6 +2033,11 @@ uint32_t SemtechUDPPacket::tmms()
 	return it->tmms();
 }
 
+bool SemtechUDPPacket::isPayloadMAC() const
+{
+    return (header.fport == 0) && (payload.size() > 0);
+}
+
 std::string SemtechUDPPacket::getMACs() const {
 	if (header.header.fctrl.f.foptslen)
 		return std::string((const char *) &header.fopts, header.header.fctrl.f.foptslen);
@@ -2046,6 +2051,19 @@ std::string SemtechUDPPacket::getMACs() const {
 	return "";
 }
 
+void SemtechUDPPacket::appendMACs(const std::string &macsString) {
+    size_t szInsert = macsString.size();
+    std::string macs = getMACs();
+    size_t szExists = macs.size();
+    size_t szNew = szExists + szInsert;
+    bool forcePayload = szNew > 15;
+    if (forcePayload || isPayloadMAC()) {
+        payload += macsString;
+    } else {
+        memmove(&header.fopts + szExists, macsString.c_str(), szInsert);
+        header.header.fctrl.f.foptslen = szNew;
+    }
+}
 
 uint64_t deveui2int(
 	const DEVEUI &value

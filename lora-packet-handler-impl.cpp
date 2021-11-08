@@ -83,17 +83,13 @@ int LoraPacketProcessor::putMACRequests(
         SemtechUDPPacket &value
 )
 {
-    value.header.fport = 0;
     std::string ms = "\6";
-    size_t sz = ms.size();
-    value.header.header.fctrl.f.foptslen = sz;
-    memmove(&value.header.fopts, ms.c_str(), sz);
-
+    value.appendMACs(ms);
     std::stringstream ss;
-    ss << "Put MAC commands size " << sz << " data "
+    ss << "Put MAC commands size " << ms.size() << " data "
         << hexString(value.getMACs())  << " from "
-       << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-       << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI);
+        << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI);
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
     return LORA_OK;
@@ -109,7 +105,6 @@ int LoraPacketProcessor::enqueueMAC(
         SemtechUDPPacket &value
 )
 {
-    std::cerr << "===1: " << value.toJsonString() << std::endl;
 	std::stringstream ss;
 	std::string macs = value.getMACs();
 	ss << MSG_MAC_COMMAND_RECEIVED
@@ -119,14 +114,11 @@ int LoraPacketProcessor::enqueueMAC(
         << ", payload: " << hexString(value.payload)
         << ", MACs: " << hexString(macs);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
-    std::cerr << "=====2: " << value.toJsonString() << std::endl;
 	// wait until gateways all send packet
 	struct timeval t;
 	t.tv_sec = time.tv_sec;
 	t.tv_usec = time.tv_usec;
 	incTimeval(t, 0, DEF_TIMEOUT_US);
-    std::cerr << "=====3: " << value.toJsonString() << std::endl;
-    std::cerr << "===11: " << value.toJsonString() << std::endl;
 	packetQueue.push(0, MODE_REPLY_MAC, t, value);
 	packetQueue.wakeUp();
 	return LORA_OK;
@@ -229,7 +221,6 @@ int LoraPacketProcessor::put
 
 			if (packet.hasMACPayload()) {
                 // provide MAC reply to the end-device if MAC command present in the packet
-                std::cerr << "=== 00: " << packet.toJsonString() << std::endl;
                 enqueueMAC(time, packet);
             }
 		}
