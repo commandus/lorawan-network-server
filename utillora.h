@@ -268,6 +268,13 @@ typedef ALIGN struct {
 	uint8_t release: 4;		// no matter
 } PACKED LORAWAN_VERSION;	// 1 byte
 
+// Regional paramaters version e.g. RP002-1.0.0, RP002-1.0.1
+typedef ALIGN struct {
+    uint8_t major: 2;		// always 1
+    uint8_t minor: 2;		// 0 or 1
+    uint8_t release: 4;		// no matter
+} PACKED REGIONAL_PARAMETERS_VERSION;	// 1 byte
+
 std::string LORAWAN_VERSION2string
 (
 	LORAWAN_VERSION value
@@ -365,7 +372,7 @@ public:
 	SPREADING_FACTOR spreadingFactor;
  	CODING_RATE codingRate;
 
-	uint32_t bps;				// FSK bite per second
+	uint32_t bps;				// FSK bits per second
 	int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
 	float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
 	rfmMetaData();
@@ -648,5 +655,18 @@ const char *getTXAckCodeName
 (
 	ERR_CODE_TX code
 );
+
+std::string MODULATION2String(MODULATION value);
+MODULATION string2MODULATION(const char *value);
+
+/**
+ * TODO nor sure for BW_7KHZ..BW_125KHZ
+ * @see https://github.com/x893/SX1231/blob/master/SX12xxDrivers-2.0.0/src/radio/sx1276-LoRa.c
+ * SignalBw
+ * 0: 7.8kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
+ * 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved
+ */
+std::string BANDWIDTH2String(BANDWIDTH value);
+BANDWIDTH string2BANDWIDTH(const char *value);
 
 #endif

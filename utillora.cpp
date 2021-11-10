@@ -641,22 +641,13 @@ uint32_t rfmMetaData::tmms() const
 
 std::string rfmMetaData::modulation() const
 {
-	switch (modu)
-	{
-	case FSK:
-		return "FSK";
-	default:
-		return "LORA";
-	}
+    return MODULATION2String(modu);
 }
 
 void rfmMetaData::setModulation(
 	const char *value
 ) {
-	if (strcmp(value, "FSK") == 0)
-		modu = FSK;
-	else
-		modu = LORA;
+    modu = string2MODULATION(value);
 }
 
 std::string rfmMetaData::frequency() const
@@ -1935,7 +1926,8 @@ std::string SemtechUDPPacket::mkPullResponse(
 	}
 	sMsg << frmPayload;
 
-	std::cerr << "==Address: " << DEVADDR2string(rfmHeader.header.devaddr) << std::endl;
+    std::cerr << "== mkPullResponse" << std::endl;
+    std::cerr << "==Address: " << DEVADDR2string(rfmHeader.header.devaddr) << std::endl;
 	std::cerr << "==FCnt:  " << rfmHeader.header.fcnt << std::endl;
 	std::cerr << "=Header: " << rfmHeader.toJson() << std::endl;
 	std::cerr << "=Header: " << hexString(rfmHeader.toBinary()) << std::endl;
@@ -2059,8 +2051,11 @@ void SemtechUDPPacket::appendMACs(const std::string &macsString) {
     bool forcePayload = szNew > 15;
     if (forcePayload || isPayloadMAC()) {
         payload += macsString;
+        memset(&header.fopts, 0, sizeof(FOPTS));
+        header.header.fctrl.f.foptslen = 0;
     } else {
-        memmove(&header.fopts + szExists, macsString.c_str(), szInsert);
+        std::cerr << "====" << hexString(macsString.c_str()) << std::endl;
+        memmove(&header.fopts.fopts[szExists], macsString.c_str(), szInsert);
         header.header.fctrl.f.foptslen = szNew;
     }
 }
@@ -2335,3 +2330,80 @@ LORAWAN_VERSION string2LORAWAN_VERSION
 	LORAWAN_VERSION r = { (uint8_t) (ma & 3), (uint8_t) (mi & 3), (uint8_t) (re & 0xf) };
 	return r;
   }
+
+    std::string MODULATION2String(MODULATION value)
+    {
+        switch (value)
+        {
+            case FSK:
+                return "FSK";
+            default:
+                return "LORA";
+        }
+    }
+
+    MODULATION string2MODULATION(const char *value)
+    {
+        if (strcmp(value, "FSK") == 0)
+            return FSK;
+        else
+            return LORA;
+    }
+
+std::string BANDWIDTH2String(BANDWIDTH value) {
+    switch (value) {
+        case BW_7KHZ:
+            return "7.8";
+        case BW_10KHZ:
+            return "10.4";
+        case BW_15KHZ:
+            return "15.6";
+        case BW_20KHZ:
+            return "20.8";
+        case BW_31KHZ:
+            return "31.2";
+        case BW_41KHZ:
+            return "41.6";
+        case BW_62KHZ:
+            return "62.5";
+        case BW_125KHZ:
+            return "125";
+        case BW_200KHZ:
+            return "200";
+        case BW_400KHZ:
+            return "400";
+        case BW_800KHZ:
+            return "800";
+        case BW_1600KHZ:
+            return "1600";
+
+    }
+}
+
+BANDWIDTH string2BANDWIDTH(const char *value)
+{
+    if (strcmp(value, "7.8") == 0)
+        return BW_7KHZ;
+    if (strcmp(value, "10.4") == 0)
+        return BW_10KHZ;
+    if (strcmp(value, "15.6") == 0)
+        return BW_15KHZ;
+    if (strcmp(value, "20.8") == 0)
+        return BW_20KHZ;
+    if (strcmp(value, "31.2") == 0)
+        return BW_31KHZ;
+    if (strcmp(value, "41.6") == 0)
+        return BW_41KHZ;
+    if (strcmp(value, "62.5") == 0)
+        return BW_62KHZ;
+    if (strcmp(value, "125") == 0)
+        return BW_125KHZ;
+    if (strcmp(value, "200") == 0)
+        return BW_200KHZ;
+    if (strcmp(value, "400") == 0)
+        return BW_400KHZ;
+    if (strcmp(value, "800") == 0)
+        return BW_800KHZ;
+    if (strcmp(value, "1600") == 0)
+        return BW_1600KHZ;
+}

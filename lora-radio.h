@@ -23,7 +23,7 @@ typedef enum {
     BW_62KHZ  = 6,   // 62.5
     BW_125KHZ  = 7,   // 125
 
-    BW_200KHZ  = 8,
+    BW_200KHZ  = 8, // 9 -> 300?
     BW_400KHZ  = 10,
     BW_800KHZ  = 12,    // default?
     BW_1600KHZ = 13
@@ -49,6 +49,8 @@ typedef enum {
     CRLORA_LI_4_6 = 0x06,
     CRLORA_LI_4_8 = 0x07
 } CODING_RATE;
+
+#define DATA_RATE_SIZE 8
 
 typedef enum {
     TXSTATUS_UNKNOWN,

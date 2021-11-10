@@ -86,8 +86,8 @@ int LoraPacketProcessor::putMACRequests(
     std::string ms = "\6";
     value.appendMACs(ms);
     std::stringstream ss;
-    ss << "Put MAC commands size " << ms.size() << " data "
-        << hexString(value.getMACs())  << " from "
+    ss << "Put MAC commands " << hexString(ms) << ", size " << ms.size() << ", MACs: "
+        << hexString(value.getMACs())  << " to be send to  "
         << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
         << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI);
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
@@ -216,12 +216,14 @@ int LoraPacketProcessor::put
 				deviceHistoryService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
 			if (packet.hasApplicationPayload()) {   // store payload to the database(s) if exists
                 enqueuePayload(time, packet);
-                putMACRequests(time, packet);
             }
 
 			if (packet.hasMACPayload()) {
                 // provide MAC reply to the end-device if MAC command present in the packet
                 enqueueMAC(time, packet);
+            } else {
+                // request MAC
+                putMACRequests(time, packet);
             }
 		}
 	} else {
