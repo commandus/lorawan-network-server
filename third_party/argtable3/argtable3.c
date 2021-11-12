@@ -338,7 +338,7 @@ char    *optarg;		/* argument associated with option */
 #define FLAG_ALLARGS	0x02	/* treat non-options as args to option "-1" */
 #define FLAG_LONGONLY	0x04	/* operate as getopt_long_only */
 
-/* return values */
+/* return bands */
 #define	BADCH		(int)'?'
 #define	BADARG		((*options == ':') ? (int)':' : (int)'?')
 #define	INORDER 	(int)1
@@ -4020,7 +4020,7 @@ char * alloc_shortoptions(struct arg_hdr * *table)
         char *res = result;
 
         /* add a leading ':' so getopt return codes distinguish    */
-        /* unrecognised option and options missing argument values */
+        /* unrecognised option and options missing argument bands */
         *res++ = ':';
 
         for(tabindex = 0; !(table[tabindex]->flag & ARG_TERMINATOR); tabindex++)
@@ -4566,7 +4566,7 @@ void arg_cat_optionv(char *dest,
 }
 
 
-/* this function should be deprecated because it doesnt consider optional argument values (ARG_HASOPTVALUE) */
+/* this function should be deprecated because it doesnt consider optional argument bands (ARG_HASOPTVALUE) */
 void arg_print_option(FILE *fp,
                       const char *shortopts,
                       const char *longopts,
@@ -4576,7 +4576,7 @@ void arg_print_option(FILE *fp,
     char syntax[200] = "";
     suffix = suffix ? suffix : "";
 
-    /* there is no way of passing the proper optvalue for optional argument values here, so we must ignore it */
+    /* there is no way of passing the proper optvalue for optional argument bands here, so we must ignore it */
     arg_cat_optionv(syntax,
                     sizeof(syntax),
                     shortopts,
@@ -4592,7 +4592,7 @@ void arg_print_option(FILE *fp,
 
 /*
  * Print a GNU style [OPTION] string in which all short options that
- * do not take argument values are presented in abbreviated form, as
+ * do not take argument bands are presented in abbreviated form, as
  * in: -xvfsd, or -xvf[sd], or [-xvsfd]
  */
 static
@@ -4603,7 +4603,7 @@ void arg_print_gnuswitch(FILE *fp, struct arg_hdr * *table)
     char *format2 = " [-%c";
     char *suffix = "";
 
-    /* print all mandatory switches that are without argument values */
+    /* print all mandatory switches that are without argument bands */
     for(tabindex = 0;
         table[tabindex] && !(table[tabindex]->flag & ARG_TERMINATOR);
         tabindex++)
@@ -4616,7 +4616,7 @@ void arg_print_gnuswitch(FILE *fp, struct arg_hdr * *table)
         if (table[tabindex]->shortopts == NULL)
             continue;
 
-        /* skip options that take argument values */
+        /* skip options that take argument bands */
         if (table[tabindex]->flag & ARG_HASVALUE)
             continue;
 
@@ -4626,7 +4626,7 @@ void arg_print_gnuswitch(FILE *fp, struct arg_hdr * *table)
         format2 = "[%c";
     }
 
-    /* print all optional switches that are without argument values */
+    /* print all optional switches that are without argument bands */
     for(tabindex = 0;
         table[tabindex] && !(table[tabindex]->flag & ARG_TERMINATOR);
         tabindex++)
@@ -4639,7 +4639,7 @@ void arg_print_gnuswitch(FILE *fp, struct arg_hdr * *table)
         if (table[tabindex]->shortopts == NULL)
             continue;
 
-        /* skip args with values */
+        /* skip args with bands */
         if (table[tabindex]->flag & ARG_HASVALUE)
             continue;
 
@@ -4669,7 +4669,7 @@ void arg_print_syntax(FILE *fp, void * *argtable, const char *suffix)
         char syntax[200] = "";
         const char *shortopts, *longopts, *datatype;
 
-        /* skip short options without arg values (they were printed by arg_print_gnu_switch) */
+        /* skip short options without arg bands (they were printed by arg_print_gnu_switch) */
         if (table[tabindex]->shortopts &&
             !(table[tabindex]->flag & ARG_HASVALUE))
             continue;

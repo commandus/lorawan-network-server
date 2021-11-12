@@ -198,7 +198,7 @@ Server config:
 - readBufferSize UDP buffer size Default 4096.
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
 - daemonize false..true Indicates does network server starts as daemon or not
-- controlFPort 0: no remote control, 1..223- FPort values used by network service to control server. Default 0.
+- controlFPort 0: no remote control, 1..223- FPort bands used by network service to control server. Default 0.
 
 configFileName can used to load configuration from different location. 
 Do not use this parameter except when you really need it.
@@ -217,7 +217,7 @@ Example of lorawan-network-server.json:
 }
 ```
 
-Option "storageType" values are:
+Option "storageType" bands are:
 
 - json (default)
 - lmdb (file database)
@@ -229,7 +229,7 @@ Option "lmdb" is a little safer and suitable for low-memory installations.
 
 Option "txt" is slow and useful for debug only.
 
-Options "gwStatStorageType", "deviceStatStorageType" values are
+Options "gwStatStorageType", "deviceStatStorageType" bands are
 
 - file
 - post 
@@ -261,7 +261,7 @@ Option "messageQueueStorageName" set name of file name (or directory name).
 
 There messageQueueStorageType option determines how to keep received messages in the temporary queue.
 
-Option "messageQueueStorageType" values are:
+Option "messageQueueStorageType" bands are:
 
 - json (default)
 - lmdb (file database)
@@ -287,7 +287,7 @@ Other programs can put files to this directory and lorawan-network-server will p
 - ".hex" - payload each byte represented as hexadecimal two digits number
 - ".b64" - base64 encoded payload
 
-Option "messageQueueDirFormat" values are:
+Option "messageQueueDirFormat" bands are:
 
 - 0 or "bin" (default)
 - 1 or "hex"
@@ -487,7 +487,7 @@ You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
 
 ## Packet types sent by Semtech gateway
 
-Tag values:
+Tag bands:
 
 - 0 PUSH_DATA
 - 1 PUSH_ACK
@@ -542,7 +542,7 @@ Each element is object with members
 
 Name is used to find out appropriate database.
 
-Valid values for "type" are "sqlite3", "postgresql".
+Valid bands for "type" are "sqlite3", "postgresql".
 
 Connection for database type "sqlite3" is file name of SQLite database.
 

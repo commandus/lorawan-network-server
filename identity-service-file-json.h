@@ -24,29 +24,29 @@ class JsonFileIdentityService: public IdentityService {
 	public:
 		JsonFileIdentityService();
 		~JsonFileIdentityService();
-		int get(DEVADDR &devaddr, DeviceId &retval);
-		int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui);
+		int get(DEVADDR &devaddr, DeviceId &retval) override;
+		int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui) override;
 		// List entries
-		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size);
-		void put(DEVADDR &devaddr, DEVICEID &id);
-		void rm(DEVADDR &addr);
+		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size) override;
+		void put(DEVADDR &devaddr, DEVICEID &id) override;
+		void rm(DEVADDR &addr) override;
 		
-		int init(const std::string &option, void *data);
-		void flush();
-		void done();
+		int init(const std::string &option, void *data) override;
+		void flush() override;
+		void done() override;
 		int parseIdentifiers(
 			std::vector<TDEVEUI> &retval,
 			const std::vector<std::string> &list,
 			bool useRegex
-		);
+		) override;
 		int parseNames(
 			std::vector<TDEVEUI> &retval,
 			const std::vector<std::string> &list,
 			bool useRegex
-		);
+		) override;
 		bool canControlService(
 			const DEVADDR &addr
-		);
+		) override;
 
 		// debug only
 		std::string toJsonString();

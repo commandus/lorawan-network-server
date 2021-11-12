@@ -103,28 +103,28 @@ struct arg_int
 {
     struct arg_hdr hdr;      /* The mandatory argtable header struct */
     int count;               /* Number of matching command line args */
-    int *ival;               /* Array of parsed argument values */
+    int *ival;               /* Array of parsed argument bands */
 };
 
 struct arg_dbl
 {
     struct arg_hdr hdr;      /* The mandatory argtable header struct */
     int count;               /* Number of matching command line args */
-    double *dval;            /* Array of parsed argument values */
+    double *dval;            /* Array of parsed argument bands */
 };
 
 struct arg_str
 {
     struct arg_hdr hdr;      /* The mandatory argtable header struct */
     int count;               /* Number of matching command line args */
-    const char **sval;       /* Array of parsed argument values */
+    const char **sval;       /* Array of parsed argument bands */
 };
 
 struct arg_rex
 {
     struct arg_hdr hdr;      /* The mandatory argtable header struct */
     int count;               /* Number of matching command line args */
-    const char **sval;       /* Array of parsed argument values */
+    const char **sval;       /* Array of parsed argument bands */
 };
 
 struct arg_file
@@ -141,7 +141,7 @@ struct arg_date
     struct arg_hdr hdr;      /* The mandatory argtable header struct */
     const char *format;      /* strptime format string used to parse the date */
     int count;               /* Number of matching command line args */
-    struct tm *tmval;        /* Array of parsed time values */
+    struct tm *tmval;        /* Array of parsed time bands */
 };
 
 enum {ARG_ELIMIT=1, ARG_EMALLOC, ARG_ENOMATCH, ARG_ELONGOPT, ARG_EMISSARG};

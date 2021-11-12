@@ -2,14 +2,18 @@
 #define REGION_BAND_H_	1
 
 #include <string>
-#include <map>
 #include <vector>
 #include <inttypes.h>
 #include "utillora.h"
 #include "lora-radio.h"
 
+class RBJsonIntf {
+public:
+    virtual std::string toJsonString() const = 0;
+};
+
 // DataRate defines a data rate
-class DataRate {
+class DataRate : public RBJsonIntf {
 public:
     bool uplink;                        // data-rate can be used for uplink
     bool downlink;                      // data-rate can be used for downlink
@@ -21,11 +25,11 @@ public:
 
     DataRate();
     DataRate(const DataRate &value);
-    std::string toJsonString();
+    std::string toJsonString() const override;
 };
 
 // Channel
-class Channel {
+class Channel : public RBJsonIntf {
 public:
     int frequency;  // frequency in Hz
     int minDR;
@@ -34,11 +38,11 @@ public:
     bool custom;    // this channel was configured by the user
     Channel();
     Channel(const Channel &value);
-    std::string toJsonString();
+    std::string toJsonString() const override;
 };
 
-// BandDefaults defines the default values defined by a band.
-class BandDefaults {
+// BandDefaults defines the default bands defined by a band.
+class BandDefaults : public RBJsonIntf {
 public:
     // fixed frequency for the RX2 receive window
     int RX2Frequency;
@@ -54,28 +58,27 @@ public:
     int JoinAcceptDelay2;
     BandDefaults();
     BandDefaults(const BandDefaults &value);
-    std::string toJsonString();
+    std::string toJsonString() const override;
 };
 
 // MaxPayloadSize defines the max payload size
-class MaxPayloadSize {
+class MaxPayloadSize : public RBJsonIntf {
 public:
     uint8_t m;  // The maximum MACPayload size length
     uint8_t n;  // The maximum application payload length in the absence of the optional FOpt control field
     MaxPayloadSize();
     MaxPayloadSize(const MaxPayloadSize &value);
-    std::string toJsonString();
+    std::string toJsonString() const override;
 };
 
-class RegionBand
-{
+class RegionBand : public RBJsonIntf {
 public:
     std::string name;
     bool supportsExtraChannels;
     BandDefaults bandDefaults;
     DataRate dataRates[DATA_RATE_SIZE];
     MaxPayloadSize maxPayloadSizePerDataRate[DATA_RATE_SIZE];
-    MaxPayloadSize maxPayloadSizePerDataRateRepeator[DATA_RATE_SIZE];    // if repeater is used
+    MaxPayloadSize maxPayloadSizePerDataRateRepeater[DATA_RATE_SIZE];    // if repeater is used
     uint8_t rx1DataRateOffsets[DATA_RATE_SIZE];
     int8_t txPowerOffsets[DATA_RATE_SIZE];
 
@@ -84,17 +87,17 @@ public:
 
     RegionBand();
     RegionBand(const RegionBand &value);
-    std::string toJsonString();
+    std::string toJsonString() const override;
 };
 
-class RegionBands
-{
+class RegionBands : public RBJsonIntf {
 public:
     REGIONAL_PARAMETERS_VERSION regionalParametersVersion;  // since specified LoraWAN regional parameters version, if version 0.0.0- any(default) version
-    std::map<std::string, RegionBand> values;
+    std::vector<RegionBand> bands;
     RegionBands();
-    RegionBands(const RegionBands &config);
-    std::string toJsonString();
+    RegionBands(const RegionBands &value);
+    const RegionBand* get(const std::string &name) const;
+    std::string toJsonString() const override;
 };
 
 #endif

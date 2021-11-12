@@ -84,7 +84,7 @@ message FileDescriptorProto {
   optional SourceCodeInfo source_code_info = 9;
 
   // The syntax of the proto file.
-  // The supported values are "proto2" and "proto3".
+  // The supported bands are "proto2" and "proto3".
   optional string syntax = 12;
 }
 
@@ -129,11 +129,11 @@ message FieldDescriptorProto {
     TYPE_DOUBLE         = 1;
     TYPE_FLOAT          = 2;
     // Not ZigZag encoded.  Negative numbers take 10 bytes.  Use TYPE_SINT64 if
-    // negative values are likely.
+    // negative bands are likely.
     TYPE_INT64          = 3;
     TYPE_UINT64         = 4;
     // Not ZigZag encoded.  Negative numbers take 10 bytes.  Use TYPE_SINT32 if
-    // negative values are likely.
+    // negative bands are likely.
     TYPE_INT32          = 5;
     TYPE_FIXED64        = 6;
     TYPE_FIXED32        = 7;
@@ -257,7 +257,7 @@ message MethodDescriptorProto {
 //
 // Clients may define custom options as extensions of the *Options messages.
 // These extensions may not yet be known at parsing time, so the parser cannot
-// store the values in them.  Instead it stores them in a field in the *Options
+// store the bands in them.  Instead it stores them in a field in the *Options
 // message called uninterpreted_option. This field must have the same name
 // across all *Options messages. We then use this field to populate the
 // extensions when we build a descriptor, at which point all protos have been
@@ -422,7 +422,7 @@ message MessageOptions {
   //     repeated MapFieldEntry map_field = 1;
   //
   // Implementations may choose not to generate the map_entry=true message, but
-  // use a native map in the target language to hold the keys and values.
+  // use a native map in the target language to hold the keys and bands.
   // The reflection APIs in such implementions still need to work as
   // if the field is a repeated message field.
   //
@@ -461,7 +461,7 @@ message FieldOptions {
   // false will avoid using packed encoding.
   optional bool packed = 2;
 
-  // The jstype option determines the JavaScript type used for values of the
+  // The jstype option determines the JavaScript type used for bands of the
   // field.  The option is permitted only for 64 bit integral and fixed types
   // (int64, uint64, sint64, fixed64, sfixed64).  By default these types are
   // represented as JavaScript strings.  This avoids loss of precision that can
@@ -562,7 +562,7 @@ message EnumValueOptions {
   // Is this enum value deprecated?
   // Depending on the target platform, this can emit Deprecated annotations
   // for the enum value, or it will be completely ignored; in the very least,
-  // this is a formalization for deprecating enum values.
+  // this is a formalization for deprecating enum bands.
   optional bool deprecated = 1 [default=false];
 
   // The parser stores options it doesn't recognize here. See above.

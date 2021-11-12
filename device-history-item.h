@@ -21,7 +21,7 @@ typedef ALIGN struct {
 } PACKED DEVICE_HISTORY_ITEM;		// 4 bytes
 
 /** 
- * Device stat keep FCntUp and FCntDown counter values.
+ * Device stat keep FCntUp and FCntDown counter bands.
  * Gateway identified by the network address.
  */
 class DeviceHistoryItem {

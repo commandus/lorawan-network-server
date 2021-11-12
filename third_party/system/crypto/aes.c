@@ -93,7 +93,7 @@ extern "C" {
 
 #if defined( USE_TABLES )
 
-#define sb_data(w) {    /* S Box data values */                            \
+#define sb_data(w) {    /* S Box data bands */                            \
     w(0x63), w(0x7c), w(0x77), w(0x7b), w(0xf2), w(0x6b), w(0x6f), w(0xc5),\
     w(0x30), w(0x01), w(0x67), w(0x2b), w(0xfe), w(0xd7), w(0xab), w(0x76),\
     w(0xca), w(0x82), w(0xc9), w(0x7d), w(0xfa), w(0x59), w(0x47), w(0xf0),\
@@ -127,7 +127,7 @@ extern "C" {
     w(0x8c), w(0xa1), w(0x89), w(0x0d), w(0xbf), w(0xe6), w(0x42), w(0x68),\
     w(0x41), w(0x99), w(0x2d), w(0x0f), w(0xb0), w(0x54), w(0xbb), w(0x16) }
 
-#define isb_data(w) {   /* inverse S Box data values */                    \
+#define isb_data(w) {   /* inverse S Box data bands */                    \
     w(0x52), w(0x09), w(0x6a), w(0xd5), w(0x30), w(0x36), w(0xa5), w(0x38),\
     w(0xbf), w(0x40), w(0xa3), w(0x9e), w(0x81), w(0xf3), w(0xd7), w(0xfb),\
     w(0x7c), w(0xe3), w(0x39), w(0x82), w(0x9b), w(0x2f), w(0xff), w(0x87),\
@@ -228,7 +228,7 @@ static const uint8_t gfmul_e[256] = mm_data(fe);
 /* this is the high bit of x right shifted by 1 */
 /* position. Since the starting polynomial has  */
 /* 9 bits (0x11b), this right shift keeps the   */
-/* values of all top bits within a byte         */
+/* bands of all top bits within a byte         */
 
 static uint8_t hibit(const uint8_t x)
 {   uint8_t r = (uint8_t)((x >> 1) | (x >> 2));
@@ -259,7 +259,7 @@ static uint8_t gf_inv(const uint8_t x)
         else
             return v1;
 
-        if(n2)                          /* repeat with values swapped    */
+        if(n2)                          /* repeat with bands swapped    */
             while(n1 >= n2)
             {
                 n1 /= n2;

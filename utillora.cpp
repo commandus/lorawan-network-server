@@ -2331,7 +2331,33 @@ LORAWAN_VERSION string2LORAWAN_VERSION
 	return r;
   }
 
-    std::string MODULATION2String(MODULATION value)
+std::string REGIONAL_PARAMETERS_VERSION2string(
+    REGIONAL_PARAMETERS_VERSION value
+) {
+    return LORAWAN_VERSION2string(*(LORAWAN_VERSION*) &value);
+}
+
+REGIONAL_PARAMETERS_VERSION string2REGIONAL_PARAMETERS_VERSION(
+    const std::string &value
+) {
+    std::stringstream ss(value);
+    int ma = 1, mi = 0, re = 0;
+    char dot;
+    if (!ss.eof ())
+        ss >> ma;
+    if (!ss.eof ())
+        ss >> dot;
+    if (!ss.eof ())
+        ss >> mi;
+    if (!ss.eof ())
+        ss >> dot;
+    if (!ss.eof ())
+        ss >> re;
+    REGIONAL_PARAMETERS_VERSION r = { (uint8_t) (ma & 3), (uint8_t) (mi & 3), (uint8_t) (re & 0xf) };
+    return r;
+}
+
+std::string MODULATION2String(MODULATION value)
     {
         switch (value)
         {

@@ -285,6 +285,16 @@ LORAWAN_VERSION string2LORAWAN_VERSION
 	const std::string &value
 );
 
+std::string REGIONAL_PARAMETERS_VERSION2string
+(
+        REGIONAL_PARAMETERS_VERSION value
+);
+
+REGIONAL_PARAMETERS_VERSION string2REGIONAL_PARAMETERS_VERSION
+(
+        const std::string &value
+);
+
 typedef struct {
 	// value, no key
 	ACTIVATION activation;	///< activation type: ABP or OTAA
