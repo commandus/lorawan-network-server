@@ -357,6 +357,46 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     applyErrorDescription("UInt JRB_BAND_CHANNEL");
                     return false;
                 }
+                case JRB_BAND_P_SIZE: {
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("UInt JRB_BAND_P_SIZE no band");
+                        return false;
+                    }
+                    if (maxPayloadSizePerDataRateCount >= DATA_RATE_SIZE) {
+                        applyErrorDescription("UInt JRB_BAND_P_SIZE too big");
+                        return false;
+                    }
+                    switch (keyIndex) {
+                        case JK_M:
+                            value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].m = val;
+                            return true;
+                        case JK_N:
+                            value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].n = val;
+                            return true;
+                    }
+                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
+                    return false;
+                }
+                case JRB_BAND_PRPT_SIZE: {
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE no band");
+                        return false;
+                    }
+                    if (maxPayloadSizePerDataRateRepeaterCount  >= DATA_RATE_SIZE) {
+                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE too big");
+                        return false;
+                    }
+                    switch (keyIndex) {
+                        case JK_M:
+                            value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateCount].m = val;
+                            return true;
+                        case JK_N:
+                            value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateCount].n = val;
+                            return true;
+                    }
+                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
+                    return false;
+                }
                 default:
                     switch (keyIndex) {
                         case JK_RX2FREQUENCY:
@@ -443,11 +483,9 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     return true;
                 case JRB_BAND_P_SIZES:
                     state = JRB_BAND_P_SIZE;
-                    maxPayloadSizePerDataRateCount++;
                     return true;
                 case JRB_BAND_PRPT_SIZES:
                     state = JRB_BAND_PRPT_SIZE;
-                    maxPayloadSizePerDataRateRepeaterCount++;
                     return true;
                 case JRB_BAND_RX1_DR_OFS:
                     rx1DataRateOffsetCount++;
@@ -501,9 +539,11 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     return true;
                 case JRB_BAND_P_SIZE:
                     state = JRB_BAND_P_SIZES;
+                    maxPayloadSizePerDataRateCount++;
                     return true;
                 case JRB_BAND_PRPT_SIZE:
                     state = JRB_BAND_PRPT_SIZES;
+                    maxPayloadSizePerDataRateRepeaterCount++;
                     return true;
                 case JRB_BAND_CHANNEL:
                     state = prevState;

@@ -387,7 +387,7 @@ void NetworkIdentity::set(
 
 // const std::string DEF_DATA_RATE = "SF7BW125";
 // const std::string DEF_ECCCODE_RATE = "4/6";
-#define DEF_BANDWIDTH BW_200KHZ
+#define DEF_BANDWIDTH BW_250KHZ
 #define DEF_SPREADING_FACTOR DRLORA_SF7
 #define DEF_CODING_RATE CRLORA_4_6
 
@@ -447,21 +447,14 @@ std::string rfmMetaData::datr() const
 		case BW_125KHZ:
 			bandwithValue = 125; // 125
 			break;
-
-		case BW_200KHZ:
-			bandwithValue = 203; // 200
+		case BW_250KHZ:
+			bandwithValue = 250; // 250
 			break;
-		case BW_400KHZ:
-			bandwithValue = 406; // 400
-			break;
-		case BW_800KHZ:
-			bandwithValue = 812; // 800
-			break;
-		case BW_1600KHZ:
-			bandwithValue = 1625; // 1600
+		case BW_500KHZ:
+			bandwithValue = 500; // 500
 			break;
 		default:
-			bandwithValue = 203;
+			bandwithValue = 250;
 			break;
 	}
 	std::stringstream ss;
@@ -513,24 +506,14 @@ void rfmMetaData::setDatr(
 		case 125:
 			bandwith = BW_125KHZ; // 125
 			break;
-		case 200:
-		case 203:
-			bandwith = BW_200KHZ;
+		case 250:
+			bandwith = BW_250KHZ;
 			break;
-		case 400:
-		case 406:
-			bandwith = BW_400KHZ;
-			break;
-		case 800:
-		case 812:
-			bandwith = BW_800KHZ;
-			break;
-		case 1600:
-		case 1625:
-			bandwith = BW_1600KHZ;
+		case 500:
+			bandwith = BW_500KHZ;
 			break;
 		default:
-			bandwith = BW_200KHZ;
+			bandwith = BW_250KHZ;
 			break;
 	}
 }
@@ -1244,7 +1227,7 @@ int SemtechUDPPacket::parse
 	if (doc.HasMember(METADATA_RX_NAMES[7])) {	// "stat"
 		rapidjson::Value &jstat = doc[METADATA_RX_NAMES[7]];
 		if (retgwstat.parse(jstat) == 0) {
-			// set gateway identifier
+			// setValue gateway identifier
 			retgwstat.gatewayId = *(uint64_t *) &retprefix.mac;
 			retgwstat.errcode = 0;
 		} else {
@@ -2394,15 +2377,10 @@ std::string BANDWIDTH2String(BANDWIDTH value) {
             return "62.5";
         case BW_125KHZ:
             return "125";
-        case BW_200KHZ:
-            return "200";
-        case BW_400KHZ:
-            return "400";
-        case BW_800KHZ:
-            return "800";
-        case BW_1600KHZ:
-            return "1600";
-
+        case BW_250KHZ:
+            return "250";
+        case BW_500KHZ:
+            return "500";
     }
 }
 
@@ -2424,12 +2402,8 @@ BANDWIDTH string2BANDWIDTH(const char *value)
         return BW_62KHZ;
     if (strcmp(value, "125") == 0)
         return BW_125KHZ;
-    if (strcmp(value, "200") == 0)
-        return BW_200KHZ;
-    if (strcmp(value, "400") == 0)
-        return BW_400KHZ;
-    if (strcmp(value, "800") == 0)
-        return BW_800KHZ;
-    if (strcmp(value, "1600") == 0)
-        return BW_1600KHZ;
+    if (strcmp(value, "250") == 0)
+        return BW_250KHZ;
+    if (strcmp(value, "500") == 0)
+        return BW_500KHZ;
 }
