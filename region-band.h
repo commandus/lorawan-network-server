@@ -25,6 +25,10 @@ public:
 
     DataRate();
     DataRate(const DataRate &value);
+    // Lora modulation
+    DataRate(BANDWIDTH bandwidth, SPREADING_FACTOR spreadingFactor);
+    // FSK modulation
+    DataRate(uint32_t bps);
     std::string toJsonString() const override;
 };
 
@@ -39,6 +43,8 @@ public:
     Channel();
     Channel(const Channel &value);
     std::string toJsonString() const override;
+
+    void setValue(int frequency, int minDR, int maxDR, bool enabled, bool custom);
 };
 
 // BandDefaults defines the default bands defined by a band.
@@ -58,6 +64,13 @@ public:
     int JoinAcceptDelay2;
     BandDefaults();
     BandDefaults(const BandDefaults &value);
+    void setValue(
+        int RX2Frequency,
+        int RX2DataRate,
+        int ReceiveDelay1,
+        int ReceiveDelay2,
+        int JoinAcceptDelay1,
+        int JoinAcceptDelay2);
     std::string toJsonString() const override;
 };
 
@@ -69,6 +82,8 @@ public:
     MaxPayloadSize();
     MaxPayloadSize(const MaxPayloadSize &value);
     std::string toJsonString() const override;
+
+    void setValue(uint8_t m, uint8_t n);
 };
 
 class RegionBand : public RBJsonIntf {
@@ -79,7 +94,7 @@ public:
     DataRate dataRates[DATA_RATE_SIZE];
     MaxPayloadSize maxPayloadSizePerDataRate[DATA_RATE_SIZE];
     MaxPayloadSize maxPayloadSizePerDataRateRepeater[DATA_RATE_SIZE];    // if repeater is used
-    uint8_t rx1DataRateOffsets[DATA_RATE_SIZE];
+    std::vector<uint8_t> rx1DataRateOffsets[DATA_RATE_SIZE];
     int8_t txPowerOffsets[DATA_RATE_SIZE];
 
     std::vector<Channel> uplinkChannels;
@@ -88,6 +103,10 @@ public:
     RegionBand();
     RegionBand(const RegionBand &value);
     std::string toJsonString() const override;
+
+    void setTxPowerOffsets(int8_t v0, int8_t v1, int8_t v2, int8_t v3, int8_t v4, int8_t v5, int8_t v6, int8_t v7);
+
+    void setRx1DataRateOffsets(int dataRateIndex, int count, ...);
 };
 
 class RegionBands : public RBJsonIntf {
@@ -98,6 +117,7 @@ public:
     RegionBands(const RegionBands &value);
     const RegionBand* get(const std::string &name) const;
     std::string toJsonString() const override;
+    bool setRegionalParametersVersion(const std::string &value);
 };
 
 #endif

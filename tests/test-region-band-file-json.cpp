@@ -1,0 +1,112 @@
+#include <string>
+#include <iostream>
+#include <sstream>
+
+#include "utilstring.h"
+#include "errlist.h"
+#include "utilfile.h"
+#include "region-band-file-json.h"
+
+const std::string TEST_FN("region-band.json.tmp");
+
+void loadFile(RegionBandsFileJson &value, const std::string &fn)
+{
+    value.init(fn, nullptr);
+    if (value.errcode) {
+        std::cerr << ERR_MESSAGE << value.errcode << ": "
+            << " " << value.errMessage << std::endl;
+    }
+}
+
+void saveFile(RegionBandsFileJson &value, const std::string &fn)
+{
+    value.flush();
+}
+
+void printRegionBands(const RegionBandsFileJson &value)
+{
+    std::cout << value.storage.toJsonString() << std::endl;
+}
+
+void doSmth(RegionBandsFileJson &value)
+{
+    value.storage.setRegionalParametersVersion("1.0.1");
+    RegionBand rb;
+    rb.name = "RU864-870";  // 870MHz band
+    rb.bandDefaults.setValue(869100000, 0, 1, 2, 5, 6);
+    rb.maxPayloadSizePerDataRate[0].setValue(59, 51);
+    rb.maxPayloadSizePerDataRate[1].setValue(59, 51);
+    rb.maxPayloadSizePerDataRate[2].setValue(59, 51);
+    rb.maxPayloadSizePerDataRate[3].setValue(123, 115);
+    rb.maxPayloadSizePerDataRate[4].setValue(250, 242);
+    rb.maxPayloadSizePerDataRate[5].setValue(250, 242);
+    rb.maxPayloadSizePerDataRate[6].setValue(250, 242);
+    rb.maxPayloadSizePerDataRate[7].setValue(250, 242);
+
+    rb.maxPayloadSizePerDataRateRepeater[0].setValue(59, 51);
+    rb.maxPayloadSizePerDataRateRepeater[1].setValue(59, 51);
+    rb.maxPayloadSizePerDataRateRepeater[2].setValue(59, 51);
+    rb.maxPayloadSizePerDataRateRepeater[3].setValue(123, 115);
+    rb.maxPayloadSizePerDataRateRepeater[4].setValue(230, 222);
+    rb.maxPayloadSizePerDataRateRepeater[5].setValue(230, 222);
+    rb.maxPayloadSizePerDataRateRepeater[6].setValue(230, 222);
+    rb.maxPayloadSizePerDataRateRepeater[7].setValue(230, 222);
+
+    Channel ch;
+    ch.setValue(868900000, 0, 5, true, false);
+    rb.uplinkChannels.push_back(ch);
+    rb.downlinkChannels.push_back(ch);
+    ch.setValue(869100000, 0, 5, true, false);
+    rb.uplinkChannels.push_back(ch);
+    rb.downlinkChannels.push_back(ch);
+
+    rb.supportsExtraChannels = true;
+    rb.dataRates[0] = DataRate(BW_125KHZ, DRLORA_SF12);
+    rb.dataRates[1] = DataRate(BW_125KHZ, DRLORA_SF11);
+    rb.dataRates[2] = DataRate(BW_125KHZ, DRLORA_SF10);
+    rb.dataRates[3] = DataRate(BW_125KHZ, DRLORA_SF9);
+    rb.dataRates[4] = DataRate(BW_125KHZ, DRLORA_SF8);
+    rb.dataRates[5] = DataRate(BW_125KHZ, DRLORA_SF7);
+    rb.dataRates[6] = DataRate(BW_250KHZ, DRLORA_SF7);
+    rb.dataRates[7] = DataRate(5000);
+
+
+    rb.setTxPowerOffsets(0, -2, -4, -6, -8, -10, -12, -14);
+
+    rb.setRx1DataRateOffsets(0, 6, 0, 0, 0, 0, 0, 0);
+    rb.setRx1DataRateOffsets(1, 6, 1, 0, 0, 0, 0, 0);
+    rb.setRx1DataRateOffsets(2, 6, 2, 1, 0, 0, 0, 0);
+    rb.setRx1DataRateOffsets(3, 6, 3, 2, 1, 0, 0, 0);
+    rb.setRx1DataRateOffsets(4, 6, 4, 3, 2, 1, 0, 0);
+    rb.setRx1DataRateOffsets(5, 6, 5, 4, 3, 2, 1, 0);
+    rb.setRx1DataRateOffsets(6, 6, 6, 5, 5, 4, 3, 2);
+    rb.setRx1DataRateOffsets(7, 6, 7, 6, 5, 4, 3, 2);
+
+    value.storage.bands.push_back(rb);
+}
+
+int main(int argc, char **argv) {
+
+    config::rmFile(TEST_FN);
+
+    RegionBandsFileJson rbFile;
+    std::cerr << "Load empty file.." << std::endl;
+    // load empty file
+    loadFile(rbFile, TEST_FN);
+    std::cerr << "Print empty file.." << std::endl;
+    printRegionBands(rbFile);
+
+    std::cerr << "Change.." << std::endl;
+    doSmth(rbFile);
+    std::cerr << "Print changes.." << std::endl;
+    printRegionBands(rbFile);
+
+    std::cerr << "Save file.." << std::endl;
+    saveFile(rbFile, TEST_FN);
+
+    std::cerr << "Load saved file.." << std::endl;
+    // load non-empty file
+    loadFile(rbFile, TEST_FN);
+    std::cerr << "Print saved file.." << std::endl;
+    printRegionBands(rbFile);
+}

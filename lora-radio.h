@@ -21,33 +21,30 @@ typedef enum {
     BW_31KHZ  = 4,   // 31.2
     BW_41KHZ  = 5,   // 41.6
     BW_62KHZ  = 6,   // 62.5
-    BW_125KHZ  = 7,   // 125
-
-    BW_200KHZ  = 8, // 9 -> 300?
-    BW_400KHZ  = 10,
-    BW_800KHZ  = 12,    // default?
-    BW_1600KHZ = 13
+    BW_125KHZ  = 7,  // 125
+    BW_250KHZ  = 8,  // 250
+    BW_500KHZ  = 9  // 500
 } BANDWIDTH;
 
 typedef enum {
     DRLORA_SF5 = 5,
-    DRLORA_SF6,
-    DRLORA_SF7,
-    DRLORA_SF8,
-    DRLORA_SF9,
-    DRLORA_SF10,
-    DRLORA_SF11,
-    DRLORA_SF12
+    DRLORA_SF6 = 6,
+    DRLORA_SF7 = 7,
+    DRLORA_SF8 = 8,
+    DRLORA_SF9 = 9,
+    DRLORA_SF10 = 10,
+    DRLORA_SF11 = 11,
+    DRLORA_SF12 = 12
 } SPREADING_FACTOR;
 
 typedef enum {
-    CRLORA_4_5    = 0x01,
-    CRLORA_4_6    = 0x02,   // default?
-    CRLORA_4_7    = 0x03,
-    CRLORA_4_8    = 0x04,
-    CRLORA_LI_4_5 = 0x05,
-    CRLORA_LI_4_6 = 0x06,
-    CRLORA_LI_4_8 = 0x07
+    CRLORA_4_5    = 1,
+    CRLORA_4_6    = 2,   // default?
+    CRLORA_4_7    = 3,
+    CRLORA_4_8    = 4,
+    CRLORA_LI_4_5 = 5,
+    CRLORA_LI_4_6 = 6,
+    CRLORA_LI_4_8 = 7
 } CODING_RATE;
 
 #define DATA_RATE_SIZE 8

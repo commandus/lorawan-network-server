@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cstdarg>
 
 #include "region-band.h"
 #include "errlist.h"
@@ -18,6 +19,20 @@ DataRate::DataRate()
 DataRate::DataRate(const DataRate &value)
     : uplink(value.uplink), downlink(value.downlink), modulation(value.modulation),
     bandwidth(value.bandwidth), spreadingFactor(value.spreadingFactor), bps(value.bps)
+{
+
+}
+
+DataRate::DataRate(BANDWIDTH aBandwidth, SPREADING_FACTOR aSpreadingFactor)
+    : uplink(true), downlink(true), modulation(LORA),
+    bandwidth(aBandwidth), spreadingFactor(aSpreadingFactor), bps(0)
+{
+
+}
+
+DataRate::DataRate(uint32_t aBps)
+    : uplink(true), downlink(true), modulation(FSK),
+    bandwidth(BW_7KHZ), spreadingFactor(DRLORA_SF5), bps(aBps)
 {
 
 }
@@ -53,7 +68,22 @@ Channel::Channel(const Channel &value)
 std::string Channel::toJsonString() const
 {
     std::stringstream ss;
+    ss << "{\"frequency\": " << frequency  // frequency in Hz
+       << ", \"minDR\": " << minDR
+       << ", \"maxDR\": " << maxDR
+       << ", \"enabled\": " << (enabled ? STR_TRUE_FALSE)
+       << ", \"custom\": " << (custom ? STR_TRUE_FALSE)
+       << "}";
     return ss.str();
+}
+
+void Channel::setValue(int aFrequency, int aMinDR, int aMaxDR, bool aEnabled, bool aCustom)
+{
+    frequency = aFrequency;
+    minDR = aMinDR;
+    maxDR = aMaxDR;
+    enabled = aEnabled;
+    custom = aCustom;
 }
 
 BandDefaults::BandDefaults()
@@ -68,6 +98,22 @@ BandDefaults::BandDefaults(const BandDefaults& value)
     ReceiveDelay2(value.ReceiveDelay2), JoinAcceptDelay1(value.JoinAcceptDelay1), JoinAcceptDelay2(value.JoinAcceptDelay2)
 {
 
+}
+
+void BandDefaults::setValue(
+    int aRX2Frequency,
+    int aRX2DataRate,
+    int aReceiveDelay1,
+    int aReceiveDelay2,
+    int aJoinAcceptDelay1,
+    int aJoinAcceptDelay2
+) {
+    RX2Frequency = aRX2Frequency;
+    RX2DataRate = aRX2DataRate;
+    ReceiveDelay1 = aReceiveDelay1;
+    ReceiveDelay2 = aReceiveDelay2;
+    JoinAcceptDelay1 = aJoinAcceptDelay1;
+    JoinAcceptDelay2 = aJoinAcceptDelay2;
 }
 
 std::string BandDefaults::toJsonString() const
@@ -98,21 +144,23 @@ MaxPayloadSize::MaxPayloadSize(const MaxPayloadSize &value)
 std::string MaxPayloadSize::toJsonString() const
 {
     std::stringstream ss;
-    ss << "{\"m\": " << m
-       << ", \"n\": " << n
+    ss << "{\"m\": " << (int) m
+       << ", \"n\": " << (int) n
        << "}";
     return ss.str();
 }
 
-static void clearTxPowerOffsets(int8_t* value)
-{
-    memset(value, 0, sizeof(int8_t[DATA_RATE_SIZE]));
+void MaxPayloadSize::setValue(uint8_t am, uint8_t an) {
+    m = am;
+    n = an;
 }
 
 RegionBand::RegionBand()
     : name(""), supportsExtraChannels(false)
 {
-    clearTxPowerOffsets(&txPowerOffsets[0]);
+    for (int i = 0; i < DATA_RATE_SIZE; i++) {
+        txPowerOffsets[i] = 0;
+    }
 }
 
 RegionBand::RegionBand(const RegionBand &value)
@@ -162,7 +210,7 @@ static void intsAppendJSON(std::ostream &strm, T &value)
             strm << ", ";
         else
             hasPrev = true;
-        strm << (uint) value[i];
+        strm << (int) value[i];
     }
     strm << "]";
 }
@@ -182,12 +230,34 @@ static void arrayAppendJSON(std::ostream &strm, T &value)
     strm << "]";
 }
 
+static void rx1DataRateOffsetsAppendJSON(std::ostream &strm, const std::vector<uint8_t> *value)
+{
+    strm << "[";
+    bool hasPrev = false;
+    for (int i = 0; i < DATA_RATE_SIZE; i++) {
+        if (hasPrev)
+            strm << ", ";
+        else
+            hasPrev = true;
+        bool hasPrev2 = false;
+        strm << "[";
+        for (std::vector<uint8_t>::const_iterator it(value[i].begin()); it != value[i].end(); it++) {
+            if (hasPrev2)
+                strm << ", ";
+            else
+                hasPrev2 = true;
+            strm << (int) *it;
+        }
+        strm << "]";
+    }
+    strm << "]";
+}
+
 std::string RegionBand::toJsonString() const
 {
     std::stringstream ss;
     ss << "{\"name\": \"" << name
        << "\", \"supportsExtraChannels\": " << (supportsExtraChannels ? STR_TRUE_FALSE)
-       << ", \"supportsExtraChannels\": " << (supportsExtraChannels ? STR_TRUE_FALSE)
        << ", \"bandDefaults\": " << bandDefaults.toJsonString()
        << ", \"uplinkChannels\": ";
     vectorAppendJSON(ss, uplinkChannels);
@@ -199,12 +269,36 @@ std::string RegionBand::toJsonString() const
     ss << ", \"maxPayloadSizePerDataRateRepeater\": ";
     arrayAppendJSON(ss, maxPayloadSizePerDataRateRepeater);
     ss << ", \"rx1DataRateOffsets\": ";
-    intsAppendJSON(ss, rx1DataRateOffsets);
+    rx1DataRateOffsetsAppendJSON(ss, rx1DataRateOffsets);
     ss << ", \"txPowerOffsets\": ";
     intsAppendJSON(ss, txPowerOffsets);
 
     ss << "}";
     return ss.str();
+}
+
+void RegionBand::setTxPowerOffsets(int8_t v0, int8_t v1, int8_t v2, int8_t v3, int8_t v4, int8_t v5, int8_t v6, int8_t v7)
+{
+    txPowerOffsets[0] = v0;
+    txPowerOffsets[1] = v1;
+    txPowerOffsets[2] = v2;
+    txPowerOffsets[3] = v3;
+    txPowerOffsets[4] = v4;
+    txPowerOffsets[5] = v5;
+    txPowerOffsets[6] = v6;
+    txPowerOffsets[7] = v7;
+}
+
+void RegionBand::setRx1DataRateOffsets(int dataRateIndex, int count, ...)
+{
+    va_list ap;
+    va_start(ap, count);
+    rx1DataRateOffsets[dataRateIndex].clear();
+    for (int i = 0; i < count; i++)
+    {
+        rx1DataRateOffsets[dataRateIndex].push_back(va_arg(ap, int));
+    }
+    va_end(ap);
 }
 
 const RegionBand* RegionBands::get(const std::string &name) const
@@ -221,9 +315,15 @@ std::string RegionBands::toJsonString() const {
     std::stringstream ss;
     ss << "{\"regionalParametersVersion\": \"" << REGIONAL_PARAMETERS_VERSION2string(regionalParametersVersion)
        << "\", \"RegionBands\": ";
-    arrayAppendJSON(ss, bands);
+    vectorAppendJSON(ss, bands);
     ss << "}";
     return ss.str();
+}
+
+bool RegionBands::setRegionalParametersVersion(const std::string &value)
+{
+    regionalParametersVersion = string2REGIONAL_PARAMETERS_VERSION(value);
+    return true;
 }
 
 static bool isAnyLorawanVersion(LORAWAN_VERSION value) {
