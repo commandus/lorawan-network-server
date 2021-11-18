@@ -52,7 +52,9 @@ int DirTxtIdentityService::load()
 	config::filesInPath(path, ".txt", 0, &files);
 	int r = 0;
 	for (int f = 0; f < files.size(); f++) {
-		r |= loadTxtFile(files[f]);
+        int rr = loadTxtFile(files[f]);
+		if (rr < 0)
+            r = rr;
 	}
 	return r;
 } 

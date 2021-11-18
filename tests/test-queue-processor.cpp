@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 	recieverQueueProcessor->setPkt2Env(pkt2env);
 	ConfigDatabases configDatabases("dbs.js");
 	if (configDatabases.dbs.size() == 0) {
-		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
+		std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_DATABASE_CONFIG << ": " << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 	DatabaseByConfig *dbByConfig = new DatabaseByConfig(&configDatabases);

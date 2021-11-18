@@ -2,12 +2,17 @@
 #include "db-identity.h"
 #include "identity-service-lmdb.h"
 #include "utilstring.h"
+#include "errlist.h"
 
 int main(int argc, char **argv) {
 	LmdbIdentityService s;
 	int r = s.init("db", NULL);
 	if (r) {
-		std::cerr << "Error" <<  r << std::endl;
+		std::cerr << "Error " <<  r << ": " << strerror_lorawan_ns(r) << std::endl;
+        if (r == -527) {
+            std::cerr << "Probably run 'mkdir db' first." << std::endl;
+        }
+        exit(r);
 	}
 	DEVADDR a;
 	a[0] = 1;

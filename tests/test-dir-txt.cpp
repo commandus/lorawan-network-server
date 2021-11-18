@@ -2,13 +2,12 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
-
-#include "utilstring.h"
-#include "lora-rejoin.h"
-
 #include "base64/base64.h"
 
-#include <identity-service-dir-txt.h>
+#include "utilstring.h"
+#include "errlist.h"
+#include "lora-rejoin.h"
+#include "identity-service-dir-txt.h"
 
 void getIdentityTest(
 	JsonFileIdentityService &s,
@@ -172,10 +171,29 @@ void checkGrep() {
 int main(int argc, char **argv) {
 	DirTxtIdentityService s;
 	std::cerr << "Init.." << std::endl;
-	s.init("doc", NULL);
-	std::cerr << "Listen.." << std::endl;
-	s.startListen(onIdentitiesUpdate);
-	std::cerr << s.toJsonString() << std::endl;
+	int r = s.init("doc", NULL);
+    if (r) {
+        std::cerr << "Error " <<  r << ": " << strerror_lorawan_ns(r) << std::endl;
+        exit(r);
+    }
+
+    std::cerr << "Listen.." << std::endl;
+    try {
+        r = s.startListen(onIdentitiesUpdate);
+    } catch(...) {
+        r = ERR_CODE_OPEN_DEVICE;
+    }
+
+    if (r) {
+        std::cerr << "Error " <<  r << ": " << strerror_lorawan_ns(r) << std::endl;
+        if (r == -527) {
+            std::cerr << "Probably run 'mkdir doc' first." << std::endl;
+        }
+        exit(r);
+    }
+
+    std::cerr << "Json.." << std::endl;
+    std::cerr << s.toJsonString() << std::endl;
 	// putTest(s);
 	std::cerr << "Check regex.." << std::endl;
 	checkGrep();
