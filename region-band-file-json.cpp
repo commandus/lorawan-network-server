@@ -30,12 +30,13 @@ enum JSON_STATE_REGION_BAND {
     JRB_BAND_P_SIZES = 7,               	//     Array
     JRB_BAND_P_SIZE = 8,	                //          Max payload size
     JRB_BAND_PRPT_SIZES = 9,                //     Array
-    JRB_BAND_PRPT_SIZE = 10,	                //          Max payload size
-    JRB_BAND_RX1_DR_OFS = 11,        	    //     Array
-    JRB_BAND_TX_POWER_OFS = 12,        	    //     Array
-    JRB_BAND_UPLINKS = 13,           	    //     Array
-    JRB_BAND_DOWNLINKS = 14,           	    //     Array
-    JRB_BAND_CHANNEL = 15              	    //          Channel
+    JRB_BAND_PRPT_SIZE = 10,	            //          Max payload size
+    JRB_BAND_RX1_DR_OFFSETS = 11,        	//     Array
+    JRB_BAND_RX1_DR_OFFSET = 12,            //              Array
+    JRB_BAND_TX_POWER_OFS = 13,        	    //     Array
+    JRB_BAND_UPLINKS = 14,           	    //     Array
+    JRB_BAND_DOWNLINKS = 15,           	    //     Array
+    JRB_BAND_CHANNEL = 16              	    //          Channel
 };
 
 #define JSON_STATE_REGION_BAND_COUNT 17
@@ -52,7 +53,8 @@ static const char *PARSE_STATE_NAMES[JSON_STATE_REGION_BAND_COUNT] = {
     "band_p_size",
     "band_prpt_sizes",
     "band_prpt_size",
-    "band_rx1_dr_ofs",
+    "band_rx1_dr_offsets",
+    "band_rx1_dr_offset",
     "band_tx_power_ofs",
     "band_uplinks",
     "band_downlinks",
@@ -194,6 +196,157 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
             value->errMessage = ss.str();
         }
 
+        bool Integer(int64_t val) {
+            switch (state) {
+                case JRB_BAND_TX_POWER_OFS:
+                    if (state == JRB_BAND_TX_POWER_OFS) {
+                        if (!value->storage.bands.empty()) {
+                            value->storage.bands.back().txPowerOffsets[txPowerOffsetCount] = val;
+                            txPowerOffsetCount++;
+                            return true;
+                        }
+                    }
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("Int JRB_BAND_TX_POWER_OFS no band");
+                        return false;
+                    }
+                    return false;
+                case JRB_BAND_DEFAULTS:
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("UInt JRB_BAND_DEFAULTS no band");
+                        return false;
+                    }
+                    switch (keyIndex) {
+                        case JK_RX2FREQUENCY:
+                            value->storage.bands.back().bandDefaults.RX2Frequency = val;
+                            return true;
+                        case JK_RX2DATARATE:
+                            value->storage.bands.back().bandDefaults.RX2DataRate = val;
+                            return true;
+                        case JK_RECEIVEDELAY1:
+                            value->storage.bands.back().bandDefaults.ReceiveDelay1 = val;
+                            return true;
+                        case JK_RECEIVEDELAY2:
+                            value->storage.bands.back().bandDefaults.ReceiveDelay2 = val;
+                            return true;
+                        case JK_JOINACCEPTDELAY1:
+                            value->storage.bands.back().bandDefaults.JoinAcceptDelay1 = val;
+                            return true;
+                        case JK_JOINACCEPTDELAY2:
+                            value->storage.bands.back().bandDefaults.JoinAcceptDelay2 = val;
+                            return true;
+                        default:
+                            applyErrorDescription("UInt JRB_BAND_DEFAULTS default");
+                            return false;
+                    }
+                case JRB_BAND_RX1_DR_OFFSET: {
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("UInt JRB_BAND_DEFAULTS no band");
+                        return false;
+                    }
+                    if (rx1DataRateOffsetCount >= DATA_RATE_SIZE) {
+                        applyErrorDescription("rx1DataRateOffset has too many elements");
+                        return false;
+                    }
+
+                    RegionBand &rb = value->storage.bands.back();
+                    rb.rx1DataRateOffsets[rx1DataRateOffsetCount].push_back(val);
+                    return true;
+                }
+                case JRB_BAND_CHANNEL: {
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("UInt JRB_BAND_CHANNEL no band");
+                        return false;
+                    }
+                    switch (prevState) {
+                        case JRB_BAND_UPLINKS:
+                            if (value->storage.bands.back().uplinkChannels.empty()) {
+                                applyErrorDescription("UInt JRB_BAND_CHANNEL no band uplink channels");
+                                return false;
+                            }
+                        case JRB_BAND_DOWNLINKS:
+                            if (value->storage.bands.back().uplinkChannels.empty()) {
+                                applyErrorDescription("UInt JRB_BAND_CHANNEL no band downlink channels");
+                                return false;
+                            }
+                    }
+                    Channel &channel = value->storage.bands.back().uplinkChannels.back();
+
+                    switch (keyIndex) {
+                        case JK_FREQUENCY:
+                            channel.frequency = val;
+                            return true;
+                        case JK_MINDR:
+                            channel.minDR = val;
+                            return true;
+                        case JK_MAXDR:
+                            channel.maxDR = val;
+                            return true;
+                    }
+                    applyErrorDescription("UInt JRB_BAND_CHANNEL");
+                    return false;
+                }
+                case JRB_BAND_P_SIZE: {
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("UInt JRB_BAND_P_SIZE no band");
+                        return false;
+                    }
+                    if (maxPayloadSizePerDataRateCount >= DATA_RATE_SIZE) {
+                        applyErrorDescription("UInt JRB_BAND_P_SIZE too big");
+                        return false;
+                    }
+                    switch (keyIndex) {
+                        case JK_M:
+                            value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].m = val;
+                            return true;
+                        case JK_N:
+                            value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].n = val;
+                            return true;
+                    }
+                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
+                    return false;
+                }
+                case JRB_BAND_PRPT_SIZE: {
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE no band");
+                        return false;
+                    }
+                    if (maxPayloadSizePerDataRateRepeaterCount  >= DATA_RATE_SIZE) {
+                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE too big");
+                        return false;
+                    }
+                    switch (keyIndex) {
+                        case JK_M:
+                            value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].m = val;
+                            return true;
+                        case JK_N:
+                            value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].n = val;
+                            return true;
+                    }
+                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
+                    return false;
+                }
+                default:
+                    switch (keyIndex) {
+                        case JK_RX2FREQUENCY:
+                            return true;
+                        case JK_RX2DATARATE:
+                            return true;
+                        case JK_RECEIVEDELAY1:
+                            return true;
+                        case JK_RECEIVEDELAY2:
+                            return true;
+                        case JK_JOINACCEPTDELAY1:
+                            return true;
+                        case JK_JOINACCEPTDELAY2:
+                            return true;
+                        default:
+                            applyErrorDescription("Integer default");
+                            return false;
+                    }
+            }
+        }
+
     public:
         RegionBandsJsonHandler(RegionBandsFileJson *val)
 			: value(val), keyIndex(JK_NONE), state(JRB_NONE), prevState(JRB_NONE),
@@ -278,158 +431,27 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
         }
 
 		bool Int(int val) {
-            switch (state) {
-                case JRB_BAND_TX_POWER_OFS:
-                    if (state == JRB_BAND_TX_POWER_OFS) {
-                        if (!value->storage.bands.empty()) {
-                            value->storage.bands.back().txPowerOffsets[txPowerOffsetCount] = val;
-                            txPowerOffsetCount++;
-                            return true;
-                        }
-                    }
-            }
-            applyErrorDescription("Int default");
-            return false;
+            return Integer(val);
 		}
 
 		bool Uint(unsigned val) {
-            switch (state) {
-                case JRB_BAND_DEFAULTS:
-                    if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_DEFAULTS no band");
-                        return false;
-                    }
-                    switch (keyIndex) {
-                        case JK_RX2FREQUENCY:
-                            value->storage.bands.back().bandDefaults.RX2Frequency = val;
-                            return true;
-                        case JK_RX2DATARATE:
-                            value->storage.bands.back().bandDefaults.RX2DataRate = val;
-                            return true;
-                        case JK_RECEIVEDELAY1:
-                            value->storage.bands.back().bandDefaults.ReceiveDelay1 = val;
-                            return true;
-                        case JK_RECEIVEDELAY2:
-                            value->storage.bands.back().bandDefaults.ReceiveDelay2 = val;
-                            return true;
-                        case JK_JOINACCEPTDELAY1:
-                            value->storage.bands.back().bandDefaults.JoinAcceptDelay1 = val;
-                            return true;
-                        case JK_JOINACCEPTDELAY2:
-                            value->storage.bands.back().bandDefaults.JoinAcceptDelay2 = val;
-                            return true;
-                        default:
-                            applyErrorDescription("UInt JRB_BAND_DEFAULTS default");
-                            return false;
-                    }
-                case JRB_BAND_RX1_DR_OFS:
-                    return true;
-                case JRB_BAND_CHANNEL: {
-                    if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_CHANNEL no band");
-                        return false;
-                    }
-                    switch (prevState) {
-                        case JRB_BAND_UPLINKS:
-                            if (value->storage.bands.back().uplinkChannels.empty()) {
-                                applyErrorDescription("UInt JRB_BAND_CHANNEL no band uplink channels");
-                                return false;
-                            }
-                        case JRB_BAND_DOWNLINKS:
-                            if (value->storage.bands.back().uplinkChannels.empty()) {
-                                applyErrorDescription("UInt JRB_BAND_CHANNEL no band downlink channels");
-                                return false;
-                            }
-                    }
-                    Channel &channel = value->storage.bands.back().uplinkChannels.back();
-
-                    switch (keyIndex) {
-                        case JK_FREQUENCY:
-                            channel.frequency = val;
-                            return true;
-                        case JK_MINDR:
-                            channel.minDR = val;
-                            return true;
-                        case JK_MAXDR:
-                            channel.maxDR = val;
-                            return true;
-                    }
-                    applyErrorDescription("UInt JRB_BAND_CHANNEL");
-                    return false;
-                }
-                case JRB_BAND_P_SIZE: {
-                    if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_P_SIZE no band");
-                        return false;
-                    }
-                    if (maxPayloadSizePerDataRateCount >= DATA_RATE_SIZE) {
-                        applyErrorDescription("UInt JRB_BAND_P_SIZE too big");
-                        return false;
-                    }
-                    switch (keyIndex) {
-                        case JK_M:
-                            value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].m = val;
-                            return true;
-                        case JK_N:
-                            value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].n = val;
-                            return true;
-                    }
-                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
-                    return false;
-                }
-                case JRB_BAND_PRPT_SIZE: {
-                    if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE no band");
-                        return false;
-                    }
-                    if (maxPayloadSizePerDataRateRepeaterCount  >= DATA_RATE_SIZE) {
-                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE too big");
-                        return false;
-                    }
-                    switch (keyIndex) {
-                        case JK_M:
-                            value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateCount].m = val;
-                            return true;
-                        case JK_N:
-                            value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateCount].n = val;
-                            return true;
-                    }
-                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
-                    return false;
-                }
-                default:
-                    switch (keyIndex) {
-                        case JK_RX2FREQUENCY:
-                            return true;
-                        case JK_RX2DATARATE:
-                            return true;
-                        case JK_RECEIVEDELAY1:
-                            return true;
-                        case JK_RECEIVEDELAY2:
-                            return true;
-                        case JK_JOINACCEPTDELAY1:
-                            return true;
-                        case JK_JOINACCEPTDELAY2:
-                            return true;
-                    default:
-                        applyErrorDescription("UInt default");
-                        return false;
-                }
-            }
+            return Integer(val);
 		}
 
 		bool Int64(int64_t val) {
             std::cerr << "=== Int64 " << val << ", state: " << state << std::endl;
-			return true;
+            applyErrorDescription("Int64 is too big");
+			return false;
 		}
 
 		bool Uint64(uint64_t val) {
-            std::cerr << "=== UInt64 " << val << ", state: " << state << std::endl;
-			return true;
+            applyErrorDescription("UInt64 is too big");
+			return false;
 		}
 
 		bool Double(double d) {
-			return true;
+            applyErrorDescription("Double not allowed");
+            return false;
 		}
 
 		bool String(const char* str, rapidjson::SizeType length, bool copy) { 
@@ -487,9 +509,6 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                 case JRB_BAND_PRPT_SIZES:
                     state = JRB_BAND_PRPT_SIZE;
                     return true;
-                case JRB_BAND_RX1_DR_OFS:
-                    rx1DataRateOffsetCount++;
-                    return true;
                 case JRB_BAND_UPLINKS:
                     state = JRB_BAND_CHANNEL;
                     if (!value->storage.bands.empty()) {
@@ -531,6 +550,9 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                 case JRB_BAND:
                     state = JRB_ROOT;
                     return true;
+                case JRB_ROOT:
+                    state = JRB_NONE;
+                    return true;
                 case JRB_BAND_DEFAULTS:
                     state = JRB_BAND;
                     return true;
@@ -565,7 +587,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             applyErrorDescription("Array JRB_ROOT default");
                             return false;
                     }
-                case JRB_BAND:                            // Band
+                case JRB_BAND:
                     switch (keyIndex) {
                         case JK_DATA_RATES:
                             state = JRB_BAND_DATA_RATES;
@@ -577,7 +599,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             state = JRB_BAND_PRPT_SIZES;
                             return true;
                         case JK_RX1DATARATEOFFSETS:
-                            state = JRB_BAND_RX1_DR_OFS;
+                            state = JRB_BAND_RX1_DR_OFFSETS;
                             return true;
                         case JK_TXPOWEROFFSETS:
                             state = JRB_BAND_TX_POWER_OFS;
@@ -594,6 +616,10 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             applyErrorDescription("Array JRB_BAND default");
                             return false;
                     }
+                case JRB_BAND_RX1_DR_OFFSETS:
+                    state = JRB_BAND_RX1_DR_OFFSET;
+                    return true;
+
                 default:
                     applyErrorDescription("Array default");
                     return false;
@@ -602,17 +628,23 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
 
 		bool EndArray(rapidjson::SizeType elementCount) {
             switch (state) {
+                case JRB_ROOT:
+                    return true;
                 case JRB_BANDS:
                     state = JRB_ROOT;
                     return true;
                 case JRB_BAND_DATA_RATES:
                 case JRB_BAND_P_SIZES:
                 case JRB_BAND_PRPT_SIZES:
-                case JRB_BAND_RX1_DR_OFS:
+                case JRB_BAND_RX1_DR_OFFSETS:
                 case JRB_BAND_TX_POWER_OFS:
                 case JRB_BAND_UPLINKS:
                 case JRB_BAND_DOWNLINKS:
                     state = JRB_BAND;
+                    return true;
+                case JRB_BAND_RX1_DR_OFFSET:
+                    state = JRB_BAND_RX1_DR_OFFSETS;
+                    rx1DataRateOffsetCount++;
                     return true;
                 default:
                     applyErrorDescription("EndArray default");

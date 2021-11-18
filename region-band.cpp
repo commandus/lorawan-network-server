@@ -1,5 +1,6 @@
 #include <sstream>
 #include <cstdarg>
+#include <iostream>
 
 #include "region-band.h"
 #include "errlist.h"
@@ -230,7 +231,7 @@ static void arrayAppendJSON(std::ostream &strm, T &value)
     strm << "]";
 }
 
-static void rx1DataRateOffsetsAppendJSON(std::ostream &strm, const std::vector<uint8_t> *value)
+static void rx1DataRateOffsetsAppendJSON(std::ostream &strm, const std::vector<uint8_t> (&value)[DATA_RATE_SIZE])
 {
     strm << "[";
     bool hasPrev = false;
@@ -241,7 +242,8 @@ static void rx1DataRateOffsetsAppendJSON(std::ostream &strm, const std::vector<u
             hasPrev = true;
         bool hasPrev2 = false;
         strm << "[";
-        for (std::vector<uint8_t>::const_iterator it(value[i].begin()); it != value[i].end(); it++) {
+        const std::vector<uint8_t> &v = value[i];
+        for (std::vector<uint8_t>::const_iterator it(v.begin()); it != v.end(); it++) {
             if (hasPrev2)
                 strm << ", ";
             else
@@ -269,6 +271,7 @@ std::string RegionBand::toJsonString() const
     ss << ", \"maxPayloadSizePerDataRateRepeater\": ";
     arrayAppendJSON(ss, maxPayloadSizePerDataRateRepeater);
     ss << ", \"rx1DataRateOffsets\": ";
+    // ss << "[]";
     rx1DataRateOffsetsAppendJSON(ss, rx1DataRateOffsets);
     ss << ", \"txPowerOffsets\": ";
     intsAppendJSON(ss, txPowerOffsets);
@@ -291,11 +294,12 @@ void RegionBand::setTxPowerOffsets(int8_t v0, int8_t v1, int8_t v2, int8_t v3, i
 
 void RegionBand::setRx1DataRateOffsets(int dataRateIndex, int count, ...)
 {
+    if (dataRateIndex >= DATA_RATE_SIZE)
+        return;
     va_list ap;
     va_start(ap, count);
     rx1DataRateOffsets[dataRateIndex].clear();
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
         rx1DataRateOffsets[dataRateIndex].push_back(va_arg(ap, int));
     }
     va_end(ap);

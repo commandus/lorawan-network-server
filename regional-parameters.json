@@ -1,0 +1,103 @@
+{
+	"regionalParametersVersion": "1.0.3",
+	"RegionBands": [{
+		"name": "RU864-870",
+		"supportsExtraChannels": true,
+		"bandDefaults": {
+			"RX2Frequency": 869100000,
+			"RX2DataRate": 0,
+			"ReceiveDelay1": 1,
+			"ReceiveDelay2": 2,
+			"JoinAcceptDelay1": 5,
+			"JoinAcceptDelay2": 6
+		},
+		"uplinkChannels": [{
+			"frequency": 868900000,
+			"minDR": 0,
+			"maxDR": 5,
+			"enabled": true,
+			"custom": false
+		}, {
+			"frequency": 869100000,
+			"minDR": 0,
+			"maxDR": 5,
+			"enabled": true,
+			"custom": false
+		}],
+		"downlinkChannels": [{
+			"frequency": 0,
+			"minDR": 0,
+			"maxDR": 0,
+			"enabled": true,
+			"custom": false
+		}, {
+			"frequency": 0,
+			"minDR": 0,
+			"maxDR": 0,
+			"enabled": true,
+			"custom": false
+		}],
+		"maxPayloadSizePerDataRate": [{
+			"m": 59,
+			"n": 51
+		}, {
+			"m": 59,
+			"n": 51
+		}, {
+			"m": 59,
+			"n": 51
+		}, {
+			"m": 123,
+			"n": 115
+		}, {
+			"m": 250,
+			"n": 242
+		}, {
+			"m": 250,
+			"n": 242
+		}, {
+			"m": 250,
+			"n": 242
+		}, {
+			"m": 250,
+			"n": 242
+		}],
+		"maxPayloadSizePerDataRateRepeater": [{
+			"m": 59,
+			"n": 51
+		}, {
+			"m": 59,
+			"n": 51
+		}, {
+			"m": 59,
+			"n": 51
+		}, {
+			"m": 123,
+			"n": 115
+		}, {
+			"m": 230,
+			"n": 222
+		}, {
+			"m": 230,
+			"n": 222
+		}, {
+			"m": 230,
+			"n": 222
+		}, {
+			"m": 230,
+			"n": 222
+		}],
+		"rx1DataRateOffsets": [
+			[0, 0, 0, 0, 0, 0],
+			[1, 0, 0, 0, 0, 0],
+			[2, 1, 0, 0, 0, 0],
+			[3, 2, 1, 0, 0, 0],
+			[4, 3, 2, 1, 0, 0],
+			[5, 4, 3, 2, 1, 0],
+			[6, 5, 5, 4, 3, 2],
+			[7, 6, 5, 4, 3, 2]
+		],
+		"txPowerOffsets": [0, -2, -4, -6, -8, -10, -12, -14]
+	}]
+}
+
