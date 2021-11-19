@@ -11,6 +11,11 @@
 
 class RegionBandsFileJson {
 	private:
+        // helper to get()
+        std::map<std::string, const RegionBand *> nameIndex;
+        // default RegionBand
+        const RegionBand *defaultRegionBand;
+        void buildIndex();
 		int load();
 		int save();
 	protected:
@@ -21,6 +26,8 @@ class RegionBandsFileJson {
         RegionBands storage;
         RegionBandsFileJson();
 		~RegionBandsFileJson();
+
+        const RegionBand *get(const std::string &name) const;
 
 		int init(const std::string &option, void *data);
 		void flush();

@@ -29,6 +29,8 @@ public:
     DataRate(BANDWIDTH bandwidth, SPREADING_FACTOR spreadingFactor);
     // FSK modulation
     DataRate(uint32_t bps);
+    void setLora(BANDWIDTH bandwidth, SPREADING_FACTOR spreadingFactor);
+    void setFSK(uint32_t bps);
     std::string toJsonString() const override;
 };
 
@@ -89,6 +91,7 @@ public:
 class RegionBand : public RBJsonIntf {
 public:
     std::string name;
+    bool defaultRegion;
     bool supportsExtraChannels;
     BandDefaults bandDefaults;
     DataRate dataRates[DATA_RATE_SIZE];

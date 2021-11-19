@@ -2407,3 +2407,33 @@ BANDWIDTH string2BANDWIDTH(const char *value)
     if (strcmp(value, "500") == 0)
         return BW_500KHZ;
 }
+
+BANDWIDTH int2BANDWIDTH(int value)
+{
+    if (value == 7)
+        return BW_7KHZ;
+    if (value == 10)
+        return BW_10KHZ;
+    if (value == 15)
+        return BW_15KHZ;
+    if (value == 20)
+        return BW_20KHZ;
+    if (value == 31)
+        return BW_31KHZ;
+    if (value == 41)
+        return BW_41KHZ;
+    if (value == 62)
+        return BW_62KHZ;
+    if (value == 125)
+        return BW_125KHZ;
+    if (value == 250)
+        return BW_250KHZ;
+    if (value == 500)
+        return BW_500KHZ;
+    return BW_7KHZ;
+}
+
+BANDWIDTH double2BANDWIDTH(double value)
+{
+    return int2BANDWIDTH(value);
+}

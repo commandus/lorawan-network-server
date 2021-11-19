@@ -38,6 +38,26 @@ DataRate::DataRate(uint32_t aBps)
 
 }
 
+void DataRate::setLora(BANDWIDTH aBandwidth, SPREADING_FACTOR aSpreadingFactor)
+{
+    uplink = true;
+    downlink = true;
+    modulation = LORA;
+    bandwidth = aBandwidth;
+    spreadingFactor = aSpreadingFactor;
+    bps = 0;
+}
+
+void DataRate::setFSK(uint32_t aBps)
+{
+    uplink = true;
+    downlink = true;
+    modulation = FSK;
+    bandwidth = BW_7KHZ;
+    spreadingFactor = DRLORA_SF5;
+    bps = aBps;
+}
+
 std::string DataRate::toJsonString() const
 {
     std::stringstream ss;
@@ -157,7 +177,7 @@ void MaxPayloadSize::setValue(uint8_t am, uint8_t an) {
 }
 
 RegionBand::RegionBand()
-    : name(""), supportsExtraChannels(false)
+    : name(""), supportsExtraChannels(false), defaultRegion(false)
 {
     for (int i = 0; i < DATA_RATE_SIZE; i++) {
         txPowerOffsets[i] = 0;
@@ -165,7 +185,7 @@ RegionBand::RegionBand()
 }
 
 RegionBand::RegionBand(const RegionBand &value)
-    : name(value.name), supportsExtraChannels(value.supportsExtraChannels),
+    : name(value.name), supportsExtraChannels(value.supportsExtraChannels), defaultRegion(value.defaultRegion),
     bandDefaults(value.bandDefaults),
     uplinkChannels(value.uplinkChannels), downlinkChannels(value.downlinkChannels)
 {
@@ -260,8 +280,12 @@ std::string RegionBand::toJsonString() const
     std::stringstream ss;
     ss << "{\"name\": \"" << name
        << "\", \"supportsExtraChannels\": " << (supportsExtraChannels ? STR_TRUE_FALSE)
+       << ", \"defaultRegion\": " << (defaultRegion ? STR_TRUE_FALSE)
        << ", \"bandDefaults\": " << bandDefaults.toJsonString()
-       << ", \"uplinkChannels\": ";
+       << ", \"dataRates\": ";
+    arrayAppendJSON(ss, dataRates);
+    ss << ", \"uplinkChannels\": ";
+
     vectorAppendJSON(ss, uplinkChannels);
     ss << ", \"downlinkChannels\": ";
     vectorAppendJSON(ss, downlinkChannels);

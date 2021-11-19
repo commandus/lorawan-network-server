@@ -679,4 +679,7 @@ MODULATION string2MODULATION(const char *value);
 std::string BANDWIDTH2String(BANDWIDTH value);
 BANDWIDTH string2BANDWIDTH(const char *value);
 
+BANDWIDTH int2BANDWIDTH(int value);
+BANDWIDTH double2BANDWIDTH(double value);
+
 #endif

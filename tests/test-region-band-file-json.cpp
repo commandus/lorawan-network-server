@@ -30,10 +30,21 @@ void printRegionBands(const RegionBandsFileJson &value)
 
 void doSmth(RegionBandsFileJson &value)
 {
-    value.storage.setRegionalParametersVersion("1.0.1");
+    value.storage.setRegionalParametersVersion("1.0.3");
     RegionBand rb;
     rb.name = "RU864-870";  // 870MHz band
+    rb.defaultRegion = true;
+    rb.supportsExtraChannels = true;
     rb.bandDefaults.setValue(869100000, 0, 1, 2, 5, 6);
+    rb.dataRates[0].setLora(BW_125KHZ, DRLORA_SF12);
+    rb.dataRates[1].setLora(BW_125KHZ, DRLORA_SF11);
+    rb.dataRates[2].setLora(BW_125KHZ, DRLORA_SF10);
+    rb.dataRates[3].setLora(BW_125KHZ, DRLORA_SF9);
+    rb.dataRates[4].setLora(BW_125KHZ, DRLORA_SF8);
+    rb.dataRates[5].setLora(BW_125KHZ, DRLORA_SF7);
+    rb.dataRates[6].setLora(BW_250KHZ, DRLORA_SF7);
+    rb.dataRates[7].setFSK(5000);
+
     rb.maxPayloadSizePerDataRate[0].setValue(59, 51);
     rb.maxPayloadSizePerDataRate[1].setValue(59, 51);
     rb.maxPayloadSizePerDataRate[2].setValue(59, 51);
@@ -59,17 +70,6 @@ void doSmth(RegionBandsFileJson &value)
     ch.setValue(869100000, 0, 5, true, false);
     rb.uplinkChannels.push_back(ch);
     rb.downlinkChannels.push_back(ch);
-
-    rb.supportsExtraChannels = true;
-    rb.dataRates[0] = DataRate(BW_125KHZ, DRLORA_SF12);
-    rb.dataRates[1] = DataRate(BW_125KHZ, DRLORA_SF11);
-    rb.dataRates[2] = DataRate(BW_125KHZ, DRLORA_SF10);
-    rb.dataRates[3] = DataRate(BW_125KHZ, DRLORA_SF9);
-    rb.dataRates[4] = DataRate(BW_125KHZ, DRLORA_SF8);
-    rb.dataRates[5] = DataRate(BW_125KHZ, DRLORA_SF7);
-    rb.dataRates[6] = DataRate(BW_250KHZ, DRLORA_SF7);
-    rb.dataRates[7] = DataRate(5000);
-
 
     rb.setTxPowerOffsets(0, -2, -4, -6, -8, -10, -12, -14);
 

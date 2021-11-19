@@ -367,6 +367,126 @@ Example:
 ]
 ```
 
+### Regional parameters file   
+
+LoRaWAN regional parameters described in the document named like "RP002-1.0.3"
+where 1.0.3 is version number, in the example shown it is "regionalParametersVersion" value.
+
+By default, name of file is "regional-parameters.json"
+
+"RegionBands" array contains regional settings. 
+
+Each region has mnemonic name, e.g. "RU864-870" corresponds to the Russian Federation region.
+
+Number 870 means central frequency in MHz.
+
+- supportsExtraChannels true or false
+- defaultRegion true or false. If true, this regional settings sued by default 
+  - bandDefaults default values
+    - RX2Frequency RX2 frequency in Hz
+      - RX2DataRate
+      - ReceiveDelay1 delay in seconds
+      - ReceiveDelay2 delay in seconds
+      - JoinAcceptDelay1 delay in seconds
+      - JoinAcceptDelay2 delay in seconds
+  - dataRates array of 8 elements": [{
+    - uplink true or false
+    - downlink true or false
+    - modulation "LORA" or "FSK"
+    - bandwidth in kHz (Lora only)
+    - spreadingFactor e.g. 12 (Lora only)
+    - bps (FSK only)
+  - uplinkChannels array if one or more uplink channel
+  - downlinkChannels array if one or more downlink channel
+    - frequency frequency in Hz, e.g. 868900000,
+    - minDR minimum data rate
+    - maxDR maximum data rate
+    - enabled true or false
+    - custom true or false
+  - maxPayloadSizePerDataRate array of 8 elements
+  - maxPayloadSizePerDataRate array of 8 elements
+    - m
+    - n
+  - rx1DataRateOffsets array of 8 elements of array of 1..N elements (unsigned integers)
+  - txPowerOffsets array of 8 integers
+  
+```json
+{
+	"regionalParametersVersion": "1.0.1",
+	"RegionBands": [{
+		"name": "RU864-870",
+		"supportsExtraChannels": true,
+		"bandDefaults": {
+			"RX2Frequency": 869100000,
+			"RX2DataRate": 0,
+			"ReceiveDelay1": 1,
+			"ReceiveDelay2": 2,
+			"JoinAcceptDelay1": 5,
+			"JoinAcceptDelay2": 6
+		},
+		"dataRates": [{
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 12,
+			"bps": 0
+		},
+			...
+		],
+		"uplinkChannels": [{
+			"frequency": 868900000,
+			"minDR": 0,
+			"maxDR": 5,
+			"enabled": true,
+			"custom": false
+		}, {
+			"frequency": 869100000,
+			"minDR": 0,
+			"maxDR": 5,
+			"enabled": true,
+			"custom": false
+		}],
+		"downlinkChannels": [{
+			"frequency": 868900000,
+			"minDR": 0,
+			"maxDR": 5,
+			"enabled": true,
+			"custom": false
+		}, {
+			"frequency": 869100000,
+			"minDR": 0,
+			"maxDR": 5,
+			"enabled": true,
+			"custom": false
+		}],
+		"maxPayloadSizePerDataRate": [{
+			"m": 59,
+			"n": 51
+		},
+			...
+		],
+		"maxPayloadSizePerDataRateRepeater": [{
+			"m": 59,
+			"n": 51
+		},
+			...
+		],
+		"rx1DataRateOffsets": [
+			[0, 0, 0, 0, 0, 0],
+			[1, 0, 0, 0, 0, 0],
+			[2, 1, 0, 0, 0, 0],
+			[3, 2, 1, 0, 0, 0],
+			[4, 3, 2, 1, 0, 0],
+			[5, 4, 3, 2, 1, 0],
+			[6, 5, 5, 4, 3, 2],
+			[7, 6, 5, 4, 3, 2]
+		],
+		"txPowerOffsets": [0, -2, -4, -6, -8, -10, -12, -14]
+	}]
+}
+```
+
 ## mac-gw, mac-ns utilities
 
 mac-gw send a command to a class C device bypassing the network server directly through the selected gateway.
