@@ -207,13 +207,13 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                         }
                     }
                     if (value->storage.bands.empty()) {
-                        applyErrorDescription("Int JRB_BAND_TX_POWER_OFS no band");
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
                         return false;
                     }
                     return false;
                 case JRB_BAND_DEFAULTS:
                     if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_DEFAULTS no band");
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
                         return false;
                     }
                     switch (keyIndex) {
@@ -236,16 +236,16 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             value->storage.bands.back().bandDefaults.JoinAcceptDelay2 = val;
                             return true;
                         default:
-                            applyErrorDescription("UInt JRB_BAND_DEFAULTS default");
+                            applyErrorDescription(ERR_REGION_BAND_EMPTY);
                             return false;
                     }
                 case JRB_BAND_RX1_DR_OFFSET: {
                     if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_DEFAULTS no band");
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
                         return false;
                     }
                     if (rx1DataRateOffsetCount >= DATA_RATE_SIZE) {
-                        applyErrorDescription("rx1DataRateOffset has too many elements");
+                        applyErrorDescription("rx1DataRateOffset more than 8 elements");
                         return false;
                     }
 
@@ -255,18 +255,18 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                 }
                 case JRB_BAND_CHANNEL: {
                     if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_CHANNEL no band");
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
                         return false;
                     }
                     switch (prevState) {
                         case JRB_BAND_UPLINKS:
                             if (value->storage.bands.back().uplinkChannels.empty()) {
-                                applyErrorDescription("UInt JRB_BAND_CHANNEL no band uplink channels");
+                                applyErrorDescription(ERR_REGION_BAND_EMPTY);
                                 return false;
                             }
                         case JRB_BAND_DOWNLINKS:
-                            if (value->storage.bands.back().uplinkChannels.empty()) {
-                                applyErrorDescription("UInt JRB_BAND_CHANNEL no band downlink channels");
+                            if (value->storage.bands.back().downlinkChannels.empty()) {
+                                applyErrorDescription(ERR_REGION_BAND_EMPTY);
                                 return false;
                             }
                     }
@@ -283,16 +283,16 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             channel.maxDR = val;
                             return true;
                     }
-                    applyErrorDescription("UInt JRB_BAND_CHANNEL");
+                    applyErrorDescription(ERR_REGION_BAND_EMPTY);
                     return false;
                 }
                 case JRB_BAND_P_SIZE: {
                     if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_P_SIZE no band");
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
                         return false;
                     }
                     if (maxPayloadSizePerDataRateCount >= DATA_RATE_SIZE) {
-                        applyErrorDescription("UInt JRB_BAND_P_SIZE too big");
+                        applyErrorDescription("UInt maxPayloadSizePerDataRate more than 8 elements");
                         return false;
                     }
                     switch (keyIndex) {
@@ -303,16 +303,16 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].n = val;
                             return true;
                     }
-                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
+                    applyErrorDescription("Unexpected number in the maxPayloadSizePerDataRate");
                     return false;
                 }
                 case JRB_BAND_PRPT_SIZE: {
                     if (value->storage.bands.empty()) {
-                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE no band");
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
                         return false;
                     }
                     if (maxPayloadSizePerDataRateRepeaterCount  >= DATA_RATE_SIZE) {
-                        applyErrorDescription("UInt JRB_BAND_PRPT_SIZE too big");
+                        applyErrorDescription("maxPayloadSizePerDataRateRepeater has more than 8 elements");
                         return false;
                     }
                     switch (keyIndex) {
@@ -323,7 +323,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].n = val;
                             return true;
                     }
-                    applyErrorDescription("UInt JRB_BAND_P_SIZE");
+                    applyErrorDescription(ERR_REGION_BAND_EMPTY);
                     return false;
                 }
                 default:
@@ -341,7 +341,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                         case JK_JOINACCEPTDELAY2:
                             return true;
                         default:
-                            applyErrorDescription("Integer default");
+                            applyErrorDescription("Unexpected integer value");
                             return false;
                     }
             }
@@ -370,7 +370,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             return true;
                         }
                     }
-                    applyErrorDescription("Bool JK_SUPPORTSEXTRACHANNELS");
+                    applyErrorDescription("Unexpected boolean");
                     return false;
                 case JK_UPLINK:
                     if (state == JRB_BAND_DATA_RATE) {
@@ -379,7 +379,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             return true;
                         }
                     }
-                    applyErrorDescription("Bool JK_UPLINK");
+                    applyErrorDescription("Unexpected boolean");
                     return false;
                 case JK_DOWNLINK:
                     if (state == JRB_BAND_DATA_RATE) {
@@ -388,27 +388,23 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             return true;
                         }
                     }
-                    applyErrorDescription("Bool JK_DOWNLINK");
+                    applyErrorDescription("Unexpected boolean");
                     return false;
                 case JK_ENABLED:
                 case JK_CUSTOM: {
-                    if (state != JRB_BAND_CHANNEL) {
-                        applyErrorDescription("Bool JRB_BAND_CHANNEL no channel");
-                        return false;
-                    }
-                    if (value->storage.bands.empty()) {
-                        applyErrorDescription("Bool JRB_BAND_CHANNEL no band");
+                    if (state != JRB_BAND_CHANNEL || value->storage.bands.empty()) {
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
                         return false;
                     }
                     switch (prevState) {
                         case JRB_BAND_UPLINKS:
                             if (value->storage.bands.back().uplinkChannels.empty()) {
-                                applyErrorDescription("Bool JRB_BAND_CHANNEL no band uplink channels");
+                                applyErrorDescription("uplinkChannels array element disappeared ");
                                 return false;
                             }
                         case JRB_BAND_DOWNLINKS:
-                            if (value->storage.bands.back().uplinkChannels.empty()) {
-                                applyErrorDescription("Bool JRB_BAND_CHANNEL no band downlink channels");
+                            if (value->storage.bands.back().downlinkChannels.empty()) {
+                                applyErrorDescription("downlinkChannels array element disappeared");
                                 return false;
                             }
                     }
@@ -425,7 +421,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     return true;
                 }
                 default:
-                    applyErrorDescription("Bool default");
+                    applyErrorDescription("Unexpected boolean value");
                     return false;
             }
         }
@@ -440,17 +436,17 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
 
 		bool Int64(int64_t val) {
             std::cerr << "=== Int64 " << val << ", state: " << state << std::endl;
-            applyErrorDescription("Int64 is too big");
+            applyErrorDescription("Unexpected too big Int64 number");
 			return false;
 		}
 
 		bool Uint64(uint64_t val) {
-            applyErrorDescription("UInt64 is too big");
+            applyErrorDescription("Unexpected too big UInt64 number");
 			return false;
 		}
 
 		bool Double(double d) {
-            applyErrorDescription("Double not allowed");
+            applyErrorDescription("Unexpected float number");
             return false;
 		}
 
@@ -530,7 +526,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     applyErrorDescription("Object JRB_BAND_DOWNLINKS");
                     return false;
                 default:
-                    applyErrorDescription("Object default");
+                    applyErrorDescription("Unexpected object");
                     return false;
             }
 		}
@@ -571,7 +567,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     state = prevState;
                     return true;
                 default:
-                    applyErrorDescription("EndObject default");
+                    applyErrorDescription("Unexpected end of object");
                     return false;
             }
         }
@@ -584,7 +580,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             state = JRB_BANDS;
                             return true;
                         default:
-                            applyErrorDescription("Array JRB_ROOT default");
+                            applyErrorDescription("Unexpected array");
                             return false;
                     }
                 case JRB_BAND:
@@ -613,15 +609,14 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                             state = JRB_BAND_DOWNLINKS;
                             return true;
                         default:
-                            applyErrorDescription("Array JRB_BAND default");
+                            applyErrorDescription("Unexpected array in the band");
                             return false;
                     }
                 case JRB_BAND_RX1_DR_OFFSETS:
                     state = JRB_BAND_RX1_DR_OFFSET;
                     return true;
-
                 default:
-                    applyErrorDescription("Array default");
+                    applyErrorDescription("Unexpected array");
                     return false;
             }
 		}
@@ -647,7 +642,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     rx1DataRateOffsetCount++;
                     return true;
                 default:
-                    applyErrorDescription("EndArray default");
+                    applyErrorDescription("Unexpected end of array");
                     return false;
             }
 		}

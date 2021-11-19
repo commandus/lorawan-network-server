@@ -10,7 +10,6 @@
 #include "errlist.h"
 #include "utilstring.h"
 #include "utillora.h"
-#include "utildate.h"
 
 int main(int argc, char** argv)
 {
