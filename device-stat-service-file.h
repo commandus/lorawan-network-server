@@ -26,13 +26,13 @@ private:
         std::mutex listMutex;
 	public:
         DeviceStatServiceFile();
-		virtual void put(const SemtechUDPPacket *packet);
+		void put(const SemtechUDPPacket *packet) override;
 		// force save
-		virtual void flush();
+		void flush() override;
 		// reload
-		virtual int init(const std::string &filename, void *data);
+		int init(const std::string &filename, void *data) override;
 		// close resources
-		virtual void done();
+		void done() override;
 
     void runner();
 
