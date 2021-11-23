@@ -536,6 +536,7 @@ int main(
      */
 
 	// Start received message queue service
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start received message queue service ..");
 	void *options = NULL;
 	DirTxtReceiverQueueServiceOptions dirOptions;
 	switch (config->serverConfig.messageQueueType) {
@@ -554,6 +555,7 @@ int main(
 			
 		break;
 	}
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize received message queue service ..");
 	rs = receiverQueueService->init(config->serverConfig.queueStorageName, options);
 	if (rs) {
 		std::cerr << ERR_INIT_QUEUE << rs << ": " << strerror_lorawan_ns(rs)
@@ -566,6 +568,7 @@ int main(
 		config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
 	}
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start output database service ..");
 	ConfigDatabases configDatabases(config->databaseConfigFileName);
 	if (configDatabases.dbs.size() == 0) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
@@ -575,9 +578,10 @@ int main(
 	if (config->serverConfig.verbosity > 2)
 		std::cerr << MSG_DATABASE_LIST << std::endl;
 
-	// heloer class to find out database by name or sequnce number (id)
+	// helper class to find out database by name or sequnce number (id)
 	dbByConfig = new DatabaseByConfig(&configDatabases);
 	// check out database connectivity
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Check database availability ..");
 	bool dbOk = true;
 	for (std::vector<ConfigDatabase>::const_iterator it(configDatabases.dbs.begin()); it != configDatabases.dbs.end(); it++) {
         if (!it->active)
@@ -599,7 +603,7 @@ int main(
 		if (!hasConn)
 			dbOk = false;
 	}
-	// exit, if can not connected to the database
+	// exit, if can not connect to the database
 	if (!dbOk) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
@@ -610,6 +614,7 @@ int main(
 		config->protoPath = DEF_PROTO_PATH;
 	}
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser ..");
 	pkt2env = initPkt2(config->protoPath, 0);
 	if (!pkt2env) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
@@ -617,6 +622,7 @@ int main(
 	}
 
 	// Set up processor
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start LoRaWAN packet processor..");
 	processor = new LoraPacketProcessor();
 	processor->setLogger(onLog);
 	processor->setIdentityService(identityService);
@@ -661,6 +667,7 @@ int main(
 
 	if (config->serverConfig.daemonize)
 	{
+        onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Listener daemon run ..");
 		char wd[PATH_MAX];
 		std::string progpath = getcwd(wd, PATH_MAX);
 		if (config->serverConfig.verbosity > 1)
@@ -675,6 +682,7 @@ int main(
 #else
 		setSignalHandler();
 #endif
+        onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Listener run ..");
 		run();
 		done();
 	}
