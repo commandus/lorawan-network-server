@@ -7,7 +7,7 @@
  * specified in the option parameter of init() method
  */
 DeviceStatServiceFile::DeviceStatServiceFile()
-    : state(0), timeoutSeconds(DEF_DEVICE_STAT_TIMEOUT_SECONDS), threadRun(NULL)
+    : state(0), timeoutSeconds(DEF_DEVICE_STAT_TIMEOUT_SECONDS), threadRun(nullptr)
 {
 
 }
@@ -40,6 +40,7 @@ int DeviceStatServiceFile::init(
     storageName = aFileName;
     threadRun = new std::thread(&DeviceStatServiceFile::runner, this);
     threadRun->detach();
+    return 0;
 }
 
 // close resources
@@ -55,12 +56,10 @@ void DeviceStatServiceFile::runner()
 {
     // MAX_DEVICE_STAT_TIMEOUT_SECONDS
     while (state == 1) { // 0- stopped, 1- run, 2- stop request
-        struct timeval timeout;
         if (timeoutSeconds <= 0)
             timeoutSeconds = MIN_DEVICE_STAT_TIMEOUT_SECONDS;
-        timeout.tv_sec = timeoutSeconds;
-        timeout.tv_usec = 0;
-        int r = select(0, NULL, NULL, NULL, &timeout);
+        struct timeval timeout{ .tv_sec = timeoutSeconds, .tv_usec = 0 };
+        int r = select(0, NULL, NULL, nullptr, &timeout);
         switch (r) {
             case -1:
                 break;
@@ -74,7 +73,7 @@ void DeviceStatServiceFile::runner()
         }
     }
     state = 0;
-        threadRun = NULL;
+    threadRun = nullptr;
 }
 
 void DeviceStatServiceFile::tuneDelay()
