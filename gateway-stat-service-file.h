@@ -26,13 +26,13 @@ private:
         std::mutex listMutex;
 	public:
         GatewayStatServiceFile();
-		virtual void put(GatewayStat *stat);
+		void put(GatewayStat *stat) override;
 		// force save
-		virtual void flush();
+		virtual void flush() override;
 		// reload
-		virtual int init(const std::string &filename, void *data);
+		int init(const std::string &filename, void *data) override;
 		// close resources
-		virtual void done();
+		void done() override;
 
     void runner();
 

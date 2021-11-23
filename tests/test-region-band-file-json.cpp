@@ -88,6 +88,12 @@ int main(int argc, char **argv) {
     config::rmFile(TEST_FN);
 
     RegionBandsFileJson rbFile;
+
+    std::cerr << "Load regional-parameters.json  file.." << std::endl;
+    RegionBandsFileJson *rbf = new RegionBandsFileJson();
+    rbf->init("regional-parameters.json", nullptr);
+    delete rbf;
+
     std::cerr << "Load empty file.." << std::endl;
     // load empty file
     loadFile(rbFile, TEST_FN);

@@ -184,9 +184,11 @@ static void stop()
 		listener->stopped = true;
 }
 
+#define TRACE_BUFFER_SIZE   256
+
 static void printTrace() {
-    void *t[256];
-    size_t size = backtrace(t, 256);
+    void *t[TRACE_BUFFER_SIZE];
+    size_t size = backtrace(t, TRACE_BUFFER_SIZE);
     backtrace_symbols_fd(t, size, STDERR_FILENO);
 }
 
@@ -202,8 +204,8 @@ void signalHandler(int signal)
 		break;
 	case SIGSEGV:
         std::cerr << ERR_SEGMENTATION_FAULT << std::endl;
-            printTrace();
-            exit(ERR_CODE_SEGMENTATION_FAULT);
+        printTrace();
+        exit(ERR_CODE_SEGMENTATION_FAULT);
     case SIGABRT:
 		std::cerr << ERR_ABRT << std::endl;
         printTrace();
@@ -428,7 +430,7 @@ int main(
 			identityService = new JsonFileIdentityService();
 	}
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize UDP listener..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize identity service..");
     int rs = identityService->init(config->serverConfig.identityStorageName, NULL);
     if (rs) {
         std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs)
@@ -436,13 +438,14 @@ int main(
         exit(ERR_CODE_INIT_IDENTITY);
     }
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start gateway statistics service..");
     // Start gateway statistics service
     switch (config->serverConfig.gwStatStorageType) {
         case GW_STAT_FILE_JSON:
+            onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start gateway statistics service file..");
             gatewayStatService = new GatewayStatServiceFile();
             break;
         case GW_STAT_POST:
+            onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start gateway statistics service post..");
             gatewayStatService = new GatewayStatServicePost();
             break;
         default:
@@ -522,6 +525,7 @@ int main(
     regionBandsFileJson = new RegionBandsFileJson();
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize regional settings "
         + config->serverConfig.regionalSettingsStorageName + "..");
+
     /*
     rs = regionBandsFileJson->init(config->serverConfig.regionalSettingsStorageName, NULL);
     if (rs) {

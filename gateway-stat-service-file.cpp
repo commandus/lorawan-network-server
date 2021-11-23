@@ -40,6 +40,7 @@ int GatewayStatServiceFile::init(
     storageName = aFileName;
     threadRun = new std::thread(&GatewayStatServiceFile::runner, this);
     threadRun->detach();
+    return 0;
 }
 
 // close resources
@@ -74,7 +75,7 @@ void GatewayStatServiceFile::runner()
         }
     }
     state = 0;
-        threadRun = NULL;
+    threadRun = NULL;
 }
 
 void GatewayStatServiceFile::tuneDelay()
