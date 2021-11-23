@@ -59,7 +59,7 @@ void ServerConfig::clear()
 
 ServerConfig::ServerConfig() 
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), controlFPort(0), daemonize(false),
-      identityStorageName(""), deviceHistoryStorageName(""),
+      identityStorageName(""), deviceHistoryStorageName(""), regionalSettingsStorageName(""),
       queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
       gwStatStorageType(GW_STAT_NONE), deviceStatStorageType(DEVICE_STAT_NONE),
       messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0),
@@ -103,6 +103,13 @@ int ServerConfig::parse(
             deviceHistoryStorageName = jn.GetString();
 		}
 	}
+    if (value.HasMember("regionalSettingsStorageName")) {
+        rapidjson::Value &jn = value["regionalSettingsStorageName"];
+        if (jn.IsString()) {
+            regionalSettingsStorageName = jn.GetString();
+        }
+    }
+
 	if (value.HasMember("queueStorageName")) {
 		rapidjson::Value &jn = value["queueStorageName"];
 		if (jn.IsString()) {
@@ -214,6 +221,10 @@ void ServerConfig::toJson(
 	rapidjson::Value nds;
 	nds.SetString(deviceHistoryStorageName.c_str(), deviceHistoryStorageName.size(), allocator);
 	value.AddMember("deviceHistoryStorageName", nds, allocator);
+
+    rapidjson::Value nrs;
+    nrs.SetString(regionalSettingsStorageName.c_str(), regionalSettingsStorageName.size(), allocator);
+    value.AddMember("regionalSettingsStorageName", nrs, allocator);
 
 	rapidjson::Value nq;
 	nq.SetString(queueStorageName.c_str(), queueStorageName.size(), allocator);

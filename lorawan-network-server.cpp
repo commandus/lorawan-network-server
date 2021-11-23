@@ -37,6 +37,7 @@
 #include "identity-service-dir-txt.h"
 #include "receiver-queue-service-file-json.h"
 #include "receiver-queue-service-dir-txt.h"
+#include "region-band-file-json.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
@@ -86,6 +87,8 @@ static LoraPacketProcessor *processor = NULL;
 static DatabaseByConfig *dbByConfig = NULL;
 // Device counters and last received
 static DeviceHistoryService *deviceHistoryService = NULL;
+// Regional settings
+static RegionBandsFileJson *regionBandsFileJson = NULL;
 
 // pkt2 environment
 static void* pkt2env = NULL;
@@ -108,6 +111,8 @@ static void flushFiles()
 		gatewayList->save();
 	if (deviceHistoryService)
 		deviceHistoryService->flush();
+    // if (regionBandsFileJson)
+    //    regionBandsFileJson->flush();
 }
 
 static void done()
@@ -162,6 +167,11 @@ static void done()
 		delete deviceHistoryService;
         deviceHistoryService = NULL;
 	}
+    if (regionBandsFileJson) {
+        delete regionBandsFileJson;
+        regionBandsFileJson = NULL;
+    }
+
 	if (pkt2env)
 		donePkt2(pkt2env);
 
@@ -172,6 +182,12 @@ static void stop()
 {
 	if (listener)
 		listener->stopped = true;
+}
+
+static void printTrace() {
+    void *t[256];
+    size_t size = backtrace(t, 256);
+    backtrace_symbols_fd(t, size, STDERR_FILENO);
 }
 
 void signalHandler(int signal)
@@ -185,13 +201,13 @@ void signalHandler(int signal)
 		done();
 		break;
 	case SIGSEGV:
-    {
-		std::cerr << ERR_SEGMENTATION_FAULT << std::endl;
-		void *t[256];
-		size_t size = backtrace(t, 256);
-		backtrace_symbols_fd(t, size, STDERR_FILENO);
-		exit(ERR_CODE_SEGMENTATION_FAULT);
-    }
+        std::cerr << ERR_SEGMENTATION_FAULT << std::endl;
+            printTrace();
+            exit(ERR_CODE_SEGMENTATION_FAULT);
+    case SIGABRT:
+		std::cerr << ERR_ABRT << std::endl;
+        printTrace();
+		exit(ERR_CODE_ABRT);
 	case SIGHUP:
 		std::cerr << ERR_HANGUP_DETECTED << std::endl;
 		break;
@@ -218,6 +234,7 @@ void setSignalHandler()
 	sigaction(SIGINT, &action, NULL);
 	sigaction(SIGHUP, &action, NULL);
 	sigaction(SIGSEGV, &action, NULL);
+    sigaction(SIGABRT, &action, NULL);
 	sigaction(SIGUSR2, &action, NULL);
 	
 }
@@ -369,8 +386,9 @@ int main(
 		std::cerr << ERR_NO_CONFIG << std::endl;
 		exit(ERR_CODE_NO_CONFIG);
 	}
-	
-	listener = new UDPListener();
+
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize UDP listener..");
+    listener = new UDPListener();
 	// check signal number when select() has been interrupted
 	listener->setSysSignalPtr(&lastSysSignal);
 	listener->setLogger(config->serverConfig.verbosity, onLog);
@@ -395,6 +413,7 @@ int main(
 	if (config->serverConfig.verbosity > 2)
 		std::cerr << gatewayList->toJsonString() << std::endl;
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start identity service..");
 	// Start identity service
 	switch (config->serverConfig.storageType) {
 		case IDENTITY_STORAGE_LMDB:
@@ -409,6 +428,7 @@ int main(
 			identityService = new JsonFileIdentityService();
 	}
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize UDP listener..");
     int rs = identityService->init(config->serverConfig.identityStorageName, NULL);
     if (rs) {
         std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs)
@@ -416,6 +436,7 @@ int main(
         exit(ERR_CODE_INIT_IDENTITY);
     }
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start gateway statistics service..");
     // Start gateway statistics service
     switch (config->serverConfig.gwStatStorageType) {
         case GW_STAT_FILE_JSON:
@@ -428,6 +449,7 @@ int main(
             gatewayStatService = NULL;
     }
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize gateway statistics service..");
     if (gatewayStatService) {
         rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, NULL);
         if (rs) {
@@ -437,6 +459,7 @@ int main(
         }
     }
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start device statistics service..");
     // Start device statistics service
     switch (config->serverConfig.deviceStatStorageType) {
         case DEVICE_STAT_FILE_JSON:
@@ -449,6 +472,7 @@ int main(
             deviceStatService = NULL;
     }
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize device statistics service..");
     if (deviceStatService) {
         rs = deviceStatService->init(config->serverConfig.logDeviceStatisticsFileName, NULL);
         if (rs) {
@@ -481,8 +505,10 @@ int main(
             break;
     }
 
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start device history service..");
     // std::cerr << "Device history name: " << config->serverConfig.deviceHistoryStorageName << std::endl;
     deviceHistoryService = new JsonFileDeviceHistoryService();
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize device history service..");
     rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, NULL);
     if (rs) {
         std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
@@ -490,6 +516,20 @@ int main(
         // That's ok, no problem at all
         // exit(ERR_CODE_INIT_DEVICE_STAT);
     }
+
+    // load regional settings
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start regional settings ..");
+    regionBandsFileJson = new RegionBandsFileJson();
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize regional settings "
+        + config->serverConfig.regionalSettingsStorageName + "..");
+    /*
+    rs = regionBandsFileJson->init(config->serverConfig.regionalSettingsStorageName, NULL);
+    if (rs) {
+        std::cerr << ERR_INIT_REGION_BANDS << rs << ": " << strerror_lorawan_ns(rs)
+                  << " " << config->serverConfig.regionalSettingsStorageName << std::endl;
+        exit(ERR_CODE_INIT_REGION_BANDS);
+    }
+     */
 
 	// Start received message queue service
 	void *options = NULL;

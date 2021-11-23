@@ -9,6 +9,45 @@
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
 
+/**
+ * RegionBandsFileJson class load LoRaWAN region settings from the
+ * regional-parameters.json JSON file. This file looks like:
+ * {
+	"regionalParametersVersion": "1.0.3",
+	"RegionBands": [{
+		"name": "RU864-870",
+		"supportsExtraChannels": true,
+		"bandDefaults": {
+			"RX2Frequency": 869100000,
+			"RX2DataRate": 0,
+			"ReceiveDelay1": 1,
+			"ReceiveDelay2": 2,
+			"JoinAcceptDelay1": 5,
+			"JoinAcceptDelay2": 6
+		},
+		"uplinkChannels": [{
+			"frequency": 868900000,
+			"minDR": 0,
+			"maxDR": 5,
+			"enabled": true,
+			"custom": false
+		}, ...],
+		"downlinkChannels": [...],
+		"maxPayloadSizePerDataRate": [{
+			"m": 59,
+			"n": 51
+		},...],
+		"maxPayloadSizePerDataRateRepeater": [{
+			"m": 59,
+			"n": 51
+		}, ...],
+		"rx1DataRateOffsets": [
+			[0, 0, 0, 0, 0, 0],...
+		],
+		"txPowerOffsets": [0, -2, -4, -6, -8, -10, -12, -14]
+	}]
+}
+ */
 class RegionBandsFileJson {
 	private:
         // helper hash map to get() region by the name

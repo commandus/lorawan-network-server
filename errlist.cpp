@@ -1,10 +1,10 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 90
+#define ERR_COUNT 100
 
 // used by strerror_lorawan_ns()
-static const char *errlist[ERR_COUNT] = {
+static const char *errList[ERR_COUNT] = {
 	ERR_COMMAND_LINE,
 	ERR_OPEN_DEVICE,
 	ERR_CLOSE_DEVICE,
@@ -77,6 +77,7 @@ static const char *errlist[ERR_COUNT] = {
 	ERR_INVALID_FPORT,
 	ERR_INVALID_MIC,
 	ERR_SEGMENTATION_FAULT,
+    ERR_ABRT,
 	ERR_BEST_GATEWAY_NOT_FOUND,
 	ERR_REPLY_MAC,
 	ERR_NO_MAC,
@@ -94,7 +95,8 @@ static const char *errlist[ERR_COUNT] = {
     ERR_INIT_GW_STAT,
     ERR_DEVICE_NAME_NOT_FOUND,
     ERR_GATEWAY_NO_YET_PULL_DATA,
-    ERR_REGION_BAND_EMPTY
+    ERR_REGION_BAND_EMPTY,
+    ERR_INIT_REGION_BANDS
 };
 
 const char *strerror_lorawan_ns
@@ -104,7 +106,7 @@ const char *strerror_lorawan_ns
 {
 	if ((errcode <= -500) && (errcode >= -500 - ERR_COUNT))
 	{
-		return errlist[-(errcode + 500)];
+		return errList[-(errcode + 500)];
 	}
 	return strerror(errcode);
 }

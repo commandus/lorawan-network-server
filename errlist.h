@@ -5,11 +5,12 @@
 #define	LOG_DEBUG							3
 */
 
-#define LOG_UDP_EMITTER						1
+#define LOG_MAIN_FUNC						1
 #define LOG_UDP_LISTENER					2
 #define LOG_IDENTITY_SVC					3
 #define LOG_PACKET_HANDLER					4
 #define LOG_PACKET_QUEUE					5
+#define LOG_UDP_EMITTER						6
 
 // Error codes
 #define LORA_OK            					0
@@ -85,24 +86,26 @@
 #define ERR_CODE_INVALID_FPORT				-569
 #define ERR_CODE_INVALID_MIC				-570
 #define ERR_CODE_SEGMENTATION_FAULT			-571
-#define ERR_CODE_BEST_GATEWAY_NOT_FOUND		-572
-#define ERR_CODE_REPLY_MAC					-573
-#define ERR_CODE_NO_MAC			           	-574
-#define ERR_CODE_NO_DEVICE_STAT				-575
-#define ERR_CODE_INIT_DEVICE_STAT			-576
-#define ERR_CODE_INIT_IDENTITY				-577
-#define ERR_CODE_INIT_QUEUE					-578
-#define ERR_CODE_HANGUP_DETECTED			-579
-#define ERR_CODE_NO_FCNT_DOWN				-580
-#define ERR_CODE_CONTROL_NOT_AUTHORIZED		-581
-#define ERR_CODE_GATEWAY_NOT_FOUND			-582
-#define ERR_CODE_CONTROL_DEVICE_NOT_FOUND	-583
-#define ERR_CODE_INVALID_CONTROL_PACKET		-584
-#define ERR_CODE_DUPLICATED_PACKET			-585
-#define ERR_CODE_INIT_GW_STAT   			-586
-#define ERR_CODE_DEVICE_NAME_NOT_FOUND      -587
-#define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -588
-#define ERR_CODE_REGION_BAND_EMPTY          -589
+#define ERR_CODE_ABRT           			-572
+#define ERR_CODE_BEST_GATEWAY_NOT_FOUND		-573
+#define ERR_CODE_REPLY_MAC					-574
+#define ERR_CODE_NO_MAC			           	-575
+#define ERR_CODE_NO_DEVICE_STAT				-576
+#define ERR_CODE_INIT_DEVICE_STAT			-577
+#define ERR_CODE_INIT_IDENTITY				-578
+#define ERR_CODE_INIT_QUEUE					-579
+#define ERR_CODE_HANGUP_DETECTED			-580
+#define ERR_CODE_NO_FCNT_DOWN				-581
+#define ERR_CODE_CONTROL_NOT_AUTHORIZED		-582
+#define ERR_CODE_GATEWAY_NOT_FOUND			-583
+#define ERR_CODE_CONTROL_DEVICE_NOT_FOUND	-584
+#define ERR_CODE_INVALID_CONTROL_PACKET		-585
+#define ERR_CODE_DUPLICATED_PACKET			-586
+#define ERR_CODE_INIT_GW_STAT   			-587
+#define ERR_CODE_DEVICE_NAME_NOT_FOUND      -588
+#define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -589
+#define ERR_CODE_REGION_BAND_EMPTY          -590
+#define ERR_CODE_INIT_REGION_BANDS          -591
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -184,6 +187,7 @@
 #define ERR_INVALID_FPORT				"Invalid FPort value"
 #define ERR_INVALID_MIC					"Invalid MIC"
 #define ERR_SEGMENTATION_FAULT			"Segmentation fault"
+#define ERR_ABRT                        "Abnormal program termination"
 #define ERR_BEST_GATEWAY_NOT_FOUND		"Best gateway not found"
 #define ERR_REPLY_MAC					"Error send MAC reply "
 #define ERR_NO_MAC			           	"No MAC command"
@@ -202,6 +206,7 @@
 #define ERR_DEVICE_NAME_NOT_FOUND       "Device name not found"
 #define ERR_GATEWAY_NO_YET_PULL_DATA    "Gateway does not sent PULL_DATA request, can not send to gateway "
 #define ERR_REGION_BAND_EMPTY           "RegionBands array element disappeared"
+#define ERR_INIT_REGION_BANDS			"Regional settings does not loaded "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

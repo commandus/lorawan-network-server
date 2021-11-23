@@ -2382,6 +2382,7 @@ std::string BANDWIDTH2String(BANDWIDTH value) {
         case BW_500KHZ:
             return "500";
     }
+    return "7.8";
 }
 
 BANDWIDTH string2BANDWIDTH(const char *value)
@@ -2406,6 +2407,7 @@ BANDWIDTH string2BANDWIDTH(const char *value)
         return BW_250KHZ;
     if (strcmp(value, "500") == 0)
         return BW_500KHZ;
+    return BW_7KHZ;
 }
 
 BANDWIDTH int2BANDWIDTH(int value)

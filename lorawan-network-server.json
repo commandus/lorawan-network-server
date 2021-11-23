@@ -11,6 +11,7 @@
 			"84.237.104.128:5000"
 		],
 		"deviceHistoryStorageName": "device-history.json",
+		"regionalSettingsStorageName": "regional-parameters.json",
 		
 		"deviceStatStorageType": "post",
 		"logDeviceStatisticsFileName": "http://localhost:50002/post.php",
