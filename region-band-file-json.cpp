@@ -743,7 +743,10 @@ void RegionBandsFileJson::clear()
     defaultRegionBand = nullptr;
 }
 
-void RegionBandsFileJson::buildIndex()
+/**
+ * @return ERR_CODE_REGION_BAND_EMPTY if not loaded any
+ */
+int RegionBandsFileJson::buildIndex()
 {
     nameIndex.clear();
     defaultRegionBand = nullptr;
@@ -752,7 +755,15 @@ void RegionBandsFileJson::buildIndex()
         if (it->defaultRegion)
             defaultRegionBand = &*it;
     }
-
+    if (!defaultRegionBand) {
+        if (storage.bands.empty()) {
+            // add dumb region?
+        } else {
+            // use the first one
+            defaultRegionBand = &*storage.bands.begin();
+        }
+    }
+    return storage.bands.empty() ? ERR_CODE_REGION_BAND_EMPTY : LORA_OK;
 }
 
 const RegionBand *RegionBandsFileJson::get(const std::string &name) const
@@ -763,39 +774,53 @@ const RegionBand *RegionBandsFileJson::get(const std::string &name) const
     return it->second;
 }
 
+int RegionBandsFileJson::loadFile(const std::string &fileName)
+{
+    RegionBandsJsonHandler handler(this);
+    rapidjson::Reader reader;
+    FILE* fp = fopen(fileName.c_str(), "rb");
+    if (!fp)
+        return ERR_CODE_INVALID_JSON;
+    char readBuffer[4096];
+    rapidjson::FileReadStream istrm(fp, readBuffer, sizeof(readBuffer));
+    rapidjson::ParseResult r = reader.Parse(istrm, handler);
+    if (r.IsError()) {
+        errcode = r.Code();
+        std::stringstream ss;
+        ss << rapidjson::GetParseError_En(r.Code()) << " Offset: " << r.Offset()
+           << ",  " << errMessage;
+        errMessage = ss.str();
+    } else {
+        errcode = 0;
+        errMessage = "";
+    }
+    fclose(fp);
+    return r.IsError() ? ERR_CODE_INVALID_JSON : 0;
+}
+
 int RegionBandsFileJson::load()
 {
 	clear();
-    RegionBandsJsonHandler handler(this);
-    rapidjson::Reader reader;
-	FILE* fp = fopen(path.c_str(), "rb");
-	if (!fp)
-		return ERR_CODE_INVALID_JSON;
- 	char readBuffer[4096];
-	rapidjson::FileReadStream istrm(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::ParseResult r = reader.Parse(istrm, handler);
-	if (r.IsError()) {
-		errcode = r.Code();
-		std::stringstream ss;
-		ss << rapidjson::GetParseError_En(r.Code()) << " Offset: " << r.Offset()
-            << ",  " << errMessage;
-        errMessage = ss.str();
-	} else {
-		errcode = 0;
-        errMessage = "";
-	}
-	fclose(fp);
-    buildIndex();
-	return r.IsError() ? ERR_CODE_INVALID_JSON : 0;
-} 
+    int r = loadFile(path);
+    if (!r) {
+        r = buildIndex();
+    }
+    return r;
+}
+
+int RegionBandsFileJson::saveFile(const std::string &fileName)
+{
+    std::fstream os;
+    os.open(fileName.c_str(), std::ios::out);
+    os << storage.toJsonString();
+    int r = os.bad() ? ERR_CODE_OPEN_DEVICE : 0;
+    os.close();
+    return r;
+}
 
 int RegionBandsFileJson::save()
 {
-	std::fstream os;
-	os.open(path.c_str(), std::ios::out);
-	os << storage.toJsonString();
-	int r = os.bad() ? ERR_CODE_OPEN_DEVICE : 0;
-	os.close();
+    int r = saveFile(path);
 	return r;
 }
 

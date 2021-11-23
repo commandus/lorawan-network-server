@@ -39,6 +39,7 @@ int GatewayStatServiceFile::init(
     state = 1;  // 0- stopped, 1- run, 2- stop request
     storageName = aFileName;
     threadRun = new std::thread(&GatewayStatServiceFile::runner, this);
+    threadRun->detach();
 }
 
 // close resources

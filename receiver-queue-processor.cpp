@@ -99,6 +99,7 @@ void ReceiverQueueProcessor::start(
 	this->databaseByConfig->getIds(ids);
 	receiverQueueService->setDbs(ids);
 	threadDb = new std::thread(&ReceiverQueueProcessor::runner, this);
+    threadDb->detach();
 }
 
 void ReceiverQueueProcessor::stop()

@@ -771,6 +771,7 @@ void PacketQueue::start(
 	fdWakeup = eventfd(0, EFD_CLOEXEC);
 
 	threadSend = new std::thread(&PacketQueue::runner, this);
+    threadSend->detach();
 }
 
 void PacketQueue::stop()

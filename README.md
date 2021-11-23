@@ -89,16 +89,22 @@ libprotoc-dev libunwind-dev dependencies:
 apt install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
 ```
 
-Finally
+Finally, make all
+```
+make
+```
+
+or just two static libraries:
 
 ```
-make libpkt2.a libpkt2util.a
+make pkt2.pb.h libpkt2.a libpkt2util.a
 ```
+
+pkt2.pb.h target is required to generate protobuf c++ files.
 
 Automake, autoconf, libtool, gcc or cmake must be installed first.
 
-
-Also must install at leat one backend database library, ot insttl all of them:
+Also, must install at least one backend database library, ot install all of them:
 
 ```
 sudo apt install liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev
@@ -108,6 +114,8 @@ Full set of libraries:
 ```
 sudo apt install autoconf build-essential libtool libprotobuf-dev liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
 ```
+
+If libmysqlclient-dev package is not available in repository, replace with package libmariadb-dev.
 
 To do cmake installed first run:
 
@@ -1075,6 +1083,14 @@ received packet {"activation":"ABP","class":"A","eui":"3434383566378112","nwkSKe
 Javascript error: uncaught: 'cannot read property \x27time5\x27 of ...' in 
 new Date(((field.packet46420.time5.day_month_year >> 9) & 0x7f) + 2000, ((field.packet46420.time5.day_month_year >> 5) & 0xf) - 1, (field.packet46420.time5.day_month_year & 0x1f), field.packet46420.time5.hour, field.packet46420.time5.minute, field.packet46420.time5.second, 00).getTime() / 1000
 Aborted
+
+## Tips
+
+### Check sqlite3 records
+
+```
+echo ".q" | sqlite3 -cmd "attach \"lns.data.sqlite.db\" as lns;select devname, temperature, datetime(received, 'unixepoch', 'localtime') received, rowid from vega_SI13 order by received desc limit 50;
+```
 
 ## Implementation 
 

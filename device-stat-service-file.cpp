@@ -39,6 +39,7 @@ int DeviceStatServiceFile::init(
     state = 1;  // 0- stopped, 1- run, 2- stop request
     storageName = aFileName;
     threadRun = new std::thread(&DeviceStatServiceFile::runner, this);
+    threadRun->detach();
 }
 
 // close resources

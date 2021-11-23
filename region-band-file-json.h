@@ -11,11 +11,14 @@
 
 class RegionBandsFileJson {
 	private:
-        // helper to get()
+        // helper hash map to get() region by the name
         std::map<std::string, const RegionBand *> nameIndex;
         // default RegionBand
+        // last region marked as default ("defaultRegion": true) is used
         const RegionBand *defaultRegionBand;
-        void buildIndex();
+        int buildIndex();
+        int loadFile(const std::string &fileName);
+        int saveFile(const std::string &fileName);
 		int load();
 		int save();
 	protected:
