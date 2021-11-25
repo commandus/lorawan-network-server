@@ -440,7 +440,7 @@ Id  | Channel Plan | Common Name
   - rx1DataRateOffsets array of 8 elements of array of 1..N elements (unsigned integers)
   - txPowerOffsets array of 8 integers
   
-```json
+```
 {
 	"regionalParametersVersion": "1.0.1",
 	"RegionBands": [{

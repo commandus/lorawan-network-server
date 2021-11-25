@@ -106,6 +106,7 @@
 #define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -589
 #define ERR_CODE_REGION_BAND_EMPTY          -590
 #define ERR_CODE_INIT_REGION_BANDS          -591
+#define ERR_CODE_INIT_REGION_NO_DEFAULT     -592
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -207,6 +208,7 @@
 #define ERR_GATEWAY_NO_YET_PULL_DATA    "Gateway does not sent PULL_DATA request, can not send to gateway "
 #define ERR_REGION_BAND_EMPTY           "RegionBands array element disappeared"
 #define ERR_INIT_REGION_BANDS			"Regional settings does not loaded "
+#define ERR_INIT_REGION_NO_DEFAULT		"No default regional settings loaded"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -222,6 +224,7 @@
 #define MSG_GATEWAY						"Gateway "
 #define MSG_DEVICE						"Device "
 #define MSG_DEVICES						"Devices:"
+#define MSG_REGIONAL_SETTINGS   		"Regional setings:"
 #define MSG_DEVICE_EUI					"EUI "
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "

@@ -59,7 +59,7 @@ class RegionBandsFileJson {
         const RegionBand *defaultRegionBand;
         int buildIndex();
         int loadFile(const std::string &fileName);
-        int saveFile(const std::string &fileName);
+        int saveFile(const std::string &fileName) const;
 		int load();
 		int save();
 	protected:

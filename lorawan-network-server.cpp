@@ -526,14 +526,18 @@ int main(
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize regional settings "
         + config->serverConfig.regionalSettingsStorageName + "..");
 
-    /*
+    // initialize regional settings
     rs = regionBandsFileJson->init(config->serverConfig.regionalSettingsStorageName, NULL);
     if (rs) {
-        std::cerr << ERR_INIT_REGION_BANDS << rs << ": " << strerror_lorawan_ns(rs)
-                  << " " << config->serverConfig.regionalSettingsStorageName << std::endl;
+        std::cerr << ERR_MESSAGE << ERR_CODE_INIT_REGION_BANDS << ": " << ERR_INIT_REGION_BANDS
+            << " with code " << rs << ": " << strerror_lorawan_ns(rs)
+                  << ", file: " << config->serverConfig.regionalSettingsStorageName << std::endl;
         exit(ERR_CODE_INIT_REGION_BANDS);
     }
-     */
+
+    if (config->serverConfig.verbosity > 3) {
+        std::cerr << MSG_REGIONAL_SETTINGS << regionBandsFileJson->storage.toJsonString() << std::endl;
+    }
 
 	// Start received message queue service
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start received message queue service ..");

@@ -94,7 +94,7 @@ JsonFileIdentityService::~JsonFileIdentityService()
  *		..
  *	]
  */
-class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, RegionBandsJsonHandler> {
+class RegionBandsJsonEmptyHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, RegionBandsJsonEmptyHandler> {
 private:
     JsonFileIdentityService *service;
     bool isNetworkIdentity;
@@ -103,7 +103,7 @@ private:
     DEVICEID v;
     uint32_t flags;
 public:
-    RegionBandsJsonHandler(JsonFileIdentityService *svc)
+    RegionBandsJsonEmptyHandler(JsonFileIdentityService *svc)
             : service(svc), isNetworkIdentity(false), idx(-1)
     {
         memset(&k, 0, sizeof(DEVADDR));
@@ -222,7 +222,7 @@ void JsonFileIdentityService::clear()
 int JsonFileIdentityService::load()
 {
     clear();
-    RegionBandsJsonHandler handler(this);
+    RegionBandsJsonEmptyHandler handler(this);
     rapidjson::Reader reader;
     FILE* fp = fopen(path.c_str(), "rb");
     if (!fp)
