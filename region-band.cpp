@@ -177,17 +177,18 @@ void MaxPayloadSize::setValue(uint8_t am, uint8_t an) {
 }
 
 RegionBand::RegionBand()
-    : name(""), supportsExtraChannels(false), defaultRegion(false)
+    : id(0), name(""), supportsExtraChannels(false), defaultRegion(false), txPowerOffsetsSize(0)
 {
-    for (int i = 0; i < DATA_RATE_SIZE; i++) {
+    for (int i = 0; i < TX_POWER_OFFSET_MAX_SIZE; i++) {
         txPowerOffsets[i] = 0;
     }
 }
 
 RegionBand::RegionBand(const RegionBand &value)
-    : name(value.name), supportsExtraChannels(value.supportsExtraChannels), defaultRegion(value.defaultRegion),
+    : id(value.id), name(value.name), supportsExtraChannels(value.supportsExtraChannels), defaultRegion(value.defaultRegion),
     bandDefaults(value.bandDefaults),
-    uplinkChannels(value.uplinkChannels), downlinkChannels(value.downlinkChannels)
+    uplinkChannels(value.uplinkChannels), downlinkChannels(value.downlinkChannels),
+    txPowerOffsetsSize(value.txPowerOffsetsSize)
 {
     for (int i = 0; i < DATA_RATE_SIZE; i++ ) {
         dataRates[i] = value.dataRates[i];
@@ -201,7 +202,7 @@ RegionBand::RegionBand(const RegionBand &value)
     for (int i = 0; i < DATA_RATE_SIZE; i++ ) {
         rx1DataRateOffsets[i] = value.rx1DataRateOffsets[i];
     }
-    for (int i = 0; i < DATA_RATE_SIZE; i++ ) {
+    for (int i = 0; i < TX_POWER_OFFSET_MAX_SIZE; i++ ) {
         txPowerOffsets[i] = value.txPowerOffsets[i];
     }
 }
@@ -227,6 +228,21 @@ static void intsAppendJSON(std::ostream &strm, T &value)
     strm << "[";
     bool hasPrev = false;
     for (int i = 0; i < DATA_RATE_SIZE; i++) {
+        if (hasPrev)
+            strm << ", ";
+        else
+            hasPrev = true;
+        strm << (int) value[i];
+    }
+    strm << "]";
+}
+
+static void txPowerOffsetsAppendJSON(std::ostream &strm,
+  uint8_t txPowerOffsetsSize, const int8_t (&value)[TX_POWER_OFFSET_MAX_SIZE])
+{
+    strm << "[";
+    bool hasPrev = false;
+    for (int i = 0; i < txPowerOffsetsSize; i++) {
         if (hasPrev)
             strm << ", ";
         else
@@ -278,7 +294,8 @@ static void rx1DataRateOffsetsAppendJSON(std::ostream &strm, const std::vector<u
 std::string RegionBand::toJsonString() const
 {
     std::stringstream ss;
-    ss << "{\"name\": \"" << name
+    ss << "{\"id\": " << (int) id
+       << ", \"name\": \"" << name
        << "\", \"supportsExtraChannels\": " << (supportsExtraChannels ? STR_TRUE_FALSE)
        << ", \"defaultRegion\": " << (defaultRegion ? STR_TRUE_FALSE)
        << ", \"bandDefaults\": " << bandDefaults.toJsonString()
@@ -298,22 +315,23 @@ std::string RegionBand::toJsonString() const
     // ss << "[]";
     rx1DataRateOffsetsAppendJSON(ss, rx1DataRateOffsets);
     ss << ", \"txPowerOffsets\": ";
-    intsAppendJSON(ss, txPowerOffsets);
+    txPowerOffsetsAppendJSON(ss, txPowerOffsetsSize, txPowerOffsets);
 
     ss << "}";
     return ss.str();
 }
 
-void RegionBand::setTxPowerOffsets(int8_t v0, int8_t v1, int8_t v2, int8_t v3, int8_t v4, int8_t v5, int8_t v6, int8_t v7)
+void RegionBand::setTxPowerOffsets(int count, ...)
 {
-    txPowerOffsets[0] = v0;
-    txPowerOffsets[1] = v1;
-    txPowerOffsets[2] = v2;
-    txPowerOffsets[3] = v3;
-    txPowerOffsets[4] = v4;
-    txPowerOffsets[5] = v5;
-    txPowerOffsets[6] = v6;
-    txPowerOffsets[7] = v7;
+    if (count >= TX_POWER_OFFSET_MAX_SIZE)
+        return;
+    txPowerOffsetsSize = count;
+    va_list ap;
+    va_start(ap, count);
+    for (int i = 0; i < count; i++) {
+        txPowerOffsets[i] = va_arg(ap, int);
+    }
+    va_end(ap);
 }
 
 void RegionBand::setRx1DataRateOffsets(int dataRateIndex, int count, ...)

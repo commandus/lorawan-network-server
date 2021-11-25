@@ -2233,8 +2233,8 @@ uint8_t loraMargin(
 
 }
 
-#define TXACKCODESSIZE	12
-static const char* TxAckCodes [TXACKCODESSIZE] {
+#define TRACK_CODE_SSIZE	11
+static const char* TxAckCodes [TRACK_CODE_SSIZE] {
 	"",
 	"TOO_LATE",
 	"TOO_EARLY",
@@ -2245,7 +2245,6 @@ static const char* TxAckCodes [TXACKCODESSIZE] {
 	"TX_FREQ",
 	"TX_POWER",
 	"GPS_UNLOCKED",
-	"GPS_UNLOCKED",
 	"UNKNOWN"	// packet is invalid
 };
 
@@ -2255,7 +2254,7 @@ ERR_CODE_TX extractTXAckCode(
 )
 {
 	if ((sz < sizeof(SEMTECH_PREFIX_GW)) || ((const char *) buffer)[3] != 5) /// 5- PKT_TX_ACK
-		return JIT_ERROR_OK;	// it is not tramsmission ACK packet
+		return JIT_ERROR_OK;	// it is not transmission ACK packet
 	std::string s(((const char *) buffer ) + sizeof(SEMTECH_PREFIX_GW), sz);
 	std::size_t p = s.find("txpk_ack");
 	if (p == std::string::npos)
@@ -2263,9 +2262,9 @@ ERR_CODE_TX extractTXAckCode(
 	p = s.find("error", p);
 	if (p == std::string::npos)
 		return JIT_ERROR_OK;
-	for (int i = 1; i < TXACKCODESSIZE; i++) {
+	for (int i = 1; i < TRACK_CODE_SSIZE; i++) {
 		std::size_t f = s.find(TxAckCodes[i], p);
-		if (p != std::string::npos)
+		if (f != std::string::npos)
 			return (ERR_CODE_TX) i;
 	}
 	return JIT_ERROR_OK;

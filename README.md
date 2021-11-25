@@ -387,7 +387,28 @@ By default, name of file is "regional-parameters.json"
 
 Each region has mnemonic name, e.g. "RU864-870" corresponds to the Russian Federation region.
 
-Number 870 means central frequency in MHz.
+Numbers 864 and 870 means central frequency in MHz.
+
+Region can have mnemonic name like EU433 if channels frequencies all in 433Mhz.
+
+In accordance to 2.1 Regional Parameter Channel Plan Common Names 
+
+Id  | Channel Plan | Common Name
+----|--------------|-------------
+ 1  | EU863-870    | EU868
+ 2  | US902-928    | US915
+ 3  | CN779-787    | CN779
+ 4  | EU433        | EU433
+ 5  | AU915-928    | AU915
+ 6  | CN470-510    | CN470
+ 7  | AS923-1      | AS923 
+ 8  | AS923-2      | AS923-2
+ 9  | AS923-3      | AS923-3
+ 10 | KR920-923    | KR920
+ 11 | IN865-867    | IN865
+ 12 | RU864-870    | RU864
+ 13 | AS923-4      | AS923-4
+
 
 - supportsExtraChannels true or false
 - defaultRegion true or false. If true, this regional settings sued by default 
@@ -1084,6 +1105,10 @@ received packet {"activation":"ABP","class":"A","eui":"3434383566378112","nwkSKe
 Javascript error: uncaught: 'cannot read property \x27time5\x27 of ...' in 
 new Date(((field.packet46420.time5.day_month_year >> 9) & 0x7f) + 2000, ((field.packet46420.time5.day_month_year >> 5) & 0xf) - 1, (field.packet46420.time5.day_month_year & 0x1f), field.packet46420.time5.hour, field.packet46420.time5.minute, field.packet46420.time5.second, 00).getTime() / 1000
 Aborted
+
+## Tables
+
+"powe" values -6dBm..27dBm default 14dBm
 
 ## Tips
 

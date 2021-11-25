@@ -90,6 +90,7 @@ public:
 
 class RegionBand : public RBJsonIntf {
 public:
+    uint8_t id; // 1..14
     std::string name;
     bool defaultRegion;
     bool supportsExtraChannels;
@@ -98,7 +99,9 @@ public:
     MaxPayloadSize maxPayloadSizePerDataRate[DATA_RATE_SIZE];
     MaxPayloadSize maxPayloadSizePerDataRateRepeater[DATA_RATE_SIZE];    // if repeater is used
     std::vector<uint8_t> rx1DataRateOffsets[DATA_RATE_SIZE];
-    int8_t txPowerOffsets[DATA_RATE_SIZE];
+    // Max EIRP - <offset> dB
+    uint8_t txPowerOffsetsSize; // 0..16
+    int8_t txPowerOffsets[TX_POWER_OFFSET_MAX_SIZE];
 
     std::vector<Channel> uplinkChannels;
     std::vector<Channel> downlinkChannels;
@@ -107,7 +110,7 @@ public:
     RegionBand(const RegionBand &value);
     std::string toJsonString() const override;
 
-    void setTxPowerOffsets(int8_t v0, int8_t v1, int8_t v2, int8_t v3, int8_t v4, int8_t v5, int8_t v6, int8_t v7);
+    void setTxPowerOffsets(int count, ...);
 
     void setRx1DataRateOffsets(int dataRateIndex, int count, ...);
 };

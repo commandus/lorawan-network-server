@@ -19,6 +19,11 @@
 
 #include "gateway-stat.h"
 
+#define TX_MIN_POWER_DBM    -6
+// 27 26 20
+#define TX_MAX_POWER_DBM    21
+#define TX_DEF_POWER_DBM    14
+
 typedef unsigned char NETID[3];
 
 typedef unsigned char KEY128[16];
@@ -35,17 +40,17 @@ class IdentityService;
 typedef char DEVICENAME[8];
 
 enum ERR_CODE_TX {
-	JIT_ERROR_OK,           	// Packet ok to be sent
-	JIT_ERROR_TOO_LATE,     	// Too late to send this packet
-	JIT_ERROR_TOO_EARLY,    	// Too early to queue this packet
-	JIT_ERROR_FULL,         	// Downlink queue is full
-	JIT_ERROR_EMPTY,        	// Downlink queue is empty
-	JIT_ERROR_COLLISION_PACKET, // A packet is already enqueued for this timeframe
-	JIT_ERROR_COLLISION_BEACON, // A beacon is planned for this timeframe
-	JIT_ERROR_TX_FREQ,      	// The required frequency for downlink is not supported
-	JIT_ERROR_TX_POWER,     	// The required power for downlink is not supported
-	JIT_ERROR_GPS_UNLOCKED, 	// GPS timestamp could not be used as GPS is unlocked
-	JIT_ERROR_INVALID       	// Packet is invalid
+	JIT_ERROR_OK = 0,           	// Packet ok to be sent
+	JIT_ERROR_TOO_LATE = 1,     	// Too late to send this packet
+	JIT_ERROR_TOO_EARLY = 2,    	// Too early to queue this packet
+	JIT_ERROR_FULL = 3,         	// Downlink queue is full
+	JIT_ERROR_EMPTY = 4,        	// Downlink queue is empty
+	JIT_ERROR_COLLISION_PACKET = 5, // A packet is already enqueued for this timeframe
+	JIT_ERROR_COLLISION_BEACON = 6, // A beacon is planned for this timeframe
+	JIT_ERROR_TX_FREQ = 7,      	// The required frequency for downlink is not supported
+	JIT_ERROR_TX_POWER = 8,     	// The required power for downlink is not supported
+	JIT_ERROR_GPS_UNLOCKED = 9, 	// GPS timestamp could not be used as GPS is unlocked
+	JIT_ERROR_INVALID = 10       	// Packet is invalid
 };
 
 void string2DEVADDR(DEVADDR &retval, const std::string &str);

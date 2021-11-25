@@ -30,6 +30,7 @@ void doSmth(RegionBandsFileJson &value)
 {
     value.storage.setRegionalParametersVersion("1.0.3");
     RegionBand rb;
+    rb.id = 14;
     rb.name = "RU864-870";  // 870MHz band
     rb.defaultRegion = true;
     rb.supportsExtraChannels = true;
@@ -69,7 +70,7 @@ void doSmth(RegionBandsFileJson &value)
     rb.uplinkChannels.push_back(ch);
     rb.downlinkChannels.push_back(ch);
 
-    rb.setTxPowerOffsets(0, -2, -4, -6, -8, -10, -12, -14);
+    rb.setTxPowerOffsets(8, 0, -2, -4, -6, -8, -10, -12, -14);
 
     rb.setRx1DataRateOffsets(0, 6, 0, 0, 0, 0, 0, 0);
     rb.setRx1DataRateOffsets(1, 6, 1, 0, 0, 0, 0, 0);
@@ -92,6 +93,7 @@ int main(int argc, char **argv) {
     std::cerr << "Load regional-parameters.json  file.." << std::endl;
     RegionBandsFileJson *rbf = new RegionBandsFileJson();
     rbf->init("regional-parameters.json", nullptr);
+    printRegionBands(*rbf);
     delete rbf;
 
     std::cerr << "Load empty file.." << std::endl;

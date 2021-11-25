@@ -16,7 +16,7 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_REGION_BAND_COUNT	33
+#define ATTRS_REGION_BAND_COUNT	34
 
 enum JSON_STATE_REGION_BAND {
     JRB_NONE = 0,                  	        // Initial state
@@ -66,40 +66,41 @@ enum JSON_KEY_REGION_BAND {
     JK_REGIONALPARAMETERSVERSION = 1,
     JK_REGIONBANDS = 2,
 
-    JK_NAME = 3,
-    JK_SUPPORTSEXTRACHANNELS = 4,
-    JK_DEFAULT_REGION = 5,
-    JK_BANDDEFAULTS = 6,
-    JK_DATA_RATES = 7,
-    JK_UPLINKCHANNELS = 8,
-    JK_DOWNLINKCHANNELS = 9,
-    JK_MAXPAYLOADSIZEPERDATARATE = 10,
-    JK_MAXPAYLOADSIZEPERDATARATEREPEATOR = 11,
-    JK_RX1DATARATEOFFSETS = 12,
-    JK_TXPOWEROFFSETS = 13,
+    JK_ID = 3,
+    JK_NAME = 4,
+    JK_SUPPORTSEXTRACHANNELS = 5,
+    JK_DEFAULT_REGION = 6,
+    JK_BANDDEFAULTS = 7,
+    JK_DATA_RATES = 8,
+    JK_UPLINKCHANNELS = 9,
+    JK_DOWNLINKCHANNELS = 10,
+    JK_MAXPAYLOADSIZEPERDATARATE = 11,
+    JK_MAXPAYLOADSIZEPERDATARATEREPEATOR = 12,
+    JK_RX1DATARATEOFFSETS = 13,
+    JK_TXPOWEROFFSETS = 14,
 
-    JK_RX2FREQUENCY = 14,
-    JK_RX2DATARATE = 15,
-    JK_RECEIVEDELAY1 = 16,
-    JK_RECEIVEDELAY2 = 17,
-    JK_JOINACCEPTDELAY1 = 18,
-    JK_JOINACCEPTDELAY2 = 19,
+    JK_RX2FREQUENCY = 15,
+    JK_RX2DATARATE = 16,
+    JK_RECEIVEDELAY1 = 17,
+    JK_RECEIVEDELAY2 = 18,
+    JK_JOINACCEPTDELAY1 = 19,
+    JK_JOINACCEPTDELAY2 = 20,
 
-    JK_UPLINK = 20,
-    JK_DOWNLINK = 21,
-    JK_MODULATION = 22,
-    JK_BANDWIDTH = 23,
-    JK_SPREADINGFACTOR = 24,
-    JK_BPS = 25,
+    JK_UPLINK = 21,
+    JK_DOWNLINK = 22,
+    JK_MODULATION = 23,
+    JK_BANDWIDTH = 24,
+    JK_SPREADINGFACTOR = 25,
+    JK_BPS = 26,
 
-    JK_M = 26,
-    JK_N = 27,
+    JK_M = 27,
+    JK_N = 28,
 
-    JK_FREQUENCY = 28,
-    JK_MINDR = 29,
-    JK_MAXDR = 30,
-    JK_ENABLED = 31,
-    JK_CUSTOM = 32
+    JK_FREQUENCY = 29,
+    JK_MINDR = 30,
+    JK_MAXDR = 31,
+    JK_ENABLED = 32,
+    JK_CUSTOM = 33
 
 };
 
@@ -108,40 +109,40 @@ static const char *ATTR_REGION_BAND_NAMES[ATTRS_REGION_BAND_COUNT] = {
         "regionalParametersVersion",         // 1
         "RegionBands",                       // 2
 
-        "name",                              // 3
-        "supportsExtraChannels",             // 4
-        "defaultRegion",                     // 5
-        "bandDefaults",                      // 6
-        "dataRates",                         // 7
-        "uplinkChannels",                    // 8
-        "downlinkChannels",                  // 9
-        "maxPayloadSizePerDataRate",         // 10
-        "maxPayloadSizePerDataRateRepeater", // 11
-        "rx1DataRateOffsets",                // 12
-        "txPowerOffsets",                    // 13
+        "id",                                // 3
+        "name",                              // 4
+        "supportsExtraChannels",             // 5
+        "defaultRegion",                     // 6
+        "bandDefaults",                      // 7
+        "dataRates",                         // 8
+        "uplinkChannels",                    // 9
+        "downlinkChannels",                  // 10
+        "maxPayloadSizePerDataRate",         // 11
+        "maxPayloadSizePerDataRateRepeater", // 12
+        "rx1DataRateOffsets",                // 13
+        "txPowerOffsets",                    // 14
+        "RX2Frequency",                      // 15
+        "RX2DataRate",                       // 16
+        "ReceiveDelay1",                     // 17
+        "ReceiveDelay2",                     // 18
+        "JoinAcceptDelay1",                  // 19
+        "JoinAcceptDelay2",                  // 20
 
-        "RX2Frequency",                      // 14
-        "RX2DataRate",                       // 15
-        "ReceiveDelay1",                     // 16
-        "ReceiveDelay2",                     // 17
-        "JoinAcceptDelay1",                  // 18
-        "JoinAcceptDelay2",                  // 19
+        "uplink",                            // 21
+        "downlink",                          // 22
+        "modulation",                        // 23
+        "bandwidth",                         // 24
+        "spreadingFactor",                   // 25
+        "bps",                               // 26
 
-        "uplink",                            // 20
-        "downlink",                          // 21
-        "modulation",                        // 22
-        "bandwidth",                         // 23
-        "spreadingFactor",                   // 24
-        "bps",                               // 25
+        "m",                                 // 27
+        "n",                                 // 28
 
-        "m",                                 // 26
-        "n",                                 // 27
-
-        "frequency",                        // 28
-        "minDR",                            // 29
-        "maxDR",                            // 30
-        "enabled",                          // 31
-        "custom"                            // 32
+        "frequency",                         // 29
+        "minDR",                             // 30
+        "maxDR",                             // 31
+        "enabled",                           // 32
+        "custom"                             // 33
 };
 
 static JSON_KEY_REGION_BAND getAttrByName(
@@ -203,8 +204,14 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                 case JRB_BAND_TX_POWER_OFS:
                     if (state == JRB_BAND_TX_POWER_OFS) {
                         if (!value->storage.bands.empty()) {
-                            value->storage.bands.back().txPowerOffsets[txPowerOffsetCount] = val;
+                            if (txPowerOffsetCount >= TX_POWER_OFFSET_MAX_SIZE) {
+                                applyErrorDescription("Too many tx eirp offsets");
+                                return false;
+                            }
+                            RegionBand &rb(value->storage.bands.back());
+                            rb.txPowerOffsets[txPowerOffsetCount] = val;
                             txPowerOffsetCount++;
+                            rb.txPowerOffsetsSize = txPowerOffsetCount;
                             return true;
                         }
                     }
@@ -370,20 +377,21 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     applyErrorDescription("Unexpected integer");
                     return false;
                 }
+                case JRB_BAND:
+                    switch (keyIndex) {
+                        case JK_ID:
+                            if (value->storage.bands.empty()) {
+                                applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                                return false;
+                            }
+                            value->storage.bands.back().id = val;
+                            return true;
+                    }
+                    applyErrorDescription("Unexpected integer value");
+                    return false;
+
                 default:
                     switch (keyIndex) {
-                        case JK_RX2FREQUENCY:
-                            return true;
-                        case JK_RX2DATARATE:
-                            return true;
-                        case JK_RECEIVEDELAY1:
-                            return true;
-                        case JK_RECEIVEDELAY2:
-                            return true;
-                        case JK_JOINACCEPTDELAY1:
-                            return true;
-                        case JK_JOINACCEPTDELAY2:
-                            return true;
                         default:
                             applyErrorDescription("Unexpected integer value");
                             return false;
@@ -632,7 +640,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
 		{
             switch (state) {
                 case JRB_BAND:
-                    state = JRB_ROOT;
+                    state = JRB_BANDS;
                     return true;
                 case JRB_ROOT:
                     state = JRB_NONE;
@@ -713,6 +721,9 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
             switch (state) {
                 case JRB_ROOT:
                     return true;
+                case JRB_BAND:
+                    state = JRB_BANDS;
+                    return true;
                 case JRB_BANDS:
                     state = JRB_ROOT;
                     return true;
@@ -749,15 +760,18 @@ void RegionBandsFileJson::clear()
 int RegionBandsFileJson::buildIndex()
 {
     nameIndex.clear();
+    idIndex.clear();
     defaultRegionBand = nullptr;
     for (std::vector<RegionBand>::const_iterator it(storage.bands.begin()); it != storage.bands.end(); it++) {
         nameIndex[it->name] = &*it;
+        idIndex[it->id] = &*it;
         if (it->defaultRegion)
             defaultRegionBand = &*it;
     }
+    // Assign default regional settings
     if (!defaultRegionBand) {
         if (storage.bands.empty()) {
-            // add dumb region?
+            // TODO add dumb region?
         } else {
             // use the first one
             defaultRegionBand = &*storage.bands.begin();
@@ -770,6 +784,14 @@ const RegionBand *RegionBandsFileJson::get(const std::string &name) const
 {
     std::map<std::string, const RegionBand*>::const_iterator it(nameIndex.find(name));
     if (it == nameIndex.end())
+        return defaultRegionBand;
+    return it->second;
+}
+
+const RegionBand *RegionBandsFileJson::get(int id) const
+{
+    std::map<int, const RegionBand*>::const_iterator it(idIndex.find(id));
+    if (it == idIndex.end())
         return defaultRegionBand;
     return it->second;
 }

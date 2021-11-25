@@ -13,6 +13,7 @@
 #include "identity-service-abstract.h"
 #include "control-packet.h"
 
+#define TX_POWER_VALUE_DBM TX_MAX_POWER_DBM
 SemtechUDPPacketItem::SemtechUDPPacketItem()
 	: processMode(MODE_NONE)
 {
@@ -381,7 +382,7 @@ int PacketQueue::replyMAC(
 ) {
 	// to reply via closest gateway, find out gatewsy with best SNR
 	float snr;
-	int power = 14;
+	int power = TX_POWER_VALUE_DBM;
 	uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
 	if (gwa == 0) {
 		std::stringstream ss;
@@ -520,7 +521,7 @@ int PacketQueue::replyControl(
 
 	// to reply via the closest gateway, find out gateway with best SNR
 	float snr;
-	int power = 14;
+	int power = TX_POWER_VALUE_DBM;
 
 	// check just in case
 	// .. gateway

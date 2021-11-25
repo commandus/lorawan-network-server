@@ -47,7 +47,9 @@ typedef enum {
     CRLORA_LI_4_8 = 7
 } CODING_RATE;
 
-#define DATA_RATE_SIZE 8
+#define DATA_RATE_SIZE              8
+
+#define TX_POWER_OFFSET_MAX_SIZE    16
 
 typedef enum {
     TXSTATUS_UNKNOWN,

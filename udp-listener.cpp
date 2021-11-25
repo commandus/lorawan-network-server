@@ -212,6 +212,10 @@ int UDPListener::parseBuffer
 						break;
 					ERR_CODE_TX r = extractTXAckCode(buffer.c_str(), bytesReceived);
 					std::stringstream ss;
+                    if (r) {
+                        ss << ERR_MESSAGE << " " << r << ": ";
+                        // TODO re-send in second window or later if device is class C
+                    }
 					ss << "TX ACK " << getTXAckCodeName(r)
 						<< " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
 						<< " gateway: " << DEVEUI2string(dataPrefix.mac);
