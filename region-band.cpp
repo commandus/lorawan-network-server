@@ -177,12 +177,16 @@ void MaxPayloadSize::setValue(uint8_t am, uint8_t an) {
 }
 
 RegionBand::RegionBand()
-    : id(0), name(""), supportsExtraChannels(false), defaultRegion(false)
+    : id(0), supportsExtraChannels(false), defaultRegion(false),
+        maxUplinkEIRP(0.0f), defaultDownlinkTXPower(0), implementsTXParamSetup(false)
 {
 }
 
 RegionBand::RegionBand(const RegionBand &value)
-    : id(value.id), name(value.name), supportsExtraChannels(value.supportsExtraChannels), defaultRegion(value.defaultRegion),
+    : id(value.id), name(value.name), cn(value.cn),
+    maxUplinkEIRP(value.maxUplinkEIRP), defaultDownlinkTXPower(value.defaultDownlinkTXPower),
+    implementsTXParamSetup(value.implementsTXParamSetup),
+    supportsExtraChannels(value.supportsExtraChannels), defaultRegion(value.defaultRegion),
     bandDefaults(value.bandDefaults),
     uplinkChannels(value.uplinkChannels), downlinkChannels(value.downlinkChannels),
     txPowerOffsets(value.txPowerOffsets)
@@ -290,7 +294,11 @@ std::string RegionBand::toJsonString() const
     std::stringstream ss;
     ss << "{\"id\": " << (int) id
        << ", \"name\": \"" << name
-       << "\", \"supportsExtraChannels\": " << (supportsExtraChannels ? STR_TRUE_FALSE)
+       << "\", \"cn\": \"" << cn
+       << "\", \"implementsTXParamSetup\": " << (implementsTXParamSetup ? STR_TRUE_FALSE)
+       << ", \"maxUplinkEIRP\": " << maxUplinkEIRP
+       << ", \"defaultDownlinkTXPower\": " << defaultDownlinkTXPower
+       << ", \"supportsExtraChannels\": " << (supportsExtraChannels ? STR_TRUE_FALSE)
        << ", \"defaultRegion\": " << (defaultRegion ? STR_TRUE_FALSE)
        << ", \"bandDefaults\": " << bandDefaults.toJsonString()
        << ", \"dataRates\": ";

@@ -16,7 +16,7 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_REGION_BAND_COUNT	34
+#define ATTRS_REGION_BAND_COUNT	38
 
 enum JSON_STATE_REGION_BAND {
     JRB_NONE = 0,                  	        // Initial state
@@ -65,42 +65,47 @@ enum JSON_KEY_REGION_BAND {
     JK_NONE = 0,
     JK_REGIONALPARAMETERSVERSION = 1,
     JK_REGIONBANDS = 2,
-
     JK_ID = 3,
     JK_NAME = 4,
-    JK_SUPPORTSEXTRACHANNELS = 5,
-    JK_DEFAULT_REGION = 6,
-    JK_BANDDEFAULTS = 7,
-    JK_DATA_RATES = 8,
-    JK_UPLINKCHANNELS = 9,
-    JK_DOWNLINKCHANNELS = 10,
-    JK_MAXPAYLOADSIZEPERDATARATE = 11,
-    JK_MAXPAYLOADSIZEPERDATARATEREPEATOR = 12,
-    JK_RX1DATARATEOFFSETS = 13,
-    JK_TXPOWEROFFSETS = 14,
 
-    JK_RX2FREQUENCY = 15,
-    JK_RX2DATARATE = 16,
-    JK_RECEIVEDELAY1 = 17,
-    JK_RECEIVEDELAY2 = 18,
-    JK_JOINACCEPTDELAY1 = 19,
-    JK_JOINACCEPTDELAY2 = 20,
+    JK_CN = 5,
+    JK_MAXUPLINKEIRP = 6,
+    JK_DEFAULTDOWNLINKTXPOWER = 7,
+    JK_IMPLEMENTSTXPARAMSETUP = 8,
 
-    JK_UPLINK = 21,
-    JK_DOWNLINK = 22,
-    JK_MODULATION = 23,
-    JK_BANDWIDTH = 24,
-    JK_SPREADINGFACTOR = 25,
-    JK_BPS = 26,
+    JK_SUPPORTSEXTRACHANNELS = 9,
+    JK_DEFAULT_REGION = 10,
+    JK_BANDDEFAULTS = 11,
+    JK_DATA_RATES = 12,
+    JK_UPLINKCHANNELS = 13,
+    JK_DOWNLINKCHANNELS = 14,
+    JK_MAXPAYLOADSIZEPERDATARATE = 15,
+    JK_MAXPAYLOADSIZEPERDATARATEREPEATOR = 16,
+    JK_RX1DATARATEOFFSETS = 17,
+    JK_TXPOWEROFFSETS = 18,
 
-    JK_M = 27,
-    JK_N = 28,
+    JK_RX2FREQUENCY = 19,
+    JK_RX2DATARATE = 20,
+    JK_RECEIVEDELAY1 = 21,
+    JK_RECEIVEDELAY2 = 22,
+    JK_JOINACCEPTDELAY1 = 23,
+    JK_JOINACCEPTDELAY2 = 24,
 
-    JK_FREQUENCY = 29,
-    JK_MINDR = 30,
-    JK_MAXDR = 31,
-    JK_ENABLED = 32,
-    JK_CUSTOM = 33
+    JK_UPLINK = 25,
+    JK_DOWNLINK = 26,
+    JK_MODULATION = 27,
+    JK_BANDWIDTH = 28,
+    JK_SPREADINGFACTOR = 29,
+    JK_BPS = 30,
+
+    JK_M = 31,
+    JK_N = 32,
+
+    JK_FREQUENCY = 33,
+    JK_MINDR = 34,
+    JK_MAXDR = 35,
+    JK_ENABLED = 36,
+    JK_CUSTOM = 37
 
 };
 
@@ -108,41 +113,46 @@ static const char *ATTR_REGION_BAND_NAMES[ATTRS_REGION_BAND_COUNT] = {
         "",
         "regionalParametersVersion",         // 1
         "RegionBands",                       // 2
-
         "id",                                // 3
         "name",                              // 4
-        "supportsExtraChannels",             // 5
-        "defaultRegion",                     // 6
-        "bandDefaults",                      // 7
-        "dataRates",                         // 8
-        "uplinkChannels",                    // 9
-        "downlinkChannels",                  // 10
-        "maxPayloadSizePerDataRate",         // 11
-        "maxPayloadSizePerDataRateRepeater", // 12
-        "rx1DataRateOffsets",                // 13
-        "txPowerOffsets",                    // 14
-        "RX2Frequency",                      // 15
-        "RX2DataRate",                       // 16
-        "ReceiveDelay1",                     // 17
-        "ReceiveDelay2",                     // 18
-        "JoinAcceptDelay1",                  // 19
-        "JoinAcceptDelay2",                  // 20
 
-        "uplink",                            // 21
-        "downlink",                          // 22
-        "modulation",                        // 23
-        "bandwidth",                         // 24
-        "spreadingFactor",                   // 25
-        "bps",                               // 26
+        "cn",                                // 5
+        "maxUplinkEIRP",                     // 6
+        "defaultDownlinkTXPower",            // 7
+        "implementsTXParamSetup",            // 8
 
-        "m",                                 // 27
-        "n",                                 // 28
+        "supportsExtraChannels",             // 9
+        "defaultRegion",                     // 10
+        "bandDefaults",                      // 11
+        "dataRates",                         // 12
+        "uplinkChannels",                    // 13
+        "downlinkChannels",                  // 14
+        "maxPayloadSizePerDataRate",         // 15
+        "maxPayloadSizePerDataRateRepeater", // 16
+        "rx1DataRateOffsets",                // 17
+        "txPowerOffsets",                    // 18
+        "RX2Frequency",                      // 19
+        "RX2DataRate",                       // 20
+        "ReceiveDelay1",                     // 21
+        "ReceiveDelay2",                     // 22
+        "JoinAcceptDelay1",                  // 23
+        "JoinAcceptDelay2",                  // 24
 
-        "frequency",                         // 29
-        "minDR",                             // 30
-        "maxDR",                             // 31
-        "enabled",                           // 32
-        "custom"                             // 33
+        "uplink",                            // 25
+        "downlink",                          // 26
+        "modulation",                        // 27
+        "bandwidth",                         // 28
+        "spreadingFactor",                   // 29
+        "bps",                               // 30
+
+        "m",                                 // 31
+        "n",                                 // 32
+
+        "frequency",                         // 33
+        "minDR",                             // 34
+        "maxDR",                             // 35
+        "enabled",                           // 36
+        "custom"                             // 37
 };
 
 static JSON_KEY_REGION_BAND getAttrByName(
@@ -373,6 +383,20 @@ private:
             }
             case JRB_BAND:
                 switch (keyIndex) {
+                    case JK_DEFAULTDOWNLINKTXPOWER:
+                        if (value->storage.bands.empty()) {
+                            applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                            return false;
+                        }
+                        value->storage.bands.back().defaultDownlinkTXPower = val;
+                        return true;
+                    case JK_MAXUPLINKEIRP:
+                        if (value->storage.bands.empty()) {
+                            applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                            return false;
+                        }
+                        value->storage.bands.back().maxUplinkEIRP = (float) val;
+                        return true;
                     case JK_ID:
                         if (value->storage.bands.empty()) {
                             applyErrorDescription(ERR_REGION_BAND_EMPTY);
@@ -383,13 +407,9 @@ private:
                 }
                 applyErrorDescription("Unexpected integer value");
                 return false;
-
             default:
-                switch (keyIndex) {
-                    default:
-                        applyErrorDescription("Unexpected integer value");
-                        return false;
-                }
+                applyErrorDescription("Unexpected integer value");
+                return false;
         }
     }
 
@@ -414,23 +434,26 @@ public:
     bool Bool(bool b) {
         switch (keyIndex) {
             case JK_SUPPORTSEXTRACHANNELS:
-                if (state == JRB_BAND) {
-                    if (!value->storage.bands.empty()) {
-                        value->storage.bands.back().supportsExtraChannels = b;
-                        return true;
-                    }
+                if (value->storage.bands.empty()) {
+                    applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                    return false;
                 }
-                applyErrorDescription("Unexpected boolean");
-                return false;
+                value->storage.bands.back().supportsExtraChannels = b;
+                return true;
+            case JK_IMPLEMENTSTXPARAMSETUP:
+                if (value->storage.bands.empty()) {
+                    applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                    return false;
+                }
+                value->storage.bands.back().implementsTXParamSetup = b;
+                return true;
             case JK_DEFAULT_REGION:
-                if (state == JRB_BAND) {
-                    if (!value->storage.bands.empty()) {
-                        value->storage.bands.back().defaultRegion = b;
-                        return true;
-                    }
+                if (value->storage.bands.empty()) {
+                    applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                    return false;
                 }
-                applyErrorDescription("Unexpected boolean");
-                return false;
+                value->storage.bands.back().defaultRegion = b;
+                return true;
             case JK_UPLINK:
             case JK_DOWNLINK:
                 if (state == JRB_BAND_DATA_RATE) {
@@ -511,6 +534,19 @@ public:
 
     bool Double(double d) {
         switch(state) {
+            case JRB_BAND:
+                switch (keyIndex) {
+                    case JK_MAXUPLINKEIRP:
+                        if (value->storage.bands.empty()) {
+                            applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                            return false;
+                        }
+                        value->storage.bands.back().maxUplinkEIRP = (float) d;
+                        return true;
+                    default:
+                        break;
+                }
+                return false;
             case JRB_BAND_DATA_RATE: {
                 switch (keyIndex) {
                     case JK_BANDWIDTH:
@@ -543,12 +579,25 @@ public:
                 return false;
             case JK_NAME:
                 if (state == JRB_BAND) {
-                    if (!value->storage.bands.empty()) {
-                        value->storage.bands.back().name = s;
-                        return true;
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                        return false;
                     }
+                    value->storage.bands.back().name = s;
+                    return true;
                 }
                 applyErrorDescription("String JK_NAME");
+                return false;
+            case JK_CN:
+                if (state == JRB_BAND) {
+                    if (value->storage.bands.empty()) {
+                        applyErrorDescription(ERR_REGION_BAND_EMPTY);
+                        return false;
+                    }
+                    value->storage.bands.back().cn = s;
+                    return true;
+                }
+                applyErrorDescription("String JK_CN");
                 return false;
             case JK_MODULATION:
                 if (state == JRB_BAND_DATA_RATE) {

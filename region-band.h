@@ -90,8 +90,12 @@ public:
 
 class RegionBand : public RBJsonIntf {
 public:
-    uint8_t id; // 1..14
-    std::string name;
+    uint8_t id;             // 1..14
+    std::string name;       // channel plan name
+    std::string cn;         // common name
+    float maxUplinkEIRP;    // dBm default
+    int defaultDownlinkTXPower; // can depend on frequency
+    bool implementsTXParamSetup;
     bool defaultRegion;
     bool supportsExtraChannels;
     BandDefaults bandDefaults;
