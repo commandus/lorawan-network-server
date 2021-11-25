@@ -99,10 +99,8 @@ public:
     MaxPayloadSize maxPayloadSizePerDataRate[DATA_RATE_SIZE];
     MaxPayloadSize maxPayloadSizePerDataRateRepeater[DATA_RATE_SIZE];    // if repeater is used
     std::vector<uint8_t> rx1DataRateOffsets[DATA_RATE_SIZE];
-    // Max EIRP - <offset> dB
-    uint8_t txPowerOffsetsSize; // 0..16
-    int8_t txPowerOffsets[TX_POWER_OFFSET_MAX_SIZE];
-
+    // Max EIRP - <offset> dB, 0..16
+    std::vector<int8_t> txPowerOffsets;
     std::vector<Channel> uplinkChannels;
     std::vector<Channel> downlinkChannels;
 

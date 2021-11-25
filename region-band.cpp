@@ -177,18 +177,15 @@ void MaxPayloadSize::setValue(uint8_t am, uint8_t an) {
 }
 
 RegionBand::RegionBand()
-    : id(0), name(""), supportsExtraChannels(false), defaultRegion(false), txPowerOffsetsSize(0)
+    : id(0), name(""), supportsExtraChannels(false), defaultRegion(false)
 {
-    for (int i = 0; i < TX_POWER_OFFSET_MAX_SIZE; i++) {
-        txPowerOffsets[i] = 0;
-    }
 }
 
 RegionBand::RegionBand(const RegionBand &value)
     : id(value.id), name(value.name), supportsExtraChannels(value.supportsExtraChannels), defaultRegion(value.defaultRegion),
     bandDefaults(value.bandDefaults),
     uplinkChannels(value.uplinkChannels), downlinkChannels(value.downlinkChannels),
-    txPowerOffsetsSize(value.txPowerOffsetsSize)
+    txPowerOffsets(value.txPowerOffsets)
 {
     for (int i = 0; i < DATA_RATE_SIZE; i++ ) {
         dataRates[i] = value.dataRates[i];
@@ -201,9 +198,6 @@ RegionBand::RegionBand(const RegionBand &value)
     }
     for (int i = 0; i < DATA_RATE_SIZE; i++ ) {
         rx1DataRateOffsets[i] = value.rx1DataRateOffsets[i];
-    }
-    for (int i = 0; i < TX_POWER_OFFSET_MAX_SIZE; i++ ) {
-        txPowerOffsets[i] = value.txPowerOffsets[i];
     }
 }
 
@@ -238,11 +232,11 @@ static void intsAppendJSON(std::ostream &strm, T &value)
 }
 
 static void txPowerOffsetsAppendJSON(std::ostream &strm,
-  uint8_t txPowerOffsetsSize, const int8_t (&value)[TX_POWER_OFFSET_MAX_SIZE])
+    const std::vector<int8_t> &value)
 {
     strm << "[";
     bool hasPrev = false;
-    for (int i = 0; i < txPowerOffsetsSize; i++) {
+    for (int i = 0; i < value.size(); i++) {
         if (hasPrev)
             strm << ", ";
         else
@@ -315,7 +309,7 @@ std::string RegionBand::toJsonString() const
     // ss << "[]";
     rx1DataRateOffsetsAppendJSON(ss, rx1DataRateOffsets);
     ss << ", \"txPowerOffsets\": ";
-    txPowerOffsetsAppendJSON(ss, txPowerOffsetsSize, txPowerOffsets);
+    txPowerOffsetsAppendJSON(ss, txPowerOffsets);
 
     ss << "}";
     return ss.str();
@@ -324,12 +318,11 @@ std::string RegionBand::toJsonString() const
 void RegionBand::setTxPowerOffsets(int count, ...)
 {
     if (count >= TX_POWER_OFFSET_MAX_SIZE)
-        return;
-    txPowerOffsetsSize = count;
+        count = TX_POWER_OFFSET_MAX_SIZE;
     va_list ap;
     va_start(ap, count);
     for (int i = 0; i < count; i++) {
-        txPowerOffsets[i] = va_arg(ap, int);
+        txPowerOffsets.push_back(va_arg(ap, int));
     }
     va_end(ap);
 }

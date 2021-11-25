@@ -205,13 +205,12 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     if (state == JRB_BAND_TX_POWER_OFS) {
                         if (!value->storage.bands.empty()) {
                             if (txPowerOffsetCount >= TX_POWER_OFFSET_MAX_SIZE) {
-                                applyErrorDescription("Too many tx eirp offsets");
+                                applyErrorDescription("Too many tx offsets");
                                 return false;
                             }
                             RegionBand &rb(value->storage.bands.back());
-                            rb.txPowerOffsets[txPowerOffsetCount] = val;
+                            rb.txPowerOffsets.push_back(val);
                             txPowerOffsetCount++;
-                            rb.txPowerOffsetsSize = txPowerOffsetCount;
                             return true;
                         }
                     }
@@ -584,6 +583,13 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     bandCount++;
                     return true;
                 case JRB_BAND:
+                    dataRateCount = 0;
+                    maxPayloadSizePerDataRateCount = 0;
+                    maxPayloadSizePerDataRateRepeaterCount = 0;
+                    rx1DataRateOffsetCount = 0;
+                    txPowerOffsetCount = 0;
+                    uplinkChannelCount = 0;
+                    downlinkChannelCount = 0;
                     switch(keyIndex) {
                         case JK_BANDDEFAULTS:
                             state = JRB_BAND_DEFAULTS;
@@ -674,6 +680,7 @@ class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
                     switch (keyIndex) {
                         case JK_REGIONBANDS:
                             state = JRB_BANDS;
+                            bandCount = 0;
                             return true;
                         default:
                             applyErrorDescription("Unexpected array");
