@@ -37,7 +37,7 @@
 #include "identity-service-dir-txt.h"
 #include "receiver-queue-service-file-json.h"
 #include "receiver-queue-service-dir-txt.h"
-#include "region-band-file-json.h"
+#include "regional-parameter-channel-plan-file-json.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
@@ -58,6 +58,7 @@
 #include "gateway-stat-service-post.h"
 #include "device-stat-service-file.h"
 #include "device-stat-service-post.h"
+#include "device-channel-plan-file-json.h"
 
 const std::string programName = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
@@ -89,6 +90,7 @@ static DatabaseByConfig *dbByConfig = NULL;
 static DeviceHistoryService *deviceHistoryService = NULL;
 // Regional settings
 static RegionalParameterChannelPlans *regionalParameterChannelPlans = NULL;
+static DeviceChannelPlan *deviceChannelPlan = NULL;
 
 // pkt2 environment
 static void* pkt2env = NULL;
@@ -111,8 +113,10 @@ static void flushFiles()
 		gatewayList->save();
 	if (deviceHistoryService)
 		deviceHistoryService->flush();
-    // if (regionalParameterChannelPlans)
-    //    regionalParameterChannelPlans->flush();
+    // if (deviceChannelPlan)
+    //    deviceChannelPlan->flush();
+    // if (deviceChannelPlan)
+    //    deviceChannelPlan->flush();
 }
 
 static void done()
@@ -170,6 +174,10 @@ static void done()
     if (regionalParameterChannelPlans) {
         delete regionalParameterChannelPlans;
         regionalParameterChannelPlans = NULL;
+    }
+    if (deviceChannelPlan) {
+        delete deviceChannelPlan;
+        deviceChannelPlan = nullptr;
     }
 
 	if (pkt2env)
@@ -534,6 +542,8 @@ int main(
                   << ", file: " << config->serverConfig.regionalSettingsStorageName << std::endl;
         exit(ERR_CODE_INIT_REGION_BANDS);
     }
+    // initialize regional settings device mapping
+    deviceChannelPlan = new DeviceChannelPlanFileJson(regionalParameterChannelPlans);
 
     if (config->serverConfig.verbosity > 3) {
         std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlans->toJsonString() << std::endl;
@@ -635,7 +645,7 @@ int main(
     processor->setDeviceHistoryService(deviceHistoryService);
 	// FPort number reserved for messages controls network service. 0- no remote control allowed
 	processor->reserveFPort(config->serverConfig.controlFPort);
-    processor->setRegionalParameterChannelPlans(regionalParameterChannelPlans);
+    processor->setDeviceChannelPlan(deviceChannelPlan);
 
 	// Set pkt2 environment
 	receiverQueueProcessor = new ReceiverQueueProcessor();

@@ -13,7 +13,7 @@
 #include "receiver-queue-service.h"
 #include "receiver-queue-processor.h"
 #include "db-any.h"
-#include "region-band-file-json.h"
+#include "device-channel-plan.h"
 
 /**
  * Handle uplink messages
@@ -30,7 +30,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		// ReceiverQueueProcessor get payload from the queue, parse and put parsed data
 		ReceiverQueueProcessor *recieverQueueProcessor;
 		PacketQueue packetQueue;
-        const RegionalParameterChannelPlans *regionalParameterChannelPlans;
+        const DeviceChannelPlan *deviceChannelPlan;
 
 		std::function<void(
 			void *env,
@@ -101,7 +101,8 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		uint8_t value
 	);
 
-    void setRegionalParameterChannelPlans(const RegionalParameterChannelPlans *value);
+    void setDeviceChannelPlan(const DeviceChannelPlan *value);
+
 };
 
 #endif

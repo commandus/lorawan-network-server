@@ -793,6 +793,6 @@ void PacketQueue::stop()
 	fdWakeup = 0;
 }
 
-void PacketQueue::setRegionalParameterChannelPlans(const RegionalParameterChannelPlans *value) {
-    regionalParameterChannelPlans = value;
+void PacketQueue::setDeviceChannelPlan(const DeviceChannelPlan *value) {
+    deviceChannelPlan = value;
 }

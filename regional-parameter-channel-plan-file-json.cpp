@@ -9,7 +9,7 @@
 #include "rapidjson/error/en.h"
 #pragma clang diagnostic pop
  
-#include "region-band-file-json.h"
+#include "regional-parameter-channel-plan-file-json.h"
 #include "utilstring.h"
 #include "errlist.h"
 

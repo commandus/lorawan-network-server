@@ -3,6 +3,7 @@
 #include "utilstring.h"
 #include "utildate.h"
 #include "errlist.h"
+#include "device-channel-plan.h"
 
 #include <iostream>
 
@@ -334,8 +335,8 @@ void LoraPacketProcessor::reserveFPort
 	reservedFPort = value;
 }
 
-void LoraPacketProcessor::setRegionalParameterChannelPlans(const RegionalParameterChannelPlans *value)
+void LoraPacketProcessor::setDeviceChannelPlan(const DeviceChannelPlan *value)
 {
-	regionalParameterChannelPlans = value;
-	packetQueue.setRegionalParameterChannelPlans(value);
+    deviceChannelPlan = value;
+    packetQueue.setDeviceChannelPlan(value);
 }

@@ -2,23 +2,13 @@
 #define REGION_BAND_FILE_JSON_H_ 1
 
 #include <vector>
-#include "region-band.h"
+#include "regional-parameter-channel-plan.h"
+#include "regional-parameter-channel-plans.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
-
-class RegionalParameterChannelPlans {
-public:
-    virtual const RegionalParameterChannelPlan *get(const std::string &name) const = 0;
-    virtual const RegionalParameterChannelPlan *get(int id) const = 0;
-
-    virtual int init(const std::string &option, void *data) = 0;
-    virtual void flush() = 0;
-    virtual void done() = 0;
-    virtual std::string toJsonString() const  = 0;
-};
 
 /**
  * RegionalParameterChannelPlanFileJson class load LoRaWAN region settings from the

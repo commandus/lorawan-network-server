@@ -3,7 +3,7 @@
 
 #include "errlist.h"
 #include "utilfile.h"
-#include "region-band-file-json.h"
+#include "regional-parameter-channel-plan-file-json.h"
 
 const std::string TEST_FN("region-band.json.tmp");
 

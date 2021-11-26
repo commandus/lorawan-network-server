@@ -114,7 +114,7 @@ nobase_dist_include_HEADERS = \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
-	region-band.h region-band-file-json.h \
+	device-channel-plan-file-json.h device-channel-plan.h regional-parameter-channel-plan.h regional-parameter-channel-plans.h regional-parameter-channel-plan-file-json.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -130,8 +130,8 @@ lorawan_network_server_SOURCES = \
 	gateway-stat-service-abstract.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp utilcurl.cpp \
 	device-stat-service-abstract.cpp device-stat-service-file.cpp device-stat-service-post.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
-	device-history-service-json.cpp receiver-queue-processor.cpp \
-	region-band.cpp region-band-file-json.cpp \
+	device-channel-plan-file-json.cpp device-channel-plan.cpp device-history-service-json.cpp receiver-queue-processor.cpp \
+	regional-parameter-channel-plan.cpp regional-parameter-channel-plan-file-json.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
@@ -318,7 +318,9 @@ test_queue_processor_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 test_region_band_file_json_SOURCES = \
 	tests/test-region-band-file-json.cpp \
-	region-band.cpp region-band-file-json.cpp errlist.cpp utilstring.cpp utilfile.cpp \
+	device-channel-plan-file-json.cpp device-channel-plan.cpp regional-parameter-channel-plan.cpp \
+	regional-parameter-channel-plan-file-json.cpp \
+	errlist.cpp utilstring.cpp utilfile.cpp \
 	utillora.cpp utildate.cpp $(SRC_AES) lorawan-mac.cpp gateway-stat.cpp \
 	lora-encrypt.cpp \
 	third_party/base64/base64.cpp

@@ -2,7 +2,7 @@
 #include <cstdarg>
 #include <iostream>
 
-#include "region-band.h"
+#include "regional-parameter-channel-plan.h"
 #include "errlist.h"
 
 static std::string STR_TRUE("true");
