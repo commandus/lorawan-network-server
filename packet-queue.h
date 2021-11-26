@@ -17,6 +17,7 @@
 #include "packet-handler-abstract.h"
 #include "device-history-service-abstract.h"
 #include "gateway-list.h"
+#include "region-band-file-json.h"
 
 // default delay in ms
 #define DEF_DELAY_MS 500
@@ -78,7 +79,9 @@ class PacketQueue {
 		IdentityService *identityService;
 		DeviceHistoryService *deviceHistoryService;
 		GatewayList *gatewayList;
-		int replyMAC(
+        const RegionalParameterChannelPlans *regionalParameterChannelPlans;
+
+        int replyMAC(
 			SemtechUDPPacketItem &item,
 			struct timeval &t
 		);
@@ -136,6 +139,8 @@ class PacketQueue {
 				int errorcode,
 				const std::string &message
 		) > value);
+
+    void setRegionalParameterChannelPlans(const RegionalParameterChannelPlans *pPlans);
 };
 
 #endif

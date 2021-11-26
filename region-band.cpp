@@ -176,16 +176,16 @@ void MaxPayloadSize::setValue(uint8_t am, uint8_t an) {
     n = an;
 }
 
-RegionBand::RegionBand()
+RegionalParameterChannelPlan::RegionalParameterChannelPlan()
     : id(0), supportsExtraChannels(false), defaultRegion(false),
-        maxUplinkEIRP(0.0f), defaultDownlinkTXPower(0), implementsTXParamSetup(false)
+        maxUplinkEIRP(0.0f), pingSlotFrequency(0), defaultDownlinkTXPower(0), implementsTXParamSetup(false)
 {
 }
 
-RegionBand::RegionBand(const RegionBand &value)
+RegionalParameterChannelPlan::RegionalParameterChannelPlan(const RegionalParameterChannelPlan &value)
     : id(value.id), name(value.name), cn(value.cn),
     maxUplinkEIRP(value.maxUplinkEIRP), defaultDownlinkTXPower(value.defaultDownlinkTXPower),
-    implementsTXParamSetup(value.implementsTXParamSetup),
+    pingSlotFrequency(value.pingSlotFrequency), implementsTXParamSetup(value.implementsTXParamSetup),
     supportsExtraChannels(value.supportsExtraChannels), defaultRegion(value.defaultRegion),
     bandDefaults(value.bandDefaults),
     uplinkChannels(value.uplinkChannels), downlinkChannels(value.downlinkChannels),
@@ -289,7 +289,7 @@ static void rx1DataRateOffsetsAppendJSON(std::ostream &strm, const std::vector<u
     strm << "]";
 }
 
-std::string RegionBand::toJsonString() const
+std::string RegionalParameterChannelPlan::toJsonString() const
 {
     std::stringstream ss;
     ss << "{\"id\": " << (int) id
@@ -297,6 +297,7 @@ std::string RegionBand::toJsonString() const
        << "\", \"cn\": \"" << cn
        << "\", \"implementsTXParamSetup\": " << (implementsTXParamSetup ? STR_TRUE_FALSE)
        << ", \"maxUplinkEIRP\": " << maxUplinkEIRP
+       << ", \"pingSlotFrequency\": " << pingSlotFrequency
        << ", \"defaultDownlinkTXPower\": " << defaultDownlinkTXPower
        << ", \"supportsExtraChannels\": " << (supportsExtraChannels ? STR_TRUE_FALSE)
        << ", \"defaultRegion\": " << (defaultRegion ? STR_TRUE_FALSE)
@@ -323,7 +324,7 @@ std::string RegionBand::toJsonString() const
     return ss.str();
 }
 
-void RegionBand::setTxPowerOffsets(int count, ...)
+void RegionalParameterChannelPlan::setTxPowerOffsets(int count, ...)
 {
     if (count >= TX_POWER_OFFSET_MAX_SIZE)
         count = TX_POWER_OFFSET_MAX_SIZE;
@@ -335,7 +336,7 @@ void RegionBand::setTxPowerOffsets(int count, ...)
     va_end(ap);
 }
 
-void RegionBand::setRx1DataRateOffsets(int dataRateIndex, int count, ...)
+void RegionalParameterChannelPlan::setRx1DataRateOffsets(int dataRateIndex, int count, ...)
 {
     if (dataRateIndex >= DATA_RATE_SIZE)
         return;
@@ -348,9 +349,9 @@ void RegionBand::setRx1DataRateOffsets(int dataRateIndex, int count, ...)
     va_end(ap);
 }
 
-const RegionBand* RegionBands::get(const std::string &name) const
+const RegionalParameterChannelPlan* RegionBands::get(const std::string &name) const
 {
-    for (std::vector<RegionBand>::const_iterator it(bands.begin()); it != bands.end(); it++) {
+    for (std::vector<RegionalParameterChannelPlan>::const_iterator it(bands.begin()); it != bands.end(); it++) {
         if (it->name == name) {
             return &*it;
         }

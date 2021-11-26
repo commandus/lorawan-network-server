@@ -13,6 +13,7 @@
 #include "receiver-queue-service.h"
 #include "receiver-queue-processor.h"
 #include "db-any.h"
+#include "region-band-file-json.h"
 
 /**
  * Handle uplink messages
@@ -29,6 +30,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		// ReceiverQueueProcessor get payload from the queue, parse and put parsed data
 		ReceiverQueueProcessor *recieverQueueProcessor;
 		PacketQueue packetQueue;
+        const RegionalParameterChannelPlans *regionalParameterChannelPlans;
 
 		std::function<void(
 			void *env,
@@ -92,12 +94,14 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
                 SemtechUDPPacket &value
 		);
 
-	void setRecieverQueueProcessor(ReceiverQueueProcessor *value);
+	void setReceiverQueueProcessor(ReceiverQueueProcessor *value);
 
 	// Reserve FPort number for network service purposes
 	void reserveFPort(
 		uint8_t value
 	);
+
+    void setRegionalParameterChannelPlans(const RegionalParameterChannelPlans *value);
 };
 
 #endif

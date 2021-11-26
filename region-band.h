@@ -88,13 +88,14 @@ public:
     void setValue(uint8_t m, uint8_t n);
 };
 
-class RegionBand : public RBJsonIntf {
+class RegionalParameterChannelPlan : public RBJsonIntf {
 public:
     uint8_t id;             // 1..14
     std::string name;       // channel plan name
     std::string cn;         // common name
     float maxUplinkEIRP;    // dBm default
     int defaultDownlinkTXPower; // can depend on frequency
+    int pingSlotFrequency;
     bool implementsTXParamSetup;
     bool defaultRegion;
     bool supportsExtraChannels;
@@ -108,8 +109,8 @@ public:
     std::vector<Channel> uplinkChannels;
     std::vector<Channel> downlinkChannels;
 
-    RegionBand();
-    RegionBand(const RegionBand &value);
+    RegionalParameterChannelPlan();
+    RegionalParameterChannelPlan(const RegionalParameterChannelPlan &value);
     std::string toJsonString() const override;
 
     void setTxPowerOffsets(int count, ...);
@@ -120,10 +121,10 @@ public:
 class RegionBands : public RBJsonIntf {
 public:
     REGIONAL_PARAMETERS_VERSION regionalParametersVersion;  // since specified LoraWAN regional parameters version, if version 0.0.0- any(default) version
-    std::vector<RegionBand> bands;
+    std::vector<RegionalParameterChannelPlan> bands;
     RegionBands();
     RegionBands(const RegionBands &value);
-    const RegionBand* get(const std::string &name) const;
+    const RegionalParameterChannelPlan* get(const std::string &name) const;
     std::string toJsonString() const override;
     bool setRegionalParametersVersion(const std::string &value);
 };

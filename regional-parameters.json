@@ -5,9 +5,10 @@
 			"id": 1,
 			"name": "EU863-870",
 			"cn": "EU868",
-			"implementsTXParamSetup": true,
+			"implementsTXParamSetup": false,
 			"maxUplinkEIRP": 16,
 			"defaultDownlinkTXPower": 14,
+			"pingSlotFrequency": 869525000,
 			"supportsExtraChannels": true,
 			"bandDefaults": {
 				"RX2Frequency": 869100000,
@@ -109,6 +110,10 @@
 		"id": 12,
 		"name": "RU864-870",
 		"cn": "RU864",
+		"implementsTXParamSetup": false,
+		"maxUplinkEIRP": 16,
+		"defaultDownlinkTXPower": 14,
+		"pingSlotFrequency": 868900000,
 		"supportsExtraChannels": true,
 		"bandDefaults": {
 			"RX2Frequency": 869100000,
@@ -210,6 +215,11 @@
 		"id": 4,
 		"name": "EU443",
 		"cn": "EU433",
+		"implementsTXParamSetup": false,
+		"maxUplinkEIRP": 12.15,
+		"defaultDownlinkTXPower": 10,
+		"pingSlotFrequency": 434665000,
+
 		"supportsExtraChannels": true,
 		"bandDefaults": {
 			"RX2Frequency": 434665000,

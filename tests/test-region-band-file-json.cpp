@@ -7,7 +7,7 @@
 
 const std::string TEST_FN("region-band.json.tmp");
 
-void loadFile(RegionBandsFileJson &value, const std::string &fn)
+void loadFile(RegionalParameterChannelPlanFileJson &value, const std::string &fn)
 {
     value.init(fn, nullptr);
     if (value.errcode) {
@@ -16,20 +16,20 @@ void loadFile(RegionBandsFileJson &value, const std::string &fn)
     }
 }
 
-void saveFile(RegionBandsFileJson &value, const std::string &fn)
+void saveFile(RegionalParameterChannelPlanFileJson &value, const std::string &fn)
 {
     value.flush();
 }
 
-void printRegionBands(const RegionBandsFileJson &value)
+void printRegionBands(const RegionalParameterChannelPlanFileJson &value)
 {
     std::cout << value.storage.toJsonString() << std::endl;
 }
 
-void doSmth(RegionBandsFileJson &value)
+void doSmth(RegionalParameterChannelPlanFileJson &value)
 {
     value.storage.setRegionalParametersVersion("1.0.3");
-    RegionBand rb;
+    RegionalParameterChannelPlan rb;
     rb.id = 14;
     rb.name = "RU864-870";  // 870MHz band
     rb.defaultRegion = true;
@@ -88,10 +88,10 @@ int main(int argc, char **argv) {
 
     config::rmFile(TEST_FN);
 
-    RegionBandsFileJson rbFile;
+    RegionalParameterChannelPlanFileJson rbFile;
 
     std::cerr << "Load regional-parameters.json  file.." << std::endl;
-    RegionBandsFileJson *rbf = new RegionBandsFileJson();
+    RegionalParameterChannelPlanFileJson *rbf = new RegionalParameterChannelPlanFileJson();
     rbf->init("regional-parameters.json", nullptr);
     printRegionBands(*rbf);
     delete rbf;

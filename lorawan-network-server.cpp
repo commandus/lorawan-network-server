@@ -88,7 +88,7 @@ static DatabaseByConfig *dbByConfig = NULL;
 // Device counters and last received
 static DeviceHistoryService *deviceHistoryService = NULL;
 // Regional settings
-static RegionBandsFileJson *regionBandsFileJson = NULL;
+static RegionalParameterChannelPlans *regionalParameterChannelPlans = NULL;
 
 // pkt2 environment
 static void* pkt2env = NULL;
@@ -111,8 +111,8 @@ static void flushFiles()
 		gatewayList->save();
 	if (deviceHistoryService)
 		deviceHistoryService->flush();
-    // if (regionBandsFileJson)
-    //    regionBandsFileJson->flush();
+    // if (regionalParameterChannelPlans)
+    //    regionalParameterChannelPlans->flush();
 }
 
 static void done()
@@ -167,9 +167,9 @@ static void done()
 		delete deviceHistoryService;
         deviceHistoryService = NULL;
 	}
-    if (regionBandsFileJson) {
-        delete regionBandsFileJson;
-        regionBandsFileJson = NULL;
+    if (regionalParameterChannelPlans) {
+        delete regionalParameterChannelPlans;
+        regionalParameterChannelPlans = NULL;
     }
 
 	if (pkt2env)
@@ -522,12 +522,12 @@ int main(
 
     // load regional settings
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start regional settings ..");
-    regionBandsFileJson = new RegionBandsFileJson();
+    regionalParameterChannelPlans = new RegionalParameterChannelPlanFileJson();
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize regional settings "
         + config->serverConfig.regionalSettingsStorageName + "..");
 
     // initialize regional settings
-    rs = regionBandsFileJson->init(config->serverConfig.regionalSettingsStorageName, NULL);
+    rs = regionalParameterChannelPlans->init(config->serverConfig.regionalSettingsStorageName, NULL);
     if (rs) {
         std::cerr << ERR_MESSAGE << ERR_CODE_INIT_REGION_BANDS << ": " << ERR_INIT_REGION_BANDS
             << " with code " << rs << ": " << strerror_lorawan_ns(rs)
@@ -536,7 +536,7 @@ int main(
     }
 
     if (config->serverConfig.verbosity > 3) {
-        std::cerr << MSG_REGIONAL_SETTINGS << regionBandsFileJson->storage.toJsonString() << std::endl;
+        std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlans->toJsonString() << std::endl;
     }
 
 	// Start received message queue service
@@ -635,6 +635,7 @@ int main(
     processor->setDeviceHistoryService(deviceHistoryService);
 	// FPort number reserved for messages controls network service. 0- no remote control allowed
 	processor->reserveFPort(config->serverConfig.controlFPort);
+    processor->setRegionalParameterChannelPlans(regionalParameterChannelPlans);
 
 	// Set pkt2 environment
 	receiverQueueProcessor = new ReceiverQueueProcessor();
@@ -644,7 +645,7 @@ int main(
 	// Set databases
 	receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
 	// start processing queue
-	processor->setRecieverQueueProcessor(receiverQueueProcessor);
+    processor->setReceiverQueueProcessor(receiverQueueProcessor);
 	
 	// Set up listener
 	listener->setHandler(processor);

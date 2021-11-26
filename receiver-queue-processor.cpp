@@ -1,6 +1,6 @@
 /**
  * 
- * Queue processor (in separate thread)
+ * Payload queue processor (in separate thread)
  * 
  * Usage:
  * 

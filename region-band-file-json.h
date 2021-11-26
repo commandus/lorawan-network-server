@@ -9,8 +9,19 @@
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
 
+class RegionalParameterChannelPlans {
+public:
+    virtual const RegionalParameterChannelPlan *get(const std::string &name) const = 0;
+    virtual const RegionalParameterChannelPlan *get(int id) const = 0;
+
+    virtual int init(const std::string &option, void *data) = 0;
+    virtual void flush() = 0;
+    virtual void done() = 0;
+    virtual std::string toJsonString() const  = 0;
+};
+
 /**
- * RegionBandsFileJson class load LoRaWAN region settings from the
+ * RegionalParameterChannelPlanFileJson class load LoRaWAN region settings from the
  * regional-parameters.json JSON file. This file looks like:
  * {
 	"regionalParametersVersion": "1.0.3",
@@ -49,14 +60,14 @@
 	}]
 }
  */
-class RegionBandsFileJson {
+class RegionalParameterChannelPlanFileJson : public RegionalParameterChannelPlans {
 	private:
         // helper hash map to get() region by the name
-        std::map<std::string, const RegionBand *> nameIndex;
-        std::map<int, const RegionBand *> idIndex;
-        // default RegionBand
+        std::map<std::string, const RegionalParameterChannelPlan *> nameIndex;
+        std::map<int, const RegionalParameterChannelPlan *> idIndex;
+        // default RegionalParameterChannelPlan
         // last region marked as default ("defaultRegion": true) is used
-        const RegionBand *defaultRegionBand;
+        const RegionalParameterChannelPlan *defaultRegionBand;
         int buildIndex();
         int loadFile(const std::string &fileName);
         int saveFile(const std::string &fileName) const;
@@ -68,19 +79,20 @@ class RegionBandsFileJson {
 
 	public:
         RegionBands storage;
-        RegionBandsFileJson();
-		~RegionBandsFileJson();
+        RegionalParameterChannelPlanFileJson();
+		~RegionalParameterChannelPlanFileJson();
 
-        const RegionBand *get(const std::string &name) const;
-        const RegionBand *get(int id) const;
+        virtual const RegionalParameterChannelPlan *get(const std::string &name) const override;
+        virtual const RegionalParameterChannelPlan *get(int id) const override;
 
-		int init(const std::string &option, void *data);
-		void flush();
-		void done();
+        virtual int init(const std::string &option, void *data) override;
+        virtual void flush() override;
+        virtual void done() override;
 
-		int errcode;
+        virtual std::string toJsonString() const override;
+
+        int errcode;
 		std::string errMessage;
-
 };
 
 #endif

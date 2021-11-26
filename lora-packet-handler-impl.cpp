@@ -293,7 +293,7 @@ void LoraPacketProcessor::setLogger(
 	packetQueue.setLogger(value);
 }
 
-void LoraPacketProcessor::setRecieverQueueProcessor
+void LoraPacketProcessor::setReceiverQueueProcessor
 (
         ReceiverQueueProcessor *value
 )
@@ -332,4 +332,10 @@ void LoraPacketProcessor::reserveFPort
 )
 {
 	reservedFPort = value;
+}
+
+void LoraPacketProcessor::setRegionalParameterChannelPlans(const RegionalParameterChannelPlans *value)
+{
+	regionalParameterChannelPlans = value;
+	packetQueue.setRegionalParameterChannelPlans(value);
 }
