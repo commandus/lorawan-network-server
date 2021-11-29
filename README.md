@@ -65,7 +65,6 @@ Gateways
 ./lorawan-network-server 84.237.104.128:2000
 ```
 
-
 ## Build
 
 You can use
@@ -199,6 +198,7 @@ Server config:
 - logDeviceStatisticsFileName e.g. log device statistics file name "device-stat.json"
 - deviceHistoryStorageName e.g. "device-history.json"
 - regionalSettingsStorageName file name of regional settings, e.g. "regional-parameters.json". Default none
+- regionalSettingsChannelPlanName If set, overrides default regional band plan value in the regional settings file.   
 - listenAddressIPv4 array of IPv4address:port e.g. ["127.0.0.1:5000","84.237.104.128:5000"]
 - listenAddressIPv6 array of IPv6address:port
 - gwStatStorageType log gateway statistics storage type, "file" or "post". Default none

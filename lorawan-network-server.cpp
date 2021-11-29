@@ -1,7 +1,8 @@
 /**
  * Simple LoRaWAN network server.
- * Copyright (c) 2021 andrey.ivanov@ikfia.ysn.ru Yu.G. Shafer Institute of Cosmophysical Research and Aeronomy of Siberian Branch of the Russian Academy of Sciences
- * MIT license
+ * Copyright (c) 2021 {@link mailto:andrey.ivanov@ikfia.ysn.ru} Yu.G. Shafer Institute of Cosmophysical Research
+ * and Aeronomy of Siberian Branch of the Russian Academy of Sciences
+ * MIT license {@link file://LICENSE}
  */
 #include <iostream>
 #include <iomanip>
@@ -329,8 +330,8 @@ int parseCmd(
 void onLog(
 	void *env,
 	int level,
-	int modulecode,
-	int errorcode,
+	int moduleCode,
+	int errorCode,
 	const std::string &message
 )
 {
@@ -544,6 +545,9 @@ int main(
     }
     // initialize regional settings device mapping
     deviceChannelPlan = new DeviceChannelPlanFileJson(regionalParameterChannelPlans);
+    if (!config->serverConfig.regionalSettingsChannelPlanName.empty()) {
+        deviceChannelPlan->setDefaultPlanName(config->serverConfig.regionalSettingsChannelPlanName);
+    }
 
     if (config->serverConfig.verbosity > 3) {
         std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlans->toJsonString() << std::endl;
@@ -569,7 +573,7 @@ int main(
 			
 		break;
 	}
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize received message queue service ..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize receiver message queue service ..");
 	rs = receiverQueueService->init(config->serverConfig.queueStorageName, options);
 	if (rs) {
 		std::cerr << ERR_INIT_QUEUE << rs << ": " << strerror_lorawan_ns(rs)
@@ -617,7 +621,7 @@ int main(
 		if (!hasConn)
 			dbOk = false;
 	}
-	// exit, if can not connect to the database
+	// exit, if it can not connect to the database
 	if (!dbOk) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);

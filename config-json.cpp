@@ -59,7 +59,8 @@ void ServerConfig::clear()
 
 ServerConfig::ServerConfig() 
 	: readBufferSize(DEF_BUFFER_SIZE), verbosity(0), controlFPort(0), daemonize(false),
-      identityStorageName(""), deviceHistoryStorageName(""), regionalSettingsStorageName(""),
+      identityStorageName(""), deviceHistoryStorageName(""),
+      regionalSettingsStorageName(""), regionalSettingsChannelPlanName(""),
       queueStorageName(""), storageType(IDENTITY_STORAGE_FILE_JSON),
       gwStatStorageType(GW_STAT_NONE), deviceStatStorageType(DEVICE_STAT_NONE),
       messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0),
@@ -107,6 +108,12 @@ int ServerConfig::parse(
         rapidjson::Value &jn = value["regionalSettingsStorageName"];
         if (jn.IsString()) {
             regionalSettingsStorageName = jn.GetString();
+        }
+    }
+    if (value.HasMember("regionalSettingsChannelPlanName")) {
+        rapidjson::Value &jn = value["regionalSettingsChannelPlanName"];
+        if (jn.IsString()) {
+            regionalSettingsChannelPlanName = jn.GetString();
         }
     }
 
@@ -225,6 +232,10 @@ void ServerConfig::toJson(
     rapidjson::Value nrs;
     nrs.SetString(regionalSettingsStorageName.c_str(), regionalSettingsStorageName.size(), allocator);
     value.AddMember("regionalSettingsStorageName", nrs, allocator);
+
+    rapidjson::Value nrscp;
+    nrs.SetString(regionalSettingsChannelPlanName.c_str(), regionalSettingsChannelPlanName.size(), allocator);
+    value.AddMember("regionalSettingsChannelPlanName", nrscp, allocator);
 
 	rapidjson::Value nq;
 	nq.SetString(queueStorageName.c_str(), queueStorageName.size(), allocator);

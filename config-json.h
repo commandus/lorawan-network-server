@@ -33,6 +33,7 @@ class ServerConfig {
 		std::string queueStorageName;
 		std::string deviceHistoryStorageName;
         std::string regionalSettingsStorageName;
+        std::string regionalSettingsChannelPlanName;
 		IDENTITY_STORAGE storageType;
         GW_STAT_STORAGE gwStatStorageType;
 		DEVICE_STAT_STORAGE deviceStatStorageType;

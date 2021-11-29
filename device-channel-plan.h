@@ -20,6 +20,7 @@ class DeviceChannelPlan {
 
         void setRegionalParameterChannelPlans(const RegionalParameterChannelPlans *plans);
         void setDefaultPlanId(int id);
+        bool setDefaultPlanName(const std::string &name);
 };
 
 #endif
