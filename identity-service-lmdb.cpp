@@ -109,7 +109,7 @@ class ListEnv {
 		)
 		: list(alist), c(0), offset(aoffset) {
 			if (asize <= 0)
-				size = UINT64_MAX;
+				size = SIZE_MAX;
 			else
 				size = asize;
 		}

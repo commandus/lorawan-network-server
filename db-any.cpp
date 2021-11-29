@@ -11,10 +11,15 @@
 #ifdef ENABLE_DB_FIREBIRD
 #include "db-fb.h"
 #endif
+#ifdef ENABLE_DB_JSON
+#include "db-json.h"
+#endif
 
 #include "errlist.h"
 
 #include "pkt2/str-pkt2.h"
+
+#define JSON_TYPE_NAME "json"
 
 DatabaseNConfig::DatabaseNConfig
 (
@@ -51,6 +56,15 @@ DatabaseNConfig::DatabaseNConfig
 #else
 	;		
 #endif
+
+                else
+                    if (config->type == "firebird")
+#ifdef ENABLE_DB_POST_JSON
+                        db = new DatabaseJSON();
+#else
+                    ;
+#endif
+
 }
 
 DatabaseNConfig::~DatabaseNConfig()
@@ -91,7 +105,7 @@ std::string DatabaseNConfig::insertClause(
 	const std::map<std::string, std::string> *properties
 )
 {
-	return parsePacket(env, inputFormat, OUTPUT_FORMAT_SQL, config->getDialect(), data, message,
+	return parsePacket(env, inputFormat, config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL, config->getDialect(), data, message,
 		&config->tableAliases, &config->fieldAliases, properties);
 }
 
@@ -104,7 +118,7 @@ int DatabaseNConfig::createTable(void *env, const std::string &message)
 }
 
 /**
- * @return 0- success, ERR_CODE_INVALID_PACKET- data is not parselable, otherwise database error code
+ * @return 0- success, ERR_CODE_INVALID_PACKET- data is not parseable, otherwise database error code
  */ 
 int DatabaseNConfig::insert(
 	void *env,

@@ -15,23 +15,23 @@ public:
 	DatabaseMySQL();
 	~DatabaseMySQL();
 
-	int open(
+	virtual int open(
 		const std::string &connection,
 		const std::string &login,
 		const std::string &password,
 		const std::string &db,
 		int port
-	);
-	int close();
+	) override;
+    virtual int close() override;
 
-	int exec(
+    virtual int exec(
 		const std::string &statement
-	);
+	) override;
 
-	int select(
+    virtual int select(
 		std::vector<std::vector<std::string>> &retval,
 		const std::string &statement
-	);
+	) override;
 };
 
 #endif

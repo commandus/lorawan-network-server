@@ -89,6 +89,15 @@ AC_ARG_ENABLE([db-firebird],
 esac],[enable_db_firebird=false])
 AM_CONDITIONAL([ENABLE_DB_FIREBIRD], [test x$enable_db_firebird = xtrue])
 
+AC_ARG_ENABLE([db-json],
+[  --enable-db-json    Turn on JSON POST web service backend],
+[case "${enableval}" in
+  yes) enable_db_json=true ;;
+  no)  enable_db_json=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-json]) ;;
+esac],[enable_db_json=false])
+AM_CONDITIONAL([ENABLE_DB_JSON], [test x$enable_db_json = xtrue])
+
 if test "$ENABLE_DB_SQLITE" == "true"; then
 AC_CHECK_HEADERS(sqlite3.h)
 AC_CHECK_LIB(sqlite3,sqlite3_close)
@@ -109,6 +118,10 @@ fi
 if test "$ENABLE_DB_FIREBIRD" == "true"; then
 AC_CHECK_HEADERS(ibase.h)
 AC_CHECK_LIB(fbclient,fb_sqlstate)
+fi
+
+if test "$ENABLE_DB_JSON" == "true"; then
+AC_CHECK_HEADERS(curl/curl.h)
 fi
 
 # MacOS: install openssl into /usr/local/lib/opt/openssl@1.1

@@ -68,6 +68,13 @@ BACKEND_DB_C +=
 BACKEND_DB_DEF += -DENABLE_DB_FIREBIRD 
 endif
 
+if ENABLE_DB_JSON
+BACKEND_DB_SRC += db-json.cpp
+BACKEND_DB_LIB +=
+BACKEND_DB_C +=
+BACKEND_DB_DEF += -DENABLE_DB_JSON
+endif
+
 #
 # mysql_config --cflags
 # -I/usr/include/mysql
@@ -111,7 +118,7 @@ nobase_dist_include_HEADERS = \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
 	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
-	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h \
+	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h db-json.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
 	device-channel-plan-file-json.h device-channel-plan.h regional-parameter-channel-plan.h regional-parameter-channel-plans.h regional-parameter-channel-plan-file-json.h \

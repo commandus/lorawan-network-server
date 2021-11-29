@@ -1115,7 +1115,7 @@ Aborted
 ### Check sqlite3 records
 
 ```
-echo ".q" | sqlite3 -cmd "attach \"lns.data.sqlite.db\" as lns;select devname, temperature, datetime(received, 'unixepoch', 'localtime') received, rowid from vega_SI13 order by received desc limit 50;
+echo ".q" | sqlite3 -cmd "attach \"lns.data.sqlite.db\" as lns;select devname, temperature, datetime(received, 'unixepoch', 'localtime') received, rowid from vega_SI13 order by received desc limit 50;"
 ```
 
 ### Send packet to the network server

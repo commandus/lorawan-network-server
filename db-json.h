@@ -1,26 +1,19 @@
-#ifndef DB_PG_H
-#define DB_PG_H	1
+#ifndef DB_JSON_H
+#define DB_JSON_H	1
 
 #include "db-intf.h"
 
-#include <postgresql/libpq-fe.h>
-
 /**
  */
-class DatabasePostgreSQL : public DatabaseIntf
+class DatabaseJSON : public DatabaseIntf
 {
+private:
+    std::string url;
 public:
-	PGconn *conn;
+    DatabaseJSON();
+	~DatabaseJSON();
 
-	DatabasePostgreSQL();
-	~DatabasePostgreSQL();
-
-	/**
-	 * @brief Connset to PostgreSQL
-	 * @param login not used
-	 * @param password not used
-	 */
-     virtual int open(
+    virtual int open(
 		const std::string &connection,
 		const std::string &login,
 		const std::string &password,
@@ -33,7 +26,7 @@ public:
 		const std::string &statement
 	) override;
 
-    virtual int select(
+	virtual int select(
 		std::vector<std::vector<std::string>> &retval,
 		const std::string &statement
 	) override;

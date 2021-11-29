@@ -318,7 +318,7 @@ void JsonFileReceiverQueueService::list(
 ) {
 	int64_t c = -1;
 	if (size == 0)
-		size = UINT64_MAX;
+		size = SIZE_MAX;
 	for (std::map<ReceiverQueueKey, ReceiverQueueValue>::const_iterator it(storage.begin()); it != storage.end(); it++) {
 		c++;
 		if (c < offset)
