@@ -151,7 +151,7 @@ mac_gw_SOURCES = \
 	config-json.cpp packet-queue.cpp device-history-item.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
-	semtech-metadata-tx.cpp lora-rejoin.cpp \
+	semtech-metadata-tx.cpp lora-rejoin.cpp utilcurl.cpp \
 	$(C_STORAGE) \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
@@ -160,7 +160,7 @@ mac_gw_SOURCES = \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
 
-mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB)
+mac_gw_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf -lcurl $(BACKEND_DB_LIB)
 mac_gw_CPPFLAGS = $(commoncppflags)
 
 mac_ns_SOURCES = \
@@ -169,7 +169,7 @@ mac_ns_SOURCES = \
 	config-json.cpp packet-queue.cpp device-history-item.cpp gateway-stat.cpp gateway-list.cpp lorawan-mac.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
-	semtech-metadata-tx.cpp lora-rejoin.cpp \
+	semtech-metadata-tx.cpp lora-rejoin.cpp utilcurl.cpp \
 	$(C_STORAGE) \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
@@ -179,28 +179,28 @@ mac_ns_SOURCES = \
 	third_party/base64/base64.cpp $(SRC_AES) \
 	control-packet.cpp
 
-mac_ns_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB)
+mac_ns_LDADD = $(commonlibs) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lcurl -lprotobuf $(BACKEND_DB_LIB)
 mac_ns_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
 	proto-db.cpp utilstring.cpp utilidentity.cpp utillora.cpp utildate.cpp utilfile.cpp \
 	lorawan-mac.cpp errlist.cpp \
 	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp identity-service-dir-txt.cpp $(C_STORAGE) \
-	db-any.cpp $(BACKEND_DB_SRC) \
+	db-any.cpp utilcurl.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES)
-proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+proto_db_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 lora_print_SOURCES = \
 	lora-print.cpp utilstring.cpp utilidentity.cpp lorawan-mac.cpp \
-	db-any.cpp $(BACKEND_DB_SRC) \
+	db-any.cpp utilcurl.cpp $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES) \
 	device-history-item.cpp gateway-stat.cpp utillora.cpp utildate.cpp utilfile.cpp lora-encrypt.cpp \
 	errlist.cpp \
 	identity-service-dir-txt.cpp $(C_STORAGE)
-lora_print_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+lora_print_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 lora_print_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 #

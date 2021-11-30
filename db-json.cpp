@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "db-json.h"
+#include "utilcurl.h"
 #include "errlist.h"
 
 DatabaseJSON::DatabaseJSON()
@@ -11,19 +12,19 @@ DatabaseJSON::DatabaseJSON()
 
 DatabaseJSON::~DatabaseJSON()
 {
-	if (db) {
-		close();
-	}
+	close();
 }
 
 int DatabaseJSON::open(
-	const std::string &connection,
+	const std::string &aUrl,
 	const std::string &login,
 	const std::string &password,
-	const std::string &dbname,
+	const std::string &aAuth,
 	int port
 )
 {
+    url = aUrl;
+    auth = aAuth;
 	return 0;
 }
 
@@ -33,10 +34,12 @@ int DatabaseJSON::close()
 }
 
 int DatabaseJSON::exec(
-	const std::string &statement
+	const std::string &json
 )
 {
-	return 0;
+    if (json.empty())
+        return ERR_CODE_PARAM_INVALID;
+    return postString(errMessage, url, auth, json);
 }
 
 int DatabaseJSON::select

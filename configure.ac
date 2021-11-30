@@ -95,7 +95,7 @@ AC_ARG_ENABLE([db-json],
   yes) enable_db_json=true ;;
   no)  enable_db_json=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-json]) ;;
-esac],[enable_db_json=false])
+esac],[enable_db_json=true])
 AM_CONDITIONAL([ENABLE_DB_JSON], [test x$enable_db_json = xtrue])
 
 if test "$ENABLE_DB_SQLITE" == "true"; then

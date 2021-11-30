@@ -1,6 +1,7 @@
 #include <sstream>
 #include "device-stat-service-file.h"
 #include "utilstring.h"
+#include "errlist.h"
 
 /**
  * Dewice statistics service append statistics to the file
@@ -94,10 +95,10 @@ void DeviceStatServiceFile::tuneDelay()
     }
 }
 
-void DeviceStatServiceFile::save()
+int DeviceStatServiceFile::save()
 {
     if (list.empty())
-        return;
+        return ERR_CODE_PARAM_INVALID;
     std::vector<SemtechUDPPacket> copyList;
     listMutex.lock();
     copyList = list;
@@ -107,5 +108,7 @@ void DeviceStatServiceFile::save()
     for (std::vector<SemtechUDPPacket>::iterator it (copyList.begin()); it != copyList.end(); it++) {
         ss << it->toJsonString() << std::endl;
     }
-    append2file(storageName, ss.str());
+    if (append2file(storageName, ss.str()))
+        return LORA_OK;
+    return ERR_CODE_SOCKET_WRITE;
 }

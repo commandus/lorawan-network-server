@@ -36,7 +36,7 @@ private:
 
     void runner();
 
-    virtual void save();
+    virtual int save();
 
     void tuneDelay();
 };

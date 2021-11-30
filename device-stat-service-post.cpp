@@ -1,16 +1,16 @@
 #include <sstream>
 #include "utilcurl.h"
 #include "device-stat-service-post.h"
-
+#include "errlist.h"
 
 /**
  * Device statistics service append statistics to the file
  * specified in the option parameter of init() method
  */
-void DeviceStatServicePost::save()
+int DeviceStatServicePost::save()
 {
     if (list.empty())
-        return;
+        return ERR_CODE_PARAM_INVALID;
     std::vector<SemtechUDPPacket> copyList;
     listMutex.lock();
     copyList = list;
@@ -29,6 +29,5 @@ void DeviceStatServicePost::save()
     }
     ss << "]";
     std::string ret;
-    int r = postString(ret, storageName, "", ss.str());
-    // std::cerr << "==POST data " << ss.str() << " to " << storageName << " return " << r << " result: " << ret << std::endl;
+    return postString(ret, storageName, "", ss.str());
 }

@@ -9,7 +9,7 @@
  */
 class DeviceStatServicePost : public DeviceStatServiceFile {
 	public:
-        virtual void save();
+        int save() override;
 };
 
 #endif
