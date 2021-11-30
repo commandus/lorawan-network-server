@@ -13,7 +13,7 @@ class DeviceChannelPlan {
     public:
         DeviceChannelPlan();
         virtual const RegionalParameterChannelPlan *get(const DEVEUI *value) const = 0;
-
+        virtual const RegionalParameterChannelPlan *getByAddr(const DEVADDRINT &value) const = 0;
         virtual int init(const std::string &option, void *data) = 0;
         virtual void flush() = 0;
         virtual void done() = 0;

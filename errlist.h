@@ -107,6 +107,7 @@
 #define ERR_CODE_REGION_BAND_EMPTY          -590
 #define ERR_CODE_INIT_REGION_BANDS          -591
 #define ERR_CODE_INIT_REGION_NO_DEFAULT     -592
+#define ERR_CODE_NO_REGION_BAND             -593
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -209,6 +210,7 @@
 #define ERR_REGION_BAND_EMPTY           "RegionBands array element disappeared"
 #define ERR_INIT_REGION_BANDS			"Regional settings does not loaded "
 #define ERR_INIT_REGION_NO_DEFAULT		"No default regional settings loaded"
+#define ERR_NO_REGION_BAND              "Regional settings not available"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

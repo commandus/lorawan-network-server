@@ -293,8 +293,8 @@ test_pkt2_parse_LDADD = $(LIB_PKT2) -lprotobuf -lpthread
 test_pkt2_parse_CPPFLAGS = $(commoncppflags)
 
 test_sqlite_SOURCES = \
-	tests/test-sqlite.cpp db-any.cpp $(BACKEND_DB_SRC)
-test_sqlite_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+	tests/test-sqlite.cpp db-any.cpp utilcurl.cpp $(BACKEND_DB_SRC)
+test_sqlite_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 test_sqlite_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 test_fb_SOURCES = \
@@ -318,8 +318,9 @@ test_queue_processor_SOURCES = \
 	lorawan-mac.cpp db-any.cpp $(BACKEND_DB_SRC) \
 	utilstring.cpp utilfile.cpp utillora.cpp utildate.cpp $(SRC_AES) \
 	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp \
+	utilcurl.cpp \
 	third_party/base64/base64.cpp
-test_queue_processor_LDADD = $(LIB_PKT2) -lprotobuf -lpthread $(BACKEND_DB_LIB)
+test_queue_processor_LDADD = $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 test_queue_processor_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 

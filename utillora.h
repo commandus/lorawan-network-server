@@ -20,9 +20,7 @@
 #include "gateway-stat.h"
 
 #define TX_MIN_POWER_DBM    -6
-// 27 26 20
-#define TX_MAX_POWER_DBM    21
-#define TX_DEF_POWER_DBM    14
+#define TX_MAX_POWER_DBM    27
 
 typedef unsigned char NETID[3];
 

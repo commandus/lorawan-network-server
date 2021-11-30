@@ -13,7 +13,6 @@
 #include "identity-service-abstract.h"
 #include "control-packet.h"
 
-#define TX_POWER_VALUE_DBM TX_MAX_POWER_DBM
 SemtechUDPPacketItem::SemtechUDPPacketItem()
 	: processMode(MODE_NONE)
 {
@@ -382,8 +381,14 @@ int PacketQueue::replyMAC(
 ) {
 	// to reply via closest gateway, find out gatewsy with best SNR
 	float snr;
-	int power = TX_POWER_VALUE_DBM;
-	uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
+    const RegionalParameterChannelPlan *regionalParameterChannelPlan;
+    if (deviceChannelPlan)
+        regionalParameterChannelPlan = deviceChannelPlan->getByAddr(item.getAddr());
+    if (!regionalParameterChannelPlan)
+        return ERR_CODE_NO_REGION_BAND;
+    int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
+
+    uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
 	if (gwa == 0) {
 		std::stringstream ss;
 		ss << ERR_BEST_GATEWAY_NOT_FOUND;
@@ -521,7 +526,13 @@ int PacketQueue::replyControl(
 
 	// to reply via the closest gateway, find out gateway with best SNR
 	float snr;
-	int power = TX_POWER_VALUE_DBM;
+
+    const RegionalParameterChannelPlan *regionalParameterChannelPlan;
+    if (deviceChannelPlan)
+        regionalParameterChannelPlan = deviceChannelPlan->getByAddr(item.getAddr());
+    if (!regionalParameterChannelPlan)
+        return ERR_CODE_NO_REGION_BAND;
+    int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
 
 	// check just in case
 	// .. gateway
