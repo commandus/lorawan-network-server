@@ -383,7 +383,7 @@ int PacketQueue::replyMAC(
 	float snr;
     const RegionalParameterChannelPlan *regionalParameterChannelPlan;
     if (deviceChannelPlan)
-        regionalParameterChannelPlan = deviceChannelPlan->getByAddr(item.getAddr());
+        regionalParameterChannelPlan = deviceChannelPlan->get(item.getAddr());
     if (!regionalParameterChannelPlan)
         return ERR_CODE_NO_REGION_BAND;
     int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
@@ -529,7 +529,7 @@ int PacketQueue::replyControl(
 
     const RegionalParameterChannelPlan *regionalParameterChannelPlan;
     if (deviceChannelPlan)
-        regionalParameterChannelPlan = deviceChannelPlan->getByAddr(item.getAddr());
+        regionalParameterChannelPlan = deviceChannelPlan->get(item.getAddr());
     if (!regionalParameterChannelPlan)
         return ERR_CODE_NO_REGION_BAND;
     int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;

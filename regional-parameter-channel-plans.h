@@ -15,7 +15,8 @@ class RegionalParameterChannelPlans {
         virtual int init(const std::string &option, void *data) = 0;
         virtual void flush() = 0;
         virtual void done() = 0;
-        virtual std::string toJsonString() const  = 0;
+        virtual std::string toJsonString() const = 0;
+        virtual std::string getErrorDescription(int &subCode) const = 0;
 };
 
 #endif

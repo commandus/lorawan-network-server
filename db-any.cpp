@@ -58,8 +58,8 @@ DatabaseNConfig::DatabaseNConfig
 #endif
 
                 else
-                    if (config->type == "firebird")
-#ifdef ENABLE_DB_POST_JSON
+                    if (config->type == "json")
+#ifdef ENABLE_DB_JSON
                         db = new DatabaseJSON();
 #else
                     ;
@@ -211,8 +211,13 @@ DatabaseIntf* DatabaseByConfig::open
 					return new DatabaseFirebird();
 #else
 	;		
-#endif					
-	return NULL;
+#endif
+#ifdef ENABLE_DB_JSON
+    return new DatabaseJSON();
+#else
+    ;
+#endif
+    return NULL;
 }
 
 size_t DatabaseByConfig::count() const

@@ -1,6 +1,5 @@
 # lorawan-network-server
 
-
 lorawan-network-server is lightweight monolith LoRaWAN network server.
 
 The payload is parsed according to the description of the data structure of the packet

@@ -538,19 +538,30 @@ int main(
     // initialize regional settings
     rs = regionalParameterChannelPlans->init(config->serverConfig.regionalSettingsStorageName, NULL);
     if (rs) {
+        int parseCode;
+        std::string parseDescription = regionalParameterChannelPlans->getErrorDescription(parseCode);
         std::cerr << ERR_MESSAGE << ERR_CODE_INIT_REGION_BANDS << ": " << ERR_INIT_REGION_BANDS
-            << " with code " << rs << ": " << strerror_lorawan_ns(rs)
-                  << ", file: " << config->serverConfig.regionalSettingsStorageName << std::endl;
+            << ", code " << rs << ": " << strerror_lorawan_ns(rs)
+                  << ", file: " << config->serverConfig.regionalSettingsStorageName
+                  << ", parse error " << parseCode << ": " << parseDescription
+                  << std::endl;
         exit(ERR_CODE_INIT_REGION_BANDS);
     }
     // initialize regional settings device mapping
     deviceChannelPlan = new DeviceChannelPlanFileJson(regionalParameterChannelPlans);
     if (!config->serverConfig.regionalSettingsChannelPlanName.empty()) {
+        // override default regional settings if region name specified
         deviceChannelPlan->setDefaultPlanName(config->serverConfig.regionalSettingsChannelPlanName);
     }
 
+    const RegionalParameterChannelPlan *regionalParameterChannelPlan = deviceChannelPlan->get();
+    if (!regionalParameterChannelPlan) {
+        std::cerr << ERR_MESSAGE << ERR_CODE_REGION_BAND_NO_DEFAULT << ": " << ERR_REGION_BAND_NO_DEFAULT << std::endl;
+        exit(ERR_CODE_REGION_BAND_NO_DEFAULT);
+    }
+
     if (config->serverConfig.verbosity > 3) {
-        std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlans->toJsonString() << std::endl;
+        std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlan->toJsonString() << std::endl;
     }
 
 	// Start received message queue service

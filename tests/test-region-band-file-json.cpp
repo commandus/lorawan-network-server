@@ -10,9 +10,9 @@ const std::string TEST_FN("region-band.json.tmp");
 void loadFile(RegionalParameterChannelPlanFileJson &value, const std::string &fn)
 {
     value.init(fn, nullptr);
-    if (value.errcode) {
-        std::cerr << ERR_MESSAGE << value.errcode << ": "
-            << " " << value.errMessage << std::endl;
+    if (value.errCode) {
+        std::cerr << ERR_MESSAGE << value.errCode << ": "
+                  << " " << value.errDescription << std::endl;
     }
 }
 

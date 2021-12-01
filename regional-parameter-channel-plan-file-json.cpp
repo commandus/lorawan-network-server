@@ -169,7 +169,7 @@ static JSON_KEY_REGION_BAND getAttrByName(
 }
 
 RegionalParameterChannelPlanFileJson::RegionalParameterChannelPlanFileJson()
-	: errcode(0), defaultRegionBand(nullptr)
+	: errCode(0), defaultRegionBand(nullptr)
 {
 
 }
@@ -426,7 +426,7 @@ private:
         std::stringstream ss;
         ss << "reason: " << reason << ", key: " << ATTR_REGION_BAND_NAMES[keyIndex] << "(" << keyIndex << ")"
            << ", state: " << PARSE_STATE_NAMES[state];
-        value->errMessage = ss.str();
+        value->errDescription = ss.str();
     }
 
 
@@ -873,14 +873,14 @@ int RegionalParameterChannelPlanFileJson::loadFile(const std::string &fileName)
     rapidjson::FileReadStream istrm(fp, readBuffer, sizeof(readBuffer));
     rapidjson::ParseResult r = reader.Parse(istrm, handler);
     if (r.IsError()) {
-        errcode = r.Code();
+        errCode = r.Code();
         std::stringstream ss;
         ss << rapidjson::GetParseError_En(r.Code()) << " Offset: " << r.Offset()
-           << ",  " << errMessage;
-        errMessage = ss.str();
+           << ",  " << errDescription;
+        errDescription = ss.str();
     } else {
-        errcode = 0;
-        errMessage = "";
+        errCode = 0;
+        errDescription = "";
     }
     fclose(fp);
     return r.IsError() ? ERR_CODE_INVALID_JSON : 0;
@@ -933,4 +933,10 @@ void RegionalParameterChannelPlanFileJson::done()
 
 std::string RegionalParameterChannelPlanFileJson::toJsonString() const {
     return storage.toJsonString();
+}
+
+std::string RegionalParameterChannelPlanFileJson::getErrorDescription(int &subCode) const
+{
+    subCode = errCode;
+    return errDescription;
 }

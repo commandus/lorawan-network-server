@@ -110,6 +110,7 @@
 		"id": 12,
 		"name": "RU864-870",
 		"cn": "RU864",
+		"defaultRegion": true,
 		"implementsTXParamSetup": false,
 		"maxUplinkEIRP": 16,
 		"defaultDownlinkTXPower": 14,

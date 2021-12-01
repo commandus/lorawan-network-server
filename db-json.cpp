@@ -39,7 +39,11 @@ int DatabaseJSON::exec(
 {
     if (json.empty())
         return ERR_CODE_PARAM_INVALID;
-    return postString(errMessage, url, auth, json);
+    int r = postString(errMessage, url, auth, json);
+    if (r >= 200 && r < 300)
+        return LORA_OK;
+    else
+        return ERR_CODE_DB_EXEC;
 }
 
 int DatabaseJSON::select

@@ -6,12 +6,12 @@ DeviceChannelPlanFileJson::DeviceChannelPlanFileJson(const RegionalParameterChan
     setDefaultPlanId(defaultPlanId);
 }
 
-const RegionalParameterChannelPlan *DeviceChannelPlanFileJson::get(const DEVEUI *value) const
+const RegionalParameterChannelPlan *DeviceChannelPlanFileJson::get(const DEVADDRINT &value) const
 {
-    return regionalParameterChannelPlans->get(defaultRegioanlSettingsBamdChannelPlanIdentifer);
+    return get();
 }
 
-const RegionalParameterChannelPlan *DeviceChannelPlanFileJson::getByAddr(const DEVADDRINT &value) const
+const RegionalParameterChannelPlan *DeviceChannelPlanFileJson::get() const
 {
     return regionalParameterChannelPlans->get(defaultRegioanlSettingsBamdChannelPlanIdentifer);
 }

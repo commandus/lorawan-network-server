@@ -55,6 +55,7 @@ class RegionalParameterChannelPlanFileJson : public RegionalParameterChannelPlan
         // helper hash map to get() region by the name
         std::map<std::string, const RegionalParameterChannelPlan *> nameIndex;
         std::map<int, const RegionalParameterChannelPlan *> idIndex;
+
         // default RegionalParameterChannelPlan
         // last region marked as default ("defaultRegion": true) is used
         const RegionalParameterChannelPlan *defaultRegionBand;
@@ -71,6 +72,8 @@ class RegionalParameterChannelPlanFileJson : public RegionalParameterChannelPlan
         RegionBands storage;
         RegionalParameterChannelPlanFileJson();
 		~RegionalParameterChannelPlanFileJson();
+        int errCode;
+        std::string errDescription;
 
         virtual const RegionalParameterChannelPlan *get(const std::string &name) const override;
         virtual const RegionalParameterChannelPlan *get(int id) const override;
@@ -81,8 +84,7 @@ class RegionalParameterChannelPlanFileJson : public RegionalParameterChannelPlan
 
         virtual std::string toJsonString() const override;
 
-        int errcode;
-		std::string errMessage;
+        virtual std::string getErrorDescription(int &subCode) const override;
 };
 
 #endif
