@@ -366,7 +366,7 @@ void DeviceId::setProperties
 	retval["activation"] = activation2string(activation);
 	retval["class"] = deviceclass2string(deviceclass);
 	retval["eui"] = DEVEUI2string(deviceEUI);
-	retval["name"] = std::string(name, sizeof(DEVICENAME));
+	retval["name"] = DEVICENAME2string(name);
 	retval["version"] = LORAWAN_VERSION2string(version);
 }
 

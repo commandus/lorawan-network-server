@@ -29,5 +29,16 @@
   "version": "1.0.0",
   "name": "pak811-1",
   "flags": 0
+},
+{
+  "addr": "01450340",
+  "activation": "ABP",
+  "eui": "1234567890102030",
+  "nwkSKey": "2B7E151628AED2A6ABF7158809CF4F3C",
+  "appSKey": "2B7E151628AED2A6ABF7158809CF4F3C",
+  "class": "A",
+  "version": "1.0.0",
+  "name": "oled1234",
+  "flags": 0
 }
 ]

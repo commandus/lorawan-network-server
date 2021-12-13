@@ -1,3 +1,4 @@
+#include <iostream>
 #include "db-any.h"
 #ifdef ENABLE_DB_SQLITE
 #include "db-sqlite.h"
@@ -105,7 +106,9 @@ std::string DatabaseNConfig::insertClause(
 	const std::map<std::string, std::string> *properties
 )
 {
-	return parsePacket(env, inputFormat, config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL, config->getDialect(), data, message,
+	return parsePacket(env, inputFormat,
+       config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
+       config->getDialect(), data, message,
 		&config->tableAliases, &config->fieldAliases, properties);
 }
 
@@ -129,6 +132,7 @@ int DatabaseNConfig::insert(
 )
 {
 	std::string clause = insertClause(env, message, inputFormat, data, properties);
+    std::cerr << "== Clause: " << clause << std::endl;
 	if (clause.empty())
 		return ERR_CODE_INVALID_PACKET;
 	return db->exec(clause);
