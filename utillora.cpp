@@ -1,5 +1,3 @@
-#include <sstream>
-#include <iostream>
 #include <iomanip>
 #include <cstring>
 
@@ -24,7 +22,6 @@
 
 #include "lora-encrypt.h"
 #include "lorawan-mac.h"
-
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define swap16(x) (x)
@@ -1208,7 +1205,6 @@ int SemtechUDPPacket::parse
 		return r;
 
 	char *json = getSemtechJSONCharPtr(packetForwarderPacket, size);
-    std::cerr << json << std::endl;
 	if (size == sizeof(SEMTECH_PREFIX_GW)) {
 		if (retprefix.tag == 2)
 			return ERR_CODE_PULLOUT;
@@ -1822,24 +1818,6 @@ std::string SemtechUDPPacket::toTxJsonString
 		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payloadString.size()
         << ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payloadString) << "\"}}";
 	
-	std::cerr << "SemtechUDPPacket::toTxJsonString {\"txpk\":{" ;
-	if (receivedTime == 0)
-		std::cerr << "\"" << METADATA_TX_NAMES[1] << "\":true";
-	else {
-		uint32_t sendTime = receivedTime + 1000000;
-		std::cerr << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
-	}
-	std::cerr << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()
-		<< ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfCh		// Concentrator "RF chain" used for TX (unsigned integer)
-		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									    // TX output power in dBm (unsigned integer, dBm precision)
-		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	    // Modulation identifier "LORA" or "FSK"
-		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()
-        << "\",\"" << METADATA_TX_NAMES[9] << "\":\"" << metadata[metadataIdx].codr()
-        << "\",\"" << METADATA_TX_NAMES[11] << "\":true" 									    // Lora modulation polarization inversion
-		<< ",\"" << METADATA_TX_NAMES[15] << "\":false" 									    // Check CRC
-		<< ",\"" << METADATA_TX_NAMES[13] << "\":" << payloadString.size()
-        << ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payloadString) << "\"}}" << std::endl;
-
 	return ss.str();
 }
 
@@ -1909,13 +1887,6 @@ std::string SemtechUDPPacket::mkPullResponse(
 	}
 	sMsg << frmPayload;
 
-    std::cerr << "== mkPullResponse" << std::endl;
-    std::cerr << "==Address: " << DEVADDR2string(rfmHeader.header.devaddr) << std::endl;
-	std::cerr << "==FCnt:  " << rfmHeader.header.fcnt << std::endl;
-	std::cerr << "=Header: " << rfmHeader.toJson() << std::endl;
-	std::cerr << "=Header: " << hexString(rfmHeader.toBinary()) << std::endl;
-	std::cerr << "==Data:  " << hexString(data) << std::endl;
-
 	std::string msg = sMsg.str();
 	// calc mic
 	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);
@@ -1971,12 +1942,6 @@ std::string SemtechUDPPacket::mkMACRequest(
 		ssMsg << (uint8_t) 0;	// FPort 0- MAC payload
 	}
 	ssMsg << frmPayload;
-
-	std::cerr << "==Address: " << DEVADDR2string(rfmHeader.header.devaddr) << std::endl;
-	std::cerr << "==FCnt:  " << rfmHeader.header.fcnt << std::endl;
-	std::cerr << "=Header: " << rfmHeader.toJson() << std::endl;
-	std::cerr << "=Header: " << hexString(rfmHeader.toBinary()) << std::endl;
-	std::cerr << "==Data:  " << hexString(data) << std::endl;
 
 	std::string msg = ssMsg.str();
 	// calc mic
@@ -2037,7 +2002,6 @@ void SemtechUDPPacket::appendMACs(const std::string &macsString) {
         memset(&header.fopts, 0, sizeof(FOPTS));
         header.header.fctrl.f.foptslen = 0;
     } else {
-        std::cerr << "====" << hexString(macsString.c_str()) << std::endl;
         memmove(&header.fopts.fopts[szExists], macsString.c_str(), szInsert);
         header.header.fctrl.f.foptslen = szNew;
     }
@@ -2221,7 +2185,6 @@ uint8_t loraMargin(
 	float loraSNR
 )
 {
-	std::cerr << "loraMargin " << loraSNR << std::endl;
 	if (spreadingFactor >= 12)
 		spreadingFactor = 11;
 	int r = (loraSNR - SpreadFactorToRequiredSNR[spreadingFactor] + 0.5);	// round
@@ -2230,7 +2193,6 @@ uint8_t loraMargin(
 	if (r > 254)
 		r = 254;
 	return r;
-
 }
 
 #define TRACK_CODE_SSIZE	11

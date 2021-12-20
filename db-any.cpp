@@ -132,7 +132,6 @@ int DatabaseNConfig::insert(
 )
 {
 	std::string clause = insertClause(env, message, inputFormat, data, properties);
-    std::cerr << "== Clause: " << clause << std::endl;
 	if (clause.empty())
 		return ERR_CODE_INVALID_PACKET;
 	return db->exec(clause);

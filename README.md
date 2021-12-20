@@ -6,6 +6,26 @@ The payload is parsed according to the description of the data structure of the 
 sent by the end-device and is stored to the database in the table specified in the 
 configuration file.
 
+Clone [Github repository](https://github.com/commandus/lorawan-network-server):
+```
+git clone git@github.com:commandus/lorawan-network-server.git
+```
+or
+```
+git clone https://github.com/commandus/lorawan-network-server.git
+```
+
+First install dependencies (see below) and then configure and make project using Autotools.
+
+```
+cd lorawan-network-server
+./autogen.sh
+./configure
+make
+```
+
+You cam use CMake with care, it may be inconsistent. You need check missed sources in the CMake script.
+
 ## Components
 
 ```
