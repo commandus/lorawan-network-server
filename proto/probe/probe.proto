@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package esp32;
+
+import "pkt2.proto";
+
+message Probe
+{
+    // backend database
+    option(pkt2.output) = {
+    	sql {
+    		dialect: SQL_POSTGRESQL
+    	}
+    };
+    // Espressif ESP32 Wi-Fi Bluetooth
+    option(pkt2.packet) = {
+        id: 14001 
+        name: "wifi"
+        short_name: "Wi-Fi probe"
+        full_name: "Wi-Fi probe"
+        // set: "device = message.device; unix_time = message.time; value = (message.degrees_c / 2) / 1.22);"
+        fields: [
+            {
+                name: "tagW"
+                type: INPUT_INT
+                size: 1
+                offset: 0,
+                tag: 66 // 0x42, 66-'B' 87- 'W'
+            },
+            {
+                name: "rssi"
+                type: INPUT_INT
+                size: 1
+                offset: 1
+            },
+            {
+                name: "mac"
+                type: INPUT_BYTES
+                size: 6
+                offset: 2
+            }
+        ]
+    };
+
+    // output 
+    int32 rssi = 1 [(pkt2.variable) = {
+        name: "rssi"
+        short_name: "RSSI Wi-Fi"
+        full_name: "Индикатор уровня принимаемого сигнала Wi-Fi"
+        measure_unit: "ед"
+        get: "field.rssi"
+        priority: 0                                 // required
+    }];
+    string mac = 2 [(pkt2.variable) = {
+        name: "mac"
+        short_name: "MAC"
+        full_name: "MAC адрес"
+        measure_unit: ""
+        get: "var v = ''; for (var i = 0; i < field.mac.length; i++) { v += ('0' + (field.mac[i] & 0xff).toString(16)).slice(-2);} v;"
+        priority: 0                                 // required
+    }];
+}

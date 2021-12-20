@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package esp32;
+
+import "pkt2.proto";
+
+message LoraText
+{
+    // backend database
+    option(pkt2.output) = {
+        sql {
+            dialect: SQL_POSTGRESQL
+        }
+    };
+    // Espressif ESP32 Wi-Fi Bluetooth
+    option(pkt2.packet) = {
+        id: 14002
+        name: "LoraText"
+        short_name: "LoRaWAN text"
+        full_name: "LoRaWAN text (up to 16 bytes)"
+        fields: [
+            {
+                name: "tagT"
+                type: INPUT_INT
+                size: 1
+                offset: 0,
+                tag: 84 // 84- 'T' 66-'B' 87- 'W'
+            },
+            {
+                name: "msg"
+                type: INPUT_STRING
+                size: 16
+                offset: 1
+            }
+        ]
+    };
+
+    // output 
+    string msg = 1 [(pkt2.variable) = {
+        name: "msg"
+        short_name: "Текст"
+        full_name: "Текст сообщения"
+        measure_unit: ""
+        get: "field.msg"
+        priority: 0                                 // required
+    }];
+}
