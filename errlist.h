@@ -5,6 +5,9 @@
 #define	LOG_DEBUG							3
 */
 
+// width in chars
+#define LOG_LEVEL_FIELD_WIDTH               2
+
 #define LOG_MAIN_FUNC						1
 #define LOG_UDP_LISTENER					2
 #define LOG_IDENTITY_SVC					3
@@ -109,6 +112,7 @@
 #define ERR_CODE_INIT_REGION_NO_DEFAULT     -592
 #define ERR_CODE_NO_REGION_BAND             -593
 #define ERR_CODE_REGION_BAND_NO_DEFAULT     -594
+#define ERR_CODE_IS_JOIN					-595
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -213,6 +217,7 @@
 #define ERR_INIT_REGION_NO_DEFAULT		"No default regional settings loaded"
 #define ERR_NO_REGION_BAND              "Regional settings not available"
 #define ERR_REGION_BAND_NO_DEFAULT      "No default region assigned"
+#define ERR_IS_JOIN					    "Jpin request or response"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

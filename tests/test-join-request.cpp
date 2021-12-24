@@ -1,35 +1,49 @@
 #include <string>
 #include <iostream>
-#include <fstream>
-#include <sstream>
+#include <cassert>
 
 #include "utilstring.h"
 #include "base64/base64.h"
-#include "lora-encrypt.h"
-#include "lora-rejoin.h"
 
-void decodeTest(
-	const std::string &skey,
-	const std::string &base64Value
-)
+#include "errlist.h"
+#include "utillora.h"
+#include "utilstring.h"
+
+void testJoinRequest2(const std::string &data)
 {
-	std::string v = base64_decode(base64Value);
-	//v = v.substr(1, 48);	// remove mhdr
 	KEY128 key;
-	string2KEY(key, skey);
-	std::string p = decryptJoinAccept(v, key);
-	std::cout << hexString(p) << ", size " << p.size() << " bytes."<< std::endl;
-	std::cout << LoraWANJoinAccept::toJSONString(p.c_str(), p.size()) << std::endl;
+    SEMTECH_PREFIX_GW retPrefix;
+    rfmMetaData m;
+    const struct sockaddr *gwAddress = nullptr;
+    SemtechUDPPacket packet(gwAddress, &retPrefix, &m, data, nullptr);
+    if (packet.errcode == ERR_CODE_IS_JOIN) {
+        std::cerr << "Join request: "
+                  << JOIN_REQUEST_FRAME2string(packet.getJoinRequestFrame())
+          << std::endl;
+    }
+}
 
-	LoraWANJoinAccept a(p.c_str(), p.size());
-	std::cout << a.toJSONString() << std::endl;
+void testJoinRequest1(const std::string &data)
+{
+    if (((MHDR *)data.c_str())->f.mtype <= MTYPE_JOIN_ACCEPT) {
+        int payloadSize = data.size() - sizeof(MHDR) - sizeof(uint32_t);
+        std::string payload = data.substr(sizeof(MHDR), payloadSize);
+        // calc MIC
+        uint32_t mic = getMic(data);
+        KEY128 APPSKEY = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+        uint32_t micCalc = calculateMICJoinRequest((JOIN_REQUEST_HEADER *) data.c_str(), APPSKEY);
 
-	// KEY128 key = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff };
-	DEVEUI joinEUI = {0, 0, 0, 0, 0, 0, 0, 0 };
-	JOINNONCE devNonce = {0, 0, 0};
-	std::cout << std::hex << a.mic(joinEUI, devNonce, key) << std::endl;
-};
+        assert(mic == micCalc);
 
-int main(int argc, char **argv) {
-	test("00112233445566778899aabbccddeeff", "IEk+61H7ohFvgQ7bN0KXUUI="); // hex 20493eeb51fba2116f810edb3742975142 line 524
+        std::cerr << "*** JOIN request *** parseData MIC: " << std::hex << mic << ", calculated MIC: " << micCalc
+                  << ", payload: " << hexString(payload)
+                  << std::endl;
+    }
+}
+
+int main(int argc, char **argv)
+{
+    std::string data = hex2string("00111213141516171801020304050607088aaacbeb32a2");
+    testJoinRequest1(data);
+    // testJoinRequest2(data);
 }

@@ -54,7 +54,7 @@ public:
 //  MHDR | JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList
 typedef ALIGN struct {
 	MHDR macheader;						// 1 MAC header message type 6
-	JOIN_NONCE joinNonce;				// 3
+	JOINNONCE joinNonce;				// 3
 	NETID netid;						// 3
 	DEVADDR devaddr;					// 4
 										// 1 dlsettings
@@ -93,7 +93,7 @@ public:
 	static std::string toJSONString(const void *buffer, size_t size);
 	uint32_t mic(
 		const DEVEUI &joinEUI,
-		const JOIN_NONCE &devNonce,
+		const JOINNONCE &devNonce,
 		const KEY128 &key
 	);
 };

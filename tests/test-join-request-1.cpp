@@ -5,7 +5,6 @@
 #include "utilfile.h"
 #include "regional-parameter-channel-plan-file-json.h"
 
-const std::string TEST_FN("region-band.json.tmp");
 
 void loadFile(RegionalParameterChannelPlanFileJson &value, const std::string &fn)
 {

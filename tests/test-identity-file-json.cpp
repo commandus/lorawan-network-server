@@ -15,14 +15,14 @@ void putTest(
 	a[3] = 4;
 
 	DEVICEID id;
-	id.deviceEUI[0] = 1;
-	id.deviceEUI[1] = 2;
-	id.deviceEUI[2] = 3;
-	id.deviceEUI[3] = 4;
-	id.deviceEUI[4] = 5;
-	id.deviceEUI[5] = 6;
-	id.deviceEUI[6] = 7;
-	id.deviceEUI[7] = 8;
+	id.devEUI[0] = 1;
+	id.devEUI[1] = 2;
+	id.devEUI[2] = 3;
+	id.devEUI[3] = 4;
+	id.devEUI[4] = 5;
+	id.devEUI[5] = 6;
+	id.devEUI[6] = 7;
+	id.devEUI[7] = 8;
 
 	id.nwkSKey[0] = 1;
 	id.nwkSKey[1] = 2;
@@ -106,7 +106,7 @@ void getIdentityTest(
 	if (s.get(a, id) == 0) {
 		std::cout 
 			<< " Address: " << DEVADDR2string(a) 
-			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " EUI: " << DEVEUI2string(id.devEUI)
 			<< " appSKey: " << KEY2string(id.appSKey)
 			<< " nwkSKey: " << KEY2string(id.nwkSKey)
 			<< std::endl;
@@ -144,7 +144,7 @@ void decodeTest(
 			<< " size: " << v.size()
 			<< " RFM header size: " << sizeof(RFM_HEADER)
 			<< " payload size: " << v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen 
-			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " EUI: " << DEVEUI2string(id.devEUI)
 			<< " appSKey: " << KEY2string(id.appSKey)
 			<< " nwkSKey: " << KEY2string(id.nwkSKey)
 			<< std::endl;
@@ -279,7 +279,7 @@ void decodeTest3(
 			<< " size: " << v.size()
 			<< " RFM header size: " << sizeof(RFM_HEADER)
 			<< " payload size: " << v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen 
-			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " EUI: " << DEVEUI2string(id.devEUI)
 			<< " appSKey: " << KEY2string(id.appSKey)
 			<< " nwkSKey: " << KEY2string(id.nwkSKey)
 			<< std::endl;

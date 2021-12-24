@@ -20,7 +20,7 @@ void getIdentityTest(
 	if (s.get(a, id) == 0) {
 		std::cout 
 			<< " Address: " << DEVADDR2string(a) 
-			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " EUI: " << DEVEUI2string(id.devEUI)
 			<< " appSKey: " << KEY2string(id.appSKey)
 			<< " nwkSKey: " << KEY2string(id.nwkSKey)
 			<< std::endl;
@@ -58,7 +58,7 @@ void decodeTest(
 			<< " size: " << v.size()
 			<< " RFM header size: " << sizeof(RFM_HEADER)
 			<< " payload size: " << v.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - hdr.header.fctrl.f.foptslen 
-			<< " EUI: " << DEVEUI2string(id.deviceEUI) 
+			<< " EUI: " << DEVEUI2string(id.devEUI)
 			<< " appSKey: " << KEY2string(id.appSKey)
 			<< " nwkSKey: " << KEY2string(id.nwkSKey)
 			<< std::endl;

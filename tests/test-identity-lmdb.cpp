@@ -21,14 +21,14 @@ int main(int argc, char **argv) {
 	a[3] = 4;
 
 	DEVICEID id;
-	id.deviceEUI[0] = 1;
-	id.deviceEUI[1] = 2;
-	id.deviceEUI[2] = 3;
-	id.deviceEUI[3] = 4;
-	id.deviceEUI[4] = 5;
-	id.deviceEUI[5] = 6;
-	id.deviceEUI[6] = 7;
-	id.deviceEUI[7] = 8;
+	id.devEUI[0] = 1;
+	id.devEUI[1] = 2;
+	id.devEUI[2] = 3;
+	id.devEUI[3] = 4;
+	id.devEUI[4] = 5;
+	id.devEUI[5] = 6;
+	id.devEUI[6] = 7;
+	id.devEUI[7] = 8;
 
 	id.nwkSKey[0] = 1;
 	id.nwkSKey[1] = 2;

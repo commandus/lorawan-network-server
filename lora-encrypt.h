@@ -26,15 +26,6 @@ void decryptPayload(
 );
 
 /**
- * Encrypt Join Accept LoRaWAN message
- * @see 6.2.3 Join-accept message
- */
-std::string encryptJoinAccept(
-	const std::string &payload,
-	const KEY128 &key
-);
-
-/**
  * Decrypt Join Accept LoRaWAN message
  * @see 6.2.3 Join-accept message
  */

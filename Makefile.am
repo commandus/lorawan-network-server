@@ -335,9 +335,19 @@ test_region_band_file_json_SOURCES = \
 test_region_band_file_json_LDADD =
 test_region_band_file_json_CPPFLAGS = $(commoncppflags)
 
+test_join_request_SOURCES = \
+	tests/test-join-request.cpp \
+	errlist.cpp utilstring.cpp utilfile.cpp \
+	utillora.cpp utildate.cpp $(SRC_AES) lorawan-mac.cpp gateway-stat.cpp \
+	lora-encrypt.cpp \
+	third_party/base64/base64.cpp
+test_join_request_LDADD =
+test_join_request_CPPFLAGS = $(commoncppflags)
+
 check_PROGRAMS = test-queue-processor \
-	test-message-queue test-fb test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json \
-	test-file-watch test-mac-gw	test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json \
-	test-region-band-file-json
+	test-join-request
+#	test-message-queue test-fb test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json \
+#	test-file-watch test-mac-gw	test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json \
+#	test-region-band-file-json
 
 TESTS = $(check_PROGRAMS)
