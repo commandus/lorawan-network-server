@@ -28,10 +28,10 @@ typedef unsigned char KEY128[16];
 typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
 
-typedef unsigned char JOIN_NONCE[3];
+typedef unsigned char JOINNONCE[3];
+typedef uint16_t DEVNONCE;
 
 typedef uint8_t FREQUENCY[3];
-typedef uint8_t JOINNONCE[3];
 
 class IdentityService;
 
@@ -217,7 +217,7 @@ typedef ALIGN struct {
  * MHDR + FHDR
  */ 
 typedef ALIGN struct {
-	// MAC heaader byte: message type, RFU, Major
+	// MAC header byte: message type, RFU, Major
 	MHDR macheader;			// 0x40 unconfirmed uplink
 	// Frame header (FHDR)
 	DEVADDR devaddr;			// MAC address
@@ -243,6 +243,18 @@ typedef ALIGN struct {
 	uint16_t fcnt;	// frame counter 0..65535
 	// FOpts 0..15
 } PACKED RFM_HEADER;			// 8 bytes, +1
+
+ typedef ALIGN struct {
+	DEVEUI joinEUI;			// JoinEUI
+	DEVEUI devEUI;			// DevEUI
+	DEVNONCE devNonce;
+} PACKED JOIN_REQUEST_FRAME;			// 8 + 8 + 2 = 18 bytes
+
+typedef ALIGN struct {
+    MHDR mhdr;  			// 0x00 Join request. MAC header byte: message type, RFU, Major
+    JOIN_REQUEST_FRAME frame;
+    uint16_t mic;			// MIC
+} PACKED JOIN_REQUEST_HEADER;			// 1 + 18 + 2 = 21 bytes
 
 // Channel frequency list
 typedef ALIGN struct {
@@ -302,13 +314,17 @@ typedef struct {
 	// value, no key
 	ACTIVATION activation;	///< activation type: ABP or OTAA
 	DEVICECLASS deviceclass;
-	DEVEUI deviceEUI;		///< device identifier 8 bytes (ABP device may not store EUI)
+	DEVEUI devEUI;		    ///< device identifier 8 bytes (ABP device may not store EUI)
 	KEY128 nwkSKey;			///< shared session key 16 bytes
 	KEY128 appSKey;			///< private key 16 bytes
 	LORAWAN_VERSION version;
+	// OTAA
+	DEVEUI appEUI;			///< OTAA application identifier
+	KEY128 appKey;			///< OTAA application private key
+	DEVNONCE devNonce;      ///< last device nonce
 	// added for searching
 	DEVICENAME name;
-} DEVICEID;					// 44 bytes + 8 = 52
+} DEVICEID;					// 44 bytes + 8 + 18 = 70
 
 /**
  * Section 6.3 Activating an end-device by personalization 
@@ -327,10 +343,14 @@ public:
 	// value
 	ACTIVATION activation;	///< activation type: ABP or OTAA
 	DEVICECLASS deviceclass;
-	DEVEUI deviceEUI;		///< device identifier
+	DEVEUI devEUI;			///< device identifier
 	KEY128 nwkSKey;			///< shared session key
 	KEY128 appSKey;			///< private key
 	LORAWAN_VERSION version;
+	// OTAA
+	DEVEUI appEUI;			///< OTAA application identifier
+	KEY128 appKey;			///< OTAA application private key
+    DEVNONCE devNonce;      ///< last device nonce
 	// added for searching
 	DEVICENAME name;
 	NetworkIdentity();
@@ -347,10 +367,14 @@ private:
 public:
 	ACTIVATION activation;	///< activation type: ABP or OTAA
 	DEVICECLASS deviceclass;
-	DEVEUI deviceEUI;			///< device identifier
-	KEY128 nwkSKey;				///< shared session key
-	KEY128 appSKey;				///< private key
+	DEVEUI devEUI;				///< device identifier
+	KEY128 nwkSKey;				///< ABP shared session key
+	KEY128 appSKey;				///< ABP private key
 	LORAWAN_VERSION version;	///< device LoraWAN version
+	// OTAA
+	DEVEUI appEUI;				///< OTAA application identifier
+	KEY128 appKey;				///< OTAA application key
+    DEVNONCE devNonce;          ///< last device nonce
 	// added for searching
 	DEVICENAME name;
 	
@@ -485,8 +509,8 @@ public:
 	// return array of packets from Basic communication protocol packet
 	static int parse(
 		const struct sockaddr *gatewayAddress,
-		SEMTECH_PREFIX_GW &retprefix,
-		GatewayStat &retgwstat,
+		SEMTECH_PREFIX_GW &retPrefix,
+		GatewayStat &retGWStat,
 		std::vector<SemtechUDPPacket> &retPackets,
 		const void *packetForwarderPacket, 
 		int size,
@@ -571,6 +595,9 @@ public:
 	std::string getMACs() const;
 
     void appendMACs(const std::string &macsString);
+
+	// can return NULL
+	JOIN_REQUEST_FRAME *getJoinRequestFrame() const;
 };
 
 uint64_t deveui2int(const DEVEUI &value);
@@ -581,6 +608,11 @@ std::string uint64_t2string(const uint64_t &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
+std::string DEVNONCE2string(const DEVNONCE &value);
+DEVNONCE string2DEVNONCE(const std::string &value);
+
+std::string JOIN_REQUEST_FRAME2string(const JOIN_REQUEST_FRAME *value);
+
 uint32_t NETID2int(const NETID &value);
 uint32_t JOINNONCE2int(const JOINNONCE &value);
 int FREQUENCY2int(const FREQUENCY &frequency);
@@ -595,6 +627,9 @@ void decryptPayload(
 	KEY128 &appSKey
 );
 
+/**
+ * Calculate MAC Frame Payload Encryption message integrity code
+ */
 uint32_t calculateMIC(
 	const unsigned char *data,
 	const unsigned char size,
@@ -602,6 +637,15 @@ uint32_t calculateMIC(
 	const unsigned char direction,
 	const DEVADDR &devAddr,
 	const KEY128 &key
+);
+
+/**
+ * Calculate Join Request MIC
+ * @see 6.2.5 Join-request frame
+ */
+uint32_t calculateMICJoinRequest(
+        const JOIN_REQUEST_HEADER *header,
+        const KEY128 &key
 );
 
 uint32_t getMic(const std::string &v);
