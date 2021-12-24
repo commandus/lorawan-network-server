@@ -399,7 +399,7 @@ int main(
         identityService.list(identities, 0, 0);
         for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
             std::cerr << "\t" << DEVADDR2string(it->devaddr)
-                      << "\t" << DEVEUI2string(it->deviceEUI)
+                      << "\t" << DEVEUI2string(it->devEUI)
                       << "\t" << DEVICENAME2string(it->name);
             if (identityService.canControlService(it->devaddr))
                 std::cerr << "\tmaster";
@@ -549,7 +549,7 @@ int main(
 			memmove(packet.prefix.mac, macGwConfig->euis[d].eui, sizeof(DEVEUI));
 			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));
 			packet.devId = netId;
-			//memmove(packet.devId.deviceEUI, netId.deviceEUI, sizeof(DEVEUI));
+			//memmove(packet.devId.devEUI, netId.devEUI, sizeof(DEVEUI));
 
 			// TODO form correct data
 			// packet.setPayload();

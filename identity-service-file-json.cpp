@@ -18,18 +18,21 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_COUNT	9
+#define ATTRS_COUNT	12
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
         "addr", 		// 0 network address (hex string, 4 bytes)
         "activation",	// 1 ABP or OTAA
-        "eui",			// 2 device identifier (hex string, 8 bytes)
+        "deveui",   	// 2 device identifier (hex string, 8 bytes)
         "nwkSKey",		// 3 shared session key (hex string, 16 bytes)
         "appSKey",		// 4 private key (hex string, 16 bytes)
         "class", 		// 5 A, B or C
         "version",		// 6 LoraWAN version
-        "name",			// 7 added for search
+        "appeui",   	// 7 OTAA application identifier (JoinEUI) (hex string, 8 bytes)
+        "appKey",   	// 8 device identifier (hex string, 8 bytes)
+        "devNonce",   	// 9 device identifier (hex string, 8 bytes)
+        "name",			// 10 added for search
         // not copied to the storage
-        "flags"			// 8 if bit 0 is set it means allow control network service
+        "flags"			// 11 if bit 0 is set it means allow control network service
 };
 
 static const char *ACTIVATION_NAMES[2] = {
@@ -125,7 +128,7 @@ public:
 
     bool Uint(unsigned u) {
         switch(idx) {
-            case 8:
+            case 11:
                 flags = u;
                 break;
         }
@@ -157,7 +160,7 @@ public:
                 v.activation = getActivationByName(str);
                 break;
             case 2:
-                string2DEVEUI(v.deviceEUI, str);
+                string2DEVEUI(v.devEUI, str);
                 break;
             case 3:
                 s = hex2string(str);
@@ -174,6 +177,16 @@ public:
                 v.version = string2LORAWAN_VERSION(str);
                 break;
             case 7:
+                string2DEVEUI(v.appEUI, str);
+                break;
+            case 8:
+                s = hex2string(str);
+                string2KEY(v.appKey, s);
+                break;
+            case 9:
+                v.devNonce = string2DEVNONCE(str);
+                break;
+            case 10:
                 string2DEVICENAME(v.name, str);
                 break;
             default:
@@ -186,6 +199,7 @@ public:
         v.version.major = 1;
         v.version.minor = 0;
         v.version.release = 0;
+        v.devNonce = 0;
         flags = 0;
         return true;
     }
@@ -256,12 +270,15 @@ int JsonFileIdentityService::save()
         os << std::endl << "{\""
            << ATTR_NAMES[0] << "\": \"" << DEVADDRINT2string(it->first) << "\",\""
            << ATTR_NAMES[1] << "\": \"" << getActivationName(it->second.activation) << "\",\""
-           << ATTR_NAMES[2] << "\": \"" << DEVEUI2string(it->second.deviceEUI) << "\",\""
+           << ATTR_NAMES[2] << "\": \"" << DEVEUI2string(it->second.devEUI) << "\",\""
            << ATTR_NAMES[3] << "\": \"" << KEY2string(it->second.nwkSKey) << "\",\""
            << ATTR_NAMES[4] << "\": \"" << KEY2string(it->second.appSKey) << "\",\""
            << ATTR_NAMES[5] << "\": \"" << deviceclass2string(it->second.deviceclass) << "\",\""
            << ATTR_NAMES[6] << "\": \"" << LORAWAN_VERSION2string(it->second.version) << "\",\""
-           << ATTR_NAMES[7] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
+           << ATTR_NAMES[7] << "\": \"" << DEVEUI2string(it->second.appEUI) << "\",\""
+           << ATTR_NAMES[8] << "\": \"" << KEY2string(it->second.appKey) << "\",\""
+           << ATTR_NAMES[9] << "\": \"" << DEVNONCE2string(it->second.devNonce) << "\",\""
+           << ATTR_NAMES[10] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
         if (rightsMask) {
             os << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;
         }
@@ -297,7 +314,7 @@ int JsonFileIdentityService::getNetworkIdentity(
 ) {
     mutexMap.lock();
     for (std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.begin()); it != storage.end(); it++) {
-        if (memcmp(it->second.deviceEUI, eui, sizeof(DEVEUI)) == 0) {
+        if (memcmp(it->second.devEUI, eui, sizeof(DEVEUI)) == 0) {
             retval.set(it->first, it->second);
             mutexMap.unlock();
             return 0;
@@ -375,7 +392,7 @@ int JsonFileIdentityService::parseIdentifiers(
             // identifier itself
             TDEVEUI v(*it);
             for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
-                if (memcmp(v.eui, dit->second.deviceEUI, sizeof(DEVEUI)) == 0) {
+                if (memcmp(v.eui, dit->second.devEUI, sizeof(DEVEUI)) == 0) {
                     retval.push_back(v);
                     break;
                 }
@@ -390,9 +407,9 @@ int JsonFileIdentityService::parseIdentifiers(
                     re = replaceAll(replaceAll(*it, "*", ".*"), "?", ".");
                 std::regex rex(re, std::regex_constants::grep);
                 for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
-                    std::string s2 = DEVEUI2string(dit->second.deviceEUI);
+                    std::string s2 = DEVEUI2string(dit->second.devEUI);
                     if (std::regex_search(s2, rex))
-                        retval.push_back(TDEVEUI(dit->second.deviceEUI));
+                        retval.push_back(TDEVEUI(dit->second.devEUI));
                 }
             }
             catch (const std::regex_error& e) {
@@ -419,7 +436,7 @@ int JsonFileIdentityService::parseNames(
             for (std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
                 std::string s2 = DEVICENAME2string(dit->second.name);
                 if (std::regex_search(s2, rex))
-                    retval.push_back(TDEVEUI(dit->second.deviceEUI));
+                    retval.push_back(TDEVEUI(dit->second.devEUI));
             }
         }
         catch (const std::regex_error& e) {
@@ -442,12 +459,15 @@ std::string JsonFileIdentityService::toJsonString()
         ss << "{"
            << "\"" << ATTR_NAMES[0] << "\":\"" << DEVADDRINT2string(dit->first) << "\", "
            << "\"" << ATTR_NAMES[1] << "\":\"" << getActivationName(dit->second.activation) << "\", "
-           << "\"" << ATTR_NAMES[2] << "\":\"" << DEVEUI2string(dit->second.deviceEUI) << "\", "
+           << "\"" << ATTR_NAMES[2] << "\":\"" << DEVEUI2string(dit->second.devEUI) << "\", "
            << "\"" << ATTR_NAMES[3] << "\":\"" << KEY2string(dit->second.nwkSKey) << "\", "
            << "\"" << ATTR_NAMES[4] << "\":\"" << KEY2string(dit->second.appSKey) << "\", "
            << "\"" << ATTR_NAMES[5] << "\":\"" << deviceclass2string(dit->second.deviceclass) << "\", "
            << "\"" << ATTR_NAMES[6] << "\":\"" << LORAWAN_VERSION2string(dit->second.version) << "\", "
-           << "\"" << ATTR_NAMES[7] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"";
+           << "\"" << ATTR_NAMES[7] << "\":\"" << DEVEUI2string(dit->second.appEUI) << "\", "
+           << "\"" << ATTR_NAMES[8] << "\":\"" << KEY2string(dit->second.appKey) << "\", "
+           << "\"" << ATTR_NAMES[9] << "\":\"" << DEVNONCE2string(dit->second.devNonce) << "\", "
+           << "\"" << ATTR_NAMES[10] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"";
         uint32_t rightsMask = getRightsMask((DEVADDR &) (dit->first.a));
         if (rightsMask)
             ss << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;

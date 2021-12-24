@@ -76,7 +76,7 @@ static bool onFindAddr
 ) {
 	FindAddrEnv *e = (FindAddrEnv *) env;
 	NetworkIdentity nid(*key, *data);
-	e->found = memcmp(&e->value, &nid.deviceEUI, sizeof(DEVEUI)) == 0;
+	e->found = memcmp(&e->value, &nid.devEUI, sizeof(DEVEUI)) == 0;
 	if (e->found)
 		e->retval = nid;
 	return e->found;
@@ -197,7 +197,7 @@ static bool onFindEUI
 	NetworkIdentity nid(*key, *data);
 	if (isHex(r->value)) {
 		TDEVEUI v(r->value);
-		r->found = memcmp(&v.eui, &nid.deviceEUI, sizeof(DEVEUI)) == 0;
+		r->found = memcmp(&v.eui, &nid.devEUI, sizeof(DEVEUI)) == 0;
 		if (r->found)
 			r->retval.push_back(v);
 		return r->found;
@@ -205,9 +205,9 @@ static bool onFindEUI
 		// can contain regex "*"
 		try {
 			std::regex rex(r->value, std::regex_constants::grep);
-			std::string s2 = DEVEUI2string(nid.deviceEUI);
+			std::string s2 = DEVEUI2string(nid.devEUI);
 			if (std::regex_search(s2, rex))
-				r->retval.push_back(TDEVEUI(nid.deviceEUI));
+				r->retval.push_back(TDEVEUI(nid.devEUI));
 		}
 		catch (const std::regex_error& e) {
 			return false;
@@ -229,7 +229,7 @@ static bool onFindName
 		std::regex rex(r->value, std::regex_constants::grep);
 		std::string s2 = std::string(nid.name, sizeof(DEVICENAME));
 		if (std::regex_search(s2, rex))
-			r->retval.push_back(TDEVEUI(nid.deviceEUI));
+			r->retval.push_back(TDEVEUI(nid.devEUI));
 	}
 	catch (const std::regex_error& e) {
 		return false;

@@ -27,7 +27,7 @@ int LoraPacketProcessor::enqueuePayload(
                 ss << MSG_ENQUEUE_DB
                     << " (queue size: " << receiverQueueService->count()
                     << ") " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI)
+                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
                    << " " << value.devId.toJsonString() << ": " << hexString(p);
                 onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
             }
@@ -36,7 +36,7 @@ int LoraPacketProcessor::enqueuePayload(
                 std::stringstream ss;
                 ss << ERR_DUPLICATED_PACKET
                    << " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI)
+                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
                    << " " << value.devId.toJsonString() << ": " << hexString(p);
                 onLog(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss.str());
             }
@@ -57,10 +57,10 @@ int LoraPacketProcessor::enqueueControl(
 )
 {
 	std::stringstream ss;
-	ss << MSG_MAC_COMMAND_RECEIVED 
-		<< UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-		<< ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " 
-		<< "payload: " << hexString(value.payload);
+	ss << MSG_MAC_COMMAND_RECEIVED
+       << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+       << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI) << ", "
+       << "payload: " << hexString(value.payload);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
 	// wait until gateways all send packet
@@ -90,7 +90,7 @@ int LoraPacketProcessor::putMACRequests(
     ss << "Put MAC commands " << hexString(ms) << ", size " << ms.size() << ", MACs: "
         << hexString(value.getMACs())  << " to be send to  "
         << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI);
+        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI);
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
     return LORA_OK;
@@ -109,8 +109,8 @@ int LoraPacketProcessor::enqueueMAC(
 	std::stringstream ss;
 	std::string macs = value.getMACs();
 	ss << MSG_MAC_COMMAND_RECEIVED
-		<< UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-		<< ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.deviceEUI) << ", " 
+       << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+       << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI) << ", "
 		// << " " << value.devId.toJsonString()
         << ", payload: " << hexString(value.payload)
         << ", MACs: " << hexString(macs);

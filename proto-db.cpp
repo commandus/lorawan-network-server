@@ -546,7 +546,7 @@ int main(
 		properties["time"] = std::to_string(t);					// time (32 bit integer, seconds since Unix epoch)
 		properties["timestamp"] = time2string(t);				// timestamp string
 		// TODO get it from command line
-		properties["eui"] = "3232323232323232";					// eui global end-device identifier in IEEE EUI64 address space
+		properties["deveui"] = "3232323232323232";				// eui global end-device identifier in IEEE EUI64 address space
 		properties["name"] = "device32";						// device name
 		properties["activation"] = "ABP";						// (ABP|OTAA)
 		properties["class"] = "C";								// A|B|C

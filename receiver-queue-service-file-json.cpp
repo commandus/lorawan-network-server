@@ -149,7 +149,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 					entry.value.deviceId.deviceclass = string2deviceclass(s);
 					break;
 				case 7:	// 	device eui
-					string2DEVEUI(entry.value.deviceId.deviceEUI, s);
+					string2DEVEUI(entry.value.deviceId.devEUI, s);
 					break;
 				case 8:	// 	device nwkSKey
 					string2KEY(entry.value.deviceId.nwkSKey, s);

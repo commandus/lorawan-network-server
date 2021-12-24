@@ -17,7 +17,7 @@ std::string SemtechPullResponsePacket::toString() {
     uint16_t token;
     // radio prefix
     SEMTECH_PREFIX_GW prefix = { 2, token, 2 };
-    memmove(&prefix.mac, identity.deviceEUI, sizeof(DEVEUI));
+    memmove(&prefix.mac, identity.devEUI, sizeof(DEVEUI));
 
 	// direction of frame is down
 	unsigned char direction = 0x01;

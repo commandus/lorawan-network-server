@@ -146,12 +146,12 @@ std::string LoraWANJoinAccept::toJSONString(
 typedef ALIGN struct {
 	uint8_t joinType;					// 1
 	DEVEUI eui;							// 8
-	JOIN_NONCE devnonce;				// 3
+	JOINNONCE devnonce;				// 3
 } PACKED JOINACCEPT4MIC_NEG1_HEADER;	// 12 bytes
 
 typedef ALIGN struct {
 	MHDR macheader;
-	JOIN_NONCE joinnonce;
+	JOINNONCE joinnonce;
 	NETID netid;
 	DEVADDR devAddr;
 	uint8_t dlSettings;
@@ -166,7 +166,7 @@ typedef ALIGN struct {
 
 uint32_t calcJoinAcceptMIC(
 	const DEVEUI &joinEUI,
-	const JOIN_NONCE &devNonce,
+	const JOINNONCE &devNonce,
 	const KEY128 &key,
 	const LORAWAN_JOIN_ACCEPT *data,
 	bool hasCFList
@@ -178,7 +178,7 @@ uint32_t calcJoinAcceptMIC(
 		// JoinReqType | JoinEUI | DevNonce 12 bytes
 		a.n.joinType = (uint8_t) JOINREQUEST;
 		memmove(a.n.eui, joinEUI, sizeof(DEVEUI));
-		memmove(a.n.devnonce, devNonce, sizeof(JOIN_NONCE));
+		memmove(a.n.devnonce, devNonce, sizeof(JOINNONCE));
 		sz += sizeof(JOINACCEPT4MIC_NEG1_HEADER);
 	}
 	//  MHDR | JoinNonce | NetID | DevAddr | DLSettings | RxDelay: 13 bytes | CFList: 16 bytes
@@ -215,7 +215,7 @@ uint32_t calcJoinAcceptMIC(
 
 uint32_t LoraWANJoinAccept::mic(
 	const DEVEUI &joinEUI,
-	const JOIN_NONCE &devNonce,
+	const JOINNONCE &devNonce,
 	const KEY128 &key
 
 ) {

@@ -168,10 +168,22 @@ int UDPListener::parseBuffer
 		SEMTECH_PREFIX *prefix = (SEMTECH_PREFIX *) buffer.c_str();
 		switch (prefix->tag) {
 			case SEMTECH_GW_PUSH_DATA:
-				pr = SemtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataPrefix, gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
-				// send ACK immediately
-				if (pr == LORA_OK && handler)
-					handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
+				pr = SemtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataPrefix,
+                        gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
+                if (handler) {
+                    if (pr == LORA_OK) {
+                        // send ACK immediately
+                        handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
+                    }
+                    if (pr == ERR_CODE_IS_JOIN) {
+                        // handler->join(socket, (const sockaddr_in *) &gwAddress, packets);
+                        if (packets.size() > 0) {
+                            std::cerr << "Join request: "
+                                      << JOIN_REQUEST_FRAME2string(packets[0].getJoinRequestFrame())
+                                << std::endl;
+                        }
+                    }
+                }
 				break;
 			case SEMTECH_GW_PULL_DATA:	// PULL_DATA
 				gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;

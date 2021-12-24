@@ -42,7 +42,7 @@ int ReceiverQueueProcessor::onPacket(
 )
 {
 	std::stringstream ss;
-	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.deviceEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress);
+	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.devEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress);
 	if (onLog)
 		onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 

@@ -33,7 +33,7 @@ int DirTxtIdentityService::loadTxtFile(
 			string2DEVADDR(k, matches[1].str());
 			string2KEY(v.appSKey, hex2string(matches[2].str()));
 			string2KEY(v.nwkSKey, hex2string(matches[3].str()));
-			string2DEVEUI(v.deviceEUI, matches[4].str());
+			string2DEVEUI(v.devEUI, matches[4].str());
 			v.activation = (ACTIVATION) strtoull(matches[5].str().c_str(), NULL, 10);
 			v.deviceclass = (DEVICECLASS) strtoull(matches[6].str().c_str(), NULL, 10);
 			strncpy(v.name, name.c_str(), sizeof(DEVICENAME));

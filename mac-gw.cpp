@@ -359,10 +359,10 @@ int main(
 			// compose packet
 			SemtechUDPPacket packet;
 			packet.setFOpts(macdatabin);
-			memmove(packet.prefix.mac, netId.deviceEUI, sizeof(DEVEUI));
+			memmove(packet.prefix.mac, netId.devEUI, sizeof(DEVEUI));
 			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));
 			packet.devId = netId;
-			//memmove(packet.devId.deviceEUI, netId.deviceEUI, sizeof(DEVEUI));
+			//memmove(packet.devId.devEUI, netId.devEUI, sizeof(DEVEUI));
 
 			// TODO form correct data
 			// packet.setPayload();

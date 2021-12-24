@@ -346,7 +346,7 @@ void onLog(
 #ifdef ENABLE_TERM_COLOR
 		<< "\033[" << logLevelColor(level)  << "m"
 #endif		
-		<< std::setw(9) << std::left
+		<< std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left
 		<< logLevelString(level) 
 #ifdef ENABLE_TERM_COLOR
 		<< "\033[0m"
@@ -500,7 +500,7 @@ int main(
 		identityService->list(identities, 0, 0);
 		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
 			std::cerr << "\t" << DEVADDR2string(it->devaddr)
-                << "\t" << DEVEUI2string(it->deviceEUI)
+                << "\t" << DEVEUI2string(it->devEUI)
                 << "\t" << DEVICENAME2string(it->name);
             if (identityService->canControlService(it->devaddr))
 				std::cerr << "\tmaster";

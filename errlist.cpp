@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 103
+#define ERR_COUNT 104
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -99,7 +99,8 @@ static const char *errList[ERR_COUNT] = {
     ERR_INIT_REGION_BANDS,
     ERR_INIT_REGION_NO_DEFAULT,
     ERR_NO_REGION_BAND,
-    ERR_REGION_BAND_NO_DEFAULT
+    ERR_REGION_BAND_NO_DEFAULT,
+    ERR_IS_JOIN
 };
 
 const char *strerror_lorawan_ns
@@ -120,25 +121,25 @@ const char *strerror_lorawan_ns
 static const char *logLevelList[LOG_LEVEL_COUNT] = 
 {
 	"",
-	"fatal",
-	"critical",
-	"error",
-	"warning",
-	"info",
-	"info",
-	"debug"
+	"F", // "fatal",
+	"C", // "critical",
+	"E", // "error",
+	"W", // "warning",
+	"I", // "info",
+	"I", // "info",
+	"D", // "debug"
 };
 
 static const char *logLevelColorList[LOG_LEVEL_COUNT] = 
 {
 	"",
-	"0;31",
-	"0;31",
-	"0;31",
-	"0;35 ",
-	"",
-	"",
-	""
+	"0;41",  // background red
+	"0;41",  // background red
+	"0;31",  // red
+	"0;33 ", // yellow
+	"0;37",  // white
+	"0;37",  // bright white
+	"0;32"   // green
 };
 
 const char *logLevelString

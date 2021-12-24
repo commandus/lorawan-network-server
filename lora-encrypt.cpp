@@ -1,4 +1,10 @@
+#include <iostream>
 #include "lora-encrypt.h"
+
+#include "system/crypto/aes.h"
+#include "system/crypto/cmac.h"
+
+#include "utilstring.h"
 
 /**
  * @see 4.3.3 MAC Frame Payload Encryption (FRMPayload)
@@ -179,24 +185,27 @@ void decryptPayload(
  * Encrypt Join Accept LoRaWAN message
  * @see 6.2.3 Join-accept message
  */
-std::string encryptJoinAccept(
-	const std::string &payload,
-	const KEY128 &key
-) {
-	/*
-	aes_context aesContext;
-	memset(aesContext.ksch, '\0', 240);
-    aes_set_key(key, sizeof(KEY128), &aesContext);
- 
- 	uint8_t a[16];
-	memset(a, 0, sizeof(s));
-	uint8_t s[16];
-	memset(s, 0, sizeof(s));
 
-	int size = payload.size();
-	uint8_t bufferIndex = 0;
-	std::string encBuffer(payload);
-	while (size >= 16) {
+/*
+static std::string encryptJoinAccept
+(
+    const std::string &payload,
+    const KEY128 &key
+)
+{
+    aes_context aesContext;
+    memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+
+     uint8_t a[16];
+    memset(a, 0, sizeof(s));
+    uint8_t s[16];
+    memset(s, 0, sizeof(s));
+
+    int size = payload.size();
+    uint8_t bufferIndex = 0;
+    std::string encBuffer(payload);
+    while (size >= 16) {
         aes_encrypt(a, s, &aesContext);
         for(int i = 0; i < 16; i++) {
             encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
@@ -204,7 +213,7 @@ std::string encryptJoinAccept(
         size -= 16;
         bufferIndex += 16;
     }
- 
+
     if (size > 0)
     {
         aes_encrypt(a, s, &aesContext);
@@ -212,10 +221,10 @@ std::string encryptJoinAccept(
             encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
         }
     }
-	payload = encBuffer;
-	*/
-	return "";
+    payload = encBuffer;
+    return "";
 }
+*/
 
 /**
  * Decrypt Join Accept LoRaWAN message

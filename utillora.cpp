@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <cstring>
+#include <iostream>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -14,7 +15,6 @@
 #include "base64/base64.h"
 
 #include "errlist.h"
-
 #include "system/crypto/aes.h"
 #include "system/crypto/cmac.h"
 
@@ -141,7 +141,8 @@ static uint32_t calculateMICRev103(
 }
 
 /**
- * 4.3.3 MAC Frame Payload Encryption (FRMPayload)
+ * Calculate MAC Frame Payload Encryption message integrity code
+ * @see 4.3.3 MAC Frame Payload Encryption (FRMPayload)
  * message integrity code
  * B0
  * 1    4       1   4       4(3+1)       1 1
@@ -178,6 +179,23 @@ uint32_t calculateMIC(
 	);
 }
 
+uint32_t calculateMICJoinRequest(
+        const JOIN_REQUEST_HEADER *header,
+        const KEY128 &key
+) {
+    aes_context aesContext;
+    memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+
+    AES_CMAC_CTX aesCmacCtx;
+    AES_CMAC_Init(&aesCmacCtx);
+    AES_CMAC_SetKey(&aesCmacCtx, key);
+    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) header, 1 + sizeof(JOIN_REQUEST_FRAME));
+    uint8_t mic[16];
+    AES_CMAC_Final(mic, &aesCmacCtx);
+    return (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
+}
+
 NetworkIdentity::NetworkIdentity()
 {
 }
@@ -190,7 +208,7 @@ NetworkIdentity::NetworkIdentity(
 	memmove(&devaddr, &a.a, sizeof(DEVADDR));
 	memmove(&activation, &value.activation, sizeof(activation));
 	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
-	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
@@ -201,6 +219,31 @@ std::string KEY2string(
 )
 {
 	return hexString(&value, sizeof(value));
+}
+
+std::string DEVNONCE2string(
+    const DEVNONCE &value
+)
+{
+    return hexString(&value, sizeof(value));
+}
+
+DEVNONCE string2DEVNONCE(
+        const std::string &value
+)
+{
+    return strtol(value.c_str(), nullptr, 16);
+}
+
+std::string JOIN_REQUEST_FRAME2string(
+    const JOIN_REQUEST_FRAME *value
+) {
+    if (value)
+        return "{\"joinEUI\": \"" + DEVEUI2string(value->joinEUI) + "\", "
+           + "\"devEUI\": \"" + DEVEUI2string(value->devEUI) + "\", "
+           + "\"devNonce\": \"" + DEVNONCE2string(value->devNonce) + "\"}";
+    else
+        return "";
 }
 
 uint32_t NETID2int(
@@ -227,19 +270,25 @@ std::string NetworkIdentity::toString() const
 	ss << DEVADDR2string(devaddr) 
 		<< " " << activation2string(activation)
 		<< " " << deviceclass2string(deviceclass)
-		<< " " << DEVEUI2string(deviceEUI)
+		<< " " << DEVEUI2string(devEUI)
 		<< " " << KEY2string(nwkSKey)
 		<< " " << KEY2string(appSKey)
 		<< " " << LORAWAN_VERSION2string(version)
+        << " " << DEVEUI2string(appEUI)
+        << " " << KEY2string(appKey)
+        << " " << DEVNONCE2string(devNonce)
 		<< " " << std::string(name, sizeof(DEVICENAME));
 	return ss.str();
 }
 
 DeviceId::DeviceId() {
-	memset(&deviceEUI, 0, sizeof(DEVEUI));
+	memset(&devEUI, 0, sizeof(DEVEUI));
 	memset(&nwkSKey, 0, sizeof(KEY128));
 	memset(&appSKey, 0, sizeof(KEY128));
 	memset(&name, 0, sizeof(DEVICENAME));
+    memset(&appEUI, 0, sizeof(DEVEUI));
+    memset(&appKey, 0, sizeof(KEY128));
+    devNonce = 0;
 	version.major = 1;
 	version.minor = 0;
 	version.release = 0;
@@ -248,9 +297,12 @@ DeviceId::DeviceId() {
 DeviceId::DeviceId(
 	const DeviceId &value
 ) {
-	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+    memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+    memmove(&appKey, &value.appKey, sizeof(KEY128));
+    devNonce = 0;
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	version.major = 1;
 	version.minor = 0;
@@ -270,10 +322,13 @@ DeviceId& DeviceId::operator=(const DeviceId& value)
 		return *this;
 	activation = value.activation;	///< activation type: ABP or OTAA
 	deviceclass = value.deviceclass;
-	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 	version = value.version;		///< device LoraWAN version
+    memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+    memmove(&appKey, &value.appKey, sizeof(KEY128));
+    devNonce = value.devNonce;
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	return *this;
 }
@@ -282,9 +337,12 @@ DeviceId& DeviceId::operator=(const NetworkIdentity& value)
 {
 	activation = value.activation;	///< activation type: ABP or OTAA
 	deviceclass = value.deviceclass;
-	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+    memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+    memmove(&appKey, &value.appKey, sizeof(KEY128));
+    devNonce = value.devNonce;
 	version = value.version;		///< device LoraWAN version
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	return *this;
@@ -296,10 +354,13 @@ void DeviceId::set(
 {
 	memmove(&activation, &value.activation, sizeof(activation));
 	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
-	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
+    memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+    memmove(&appKey, &value.appKey, sizeof(KEY128));
+    devNonce = value.devNonce;
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
@@ -308,7 +369,7 @@ void DeviceId::setEUIString
 	const std::string &value
 )
 {
-	string2DEVEUI(deviceEUI, value);
+	string2DEVEUI(devEUI, value);
 }
 
 void DeviceId::setNwkSKeyString
@@ -346,11 +407,16 @@ std::string DeviceId::toJsonString() const
 	ss << "{" 
 		<< "\"activation\":\"" << activation2string(activation)
 		<< "\",\"class\":\"" << deviceclass2string(deviceclass)
-		<< "\",\"eui\":\"" << DEVEUI2string(deviceEUI)
+		<< "\",\"deveui\":\"" << DEVEUI2string(devEUI)
 		<< "\",\"nwkSKey\":\"" << KEY2string(nwkSKey)
 		<< "\",\"appSKey\":\"" << KEY2string(appSKey)
 		<< "\",\"version\":\"" << LORAWAN_VERSION2string(version)
-		<< "\",\"name\":\"" << std::string(name, sizeof(DEVICENAME))
+
+        << "\",\"appeui\":\"" << DEVEUI2string(appEUI)
+        << "\",\"appKey\":\"" << KEY2string(appKey)
+        << "\",\"devNonce\":\"" << DEVNONCE2string(devNonce)
+
+        << "\",\"name\":\"" << std::string(name, sizeof(DEVICENAME))
 		<< "\"}";
 	return ss.str();
 }
@@ -362,7 +428,10 @@ void DeviceId::setProperties
 {
 	retval["activation"] = activation2string(activation);
 	retval["class"] = deviceclass2string(deviceclass);
-	retval["eui"] = DEVEUI2string(deviceEUI);
+	retval["deveui"] = DEVEUI2string(devEUI);
+    retval["appeui"] = DEVEUI2string(appEUI);
+    retval["appKey"] = KEY2string(appKey);
+    retval["devNonce"] = DEVNONCE2string(devNonce);
 	retval["name"] = DEVICENAME2string(name);
 	retval["version"] = LORAWAN_VERSION2string(version);
 }
@@ -375,9 +444,12 @@ void NetworkIdentity::set(
 	memmove(&devaddr, &addr.a, sizeof(DEVADDR));
 	memmove(&activation, &value.activation, sizeof(activation));
 	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
-	memmove(&deviceEUI, &value.deviceEUI, sizeof(DEVEUI));
+	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+    memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+    memmove(&appKey, &value.appKey, sizeof(KEY128));
+    devNonce = value.devNonce;
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
 }
@@ -1155,7 +1227,6 @@ char *SemtechUDPPacket::getSemtechJSONCharPtr
 (
 	const void *packet,
 	size_t size
-
 )
 {
 	if (size <= sizeof(SEMTECH_PREFIX_GW))
@@ -1191,22 +1262,21 @@ int SemtechUDPPacket::parsePrefixGw
 int SemtechUDPPacket::parse
 (
 	const struct sockaddr *gwAddress,
-	SEMTECH_PREFIX_GW &retprefix,
-	GatewayStat &retgwstat,
+	SEMTECH_PREFIX_GW &retPrefix,
+	GatewayStat &retGWStat,
 	std::vector<SemtechUDPPacket> &retPackets,
 	const void *packetForwarderPacket,
 	int size,
 	IdentityService *identityService
 ) {
-	retgwstat.errcode = ERR_CODE_NO_GATEWAY_STAT;
+    retGWStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
 
-	int r = parsePrefixGw(retprefix, packetForwarderPacket, size);
+	int r = parsePrefixGw(retPrefix, packetForwarderPacket, size);
 	if (r)
 		return r;
-
 	char *json = getSemtechJSONCharPtr(packetForwarderPacket, size);
 	if (size == sizeof(SEMTECH_PREFIX_GW)) {
-		if (retprefix.tag == 2)
+		if (retPrefix.tag == 2)
 			return ERR_CODE_PULLOUT;
 		else
 			return ERR_CODE_PING;	// remove it, nothing to do
@@ -1222,17 +1292,17 @@ int SemtechUDPPacket::parse
 
 	if (doc.HasMember(METADATA_RX_NAMES[7])) {	// "stat"
 		rapidjson::Value &jstat = doc[METADATA_RX_NAMES[7]];
-		if (retgwstat.parse(jstat) == 0) {
+		if (retGWStat.parse(jstat) == 0) {
 			// setValue gateway identifier
-			retgwstat.gatewayId = *(uint64_t *) &retprefix.mac;
-			retgwstat.errcode = 0;
+			retGWStat.gatewayId = *(uint64_t *) &retPrefix.mac;
+            retGWStat.errcode = 0;
 		} else {
 			return ERR_CODE_INVALID_STAT;
 		}
 	}
 
-	if (!doc.HasMember(METADATA_RX_NAMES[0]))
-		return 0;	// that's ok
+	if (!doc.HasMember(METADATA_RX_NAMES[0]))   // rxpk
+		return 0;	// that's ok, it is PING
 
 	rapidjson::Value &rxpk = doc[METADATA_RX_NAMES[0]];
 	if (!rxpk.IsArray())
@@ -1245,14 +1315,14 @@ int SemtechUDPPacket::parse
 		rfmMetaData m;
 		int sz;
 		std::string data;
+        // extract rxpk.data
 		int rr = m.parse(sz, data, jm);
 		if (rr)
 			return rr;
-		SemtechUDPPacket packet(gwAddress, &retprefix, &m, data, identityService);
-		if (packet.errcode == 0)
+		SemtechUDPPacket packet(gwAddress, &retPrefix, &m, data, identityService);
+		if ((packet.errcode == LORA_OK) || (packet.errcode == ERR_CODE_IS_JOIN))
 			retPackets.push_back(packet);
-		else
-			r = packet.errcode;
+        r = packet.errcode;
 	}
 	return r;
 }
@@ -1557,13 +1627,13 @@ void SemtechUDPPacket::setGatewayId(
 
 std::string SemtechUDPPacket::getDeviceEUI() const
 {
-	return DEVEUI2string(devId.deviceEUI);
+	return DEVEUI2string(devId.devEUI);
 }
 
 void SemtechUDPPacket::setDeviceEUI(
 	const std::string &value
 ) {
-	string2DEVEUI(devId.deviceEUI, value);
+	string2DEVEUI(devId.devEUI, value);
 }
 
 /**
@@ -1696,12 +1766,28 @@ int SemtechUDPPacket::parseData(
 	const std::string &data,
 	IdentityService *identityService
 ) {
-	if (!header.parse(data)) {
-		return ERR_CODE_INVALID_RFM_HEADER;
-	}
+    if (((MHDR *)data.c_str())->f.mtype <= MTYPE_JOIN_ACCEPT) {
+        int payloadSize = data.size() - sizeof(MHDR) - sizeof(uint32_t);
+        payload = data.substr(sizeof(MHDR), payloadSize);
+        // calc MIC
+        uint32_t mic = getMic(data);
+        KEY128 APPSKEY = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+        uint32_t micCalc = calculateMICJoinRequest((JOIN_REQUEST_HEADER *) data.c_str(), APPSKEY);
+        errcode = mic == micCalc ? ERR_CODE_IS_JOIN : ERR_CODE_INVALID_MIC;
+std::cerr << "*** JOIN request *** parseData MIC: " << std::hex << mic << ", calculated MIC: " << micCalc
+    << ", payload: " << hexString(payload)
+    << std::endl;
+        errcode = ERR_CODE_IS_JOIN;
+        return errcode;
+    }
+
+    if (!header.parse(data)) {
+        return ERR_CODE_INVALID_RFM_HEADER;
+    }
+
 	// get identity
 	if (identityService) {
-		// load keys from the authentication service, at least deviceEUI and appSKey. Return 0- success, <0- error code
+		// load keys from the authentication service, at least devEUI and appSKey. Return 0- success, <0- error code
 		int rc = identityService->get(header.header.devaddr, devId);
 		if (rc == 0) {
 			unsigned char direction = downlink ? 1 : 0;
@@ -2007,6 +2093,13 @@ void SemtechUDPPacket::appendMACs(const std::string &macsString) {
     }
 }
 
+JOIN_REQUEST_FRAME *SemtechUDPPacket::getJoinRequestFrame() const
+{
+    if (errcode != ERR_CODE_IS_JOIN)
+        return NULL;
+    return (JOIN_REQUEST_FRAME *) payload.c_str();
+}
+
 uint64_t deveui2int(
 	const DEVEUI &value
 )
@@ -2019,7 +2112,7 @@ uint64_t deveui2int(
 uint32_t getMic(const std::string &v)
 {
 	uint32_t r = *((uint32_t *) (v.c_str() + v.size() - 4));
-	return r; //NTOH4(r);
+	return r; // NTOH4(r);
 }
 
 uint64_t str2gatewayId(const char *value) {
