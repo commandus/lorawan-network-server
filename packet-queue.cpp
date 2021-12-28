@@ -10,7 +10,7 @@
 #include "errlist.h"
 #include "udp-socket.h"
 #include "lorawan-mac.h"
-#include "identity-service-abstract.h"
+#include "identity-service.h"
 #include "control-packet.h"
 
 SemtechUDPPacketItem::SemtechUDPPacketItem()
@@ -379,8 +379,8 @@ int PacketQueue::replyMAC(
 	SemtechUDPPacketItem &item,
 	struct timeval &t
 ) {
-	// to reply via closest gateway, find out gatewsy with best SNR
 	float snr;
+    // get regional parameters
     const RegionalParameterChannelPlan *regionalParameterChannelPlan;
     if (deviceChannelPlan)
         regionalParameterChannelPlan = deviceChannelPlan->get(item.getAddr());
@@ -388,6 +388,7 @@ int PacketQueue::replyMAC(
         return ERR_CODE_NO_REGION_BAND;
     int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
 
+    // to reply via the closest gateway, find out gateway with best SNR
     uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
 	if (gwa == 0) {
 		std::stringstream ss;
@@ -397,7 +398,7 @@ int PacketQueue::replyMAC(
 		return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
 	}
 
-	// check just in case
+	// check just in case gateway and MAC payload
 	// .. gateway
 	if (!gatewayList)
 		return ERR_CODE_WRONG_PARAM;
@@ -420,6 +421,7 @@ int PacketQueue::replyMAC(
 		return ERR_CODE_GATEWAY_NOT_FOUND;
 	}
 
+    // check does gateway socket open
     if (gwit->second.socket == 0) {
         std::stringstream ss;
         ss << ERR_GATEWAY_NO_YET_PULL_DATA << gatewayId2str(gwa);
@@ -430,29 +432,30 @@ int PacketQueue::replyMAC(
 
 	// get MAC commands
 	MacPtr macPtr(item.packet.getMACs());
-	// print out
+	// print out into log
 	std::stringstream ss;
 	uint32_t internalTime = item.packet.tmst();
-	ss << MSG_SEND_MAC_REPLY
-		<< " tmst: " << internalTime
-		<< ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId) 
-		<< " (" << gwit->second.name << ")"
-		<< MSG_GATEWAY_SNR  << snr << ", address: "
-		<< UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
 
-	ss << ", \"mac\": " << macPtr.toJSONString();
-	if (macPtr.errorcode) {
-		ss << ", \"mac_error_code\": " << macPtr.errorcode
-			<< ", \"mac_error\": \"" << strerror_lorawan_ns(macPtr.errorcode) << "\"";
-	}
-	if (onLog)
-		onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
-	// make response
+	if (onLog) {
+        ss << MSG_SEND_MAC_REPLY
+           << " tmst: " << internalTime
+           << ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId)
+           << " (" << gwit->second.name << ")"
+           << MSG_GATEWAY_SNR  << snr << ", address: "
+           << UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
+        ss << ", \"mac\": " << macPtr.toJSONString();
+        if (macPtr.errorcode) {
+            ss << ", \"mac_error_code\": " << macPtr.errorcode
+               << ", \"mac_error\": \"" << strerror_lorawan_ns(macPtr.errorcode) << "\"";
+        }
+        onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+    }
 
+    // make response
 	// get identity for NwkS
 	DeviceId id;
 	if (identityService)
-		identityService->get(item.packet.header.header.devaddr, id);
+        identityService->get(id, item.packet.header.header.devaddr);
 	// Produce MAC command response in the item.packet
 	uint32_t fcntdown = 0;
 	if (deviceHistoryService) {
@@ -492,6 +495,7 @@ std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 			deviceHistoryService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
 	}
 
+    // log result
 	if (onLog) {
 		if (r != response.size()) {
 			std::stringstream ss;
@@ -727,6 +731,9 @@ void PacketQueue::runner()
 			case MODE_REPLY_MAC:
 				replyMAC(item, t);
 				break;
+            case MODE_JOIN_REQUEST:
+                replyJoinRequest(item, t);
+                break;
 			case MODE_CONTROL_NS:
 				// control packet
 				if (onLog) {
@@ -806,4 +813,144 @@ void PacketQueue::stop()
 
 void PacketQueue::setDeviceChannelPlan(const DeviceChannelPlan *value) {
     deviceChannelPlan = value;
+}
+
+int PacketQueue::replyJoinRequest(
+        SemtechUDPPacketItem &item,
+        struct timeval &t
+)
+{
+    // get Join request
+    JOIN_REQUEST_FRAME *joinRequestFrame = item.packet.getJoinRequestFrame();
+    // check does it exist
+    if (!joinRequestFrame)
+        return ERR_CODE_BAD_JOIN_REQUEST;
+    // check identity service
+    if (!identityService)
+        return ERR_CODE_FAIL_IDENTITY_SERVICE;
+    // get network identity
+    NetworkIdentity nid;
+    int r = identityService->getNetworkIdentity(nid, joinRequestFrame->devEUI);
+    if (r) {
+        // Device not found. Device must be registered in the database before Join procedure
+        return ERR_CODE_DEVICE_EUI_NOT_FOUND;
+    }
+    if (memcmp(nid.appEUI, joinRequestFrame->joinEUI, sizeof(DEVEUI)) != 0) {
+        // Device record is invalid. Set correct Join(App)EUI
+        return ERR_CODE_APP_EUI_NOT_FOUND;
+    }
+    // check just in case gateway
+    if (!gatewayList)
+        return ERR_CODE_WRONG_PARAM;
+    // get default regional parameters
+    const RegionalParameterChannelPlan *regionalParameterChannelPlan;
+    if (deviceChannelPlan)
+        regionalParameterChannelPlan = deviceChannelPlan->get();
+    if (!regionalParameterChannelPlan)
+        return ERR_CODE_NO_REGION_BAND;
+
+    // find out best gateway by the best SNR
+    float snr;
+    // to reply via the closest gateway, find out gateway with best SNR
+    uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
+    if (gwa == 0) {
+        std::stringstream ss;
+        ss << ERR_BEST_GATEWAY_NOT_FOUND;
+        if (onLog)
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
+        return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
+    }
+
+    // find out gateway statistics, required for last gateway port number to send reply
+    std::map<uint64_t, GatewayStat>::const_iterator gwit = gatewayList->gateways.find(gwa);
+    if (gwit == gatewayList->gateways.end()) {
+        std::stringstream ss;
+        ss << ERR_GATEWAY_NOT_FOUND << gatewayId2str(gwa);
+        if (onLog)
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
+        return ERR_CODE_GATEWAY_NOT_FOUND;
+    }
+
+    // check does gateway socket open
+    if (gwit->second.socket == 0) {
+        std::stringstream ss;
+        ss << ERR_GATEWAY_NO_YET_PULL_DATA << gatewayId2str(gwa);
+        if (onLog)
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NO_YET_PULL_DATA, ss.str());
+        return ERR_CODE_GATEWAY_NO_YET_PULL_DATA;
+    }
+
+    // get RX1 delay in secs from regional settings
+    int secs = deviceChannelPlan->get()->bandDefaults.ReceiveDelay1;
+    if (secs <= 0)
+        secs = 1;
+    // get default power from regional settings
+    int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
+
+    // log end-device internal time and elected gateway
+    std::stringstream ss;
+    uint32_t internalTime = item.packet.tmst();
+    if (onLog) {
+        ss << MSG_SEND_JOIN_REQUEST_REPLY
+           << " tmst: " << internalTime
+           << ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId)
+           << " (" << gwit->second.name << ")"
+           << MSG_GATEWAY_SNR  << snr << ", address: "
+           << UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
+        onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+    }
+
+    // make response
+    JOIN_ACCEPT_FRAME frame;
+    identityService->joinAccept(frame.hdr, nid);
+
+    uint32_t fcntdown = 0;
+    if (deviceHistoryService) {
+        DeviceHistoryItem ds;
+        int rs = deviceHistoryService->get(item.packet.header.header.devaddr, ds);
+        if (rs == 0) {
+            fcntdown = ds.fcntdown;
+        } else {
+            if (onLog) {
+                ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
+                onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
+            }
+        }
+    }
+
+
+    std::string response = "";
+    std::cerr << "==JOIN ACCEPT RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
+    std::cerr << "==JOIN ACCEPT RESPONSE: " << hexString(response) << std::endl;
+    size_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
+                      (const struct sockaddr*) &gwit->second.sockaddr,
+                      ((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+
+    if (sz == response.size()) {
+        if (deviceHistoryService)
+            deviceHistoryService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
+    }
+
+    // log result
+    if (onLog) {
+        if (r != response.size()) {
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_REPLY_MAC << ERR_REPLY_MAC
+               << " socket " << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
+            if (r == -1)
+                ss << ", sent " << r << " of " << response.size();
+            ss << ", errno: " << errno << ": " << strerror(errno);
+            if (onLog)
+                onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
+        } else {
+            std::stringstream ss;
+            ss << MSG_SENT_REPLY_TO
+               << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
+               << " payload: " << hexString(response) << ", size: " << response.size();
+            if (onLog)
+                onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+        }
+    }
+    return LORA_OK;
+
 }

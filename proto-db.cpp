@@ -533,7 +533,7 @@ int main(
 		DEVADDR devaddr;
 		string2DEVADDR(devaddr, config.addr);
 		DeviceId deviceId;
-		int r = identityService->get(devaddr, deviceId);
+		int r = identityService->get(deviceId, devaddr);
 		if (r) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_ADDRESS << ": " << ERR_INVALID_ADDRESS << std::endl;
 			exit(ERR_CODE_INVALID_ADDRESS);

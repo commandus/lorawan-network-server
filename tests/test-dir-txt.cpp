@@ -17,7 +17,7 @@ void getIdentityTest(
 	DeviceId id;
 	DEVADDR a;
 	int2DEVADDR(a, address);
-	if (s.get(a, id) == 0) {
+	if (s.get(id, a) == 0) {
 		std::cout 
 			<< " Address: " << DEVADDR2string(a) 
 			<< " EUI: " << DEVEUI2string(id.devEUI)
@@ -49,7 +49,7 @@ void decodeTest(
 	DeviceId id;
 	DEVADDR a;
 	int2DEVADDR(a, address);
-	if (s.get(a, id) == 0) {
+	if (s.get(id, a) == 0) {
 		std::string v = base64_decode(base64Value);
 		RFMHeader hdr;
 		hdr.parse(v);

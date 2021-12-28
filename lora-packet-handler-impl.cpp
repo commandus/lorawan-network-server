@@ -102,8 +102,8 @@ int LoraPacketProcessor::putMACRequests(
  * @return 0- success
  */ 
 int LoraPacketProcessor::enqueueMAC(
-        const struct timeval &time,
-        SemtechUDPPacket &value
+    const struct timeval &time,
+    SemtechUDPPacket &value
 )
 {
 	std::stringstream ss;
@@ -125,9 +125,34 @@ int LoraPacketProcessor::enqueueMAC(
 	return LORA_OK;
 }
 
+int LoraPacketProcessor::enqueueJoinResponse(
+    const struct timeval &time,
+    SemtechUDPPacket &value
+)
+{
+    std::stringstream ss;
+    std::string macs = value.getMACs();
+    ss << MSG_ENQUEUE_JOIN_REQUEST
+       << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+       << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI);
+
+    onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+
+    // delay time
+    struct timeval t;
+    t.tv_sec = time.tv_sec;
+    t.tv_usec = time.tv_usec;
+
+    incTimeval(t, 0, DEF_TIMEOUT_US);
+
+    packetQueue.push(0, MODE_JOIN_REQUEST, t, value);
+    packetQueue.wakeUp();
+    return LORA_OK;
+}
+
 LoraPacketProcessor::LoraPacketProcessor()
 	: reservedFPort(0), identityService(NULL), gatewayList(NULL), onLog(NULL), receiverQueueService(NULL),
-	recieverQueueProcessor(NULL)
+      receiverQueueProcessor(NULL)
 {
 	packetQueue.start(*this);
 }
@@ -135,8 +160,8 @@ LoraPacketProcessor::LoraPacketProcessor()
 LoraPacketProcessor::~LoraPacketProcessor()
 {
 	packetQueue.stop();
-	if (recieverQueueProcessor)
-		recieverQueueProcessor->stop();
+	if (receiverQueueProcessor)
+		receiverQueueProcessor->stop();
 }
 
 // send ACK via queue
@@ -184,7 +209,7 @@ int LoraPacketProcessor::put
 	}
 
 	// try to identify end-device
-	int r = identityService->get(addr, packet.devId);
+	int r = identityService->get(packet.devId, addr);
 	if (r == 0) {
 		if (reservedFPort != 0 && packet.header.fport == reservedFPort) {
             // reserved for control packet FPort number matched
@@ -265,11 +290,11 @@ void LoraPacketProcessor::setReceiverQueueService
 )
 {
 	receiverQueueService = value;
-	if (recieverQueueProcessor) {
+	if (receiverQueueProcessor) {
 		if (receiverQueueService)
-			recieverQueueProcessor->start(receiverQueueService);
+			receiverQueueProcessor->start(receiverQueueService);
 		else
-			recieverQueueProcessor->stop();
+			receiverQueueProcessor->stop();
 	}
 }
 
@@ -299,14 +324,14 @@ void LoraPacketProcessor::setReceiverQueueProcessor
         ReceiverQueueProcessor *value
 )
 {
-	if (recieverQueueProcessor)
-		recieverQueueProcessor->stop();
-	recieverQueueProcessor = value;
-	if (recieverQueueProcessor) {
+	if (receiverQueueProcessor)
+		receiverQueueProcessor->stop();
+    receiverQueueProcessor = value;
+	if (receiverQueueProcessor) {
 		if (receiverQueueService)
-			recieverQueueProcessor->start(receiverQueueService);
+			receiverQueueProcessor->start(receiverQueueService);
 		else
-			recieverQueueProcessor->stop();
+			receiverQueueProcessor->stop();
 	}
 }
 
@@ -339,4 +364,58 @@ void LoraPacketProcessor::setDeviceChannelPlan(const DeviceChannelPlan *value)
 {
     deviceChannelPlan = value;
     packetQueue.setDeviceChannelPlan(value);
+}
+
+int LoraPacketProcessor::join(
+        const struct timeval &time,
+        int socket,
+        const sockaddr_in *socketAddress,
+        SemtechUDPPacket &packet
+)
+{
+    DEVADDR addr;
+    memmove(&addr, &packet.getHeader()->header.devaddr, sizeof(DEVADDR));
+
+    if (!identityService) {
+        if (onLog) {
+            // report error
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_INIT_IDENTITY << ": " << ERR_INIT_IDENTITY;
+            onLog(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+        }
+        return ERR_CODE_INIT_IDENTITY;
+    }
+
+    JOIN_REQUEST_FRAME *joinRequestFrame = packet.getJoinRequestFrame();
+    if (!joinRequestFrame) {
+        if (onLog) {
+            // report error
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_BAD_JOIN_REQUEST << ": " << ERR_BAD_JOIN_REQUEST;
+            onLog(this, LOG_CRIT, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+        }
+        return ERR_CODE_BAD_JOIN_REQUEST;
+    }
+
+    // try to identify end-device
+    NetworkIdentity networkIdentity;
+    int r = identityService->getNetworkIdentity(networkIdentity, joinRequestFrame->joinEUI);
+    if (r == 0) {
+        // device has been identified
+        if (deviceHistoryService)				// collect statistics if statistics collector is running
+            deviceHistoryService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
+        // enqueue response
+        enqueueJoinResponse(time, packet);
+    } else {
+        // device EUI is NOT identified
+        if (onLog) {
+            // report error
+            std::stringstream ss;
+            ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r)
+               << ", " << MSG_DEVICE_EUI << DEVEUI2string(joinRequestFrame->joinEUI)
+               << ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
+            onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
+        }
+    }
+    return r;
 }

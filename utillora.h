@@ -245,26 +245,58 @@ typedef ALIGN struct {
 } PACKED RFM_HEADER;			// 8 bytes, +1
 
  typedef ALIGN struct {
-	DEVEUI joinEUI;			// JoinEUI
-	DEVEUI devEUI;			// DevEUI
+	DEVEUI joinEUI;			    // JoinEUI
+	DEVEUI devEUI;			    // DevEUI
 	DEVNONCE devNonce;
-} PACKED JOIN_REQUEST_FRAME;			// 8 + 8 + 2 = 18 bytes
+} PACKED JOIN_REQUEST_FRAME;	// 8 + 8 + 2 = 18 bytes
 
 typedef ALIGN struct {
-    MHDR mhdr;  			// 0x00 Join request. MAC header byte: message type, RFU, Major
+    MHDR mhdr;  			    // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_REQUEST_FRAME frame;
-    uint16_t mic;			// MIC
-} PACKED JOIN_REQUEST_HEADER;			// 1 + 18 + 2 = 21 bytes
+    uint16_t mic;			    // MIC
+} PACKED JOIN_REQUEST_HEADER;	// 1 + 18 + 2 = 21 bytes
+
+
+typedef ALIGN struct {
+    uint8_t RX2DataRate: 4;	    // downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
+    uint8_t RX1DROffset: 3;	    // offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
+    uint8_t rfu: 1;     	    //
+} PACKED DLSETTINGS;	        // 1 byte
+
+/**
+ * Join-Accept
+  NetID DevAddr DLSettings RXDelay CFList
+ */
+typedef ALIGN struct {
+    JOINNONCE joinNonce;   	        //
+    NETID netId;   	                //
+    DEVADDR devAddr;   	            //
+    DLSETTINGS dlSettings;		    // downlink configuration settings
+    uint8_t rxDelay;                //
+} PACKED JOIN_ACCEPT_FRAME_HEADER;	    // 3 3 4 1 1 = 12 bytes
+
+typedef ALIGN struct {
+    MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
+    JOIN_ACCEPT_FRAME_HEADER hdr; //
+    uint16_t mic;			        // MIC
+} PACKED JOIN_ACCEPT_FRAME;	        // 1 12 2 = 15 bytes
 
 // Channel frequency list
 typedef ALIGN struct {
-	FREQUENCY frequency[5];	// frequency, 100 * Hz ch 4..8
-	uint8_t cflisttype;		// always 0
-} PACKED CFLIST;			// 16 bytes
+    FREQUENCY frequency[5];	        // frequency, 100 * Hz ch 4..8
+    uint8_t cflisttype;		        // always 0
+} PACKED CFLIST;			        // 16 bytes
+
+typedef ALIGN struct {
+    MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
+    JOIN_ACCEPT_FRAME_HEADER hdr;   // 12
+    CFLIST cflist;
+    uint16_t mic;			        // MIC
+} PACKED JOIN_ACCEPT_FRAME_CFLIST;	// 1 12 16 2 = 21 bytes
 
 typedef ALIGN struct {
 	uint8_t fopts[15];
-} PACKED FOPTS;					// 0..15 bytes
+} PACKED FOPTS;					    // 0..15 bytes
 
 typedef enum {
 	ABP = 0,
@@ -322,6 +354,7 @@ typedef struct {
 	DEVEUI appEUI;			///< OTAA application identifier
 	KEY128 appKey;			///< OTAA application private key
 	DEVNONCE devNonce;      ///< last device nonce
+	JOINNONCE joinNonce;    ///< last Join nonce
 	// added for searching
 	DEVICENAME name;
 } DEVICEID;					// 44 bytes + 8 + 18 = 70
@@ -351,6 +384,7 @@ public:
 	DEVEUI appEUI;			///< OTAA application identifier
 	KEY128 appKey;			///< OTAA application private key
     DEVNONCE devNonce;      ///< last device nonce
+	JOINNONCE joinNonce;    ///< last Join nonce
 	// added for searching
 	DEVICENAME name;
 	NetworkIdentity();
@@ -375,6 +409,7 @@ public:
 	DEVEUI appEUI;				///< OTAA application identifier
 	KEY128 appKey;				///< OTAA application key
     DEVNONCE devNonce;          ///< last device nonce
+	JOINNONCE joinNonce;    ///< last Join nonce
 	// added for searching
 	DEVICENAME name;
 	
@@ -609,7 +644,10 @@ std::string DEVADDRINT2string(const DEVADDRINT &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
 std::string DEVNONCE2string(const DEVNONCE &value);
+std::string JOINNONCE2string(const JOINNONCE &value);
+
 DEVNONCE string2DEVNONCE(const std::string &value);
+void string2JOINNONCE(JOINNONCE &retval, const std::string &value);
 
 std::string JOIN_REQUEST_FRAME2string(const JOIN_REQUEST_FRAME *value);
 
@@ -728,5 +766,7 @@ BANDWIDTH string2BANDWIDTH(const char *value);
 
 BANDWIDTH int2BANDWIDTH(int value);
 BANDWIDTH double2BANDWIDTH(double value);
+
+bool isDEVADDREmpty(const DEVADDR &addr);
 
 #endif

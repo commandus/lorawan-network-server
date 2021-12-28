@@ -106,13 +106,16 @@
 #define ERR_CODE_DUPLICATED_PACKET			-586
 #define ERR_CODE_INIT_GW_STAT   			-587
 #define ERR_CODE_DEVICE_NAME_NOT_FOUND      -588
-#define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -589
-#define ERR_CODE_REGION_BAND_EMPTY          -590
-#define ERR_CODE_INIT_REGION_BANDS          -591
-#define ERR_CODE_INIT_REGION_NO_DEFAULT     -592
-#define ERR_CODE_NO_REGION_BAND             -593
-#define ERR_CODE_REGION_BAND_NO_DEFAULT     -594
-#define ERR_CODE_IS_JOIN					-595
+#define ERR_CODE_DEVICE_EUI_NOT_FOUND       -589
+#define ERR_CODE_APP_EUI_NOT_FOUND          -590
+#define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -591
+#define ERR_CODE_REGION_BAND_EMPTY          -592
+#define ERR_CODE_INIT_REGION_BANDS          -593
+#define ERR_CODE_INIT_REGION_NO_DEFAULT     -594
+#define ERR_CODE_NO_REGION_BAND             -595
+#define ERR_CODE_REGION_BAND_NO_DEFAULT     -596
+#define ERR_CODE_IS_JOIN					-597
+#define ERR_CODE_BAD_JOIN_REQUEST			-598
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -211,6 +214,8 @@
 #define ERR_DUPLICATED_PACKET			"Packet is duplicated"
 #define ERR_INIT_GW_STAT   			    "Gateway statistics log initialization error "
 #define ERR_DEVICE_NAME_NOT_FOUND       "Device name not found"
+#define ERR_DEVICE_EUI_NOT_FOUND        "Device EUI not found"
+#define ERR_APP_EUI_NOT_FOUND           "Join (App) EUI not found"
 #define ERR_GATEWAY_NO_YET_PULL_DATA    "Gateway does not sent PULL_DATA request, can not send to gateway "
 #define ERR_REGION_BAND_EMPTY           "RegionBands array element disappeared"
 #define ERR_INIT_REGION_BANDS			"Regional settings does not loaded "
@@ -218,6 +223,7 @@
 #define ERR_NO_REGION_BAND              "Regional settings not available"
 #define ERR_REGION_BAND_NO_DEFAULT      "No default region assigned"
 #define ERR_IS_JOIN					    "Jpin request or response"
+#define ERR_BAD_JOIN_REQUEST			"Bad Join request "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -257,6 +263,8 @@
 #define MSG_RECEIVED_CONTROL_FRAME		"Control network service message received "
 #define MSG_DB_INSERT                   "Insert payload to the database successful"
 #define MSG_ENQUEUE_DB                  "Enqueue payload to the database"
+#define MSG_ENQUEUE_JOIN_REQUEST        "Enqueue join request response "
+#define MSG_SEND_JOIN_REQUEST_REPLY     "Sent join request response "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

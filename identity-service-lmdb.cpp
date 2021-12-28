@@ -42,10 +42,7 @@ int LmdbIdentityService::close()
 	return LORA_OK;
 }
 
-int LmdbIdentityService::get(
-	DEVADDR &devaddr,
-	DeviceId &retval
-) 
+int LmdbIdentityService::get(DeviceId &retval, DEVADDR &devaddr)
 {
 	DEVICEID v;
 	int r = getAddr(env, devaddr, v);

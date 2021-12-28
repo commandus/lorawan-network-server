@@ -176,11 +176,15 @@ int UDPListener::parseBuffer
                         handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
                     }
                     if (pr == ERR_CODE_IS_JOIN) {
-                        // handler->join(socket, (const sockaddr_in *) &gwAddress, packets);
+                        // send ACK immediately too
+                        handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
                         if (packets.size() > 0) {
+                            // log event
                             std::cerr << "Join request: "
                                       << JOIN_REQUEST_FRAME2string(packets[0].getJoinRequestFrame())
-                                << std::endl;
+                                      << std::endl;
+                            // enqueue packet
+                            handler->join(receivedTime, socket, (const sockaddr_in *) &gwAddress, packets[0]);
                         }
                     }
                 }

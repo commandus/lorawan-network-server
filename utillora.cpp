@@ -18,7 +18,7 @@
 #include "system/crypto/aes.h"
 #include "system/crypto/cmac.h"
 
-#include "identity-service-abstract.h"
+#include "identity-service.h"
 
 #include "lora-encrypt.h"
 #include "lorawan-mac.h"
@@ -228,11 +228,26 @@ std::string DEVNONCE2string(
     return hexString(&value, sizeof(value));
 }
 
+std::string JOINNONCE2string(
+        const JOINNONCE &value
+)
+{
+    return hexString(&value, sizeof(value));
+}
+
 DEVNONCE string2DEVNONCE(
         const std::string &value
 )
 {
     return strtol(value.c_str(), nullptr, 16);
+}
+
+void string2JOINNONCE(JOINNONCE &retval, const std::string &value)
+{
+    uint32_t r = ntohl(strtol(value.c_str(), nullptr, 16));
+    retval[0] = r & 0xff;
+    retval[1] = (r >> 8) & 0xff;
+    retval[2] = (r >> 16) & 0xff;
 }
 
 std::string JOIN_REQUEST_FRAME2string(
@@ -277,6 +292,7 @@ std::string NetworkIdentity::toString() const
         << " " << DEVEUI2string(appEUI)
         << " " << KEY2string(appKey)
         << " " << DEVNONCE2string(devNonce)
+        << " " << JOINNONCE2string(joinNonce)
 		<< " " << std::string(name, sizeof(DEVICENAME));
 	return ss.str();
 }
@@ -289,6 +305,7 @@ DeviceId::DeviceId() {
     memset(&appEUI, 0, sizeof(DEVEUI));
     memset(&appKey, 0, sizeof(KEY128));
     devNonce = 0;
+    memset(joinNonce, 0, sizeof(JOINNONCE));
 	version.major = 1;
 	version.minor = 0;
 	version.release = 0;
@@ -303,6 +320,7 @@ DeviceId::DeviceId(
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
     devNonce = 0;
+    memset(joinNonce, 0, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	version.major = 1;
 	version.minor = 0;
@@ -329,6 +347,7 @@ DeviceId& DeviceId::operator=(const DeviceId& value)
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
     devNonce = value.devNonce;
+    memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	return *this;
 }
@@ -343,6 +362,7 @@ DeviceId& DeviceId::operator=(const NetworkIdentity& value)
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
     devNonce = value.devNonce;
+    memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	version = value.version;		///< device LoraWAN version
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	return *this;
@@ -361,6 +381,7 @@ void DeviceId::set(
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
     devNonce = value.devNonce;
+    memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
@@ -415,6 +436,7 @@ std::string DeviceId::toJsonString() const
         << "\",\"appeui\":\"" << DEVEUI2string(appEUI)
         << "\",\"appKey\":\"" << KEY2string(appKey)
         << "\",\"devNonce\":\"" << DEVNONCE2string(devNonce)
+        << "\",\"joinNonce\":\"" << JOINNONCE2string(joinNonce)
 
         << "\",\"name\":\"" << std::string(name, sizeof(DEVICENAME))
 		<< "\"}";
@@ -432,6 +454,7 @@ void DeviceId::setProperties
     retval["appeui"] = DEVEUI2string(appEUI);
     retval["appKey"] = KEY2string(appKey);
     retval["devNonce"] = DEVNONCE2string(devNonce);
+    retval["joinNonce"] = JOINNONCE2string(joinNonce);
 	retval["name"] = DEVICENAME2string(name);
 	retval["version"] = LORAWAN_VERSION2string(version);
 }
@@ -450,6 +473,7 @@ void NetworkIdentity::set(
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
     devNonce = value.devNonce;
+    memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
 }
@@ -1788,7 +1812,7 @@ std::cerr << "*** JOIN request *** parseData MIC: " << std::hex << mic << ", cal
 	// get identity
 	if (identityService) {
 		// load keys from the authentication service, at least devEUI and appSKey. Return 0- success, <0- error code
-		int rc = identityService->get(header.header.devaddr, devId);
+		int rc = identityService->get(devId, header.header.devaddr);
 		if (rc == 0) {
 			unsigned char direction = downlink ? 1 : 0;
 			// calc MIC
@@ -2492,4 +2516,9 @@ BANDWIDTH int2BANDWIDTH(int value)
 BANDWIDTH double2BANDWIDTH(double value)
 {
     return int2BANDWIDTH(value);
+}
+
+bool isDEVADDREmpty(const DEVADDR &addr)
+{
+    return *((uint32_t *) &addr) == 0;
 }

@@ -18,7 +18,7 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_COUNT	12
+#define ATTRS_COUNT	13
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
         "addr", 		// 0 network address (hex string, 4 bytes)
         "activation",	// 1 ABP or OTAA
@@ -30,9 +30,10 @@ static const char *ATTR_NAMES[ATTRS_COUNT] = {
         "appeui",   	// 7 OTAA application identifier (JoinEUI) (hex string, 8 bytes)
         "appKey",   	// 8 device identifier (hex string, 8 bytes)
         "devNonce",   	// 9 device identifier (hex string, 8 bytes)
-        "name",			// 10 added for search
+        "joinNonce",   	// 10 device identifier (hex string, 8 bytes)
+        "name",			// 11 added for search
         // not copied to the storage
-        "flags"			// 11 if bit 0 is set it means allow control network service
+        "flags"			// 12 if bit 0 is set it means allow control network service
 };
 
 static const char *ACTIVATION_NAMES[2] = {
@@ -128,7 +129,7 @@ public:
 
     bool Uint(unsigned u) {
         switch(idx) {
-            case 11:
+            case 12:
                 flags = u;
                 break;
         }
@@ -187,6 +188,9 @@ public:
                 v.devNonce = string2DEVNONCE(str);
                 break;
             case 10:
+                string2JOINNONCE(v.joinNonce, str);
+                break;
+            case 11:
                 string2DEVICENAME(v.name, str);
                 break;
             default:
@@ -278,7 +282,8 @@ int JsonFileIdentityService::save()
            << ATTR_NAMES[7] << "\": \"" << DEVEUI2string(it->second.appEUI) << "\",\""
            << ATTR_NAMES[8] << "\": \"" << KEY2string(it->second.appKey) << "\",\""
            << ATTR_NAMES[9] << "\": \"" << DEVNONCE2string(it->second.devNonce) << "\",\""
-           << ATTR_NAMES[10] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
+           << ATTR_NAMES[10] << "\": \"" << JOINNONCE2string(it->second.joinNonce) << "\",\""
+           << ATTR_NAMES[11] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
         if (rightsMask) {
             os << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;
         }
@@ -292,10 +297,13 @@ int JsonFileIdentityService::save()
     return r;
 }
 
-int JsonFileIdentityService::get(
-        DEVADDR &devaddr,
-        DeviceId &retval
-)
+/**
+ * get device identifier by network address. Return 0 if success, retval = EUI and keys
+ * @param retval device identifier
+ * @param devaddr network address
+ * @return LORA_OK- success
+ */
+int JsonFileIdentityService::get(DeviceId &retval, DEVADDR &devaddr)
 {
     mutexMap.lock();
     std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.find(DEVADDRINT(devaddr)));
@@ -308,6 +316,12 @@ int JsonFileIdentityService::get(
     return 0;
 }
 
+/**
+* get network identity(with address) by network address. Return 0 if success, retval = EUI and keys
+* @param retval network identity(with address)
+* @param eui device EUI
+* @return LORA_OK- success
+*/
 int JsonFileIdentityService::getNetworkIdentity(
         NetworkIdentity &retval,
         const DEVEUI &eui
@@ -467,7 +481,8 @@ std::string JsonFileIdentityService::toJsonString()
            << "\"" << ATTR_NAMES[7] << "\":\"" << DEVEUI2string(dit->second.appEUI) << "\", "
            << "\"" << ATTR_NAMES[8] << "\":\"" << KEY2string(dit->second.appKey) << "\", "
            << "\"" << ATTR_NAMES[9] << "\":\"" << DEVNONCE2string(dit->second.devNonce) << "\", "
-           << "\"" << ATTR_NAMES[10] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"";
+           << "\"" << ATTR_NAMES[10] << "\":\"" << JOINNONCE2string(dit->second.joinNonce) << "\", "
+           << "\"" << ATTR_NAMES[11] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"";
         uint32_t rightsMask = getRightsMask((DEVADDR &) (dit->first.a));
         if (rightsMask)
             ss << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;

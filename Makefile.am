@@ -108,7 +108,7 @@ nobase_dist_include_HEADERS = \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	errlist.h daemonize.h device-history-item.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
-	identity-service-abstract.h identity-service-file-json.h \
+	identity-service.h identity-service-file-json.h \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
@@ -137,6 +137,7 @@ lorawan_network_server_SOURCES = \
 	gateway-stat-service-abstract.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp utilcurl.cpp \
 	device-stat-service-abstract.cpp device-stat-service-file.cpp device-stat-service-post.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
+	identity-service.cpp \
 	device-channel-plan-file-json.cpp device-channel-plan.cpp device-history-service-json.cpp receiver-queue-processor.cpp \
 	regional-parameter-channel-plan.cpp regional-parameter-channel-plan-file-json.cpp \
 	third_party/argtable3/argtable3.c \
@@ -152,6 +153,7 @@ mac_gw_SOURCES = \
 	lora-packet-handler-impl.cpp config-filename.cpp lora-encrypt.cpp \
 	utilstring.cpp utildate.cpp utilfile.cpp strptime.cpp semtech-pull-resp-packet.cpp \
 	semtech-metadata-tx.cpp lora-rejoin.cpp utilcurl.cpp \
+	identity-service.cpp \
 	$(C_STORAGE) \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
@@ -174,6 +176,7 @@ mac_ns_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	receiver-queue-processor.cpp \
+	identity-service.cpp \
 	gateway-stat-service-abstract.cpp device-stat-service-abstract.cpp device-history-service-json.cpp \
 	third_party/argtable3/argtable3.c \
 	third_party/base64/base64.cpp $(SRC_AES) \
@@ -224,7 +227,7 @@ test_1_CPPFLAGS = $(commoncppflags)
 
 test_identity_file_json_SOURCES = \
 	tests/test-identity-file-json.cpp \
-	identity-service-file-json.cpp lorawan-mac.cpp errlist.cpp \
+	identity-service.cpp identity-service-file-json.cpp lorawan-mac.cpp errlist.cpp \
 	utillora.cpp utildate.cpp utilstring.cpp \
 	device-history-item.cpp gateway-stat.cpp lora-encrypt.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -271,7 +274,7 @@ test_file_watch_CPPFLAGS = $(commoncppflags)
 
 test_dir_txt_SOURCES = \
 	tests/test-dir-txt.cpp lorawan-mac.cpp errlist.cpp \
-	identity-service-file-json.cpp identity-service-dir-txt.cpp \
+	identity-service.cpp identity-service-file-json.cpp identity-service-dir-txt.cpp \
 	utilstring.cpp utildate.cpp utillora.cpp utilfile.cpp \
 	lora-encrypt.cpp device-history-item.cpp gateway-stat.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -280,7 +283,7 @@ test_dir_txt_CPPFLAGS = $(commoncppflags)
 
 test_join_accept_decrypt_SOURCES = \
 	tests/test-join-accept-decrypt.cpp lorawan-mac.cpp errlist.cpp \
-	identity-service-file-json.cpp identity-service-dir-txt.cpp \
+	identity-service.cpp identity-service-file-json.cpp identity-service-dir-txt.cpp \
 	utilstring.cpp utildate.cpp utillora.cpp utilfile.cpp \
 	lora-encrypt.cpp device-history-item.cpp gateway-stat.cpp lora-rejoin.cpp \
 	third_party/base64/base64.cpp $(SRC_AES)
@@ -313,7 +316,7 @@ test_message_queue_CPPFLAGS = $(commoncppflags)
 
 test_queue_processor_SOURCES = \
 	tests/test-queue-processor.cpp receiver-queue-processor.cpp \
-	udp-socket.cpp errlist.cpp identity-service-file-json.cpp \
+	udp-socket.cpp errlist.cpp identity-service.cpp identity-service-file-json.cpp \
 	receiver-queue-service.cpp receiver-queue-service-file-json.cpp \
 	lorawan-mac.cpp db-any.cpp $(BACKEND_DB_SRC) \
 	utilstring.cpp utilfile.cpp utillora.cpp utildate.cpp $(SRC_AES) \

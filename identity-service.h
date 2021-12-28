@@ -10,8 +10,19 @@
  */ 
 class IdentityService {
 	public:
-		// Return 0, retval = EUI and keys
-		virtual int get(DEVADDR &devaddr, DeviceId &retval) = 0;
+        /**
+        * get device identifier(w/o address) by network address. Return 0 if success, retval = EUI and keys
+        * @param retval device identifier
+        * @param devaddr network address
+        * @return LORA_OK- success
+        */
+        virtual int get(DeviceId &retval, DEVADDR &devaddr) = 0;
+        /**
+        * get network identity(with address) by network address. Return 0 if success, retval = EUI and keys
+        * @param retval network identity(with address)
+        * @param eui device EUI
+        * @return LORA_OK- success
+        */
 		virtual int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui) = 0;
 		// Add or replace Address = EUI and keys pair
 		virtual void put(DEVADDR &devaddr, DEVICEID &id) = 0;
