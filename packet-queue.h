@@ -31,7 +31,8 @@ typedef enum {
 	MODE_NONE = 0,
 	MODE_ACK = 1,
 	MODE_REPLY_MAC = 2,
-	MODE_CONTROL_NS = 3 // manage network service
+    MODE_JOIN_REQUEST = 3,
+	MODE_CONTROL_NS = 4 // manage network service
 } ITEM_PROCESS_MODE;
 
 class SemtechUDPPacketItem {
@@ -89,7 +90,13 @@ class PacketQueue {
 			SemtechUDPPacketItem &item,
 			struct timeval &t
 		);
-		void runner();
+        int replyJoinRequest(
+            SemtechUDPPacketItem &item,
+            struct timeval &time
+        );
+
+        void runner();
+
 	public:
 		std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare> packets;
 		std::deque <DEVADDRINT> addrs;

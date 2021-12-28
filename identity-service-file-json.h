@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <mutex>
-#include "identity-service-abstract.h"
+#include "identity-service.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -24,7 +24,7 @@ class JsonFileIdentityService: public IdentityService {
 	public:
 		JsonFileIdentityService();
 		~JsonFileIdentityService();
-		int get(DEVADDR &devaddr, DeviceId &retval) override;
+		int get(DeviceId &retval, DEVADDR &devaddr) override;
 		int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui) override;
 		// List entries
 		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size) override;

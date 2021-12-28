@@ -5,7 +5,7 @@
 #include <functional>
 
 #include "lora-packet-handler-abstract.h"
-#include "identity-service-abstract.h"
+#include "identity-service.h"
 #include "device-history-service-abstract.h"
 #include "gateway-list.h"
 #include "packet-queue.h"
@@ -14,6 +14,7 @@
 #include "receiver-queue-processor.h"
 #include "db-any.h"
 #include "device-channel-plan.h"
+#include "regional-parameter-channel-plan.h"
 
 /**
  * Handle uplink messages
@@ -24,13 +25,13 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		IdentityService *identityService;
 		DeviceHistoryService *deviceHistoryService;
 		GatewayList *gatewayList;
+        const DeviceChannelPlan *deviceChannelPlan;
 
-		// ReceiverQueueService enque data payload packets received from gateways (with deduplication)
+		// ReceiverQueueService enqueue data payload packets received from gateways (with deduplication)
 		ReceiverQueueService *receiverQueueService;
 		// ReceiverQueueProcessor get payload from the queue, parse and put parsed data
-		ReceiverQueueProcessor *recieverQueueProcessor;
+		ReceiverQueueProcessor *receiverQueueProcessor;
 		PacketQueue packetQueue;
-        const DeviceChannelPlan *deviceChannelPlan;
 
 		std::function<void(
 			void *env,
@@ -79,6 +80,10 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
                 const struct timeval &time,
                 SemtechUDPPacket &value
 		);
+        int enqueueJoinResponse(
+                const struct timeval &time,
+                SemtechUDPPacket &value
+        );
         int putMACRequests(
                 const struct timeval &time,
                 SemtechUDPPacket &value
@@ -94,15 +99,21 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
                 SemtechUDPPacket &value
 		);
 
-	void setReceiverQueueProcessor(ReceiverQueueProcessor *value);
+	    void setReceiverQueueProcessor(ReceiverQueueProcessor *value);
 
-	// Reserve FPort number for network service purposes
-	void reserveFPort(
-		uint8_t value
-	);
+	    // Reserve FPort number for network service purposes
+	    void reserveFPort(
+		    uint8_t value
+	    );
 
-    void setDeviceChannelPlan(const DeviceChannelPlan *value);
+        void setDeviceChannelPlan(const DeviceChannelPlan *value);
 
+        int join(
+            const struct timeval &time,
+            int socket,
+            const sockaddr_in *socketAddress,
+            SemtechUDPPacket &packet
+        );
 };
 
 #endif

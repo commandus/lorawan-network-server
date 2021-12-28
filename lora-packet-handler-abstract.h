@@ -24,6 +24,13 @@ class LoraPacketHandler {
 		virtual void reserveFPort(
 			uint8_t value
 		) = 0;
+
+        virtual int join(
+            const struct timeval &time,
+            int socket,
+            const sockaddr_in *socketAddress,
+            SemtechUDPPacket &packet
+        ) = 0;
 };
 
 #endif

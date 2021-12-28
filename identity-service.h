@@ -51,6 +51,13 @@ class IdentityService {
 		virtual bool canControlService(
 			const DEVADDR &addr
 		) = 0;
+
+    int joinAccept(
+        JOIN_ACCEPT_FRAME_HEADER &retval,
+        const NetworkIdentity &networkIdentity
+    );
+
+    void getNetworkId(NETID &retval);
 };
 
 #endif

@@ -7,7 +7,7 @@
 #include "udp-socket.h"
 #include "utillora.h"
 #include "lora-packet-handler-abstract.h"
-#include "identity-service-abstract.h"
+#include "identity-service.h"
 #include "device-history-service-abstract.h"
 #include "gateway-list.h"
 

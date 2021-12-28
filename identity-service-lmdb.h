@@ -1,7 +1,7 @@
 #ifndef IDENTITY_SERVICE_LMDB_H_
 #define IDENTITY_SERVICE_LMDB_H_ 1
 
-#include "identity-service-abstract.h"
+#include "identity-service.h"
 #include "db-identity.h"
 
 class LmdbIdentityService: public IdentityService {
@@ -14,7 +14,7 @@ class LmdbIdentityService: public IdentityService {
 	public:
 		LmdbIdentityService();
 		~LmdbIdentityService();
-		int get(DEVADDR &devaddr, DeviceId &retval);
+		int get(DeviceId &retval, DEVADDR &devaddr);
 		int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui);
 		// List entries
 		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size);

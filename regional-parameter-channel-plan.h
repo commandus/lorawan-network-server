@@ -97,7 +97,7 @@ public:
     int defaultDownlinkTXPower; // can depend on frequency
     int pingSlotFrequency;
     bool implementsTXParamSetup;
-    bool defaultRegion;
+    bool defaultRegion;     // true- default region
     bool supportsExtraChannels;
     BandDefaults bandDefaults;
     DataRate dataRates[DATA_RATE_SIZE];
