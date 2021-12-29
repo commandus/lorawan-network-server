@@ -19,7 +19,9 @@ int IdentityService::joinAccept(
 }
 
 void IdentityService::getNetworkId(NETID &retval) {
-    retval[0] = 0;
-    retval[1] = 0;
-    retval[2] = 1;
+    memmove(&retval, &netid, sizeof(NETID));
+}
+
+void IdentityService::setNetworkId(const NETID &value) {
+    memmove(&netid, value, sizeof(NETID));
 }

@@ -9,6 +9,10 @@
 #include <netinet/in.h>
 
 #include "platform.h"
+
+#include "net-id.h"
+#include "dev-addr.h"
+
 #include "lora-radio.h"
 #include "system/crypto/aes.h"
 
@@ -22,10 +26,7 @@
 #define TX_MIN_POWER_DBM    -6
 #define TX_MAX_POWER_DBM    27
 
-typedef unsigned char NETID[3];
-
 typedef unsigned char KEY128[16];
-typedef unsigned char DEVADDR[4];
 typedef unsigned char DEVEUI[8];
 
 typedef unsigned char JOINNONCE[3];
@@ -255,7 +256,6 @@ typedef ALIGN struct {
     JOIN_REQUEST_FRAME frame;
     uint16_t mic;			    // MIC
 } PACKED JOIN_REQUEST_HEADER;	// 1 + 18 + 2 = 21 bytes
-
 
 typedef ALIGN struct {
     uint8_t RX2DataRate: 4;	    // downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
@@ -652,6 +652,8 @@ void string2JOINNONCE(JOINNONCE &retval, const std::string &value);
 std::string JOIN_REQUEST_FRAME2string(const JOIN_REQUEST_FRAME *value);
 
 uint32_t NETID2int(const NETID &value);
+void int2NETID(NETID &retval, uint32_t value);
+
 uint32_t JOINNONCE2int(const JOINNONCE &value);
 int FREQUENCY2int(const FREQUENCY &frequency);
 

@@ -267,6 +267,16 @@ uint32_t NETID2int(
 	return value[0] + (value[1] << 8) + (value[2] << 16);
 }
 
+void int2NETID(
+	NETID &retval,
+	uint32_t value
+)
+{
+	retval[0] = value && 0xff;
+	retval[1] = (value << 8) && 0xff;
+	retval[2] = (value << 16) && 0xff;
+}
+
 int FREQUENCY2int(
 	const FREQUENCY &frequency
 ) {
