@@ -6,7 +6,9 @@
 
 uint32_t DEVADDR2int(const DEVADDR &value)
 {
-    uint32_t r;
+    uint32_t retval;
+    *((uint32_t*) &retval) = NTOH4(*((uint32_t*) &value));
+    return retval;
 }
 
 typedef struct {
@@ -73,7 +75,7 @@ void DevAddr::set(const DEVADDR &value) {
 }
 
 void DevAddr::set(uint32_t value) {
-    int2NETID(devaddr, value);
+    int2DEVADDR(devaddr, value);
 }
 
 /**
@@ -85,13 +87,17 @@ void DevAddr::applyTypeMask()
 }
 
 /**
- * DEVADDR has 8 types
+ * DEVADDR has 8 types;
+ * 0..2- NwkId = NetId
+ * 3..7- NwkId is a part of NetId
  * @see LoRaWAN Backend Interfaces 1.0 Specification
- *      Chapter 13 DevAddr Assignment
+ *      Chapter 13 DevAddr Assignment Table 3
+ * @link link-object https://lora-alliance.org/resource_hub/lorawan-back-end-interfaces-v1-0/ @endlink
+ * @link link-object https://lora-alliance.org/wp-content/uploads/2020/11/lorawantm-backend-interfaces-v1.0.pdf @endlink
  * @see NetId
- * @return 0..7 NetId type
+ * @return 0..7 NetId type, -1- invalid dev address
  */
-int DevAddr::getNetIdType() const
+int DevAddr::getNwkIdType() const
 {
     uint8_t typePrefix8 = ((DEVADDR_TYPE*) &devaddr)->typePrefix;
     if (typePrefix8 == 0xfe)
@@ -120,12 +126,29 @@ int DevAddr::getNetIdType() const
     return -1;
 }
 
-uint32_t DevAddr::getNetId() const
+uint32_t DevAddr::getNwkId() const
 {
-    int netIdType = getNetIdType();
-    if ((netIdType < 0) || (netIdType > 7))
+    switch (getNwkIdType())
+    {
+    case 0:
+        return (devaddr[3] & 0x7f) >> 1;
+    case 1:
+        return devaddr[3] & 0x3f;
+    case 2:
+        return ((devaddr[3] & 0x1f) << 4) | (devaddr[2] >> 4);
+    case 3:
+        return ((devaddr[3] & 0xf) << 7) | (devaddr[2] >> 1);
+    case 4:
+        return ((devaddr[3] & 7) << 8) | devaddr[2];
+    case 5:
+        return ((devaddr[3] & 3) << 11) | (devaddr[2] << 3) | ((devaddr[1] & 0xe0) >> 5);
+    case 6:
+        return ((devaddr[3] & 1) << 14) | (devaddr[2] << 6) | ((devaddr[1] & 0xfc) >> 2);
+    case 7:
+        return (devaddr[2] << 9) | (devaddr[1] << 1) | ((devaddr[0] & 0x80) >> 7);
+    default:
         return 0;
-    DEVADDR_TYPE_SIZES[netIdType].typePrefixLength
+    }
 }
 
 int DevAddr::getTypeMask() const

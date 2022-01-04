@@ -20,7 +20,7 @@ uint32_t DEVADDR2int(const DEVADDR &value);
 class DevAddr {
 private:
     DEVADDR devaddr;
-    int getNetIdType() const;
+    int getNwkIdType() const;
     int getTypeMask() const;
 public:
     DevAddr();
@@ -33,8 +33,8 @@ public:
     DEVADDR *getPtr() const;
     std::string toString() const;
 
-    // NetId
-    uint32_t getNetId() const;
+    // NwkId is a part of NetId for types 3..7
+    uint32_t getNwkId() const;
 
     void setType(uint8_t value);
     void set(const std::string &value);
