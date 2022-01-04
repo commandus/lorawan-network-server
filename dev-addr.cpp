@@ -147,7 +147,32 @@ uint32_t DevAddr::getNwkId() const
     case 7:
         return (devaddr[2] << 9) | (devaddr[1] << 1) | ((devaddr[0] & 0x80) >> 7);
     default:
-        return 0;
+        return INVALID_ID;
+    }
+}
+
+uint32_t DevAddr::getNwkAddr() const
+{
+    switch (getNwkIdType())
+    {
+    case 0:
+        return ((devaddr[3] & 1) << 24) | (devaddr[2] << 16) | (devaddr[1] << 8) | devaddr[0];
+    case 1:
+        return (devaddr[2] << 16) | (devaddr[1] << 8) | devaddr[0];
+    case 2:
+        return ((devaddr[2] & 0xf) << 16) | (devaddr[1] << 8) | devaddr[0];
+    case 3:
+        return ((devaddr[2] & 3) << 16) | (devaddr[1] << 8) | devaddr[0];
+    case 4:
+        return (devaddr[1] << 8) | devaddr[0];
+    case 5:
+        return ((devaddr[1] & 0x1f ) << 8) | devaddr[0];
+    case 6:
+        return ((devaddr[1] & 3) << 8) | devaddr[0];
+    case 7:
+        return devaddr[0] & 0x7f;
+    default:
+        return INVALID_ID;
     }
 }
 

@@ -4,6 +4,8 @@
  */
 #define DEV_ADDR_H_ 1
 
+#define INVALID_ID 0xffffffff
+
 #include <string>
 
 #include "platform.h"
@@ -35,6 +37,7 @@ public:
 
     // NwkId is a part of NetId for types 3..7
     uint32_t getNwkId() const;
+    uint32_t getNwkAddr() const;
 
     void setType(uint8_t value);
     void set(const std::string &value);
