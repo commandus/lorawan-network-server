@@ -25,10 +25,16 @@
 #define NTOH2(x) (x)
 #define NTOH4(x) (x)
 #define NTOH8(x) (x)
+#define HTON2(x) (x)
+#define HTON4(x) (x)
+#define HTON8(x) (x)
 #else
 #define NTOH2(x) be16toh(x)
 #define NTOH4(x) be32toh(x)
 #define NTOH8(x) be64toh(x)
+#define HTON2(x) htobe16(x)
+#define HTON4(x) htobe32(x)
+#define HTON8(x) htobe64(x)
 #endif
 
 #ifdef __MACH__
