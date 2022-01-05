@@ -97,7 +97,7 @@ void DevAddr::applyTypeMask()
  * @see NetId
  * @return 0..7 NetId type, -1- invalid dev address
  */
-int DevAddr::getNwkIdType() const
+int DevAddr::getNetIdType() const
 {
     uint8_t typePrefix8 = ((DEVADDR_TYPE*) &devaddr)->typePrefix;
     if (typePrefix8 == 0xfe)
@@ -126,9 +126,31 @@ int DevAddr::getNwkIdType() const
     return -1;
 }
 
+void DevAddr::setNetIdType(uint8_t value)
+{
+    switch (value & 0xf) {
+    case 0:
+        devaddr[3] &= 0x7f; // 0b
+    case 1:
+        devaddr[3] = (devaddr[3] & 0x3f) | 0x80;   // 10b
+    case 2:
+        devaddr[3] = (devaddr[3] & 0x1f) | 0xc0;   // 110b
+    case 3:
+        devaddr[3] = (devaddr[3] & 0xf) | 0xe0;   // 1110b
+    case 4:
+        devaddr[3] = (devaddr[3] & 7) | 0xf0;  // 11110b
+    case 5:
+        devaddr[3] = (devaddr[3] & 3) | 0xf8;  // 111110b
+    case 6:
+        devaddr[3] = (devaddr[3] & 1) | 0xfc;  // 1111110b
+    case 7:
+        devaddr[3] = 0xfe;  // 11111110b
+    }
+}
+
 uint32_t DevAddr::getNwkId() const
 {
-    switch (getNwkIdType())
+    switch (getNetIdType())
     {
     case 0:
         return (devaddr[3] & 0x7f) >> 1;
@@ -153,7 +175,7 @@ uint32_t DevAddr::getNwkId() const
 
 uint32_t DevAddr::getNwkAddr() const
 {
-    switch (getNwkIdType())
+    switch (getNetIdType())
     {
     case 0:
         return ((devaddr[3] & 1) << 24) | (devaddr[2] << 16) | (devaddr[1] << 8) | devaddr[0];
@@ -174,6 +196,200 @@ uint32_t DevAddr::getNwkAddr() const
     default:
         return INVALID_ID;
     }
+}
+
+typedef ALIGN struct {
+    uint8_t v[4];
+} PACKED INT32_ARRAY;		// 4 bytes
+
+/*
+ * NwkId clear mask
+ * Type Bits                             Hex
+ *      MSB
+ * 0    10000001111111111111111111111111 0x81FFFFFF
+ * 1    11000000111111111111111111111111 0xC0FFFFFF
+ * 2    11100000000011111111111111111111 0xE00FFFFF
+ * 3    11110000000000111111111111111111 0xF003FFFF
+ * 4    11111000000000001111111111111111 0xF800FFFF
+ * 5    11111100000000000111111111111111 0xFC007FFF
+ * 6    11111110000000000000001111111111 0xFE0003FF
+ * 7    11111111000000000000000001111111 0xFF00007F
+ *      LSB
+ * 0    11111111111111111111111110000001 0xFFFFFF81
+ * 1    11111111111111111111111111000000 0xFFFFFFC0
+ * 2    11111111111111110000111111100000 0xFFFF0FE0
+ * 3    11111111111111110000001111110000 0xFFFF03F0
+ * 4    11111111111111110000000011111000 0xFFFF00F8
+ * 5    11111111011111110000000011111100 0xFF7F00FC
+ * 6    11111111000000110000000011111110 0xFF0300FE
+ * 7    01111111000000000000000011111111 0x7F0000FF
+ */
+
+#if BYTE_ORDER == BIG_ENDIAN
+#define NWKID_CLEAR_0 0x81FFFFFF
+#define NWKID_CLEAR_1 0xC0FFFFFF
+#define NWKID_CLEAR_2 0xE00FFFFF
+#define NWKID_CLEAR_3 0xF003FFFF
+#define NWKID_CLEAR_4 0xF800FFFF
+#define NWKID_CLEAR_5 0xFC007FFF
+#define NWKID_CLEAR_6 0xFE0003FF
+#define NWKID_CLEAR_7 0xFF00007F
+#else
+#define NWKID_CLEAR_0 0xFFFFFF81
+#define NWKID_CLEAR_1 0xFFFFFFC0
+#define NWKID_CLEAR_2 0xFFFF0FE0
+#define NWKID_CLEAR_3 0xFFFF03F0
+#define NWKID_CLEAR_4 0xFFFF00F8
+#define NWKID_CLEAR_5 0xFF7F00FC
+#define NWKID_CLEAR_6 0xFF0300FE
+#define NWKID_CLEAR_7 0x7F0000FF
+#endif
+
+#define DEVADDR_CLEAR_NWK_ID(typ) *(uint32_t *) &devaddr &= NWKID_CLEAR_ ## typ
+
+#define DEVADDR_SET_NWK_ID_1(u32, prefix_len) *(uint32_t *) &devaddr |= HTON4(u32 << (32 - prefix_len))
+
+#define DEVADDR_SET_NWK_ID(typ, u32, prefix_len) \
+    *(uint32_t *) &devaddr = (*(uint32_t *) &devaddr & NWKID_CLEAR_ ## typ ) | HTON4(u32 << (32 - prefix_len))
+
+/*
+ * NwkAddr clear mask
+ * Type Bits                             Hex
+ *      MSB
+ * 0    11111110000000000000000000000000 0xFE000000
+ * 1    11111111000000000000000000000000 0xFF000000
+ * 2    11111111111100000000000000000000 0xFFF00000
+ * 3    11111111111111000000000000000000 0xFFFC0000
+ * 4    11111111111111110000000000000000 0xFFFF0000
+ * 5    11111111111111111000000000000000 0xFFFF8000
+ * 6    11111111111111111111110000000000 0xFFFFFC00
+ * 7    11111111111111111111111110000000 0xFFFFFF80
+ *      LSB
+ * 0    00000000000000000000000011111110 0x000000FE
+ * 1    00000000000000000000000011111111 0x000000FF
+ * 2    00000000000000001111000011111111 0x0000F0FF
+ * 3    00000000000000001111110011111111 0x0000FCFF
+ * 4    00000000000000001111111111111111 0x0000FFFF
+ * 5    00000000100000001111111111111111 0x0089FFFF
+ * 6    00000000111111001111111111111111 0x00FCFFFF
+ * 7    10000000111111111111111111111111 0x80FFFFFF
+ */
+#if BYTE_ORDER == BIG_ENDIAN
+#define NWKADDR_CLEAR_0 0xFE000000
+#define NWKADDR_CLEAR_1 0xFF000000
+#define NWKADDR_CLEAR_2 0xFFF00000
+#define NWKADDR_CLEAR_3 0xFFFC0000
+#define NWKADDR_CLEAR_4 0xFFFF0000
+#define NWKADDR_CLEAR_5 0xFFFF8000
+#define NWKADDR_CLEAR_6 0xFFFFFC00
+#define NWKADDR_CLEAR_7 0xFFFFFF80
+#else
+#define NWKADDR_CLEAR_0 0x000000FE
+#define NWKADDR_CLEAR_1 0x000000FF
+#define NWKADDR_CLEAR_2 0x0000F0FF
+#define NWKADDR_CLEAR_3 0x0000FCFF
+#define NWKADDR_CLEAR_4 0x0000FFFF
+#define NWKADDR_CLEAR_5 0x0089FFFF
+#define NWKADDR_CLEAR_6 0x00FCFFFF
+#define NWKADDR_CLEAR_7 0x80FFFFFF
+#endif
+
+#define DEVADDR_SET_NWK_ADDR(typ, u32, prefix_len) \
+    *(uint32_t *) &devaddr = (*(uint32_t *) &devaddr & NWKID_CLEAR_ ## typ ) | HTON4(u32 << (32 - prefix_len))
+
+int DevAddr::setNwkId(uint8_t netIdType, uint32_t value)
+{
+    switch (netIdType)
+    {
+    case 0:
+        if (value >= 0x40)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(0, value, 1);
+    case 1:
+        if (value >= 0x40)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(1, value, 2);
+    case 2:
+        if (value >= 0x200)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(2, value, 3);
+    case 3:
+        if (value >= 0x400)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(3, value, 4);
+    case 4:
+        if (value >= 0x800)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(4, value, 5);
+    case 5:
+        if (value >= 0x2000)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(5, value, 6);
+    case 6:
+        if (value >= 0x8000)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(6, value, 7);
+    case 7:
+        if (value >= 0x20000)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ID(7, value, 8);
+    default:
+        return ADDR_OUT_OF_RANGE;
+    }
+    return 0;
+}
+
+int DevAddr::setNwkAddr(uint8_t netIdType, uint32_t value)
+{
+    switch (netIdType)
+    {
+    case 0:
+        if (value >= 0x40)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(0, value, 1);
+    case 1:
+        if (value >= 0x40)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(1, value, 2);
+    case 2:
+        if (value >= 0x200)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(2, value, 3);
+    case 3:
+        if (value >= 0x400)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(3, value, 4);
+    case 4:
+        if (value >= 0x800)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(4, value, 5);
+    case 5:
+        if (value >= 0x2000)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(5, value, 6);
+    case 6:
+        if (value >= 0x8000)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(6, value, 7);
+    case 7:
+        if (value >= 0x20000)
+            return ADDR_OUT_OF_RANGE;
+        DEVADDR_SET_NWK_ADDR(7, value, 8);
+    default:
+        return ADDR_OUT_OF_RANGE;
+    }
+    return 0;
+}
+    
+
+int DevAddr::set(
+    uint8_t netTypeId, 
+    uint32_t nwkId,
+    uint32_t nwkAddr
+)
+{
+    setNetIdType(netTypeId);
+    
 }
 
 int DevAddr::getTypeMask() const

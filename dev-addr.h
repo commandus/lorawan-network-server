@@ -6,6 +6,8 @@
 
 #define INVALID_ID 0xffffffff
 
+#define ADDR_OUT_OF_RANGE -1
+
 #include <string>
 
 #include "platform.h"
@@ -22,7 +24,11 @@ uint32_t DEVADDR2int(const DEVADDR &value);
 class DevAddr {
 private:
     DEVADDR devaddr;
-    int getNwkIdType() const;
+    int getNetIdType() const;
+    void setNetIdType(uint8_t value);
+    int setNwkId(uint8_t netIdType, uint32_t value);
+    int setNwkAddr(uint8_t netIdType, uint32_t value);
+    
     int getTypeMask() const;
 public:
     DevAddr();
@@ -43,6 +49,8 @@ public:
     void set(const std::string &value);
     void set(const DEVADDR &value);
     void set(uint32_t value);
+
+    int set(uint8_t netTypeId, uint32_t nwkId, uint32_t nwkAddr);
 
     /**
      * Invalidate DEVADDR, set RFU to zeroes
