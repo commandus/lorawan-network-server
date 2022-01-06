@@ -25,7 +25,7 @@ class DevAddr {
 private:
     DEVADDR devaddr;
     int getNetIdType() const;
-    void setNetIdType(uint8_t value);
+    int setNetIdType(uint8_t value);
     int setNwkId(uint8_t netIdType, uint32_t value);
     int setNwkAddr(uint8_t netIdType, uint32_t value);
     

@@ -126,9 +126,9 @@ int DevAddr::getNetIdType() const
     return -1;
 }
 
-void DevAddr::setNetIdType(uint8_t value)
+int DevAddr::setNetIdType(uint8_t value)
 {
-    switch (value & 0xf) {
+    switch (value) {
     case 0:
         devaddr[3] &= 0x7f; // 0b
     case 1:
@@ -145,7 +145,10 @@ void DevAddr::setNetIdType(uint8_t value)
         devaddr[3] = (devaddr[3] & 1) | 0xfc;  // 1111110b
     case 7:
         devaddr[3] = 0xfe;  // 11111110b
+    default:
+        return ADDR_OUT_OF_RANGE;
     }
+    return 0;
 }
 
 uint32_t DevAddr::getNwkId() const
@@ -388,8 +391,15 @@ int DevAddr::set(
     uint32_t nwkAddr
 )
 {
-    setNetIdType(netTypeId);
-    
+    int r = setNetIdType(netTypeId);
+    if (r)
+        return r;
+    r = setNwkId(netTypeId, nwkId);
+    if (r)
+        return r;
+    if (r)
+        return r;
+    return setNwkAddr(netTypeId, nwkAddr);
 }
 
 int DevAddr::getTypeMask() const
