@@ -40,19 +40,9 @@ DevAddr::DevAddr(const DevAddr &value) {
     memmove(&devaddr, &value.devaddr, sizeof(DEVADDR));
 }
 
-uint8_t DevAddr::getType() const
-{
-    return ((NETID_TYPE*) &devaddr)->networkType;
-}
-
 void DevAddr::get(DEVADDR &retval) const
 {
     memmove(&retval, &devaddr, sizeof(DEVADDR));
-}
-
-DEVADDR *DevAddr::getPtr() const
-{
-    return (DEVADDR *) &devaddr;
 }
 
 std::string DevAddr::toString() const
@@ -62,12 +52,7 @@ std::string DevAddr::toString() const
 
 uint32_t DevAddr::get() const
 {
-    return 0;
-}
-
-void DevAddr::setType(uint8_t value)
-{
-    ((NETID_TYPE*) &devaddr)->networkType = value;
+    return *(uint32_t *) &devaddr;;
 }
 
 void DevAddr::set(const DEVADDR &value) {
@@ -99,28 +84,28 @@ void DevAddr::applyTypeMask()
  */
 int DevAddr::getNetIdType() const
 {
-    uint8_t typePrefix8 = ((DEVADDR_TYPE*) &devaddr)->typePrefix;
+    uint8_t typePrefix8 = devaddr[3];
     if (typePrefix8 == 0xfe)
         return 7;
-    typePrefix8 &= 0x7f;
+    typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 0x7e)
         return 6;
-    typePrefix8 &= 0x3f;
+    typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 0x3e)
         return 5;
-    typePrefix8 &= 0x1f;
+    typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 0x1e)
         return 4;
-    typePrefix8 &= 0xf;
+    typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 0xe)
         return 3;
-    typePrefix8 &= 7;
+    typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 6)
         return 2;
-    typePrefix8 &= 3;
+    typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 2)
         return 1;
-    typePrefix8 &= 1;
+    typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 0)
         return 0;
     return -1;
@@ -131,22 +116,30 @@ int DevAddr::setNetIdType(uint8_t value)
     switch (value) {
     case 0:
         devaddr[3] &= 0x7f; // 0b
+        break;
     case 1:
         devaddr[3] = (devaddr[3] & 0x3f) | 0x80;   // 10b
+        break;
     case 2:
         devaddr[3] = (devaddr[3] & 0x1f) | 0xc0;   // 110b
+        break;
     case 3:
         devaddr[3] = (devaddr[3] & 0xf) | 0xe0;   // 1110b
+        break;
     case 4:
         devaddr[3] = (devaddr[3] & 7) | 0xf0;  // 11110b
+        break;
     case 5:
         devaddr[3] = (devaddr[3] & 3) | 0xf8;  // 111110b
+        break;
     case 6:
         devaddr[3] = (devaddr[3] & 1) | 0xfc;  // 1111110b
+        break;
     case 7:
         devaddr[3] = 0xfe;  // 11111110b
+        break;
     default:
-        return ADDR_OUT_OF_RANGE;
+        return TYPE_OUT_OF_RANGE;
     }
     return 0;
 }
@@ -277,7 +270,6 @@ typedef ALIGN struct {
  * 6    00000000111111001111111111111111 0x00FCFFFF
  * 7    10000000111111111111111111111111 0x80FFFFFF
  */
-#if BYTE_ORDER == BIG_ENDIAN
 #define NWKADDR_CLEAR_0 0xFE000000
 #define NWKADDR_CLEAR_1 0xFF000000
 #define NWKADDR_CLEAR_2 0xFFF00000
@@ -286,6 +278,8 @@ typedef ALIGN struct {
 #define NWKADDR_CLEAR_5 0xFFFF8000
 #define NWKADDR_CLEAR_6 0xFFFFFC00
 #define NWKADDR_CLEAR_7 0xFFFFFF80
+/*
+#if BYTE_ORDER == BIG_ENDIAN
 #else
 #define NWKADDR_CLEAR_0 0x000000FE
 #define NWKADDR_CLEAR_1 0x000000FF
@@ -296,9 +290,9 @@ typedef ALIGN struct {
 #define NWKADDR_CLEAR_6 0x00FCFFFF
 #define NWKADDR_CLEAR_7 0x80FFFFFF
 #endif
-
-#define DEVADDR_SET_NWK_ADDR(typ, u32, prefix_len) \
-    *(uint32_t *) &devaddr = (*(uint32_t *) &devaddr & NWKID_CLEAR_ ## typ ) | HTON4(u32 << (32 - prefix_len))
+*/
+#define DEVADDR_SET_NWK_ADDR(typ, u32) \
+    *(uint32_t *) &devaddr = ((*(uint32_t *) &devaddr) & NWKADDR_CLEAR_ ## typ ) | u32
 
 int DevAddr::setNwkId(uint8_t netIdType, uint32_t value)
 {
@@ -306,38 +300,46 @@ int DevAddr::setNwkId(uint8_t netIdType, uint32_t value)
     {
     case 0:
         if (value >= 0x40)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(0, value, 1);
+        break;
     case 1:
         if (value >= 0x40)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(1, value, 2);
+        break;
     case 2:
         if (value >= 0x200)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(2, value, 3);
+        break;
     case 3:
         if (value >= 0x400)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(3, value, 4);
+        break;
     case 4:
         if (value >= 0x800)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(4, value, 5);
+        break;
     case 5:
         if (value >= 0x2000)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(5, value, 6);
+        break;
     case 6:
         if (value >= 0x8000)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(6, value, 7);
+        break;
     case 7:
         if (value >= 0x20000)
-            return ADDR_OUT_OF_RANGE;
+            return NWK_OUT_OF_RANGE;
         DEVADDR_SET_NWK_ID(7, value, 8);
+        break;
     default:
-        return ADDR_OUT_OF_RANGE;
+        return NWK_OUT_OF_RANGE;
     }
     return 0;
 }
@@ -347,37 +349,45 @@ int DevAddr::setNwkAddr(uint8_t netIdType, uint32_t value)
     switch (netIdType)
     {
     case 0:
-        if (value >= 0x40)
+        if (value >= 0x2000000)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(0, value, 1);
+        DEVADDR_SET_NWK_ADDR(0, value);
+        break;
     case 1:
-        if (value >= 0x40)
+        if (value >= 0x1000000)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(1, value, 2);
+        DEVADDR_SET_NWK_ADDR(1, value);
+        break;
     case 2:
-        if (value >= 0x200)
+        if (value >= 0x100000)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(2, value, 3);
+        DEVADDR_SET_NWK_ADDR(2, value);
+        break;
     case 3:
-        if (value >= 0x400)
+        if (value >= 0x40000)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(3, value, 4);
+        DEVADDR_SET_NWK_ADDR(3, value);
+        break;
     case 4:
-        if (value >= 0x800)
+        if (value >= 0x10000)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(4, value, 5);
+        DEVADDR_SET_NWK_ADDR(4, value);
+        break;
     case 5:
         if (value >= 0x2000)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(5, value, 6);
+        DEVADDR_SET_NWK_ADDR(5, value);
+        break;
     case 6:
-        if (value >= 0x8000)
+        if (value >= 0x400)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(6, value, 7);
+        DEVADDR_SET_NWK_ADDR(6, value);
+        break;
     case 7:
-        if (value >= 0x20000)
+        if (value >= 0x80)
             return ADDR_OUT_OF_RANGE;
-        DEVADDR_SET_NWK_ADDR(7, value, 8);
+        DEVADDR_SET_NWK_ADDR(7, value);
+        break;
     default:
         return ADDR_OUT_OF_RANGE;
     }
@@ -394,12 +404,14 @@ int DevAddr::set(
     int r = setNetIdType(netTypeId);
     if (r)
         return r;
-    r = setNwkId(netTypeId, nwkId);
+   /*
+     r = setNwkId(netTypeId, nwkId);
     if (r)
         return r;
-    if (r)
-        return r;
+    */
+    
     return setNwkAddr(netTypeId, nwkAddr);
+    return 0;
 }
 
 int DevAddr::getTypeMask() const
