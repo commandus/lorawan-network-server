@@ -64,6 +64,33 @@ void NetId::set(uint32_t value) {
     int2NETID(netid, value);
 }
 
+int NetId::set(
+    uint8_t netType,
+    uint32_t value
+)
+{
+    if (netType > 7)
+        return NETTYPE_OUT_OF_RANGE;
+    switch (netType) {
+        case 0:
+        case 1:
+            if (value >= (1 << 6))
+                return NETID_OUT_OF_RANGE;
+            break;
+        case 2:
+            if (value >= (1 << 9))
+                return NETID_OUT_OF_RANGE;
+            break;
+        default:    // 3..7
+            if (value >= (1 << 21))
+                return NETID_OUT_OF_RANGE;
+            break;
+    }
+    int2NETID(netid, value);
+    setType(netType);
+    return 0;
+}
+
 /**
  * Invalidate NetId, set RFU to zeroes
  */

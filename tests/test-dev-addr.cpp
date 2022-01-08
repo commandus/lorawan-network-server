@@ -45,8 +45,33 @@ static void testSet(
     std::cout << std::endl;
 }
 
+static void testNetIdSet(
+    uint8_t netTypeId, 
+    uint32_t netId,
+    uint32_t nwkAddr
+)
+{
+    NetId netid;
+    netid.set(netTypeId, netId);
+    DevAddr a;
+    int r = a.set(netid, nwkAddr);
+    if (r) {
+        std::cerr << "Set error " << r << std::endl;
+        return;
+    }
+    std::cout << a.toString() << std::endl;
+    printBits(a);
+    std::cout << std::hex
+        << "Type: " << (int) netTypeId << " "
+        << "NetId: " << netId << " "
+        << "NetAddr: " << nwkAddr << std::endl;
+    printDetails(a);
+    std::cout << std::endl;
+}
+
 int main(int argc, char **argv)
 {
+    /*
     testSet(0, 0x3f, 0x1ffffff);
     testSet(1, 0x3f, 0xffffff);
     testSet(2, 0x1ff, 0xfffff);
@@ -55,6 +80,16 @@ int main(int argc, char **argv)
     testSet(5, 0x1fff, 0x1fff);
     testSet(6, 0x7fff, 0x3ff);
     testSet(7, 0x1ffff, 0x7f);
+    */
+
+    testNetIdSet(0, 0x3f, 0x1ffffff);
+    testNetIdSet(1, 0x3f, 0xffffff);
+    testNetIdSet(2, 0x1ff, 0xfffff);
+    testNetIdSet(3, 0x3ff, 0x3ffff);
+    testNetIdSet(4, 0x7ff, 0xffff);
+    testNetIdSet(5, 0x1fff, 0x1fff);
+    testNetIdSet(6, 0x7fff, 0x3ff);
+    testNetIdSet(7, 0x1ffff, 0x7f);
 
     exit(0);
 

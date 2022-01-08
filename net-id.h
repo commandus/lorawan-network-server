@@ -8,6 +8,9 @@
 
 #include "platform.h"
 
+#define NETTYPE_OUT_OF_RANGE -1
+#define NETID_OUT_OF_RANGE -2
+
 typedef unsigned char NETID[3];
 
 typedef ALIGN struct {
@@ -36,6 +39,7 @@ public:
     void set(const std::string &value);
     void set(const NETID &value);
     void set(uint32_t value);
+    int set(uint8_t netType, uint32_t value);
 
     /**
      * Invalidate NetId, set RFU to zeroes
