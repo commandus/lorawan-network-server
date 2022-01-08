@@ -47,33 +47,63 @@ static void testSet(
 
 int main(int argc, char **argv)
 {
-    testSet(0, 1, 0x1ffffff);
-    testSet(1, 1, 0xffffff);
-    testSet(2, 1, 0xfffff);
-    testSet(3, 1, 0x3ffff);
-    testSet(4, 1, 0xffff);
-    testSet(5, 1, 0x1fff);
-    testSet(6, 1, 0x3ff);
-    testSet(7, 1, 0x7f);
+    testSet(0, 0x3f, 0x1ffffff);
+    testSet(1, 0x3f, 0xffffff);
+    testSet(2, 0x1ff, 0xfffff);
+    testSet(3, 0x3ff, 0x3ffff);
+    testSet(4, 0x7ff, 0xffff);
+    testSet(5, 0x1fff, 0x1fff);
+    testSet(6, 0x7fff, 0x3ff);
+    testSet(7, 0x1ffff, 0x7f);
 
     exit(0);
 
-    testSet(0, 1, 12);
-    testSet(1, 1, 12);
-    testSet(2, 1, 12);
-    testSet(3, 1, 12);
-    testSet(4, 1, 12);
-    testSet(5, 1, 12);
-    testSet(6, 1, 12);
-    testSet(7, 1, 12);
+ 
+    testSet(0, 1, 0x1ffffff);
+    testSet(1, 2, 0xffffff);
+    testSet(2, 3, 0xfffff);
+    testSet(3, 4, 0x3ffff);
+    testSet(4, 5, 0xffff);
+    testSet(5, 6, 0x1fff);
+    testSet(6, 7, 0x3ff);
+    testSet(7, 8, 0x7f);
+   
+    testSet(0, 0x3f, 0);
+    testSet(1, 0x3f, 0);
+    testSet(2, 0x1ff, 0);
+    testSet(3, 0x3ff, 0);
+    testSet(4, 0x7ff, 0);
+    testSet(5, 0x1fff, 0);
+    testSet(6, 0x7fff, 0);
+    testSet(7, 0x1ffff, 0);
+    
+    exit(0);
 
-    testSet(0, 1, 13);
-    testSet(1, 1, 14);
-    testSet(2, 1, 15);
-    testSet(3, 1, 16);
-    testSet(4, 1, 17);
-    testSet(5, 1, 18);
-    testSet(6, 1, 19);
-    testSet(7, 1, 20);
+    testSet(0, 1, 0x1234567);
+    testSet(1, 1, 0x123456);
+    testSet(2, 1, 0x12345);
+    testSet(3, 1, 0x12345);
+    testSet(4, 1, 0x1234);
+    testSet(5, 1, 0x1234);
+    testSet(6, 1, 0x123);
+    testSet(7, 1, 0x12);
+
+    testSet(0, 1, 0x1);
+    testSet(1, 1, 0x1);
+    testSet(2, 1, 0x1);
+    testSet(3, 1, 0x1);
+    testSet(4, 1, 0x1);
+    testSet(5, 1, 0x1);
+    testSet(6, 1, 0x1);
+    testSet(7, 1, 0x1);
+
+    testSet(0, 1, 0);
+    testSet(1, 1, 0);
+    testSet(2, 1, 0);
+    testSet(3, 1, 0);
+    testSet(4, 1, 0);
+    testSet(5, 1, 0);
+    testSet(6, 1, 0);
+    testSet(7, 1, 0);
 
 }
