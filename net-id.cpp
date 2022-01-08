@@ -42,8 +42,15 @@ uint32_t NetId::get() const
     return NETID2int(netid);
 }
 
-static uint8_t MASK_NWK_ID[8] = {
-    6, 6, 9, 10, 11, 13, 15, 17
+static uint32_t MASK_NWK_ID[8] = {
+    (1 << 6) - 1,
+    (1 << 6) - 1,
+    (1 << 9) - 1,
+    (1 << 10) - 1,
+    (1 << 11) - 1,
+    (1 << 13) - 1,
+    (1 << 15) - 1,
+    (1 << 17) - 1
 };
 
 uint32_t NetId::getNetId() const
