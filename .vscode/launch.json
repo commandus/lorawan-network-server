@@ -301,6 +301,18 @@
 			"environment": [],
 			"externalConsole": false,
 			"MIMode": "gdb"
+		},
+		{
+			"name": "test-dev-addr",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/test-dev-addr",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb"
 		}
 	]
 }
