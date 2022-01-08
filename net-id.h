@@ -29,6 +29,7 @@ public:
     void get(NETID &retval)  const;
     uint32_t get() const;
     NETID *getPtr() const;
+    uint32_t getNwkId() const;
     std::string toString() const;
 
     void setType(uint8_t value);
