@@ -22,9 +22,9 @@ typedef ALIGN struct {
 
 class NetId {
 private:
-    NETID netid;
     int getTypeMask() const;
 public:
+    NETID netid;
     NetId();
     NetId(const NETID &value);
     NetId(const NetId &value);
@@ -32,6 +32,7 @@ public:
     void get(NETID &retval)  const;
     uint32_t get() const;
     NETID *getPtr() const;
+    uint32_t getNetId() const;
     uint32_t getNwkId() const;
     std::string toString() const;
 

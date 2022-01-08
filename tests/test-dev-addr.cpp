@@ -52,9 +52,23 @@ static void testNetIdSet(
 )
 {
     NetId netid;
-    netid.set(netTypeId, netId);
+    int r = netid.set(netTypeId, netId);
+    if (r) {
+        std::cerr << "Set error " << r << std::endl;
+        return;
+    }
+    std::cout 
+        << std::bitset<8>{netid.netid[2]}.to_string() << " "
+        << std::bitset<8>{netid.netid[1]}.to_string() << " "
+        << std::bitset<8>{netid.netid[0]}.to_string() << std::endl;
+
+    std::cout << std::hex
+        << "NetId type: " << (int) netid.getType() << " "
+        << "NetId: " << netid.getNetId() << " "
+        << "NwkId: " << netid.getNwkId() << std::endl;
+    
     DevAddr a;
-    int r = a.set(netid, nwkAddr);
+    r = a.set(netid, nwkAddr);
     if (r) {
         std::cerr << "Set error " << r << std::endl;
         return;
