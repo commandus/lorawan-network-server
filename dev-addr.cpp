@@ -361,6 +361,23 @@ int DevAddr::set(
     return setNwkAddr(netTypeId, nwkAddr);
 }
 
+int DevAddr::set(
+    const NETID &netid,
+    uint32_t nwkAddr
+)
+{
+    NetId v(netid);
+    return set(v.getType(), v.getNwkId(), nwkAddr);
+}
+
+int DevAddr::set(
+    const NetId &netid,
+    uint32_t nwkAddr
+)
+{
+    return set(netid.getType(), netid.getNwkId(), nwkAddr);
+}
+
 int DevAddr::getTypeMask() const
 {
     return 0;

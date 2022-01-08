@@ -42,6 +42,15 @@ uint32_t NetId::get() const
     return NETID2int(netid);
 }
 
+static uint8_t MASK_NWK_ID[8] = {
+    6, 6, 9, 10, 11, 13, 15, 17
+};
+
+uint32_t NetId::getNwkId() const
+{
+    return NETID2int(netid) & MASK_NWK_ID[((NETID_TYPE*) &netid)->networkType];
+}
+
 void NetId::setType(uint8_t value)
 {
     ((NETID_TYPE*) &netid)->networkType = value;

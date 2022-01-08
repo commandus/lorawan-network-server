@@ -13,6 +13,7 @@
 #include <string>
 
 #include "platform.h"
+#include "net-id.h"
 
 typedef unsigned char DEVADDR[4];
 
@@ -45,6 +46,8 @@ public:
     void set(uint32_t value);
 
     int set(uint8_t netTypeId, uint32_t nwkId, uint32_t nwkAddr);
+    int set(const NETID &netid, uint32_t nwkAddr);
+    int set(const NetId &netid, uint32_t nwkAddr);
 
     /**
      * Invalidate DEVADDR, set RFU to zeroes
