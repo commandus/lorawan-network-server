@@ -273,8 +273,8 @@ void int2NETID(
 )
 {
 	retval[0] = value & 0xff;
-	retval[1] = (value << 8) & 0xff;
-	retval[2] = (value << 16) & 0xff;
+	retval[1] = (value >> 8) & 0xff;
+	retval[2] = (value >> 16) & 0xff;
 }
 
 int FREQUENCY2int(

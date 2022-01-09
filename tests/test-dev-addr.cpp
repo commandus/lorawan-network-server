@@ -99,15 +99,14 @@ int main(int argc, char **argv)
     testNetIdSet(0, 0x3f, 0x1ffffff);
     testNetIdSet(1, 0x3f, 0xffffff);
     testNetIdSet(2, 0x1ff, 0xfffff);
-    testNetIdSet(3, 0x3ff, 0x3ffff);
-    testNetIdSet(4, 0x7ff, 0xffff);
-    testNetIdSet(5, 0x1fff, 0x1fff);
-    testNetIdSet(6, 0x7fff, 0x3ff);
-    testNetIdSet(7, 0x1ffff, 0x7f);
+    testNetIdSet(3, 0x1fffff, 0x3ffff);
+    testNetIdSet(4, 0x1fffff, 0xffff);
+    testNetIdSet(5, 0x1fffff, 0x1fff);
+    testNetIdSet(6, 0x1fffff, 0x3ff);
+    testNetIdSet(7, 0x1fffff, 0x7f);
 
     exit(0);
 
- 
     testSet(0, 1, 0x1ffffff);
     testSet(1, 2, 0xffffff);
     testSet(2, 3, 0xfffff);
@@ -154,5 +153,5 @@ int main(int argc, char **argv)
     testSet(5, 1, 0);
     testSet(6, 1, 0);
     testSet(7, 1, 0);
-    
+
 }
