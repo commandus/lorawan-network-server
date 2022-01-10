@@ -8,27 +8,17 @@
 #include <cstring>
 #include <fstream>
 
-#include <sys/time.h>
 #include <signal.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <limits.h>
-#include <errno.h>
 
 #include "argtable3/argtable3.h"
-#include "platform.h"
 #include "utilstring.h"
-#include "daemonize.h"
 
 #include "errlist.h"
 #include "utillora.h"
-#include "utilstring.h"
-#include "utildate.h"
 
-#include "udp-listener.h"
 #include "config-json.h"
 #include "macgw-config-json.h"
-#include "lora-packet-handler-impl.h"
 #include "identity-service-file-json.h"
 
 #include "gateway-list.h"
@@ -38,7 +28,6 @@ const std::string programName = "mac-gw";
 #define DEF_CONFIG_FILE_NAME "mac-gw.json"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
-#define DEF_TIME_FORMAT "%FT%T"
 
 static Configuration *config = NULL;
 static MacGwConfig *macGwConfig = NULL;

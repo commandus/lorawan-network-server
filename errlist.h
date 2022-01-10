@@ -116,6 +116,7 @@
 #define ERR_CODE_REGION_BAND_NO_DEFAULT     -596
 #define ERR_CODE_IS_JOIN					-597
 #define ERR_CODE_BAD_JOIN_REQUEST			-598
+#define ERR_CODE_NETID_OR_NETTYPE_MISSED    -599
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -224,6 +225,7 @@
 #define ERR_REGION_BAND_NO_DEFAULT      "No default region assigned"
 #define ERR_IS_JOIN					    "Jpin request or response"
 #define ERR_BAD_JOIN_REQUEST			"Bad Join request "
+#define ERR_NETID_OR_NETTYPE_MISSED     "NetId identifier or type missed"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

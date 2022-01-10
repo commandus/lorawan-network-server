@@ -8,8 +8,6 @@
 #include <iostream>
 #include <signal.h>
 #include <cstring>
-#include <sstream>
-#include <unistd.h>
 #include <vector>
 #include <map>
 
@@ -18,18 +16,13 @@
 #include "argtable3/argtable3.h"
 #include "base64/base64.h"
 
-#include "platform.h"
 #include "utilstring.h"
 
 #include "errlist.h"
-#include "utilstring.h"
 #include "utildate.h"
 
-#include "packet-queue.h"
 #include "pkt2/str-pkt2.h"
 #include "db-any.h"
-
-#include "config-filename.h"
 
 #include "identity-service-file-json.h"
 #include "identity-service-dir-txt.h"
