@@ -8,6 +8,7 @@ GEN =
 # LIB_PKT2 = -L./libs/ -lpkt2
 LIB_PKT2 = -L/home/andrei/src/pkt2/ -lpkt2
 
+AM_CPPFLAGS=-std=c++11 -O0
 AM_CXXFLAGS=-std=c++11 -O0
 COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 

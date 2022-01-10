@@ -239,12 +239,12 @@ DEVNONCE string2DEVNONCE(
         const std::string &value
 )
 {
-    return strtol(value.c_str(), nullptr, 16);
+    return strtol(value.c_str(), NULL, 16);
 }
 
 void string2JOINNONCE(JOINNONCE &retval, const std::string &value)
 {
-    uint32_t r = ntohl(strtol(value.c_str(), nullptr, 16));
+    uint32_t r = ntohl(strtol(value.c_str(), NULL, 16));
     retval[0] = r & 0xff;
     retval[1] = (r >> 8) & 0xff;
     retval[2] = (r >> 16) & 0xff;
