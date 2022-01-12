@@ -8,9 +8,6 @@
 
 #include "platform.h"
 
-#define NETTYPE_OUT_OF_RANGE -1
-#define NETID_OUT_OF_RANGE -2
-
 typedef unsigned char NETID[3];
 
 typedef ALIGN struct {

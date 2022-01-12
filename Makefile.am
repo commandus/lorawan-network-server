@@ -89,7 +89,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server mac-ns mac-gw proto-db lora-print lsnetid
+bin_PROGRAMS = lorawan-network-server mac-ns mac-gw proto-db lora-print print-netid
 
 LIBLORAWANSRC = \
 	utillora.cpp errlist.cpp net-id.cpp dev-addr.cpp udp-socket.cpp device-history-item.cpp gateway-stat.cpp \
@@ -207,11 +207,11 @@ lora_print_SOURCES = \
 lora_print_LDADD = $(L_LORAWAN) $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 lora_print_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
-lsnetid_SOURCES = \
-	lsnetid.cpp \
+print_netid_SOURCES = \
+	print-netid.cpp \
 	third_party/argtable3/argtable3.c
-lsnetid_LDADD = $(L_LORAWAN)
-lsnetid_CPPFLAGS = $(commoncppflags)
+print_netid_LDADD = $(L_LORAWAN)
+print_netid_CPPFLAGS = $(commoncppflags)
 
 #
 # Configs, readme, CMake etc.

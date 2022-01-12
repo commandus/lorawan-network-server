@@ -6,10 +6,6 @@
 
 #define INVALID_ID 0xffffffff
 
-#define TYPE_OUT_OF_RANGE -1
-#define NWK_OUT_OF_RANGE -2
-#define ADDR_OUT_OF_RANGE -3
-
 #include <string>
 
 #include "platform.h"
