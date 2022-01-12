@@ -219,7 +219,8 @@ lsnetid_CPPFLAGS = $(commoncppflags)
 configdir = $(datadir)
 dist_config_DATA = \
    autogen.sh CMakeLists.txt CODE_OF_CONDUCT.md CONTRIBUTING.md COPYING HISTORY LICENSE README.md TODO \
-   third_party/argtable3/README
+   third_party/argtable3/README \
+   tests/netid-list.sh tests/netid-list.txt
 
 #
 # Tests

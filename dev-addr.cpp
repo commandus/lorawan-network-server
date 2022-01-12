@@ -5,6 +5,8 @@
 #include "dev-addr.h"
 #include "utillora.h"
 
+#define DEFAULT_LORAWAN_BACKEND_VERSION_MINOR   1
+
 uint32_t DEVADDR2int(const DEVADDR &value)
 {
     uint32_t retval;
@@ -13,20 +15,32 @@ uint32_t DEVADDR2int(const DEVADDR &value)
 }
 
 typedef struct {
-    uint8_t typePrefixLength;
     uint8_t networkIdBits;
     uint8_t devDddrBits;
 } DEVADDR_TYPE_SIZE;
 
-static const DEVADDR_TYPE_SIZE DEVADDR_TYPE_SIZES[8] = {
-        {.typePrefixLength = 1, .networkIdBits = 6, .devDddrBits = 25 },
-        {.typePrefixLength = 2, .networkIdBits = 6, .devDddrBits = 24 },
-        {.typePrefixLength = 3, .networkIdBits = 9, .devDddrBits = 20 },
-        {.typePrefixLength = 4, .networkIdBits = 10, .devDddrBits = 18 },
-        {.typePrefixLength = 5, .networkIdBits = 11, .devDddrBits = 16 },
-        {.typePrefixLength = 6, .networkIdBits = 13, .devDddrBits = 13 },
-        {.typePrefixLength = 7, .networkIdBits = 15, .devDddrBits = 10 },
-        {.typePrefixLength = 8, .networkIdBits = 17, .devDddrBits = 7 }
+// version 1.0
+static const DEVADDR_TYPE_SIZE DEVADDR_TYPE_SIZES_1_0[8] = {
+        {.networkIdBits = 6, .devDddrBits = 25 },    // 0
+        {.networkIdBits = 6, .devDddrBits = 24 },    // 1
+        {.networkIdBits = 9, .devDddrBits = 20 },    // 2
+        {.networkIdBits = 10, .devDddrBits = 18 },   // 3
+        {.networkIdBits = 11, .devDddrBits = 16 },   // 4
+        {.networkIdBits = 13, .devDddrBits = 13 },   // 5
+        {.networkIdBits = 15, .devDddrBits = 10 },   // 6
+        {.networkIdBits = 17, .devDddrBits = 7 }     // 7
+};
+
+// version 1.1
+static const DEVADDR_TYPE_SIZE DEVADDR_TYPE_SIZES_1_1[8] = {
+        {.networkIdBits = 6, .devDddrBits = 25},    // 0
+        {.networkIdBits = 6, .devDddrBits = 24},    // 1
+        {.networkIdBits = 9, .devDddrBits = 20},    // 2
+        {.networkIdBits = 11, .devDddrBits = 17},   // 3
+        {.networkIdBits = 12, .devDddrBits = 15},   // 4
+        {.networkIdBits = 13, .devDddrBits = 13},   // 5
+        {.networkIdBits = 15, .devDddrBits = 10},   // 6
+        {.networkIdBits = 17, .devDddrBits = 7}     // 7
 };
 
 DevAddr::DevAddr() {
@@ -134,9 +148,9 @@ void DevAddr::applyTypeMask()
  * @link link-object https://lora-alliance.org/resource_hub/lorawan-back-end-interfaces-v1-0/ @endlink
  * @link link-object https://lora-alliance.org/wp-content/uploads/2020/11/lorawantm-backend-interfaces-v1.0.pdf @endlink
  * @see NetId
- * @return 0..7 NetId type, -1- invalid dev address
+ * @return 0..7 NetId type, 8- invalid dev address
  */
-int DevAddr::getNetIdType() const
+uint8_t DevAddr::getNetIdType() const
 {
     uint8_t typePrefix8 = devaddr[3];
     if (typePrefix8 == 0xfe)
@@ -162,7 +176,7 @@ int DevAddr::getNetIdType() const
     typePrefix8 = typePrefix8 >> 1;
     if (typePrefix8 == 0)
         return 0;
-    return -1;
+    return 8;
 }
 
 int DevAddr::setNetIdType(uint8_t value)
@@ -203,8 +217,13 @@ int DevAddr::setNetIdType(uint8_t value)
  */
 uint32_t DevAddr::getNwkId() const
 {
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
     return getNwkId_1_1();
+#else
+    return getNwkId_1_0();
+#endif
 }
+
 /**
  * @return NwkId
  * Type Bits                             Hex
@@ -283,7 +302,11 @@ uint32_t DevAddr::getNwkId_1_1() const
 
 uint32_t DevAddr::getNwkAddr() const
 {
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
     return getNwkAddr_1_1();
+#else
+    return getNwkAddr_1_0();
+#endif
 }
 
 /**
@@ -495,7 +518,11 @@ uint32_t DevAddr::getNwkAddr_1_1() const
 
 int DevAddr::setNwkId(uint8_t netIdType, uint32_t value)
 {
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
     return setNwkId_1_1(netIdType, value);
+#else
+    return setNwkId_1_0(netIdType, value);
+#endif
 }
 
 int DevAddr::setNwkId_1_0(uint8_t netIdType, uint32_t value)
@@ -600,7 +627,11 @@ int DevAddr::setNwkId_1_1(uint8_t netIdType, uint32_t value)
 
 int DevAddr::setNwkAddr(uint8_t netIdType, uint32_t value)
 {
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
     return setNwkAddr_1_1(netIdType, value);
+#else
+    return setNwkAddr_1_0(netIdType, value);
+#endif
 }
 
 int DevAddr::setNwkAddr_1_0(uint8_t netIdType, uint32_t value)
@@ -764,7 +795,11 @@ uint32_t DevAddr::getMaxNwkId(uint8_t netTypeId) {
 }
 
 uint32_t DevAddr::getMaxNwkAddr(uint8_t netTypeId) {
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
     return getMaxNwkAddr_1_1(netTypeId);
+#else
+    return getMaxNwkAddr_1_0(netTypeId);
+#endif
 }
 
 uint32_t DevAddr::getMaxNwkAddr_1_0(uint8_t netTypeId) {
@@ -813,4 +848,28 @@ uint32_t DevAddr::getMaxNwkAddr_1_1(uint8_t netTypeId) {
         default:
             return ADDR_OUT_OF_RANGE;
     }
+}
+
+uint8_t DevAddr::getTypePrefixBitsCount
+(
+    uint8_t netTypeId
+)
+{
+    return netTypeId + 1;
+}
+
+uint8_t DevAddr::getNwkIdBitsCount(uint8_t typ) {
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
+    return DEVADDR_TYPE_SIZES_1_1[typ].networkIdBits;
+#else
+    return DEVADDR_TYPE_SIZES_1_0[typ].networkIdBits;
+#endif
+}
+
+uint8_t DevAddr::getNwkAddrBitsCount(uint8_t typ) {
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
+    return DEVADDR_TYPE_SIZES_1_1[typ].devDddrBits;
+#else
+    return DEVADDR_TYPE_SIZES_1_0[typ].devDddrBits;
+#endif
 }

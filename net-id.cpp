@@ -129,3 +129,29 @@ int NetId::getTypeMask() const
             return (1 << 21) - 1;   // 0 unused bits, 3 bits type, 21 bits- identifier
     }
 }
+
+int NetId::getRFUBitsCount() const
+{
+    switch (((NETID_TYPE*) &netid)->networkType) {
+        case 0:
+        case 1:
+            return 15;  // 15 unused bits, 3 bits type, 6 bits- identifier
+        case 2:
+            return 12;  // 12 unused bits, 3 bits type, 9 bits- identifier
+        default:        // 3..7
+            return 0;   // 0 unused bits, 3 bits type, 21 bits- identifier
+    }
+}
+
+int NetId::getNetIdBitsCount() const
+{
+    switch (((NETID_TYPE*) &netid)->networkType) {
+        case 0:
+        case 1:
+            return 6;    // 15 unused bits, 3 bits type, 6 bits- identifier
+        case 2:
+            return 9;    // 12 unused bits, 3 bits type, 9 bits- identifier
+        default:    // 3..7
+            return 21;   // 0 unused bits, 3 bits type, 21 bits- identifier
+    }
+}

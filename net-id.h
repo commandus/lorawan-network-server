@@ -46,6 +46,9 @@ public:
      * Invalidate NetId, set RFU to zeroes
      */
     void applyTypeMask();
+
+    int getRFUBitsCount() const;
+    int getNetIdBitsCount() const;
 };
 
 #endif

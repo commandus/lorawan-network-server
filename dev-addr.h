@@ -59,7 +59,7 @@ public:
     uint32_t get() const;
     std::string toString() const;
 
-    int getNetIdType() const;
+    uint8_t getNetIdType() const;
     // NwkId is a part of NetId for types 3..7
     uint32_t getNwkId() const;
     uint32_t getNwkAddr() const;
@@ -76,6 +76,12 @@ public:
      * Invalidate DEVADDR, set RFU to zeroes
      */
     void applyTypeMask();
+
+    static uint8_t getTypePrefixBitsCount(uint8_t netTypeId);
+
+    static uint8_t getNwkIdBitsCount(uint8_t typ);
+
+    static uint8_t getNwkAddrBitsCount(uint8_t typ);
 };
 
 #endif

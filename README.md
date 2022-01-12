@@ -1147,6 +1147,70 @@ echo 02bbe50000006cc3743eed467b227278706b223a5b7b22746d7374223a34303233313131353
 echo 02030b0000006cc3743eed467b227278706b223a5b7b22746d7374223a313236313338333435322c226368616e223a362c2272666368223a312c2266726571223a3836382e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a225346374257313235222c22636f6472223a22342f35222c226c736e72223a31302e302c2272737369223a2d33372c2273697a65223a32332c2264617461223a2241424553457851564668635941514944424155474277694b717376724d71493d227d5d7d| xxd -r -p | nc -q1 -4u 84.237.104.128 5000
 ```
 
+## Tools
+
+- lsnetid
+
+### lsnetid
+
+Print NetId details by value (3 bytes):
+```
+lsnetid C0004A
+c0004f	6	4f	4f	fc013c00	fc013fff
+```
+First column (tab delimited) show NetId in hex.
+
+Column 2 show NetType value in rage of 0..7.
+
+Column 3 show network identifier.
+
+Column 4 show NwkId.
+
+It is same network identifier used in the network address except it can be shorter than network identifier.
+
+Column 4 show minimum possible NwkAddr.
+
+Column 5 show maximum possible NwkAddr.
+
+To print header use -v option:
+
+```
+lsnetid -vv c0004f
+NetId   Type Id NwkId DevAddr min  DevAddr max
+c0004f  6    4f 4f    fc013c00     fc013fff
+```
+
+To print bit fields use -vv option:
+```
+./lsnetid -vv C0004F
+NetId	Type	Id	NwkId	DevAddr min	DevAddr max
+c0004f	6	4f	4f	fc013c00	fc013fff	
+
+binary:
+110000000000000001001111
+TTTNNNNNNNNNNNNNNNNNNNNN
+
+DevAddr:
+Min 11111100000000010011110000000000 NwkId:   4f NetAddr: 0
+    TTTTTTTnnnnnnnnnnnnnnnAAAAAAAAAA
+Max 11111100000000010011111111111111 NwkId:   4f NetAddr: 3ff
+    TTTTTTTnnnnnnnnnnnnnnnAAAAAAAAAA
+```
+
+where T means NetType value in range 0..7, 
+N- network identifier, 
+n- NwkId,
+A- NwkAddr
+
+## Files
+
+List of copied from [NetID and DevAddr Prefix Assignments](https://www.thethingsnetwork.org/docs/lorawan/prefix-assignments/)
+
+- tests/netid-list.txt
+- tests/netid-list.sh
+
+netid-list.sh shell script tests lsnetid utility by the list.
+
 ## Implementation 
 
 ### MAC processing chain

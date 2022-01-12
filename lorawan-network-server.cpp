@@ -247,7 +247,6 @@ void setSignalHandler()
 	sigaction(SIGSEGV, &action, NULL);
     sigaction(SIGABRT, &action, NULL);
 	sigaction(SIGUSR2, &action, NULL);
-	
 }
 #endif
 

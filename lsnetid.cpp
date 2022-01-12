@@ -16,6 +16,12 @@
 
 const std::string programName = "lsnetid";
 
+#ifdef _MSC_VER
+#undef ENABLE_TERM_COLOR
+#else
+#define ENABLE_TERM_COLOR	1
+#endif
+
 class LsNetIdConfiguration {
 public:
     uint32_t value;         // or
@@ -108,10 +114,37 @@ static std::string getAddressBitsString(const DevAddr &value)
 {
     std::stringstream ss;
     ss
-        << std::bitset<8>{value.devaddr[3]}.to_string() << " "
-        << std::bitset<8>{value.devaddr[2]}.to_string() << " "
-        << std::bitset<8>{value.devaddr[1]}.to_string() << " "
+#ifdef ENABLE_TERM_COLOR
+        << "\033[0;32m"
+        << std::bitset<8>{value.devaddr[3]}.to_string()
+        << "\033[0m"
+        << std::bitset<8>{value.devaddr[2]}.to_string()
+        << "\033[0;32m"
+        << std::bitset<8>{value.devaddr[1]}.to_string()
+        << "\033[0m"
         << std::bitset<8>{value.devaddr[0]}.to_string();
+#else
+    << std::bitset<8>{value.devaddr[3]}.to_string() << " "
+    << std::bitset<8>{value.devaddr[2]}.to_string() << " "
+    << std::bitset<8>{value.devaddr[1]}.to_string() << " "
+    << std::bitset<8>{value.devaddr[0]}.to_string();
+#endif
+    return ss.str();
+}
+
+static std::string getBitExplanationString(const DevAddr &value)
+{
+    std::stringstream ss;
+    uint8_t typ = value.getNetIdType();
+
+    uint8_t prefixLen = DevAddr::getTypePrefixBitsCount(typ);
+    uint8_t nwkIdLen = DevAddr::getNwkIdBitsCount(typ);
+    uint8_t nwkAddrLen = DevAddr::getNwkAddrBitsCount(typ);
+    ss
+        << std::setw(prefixLen) << std::setfill('T') << "T"
+        << std::setw(nwkIdLen) << std::setfill('n') << "n"
+        << std::setw(nwkAddrLen) << std::setfill('A') << "A";
+
     return ss.str();
 }
 
@@ -120,7 +153,6 @@ static std::string getAddressDetailsString(const DevAddr &value)
     std::stringstream ss;
     ss
         << std::hex
-        << "type " << value.getNetIdType() << " "
         << "NwkId: " << std::setw(4) << value.getNwkId() << " "
         << "NetAddr: " << value.getNwkAddr();
     return ss.str();
@@ -141,8 +173,7 @@ static void printNetId(
             << "Id" << TAB_DELIMITER
             << "NwkId" << TAB_DELIMITER
             << "DevAddr min" << TAB_DELIMITER
-            << "DevAddr max" << TAB_DELIMITER
-            << "NetId, binary"
+            << "DevAddr max"
             << std::endl;
     }
 
@@ -154,22 +185,48 @@ static void printNetId(
         << value.getNwkId() << TAB_DELIMITER
         << minAddr.toString() << TAB_DELIMITER
         << maxAddr.toString() << TAB_DELIMITER
-        << std::bitset<8>{value.netid[2]}.to_string() << " "
+        << std::endl;
+
+    if (verbosity > 1) {
+        std::cout << std::endl
+                  << "binary:" << std::endl
+                  #ifdef ENABLE_TERM_COLOR
+                  << std::bitset<8>{value.netid[2]}.to_string()
+                  << "\033[0;32m"
+                  << std::bitset<8>{value.netid[1]}.to_string()
+                  << "\033[0m"
+                  << std::bitset<8>{value.netid[0]}.to_string()
+                  #else
+                  << std::bitset<8>{value.netid[2]}.to_string() << " "
         << std::bitset<8>{value.netid[1]}.to_string() << " "
-        << std::bitset<8>{value.netid[0]}.to_string() << std::endl;
+        << std::bitset<8>{value.netid[0]}.to_string()
+                  #endif
+                  << std::endl;
+        // Highlight bits
+        std::cout
+                << std::setw(3) << std::setfill('T') << "T";
+        if (value.getRFUBitsCount())
+            std::cout
+                    << std::setw(value.getRFUBitsCount()) << std::setfill(' ') << " ";
+        std::cout
+                << std::setw(value.getNetIdBitsCount()) << std::setfill('N') << "N"
+                << std::endl;
+    }
 
     if (verbosity > 1) {
         std::cout
             << std::endl
             << "DevAddr:" << std::endl
             << "Min "
-            << minAddr.toString() << " "
             << getAddressBitsString(minAddr) << " "
             << getAddressDetailsString(minAddr) << std::endl
+            << "    " << getBitExplanationString(minAddr)
+            << std::endl
             << "Max "
-            << maxAddr.toString() << " "
             << getAddressBitsString(maxAddr)  << " "
-            << getAddressDetailsString(maxAddr) << std::endl;
+            << getAddressDetailsString(maxAddr) << std::endl
+            << "    " << getBitExplanationString(maxAddr)
+            << std::endl;
     }
 }
 
@@ -185,5 +242,4 @@ int main(int argc, char **argv)
     if (lsnetidConfig.netTypeId)
         netid.set(lsnetidConfig.netTypeId, lsnetidConfig.netId);
     printNetId(netid, lsnetidConfig.verbosity);
-
 }
