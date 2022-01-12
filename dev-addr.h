@@ -22,15 +22,38 @@ uint32_t DEVADDR2int(const DEVADDR &value);
 class DevAddr {
 private:
     int setNetIdType(uint8_t value);
+
+    int setNwkId_1_0(uint8_t netIdType, uint32_t value);
+    int setNwkId_1_1(uint8_t netIdType, uint32_t value);
     int setNwkId(uint8_t netIdType, uint32_t value);
+
+    int setNwkAddr_1_0(uint8_t netIdType, uint32_t value);
+    int setNwkAddr_1_1(uint8_t netIdType, uint32_t value);
     int setNwkAddr(uint8_t netIdType, uint32_t value);
-    
+
+    int setMaxAddress(const NetId &netId);
+    int setMinAddress(const NetId &netId);
     int getTypeMask() const;
+    static uint32_t getMaxNwkId(uint8_t netTypeId);
+    static uint32_t getMaxNwkAddr_1_0(uint8_t netTypeId);
+    static uint32_t getMaxNwkAddr_1_1(uint8_t netTypeId);
+    static uint32_t getMaxNwkAddr(uint8_t netTypeId);
+
+    uint32_t getNwkId_1_0() const;
+    uint32_t getNwkId_1_1() const;
+    uint32_t getNwkAddr_1_0() const;
+    uint32_t getNwkAddr_1_1() const;
+
 public:
     DEVADDR devaddr;
     DevAddr();
     DevAddr(const DEVADDR &value);
     DevAddr(const DevAddr &value);
+    DevAddr(const NETID &netid, uint32_t nwkAddr);
+    DevAddr(const NetId &netid, uint32_t nwkAddr);
+    DevAddr(uint8_t netTypeId, uint32_t nwkId, uint32_t nwkAddr);
+    // min/max addr
+    DevAddr(const NetId &netId, bool retMax);
     
     void get(DEVADDR &retval) const;
     uint32_t get() const;

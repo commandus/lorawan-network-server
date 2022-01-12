@@ -5,7 +5,6 @@
 #include "errlist.h"
 #include "dev-addr.h"
 
-
 static void printBits(const DevAddr &value)
 {
     std::cout 
@@ -18,9 +17,9 @@ static void printBits(const DevAddr &value)
 static void printDetails(const DevAddr &value)
 {
     std::cout << std::hex
-        << "Type: " << value.getNetIdType() << " "
-        << "NwkId: " << value.getNwkId() << " "
-        << "NetAddr: " << value.getNwkAddr() << std::endl;
+              << "Type: " << value.getNetIdType() << " "
+              << "NwkId: " << value.getNwkId() << " "
+              << "NetAddr: " << value.getNwkAddr() << std::endl;
 }
 
 static void testSet(
