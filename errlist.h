@@ -117,6 +117,12 @@
 #define ERR_CODE_IS_JOIN					-597
 #define ERR_CODE_BAD_JOIN_REQUEST			-598
 #define ERR_CODE_NETID_OR_NETTYPE_MISSED    -599
+#define ERR_CODE_NETTYPE_OUT_OF_RANGE       -600
+#define ERR_CODE_NETID_OUT_OF_RANGE         -601
+#define ERR_CODE_TYPE_OUT_OF_RANGE          -602
+#define ERR_CODE_NWK_OUT_OF_RANGE           -603
+#define ERR_CODE_ADDR_OUT_OF_RANGE          -604
+
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -226,6 +232,11 @@
 #define ERR_IS_JOIN					    "Jpin request or response"
 #define ERR_BAD_JOIN_REQUEST			"Bad Join request "
 #define ERR_NETID_OR_NETTYPE_MISSED     "NetId identifier or type missed"
+#define ERR_NETTYPE_OUT_OF_RANGE        "NetType out of 0..7 range"
+#define ERR_NETID_OUT_OF_RANGE          "NetId out of range"
+#define ERR_TYPE_OUT_OF_RANGE           "Address type out of range"
+#define ERR_NWK_OUT_OF_RANGE            "Address NwkId out of range"
+#define ERR_ADDR_OUT_OF_RANGE           "Address out of range"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

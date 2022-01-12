@@ -4,6 +4,7 @@
 
 #include "dev-addr.h"
 #include "utillora.h"
+#include "errlist.h"
 
 #define DEFAULT_LORAWAN_BACKEND_VERSION_MINOR   1
 
@@ -207,7 +208,7 @@ int DevAddr::setNetIdType(uint8_t value)
         devaddr[3] = 0xfe;  // 11111110b
         break;
     default:
-        return TYPE_OUT_OF_RANGE;
+        return ERR_CODE_TYPE_OUT_OF_RANGE;
     }
     return 0;
 }
@@ -531,46 +532,46 @@ int DevAddr::setNwkId_1_0(uint8_t netIdType, uint32_t value)
     {
         case 0:
             if (value >= 0x40)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(0, value, 7);
             break;
         case 1:
             if (value >= 0x40)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(1, value, 8);
             break;
         case 2:
             if (value >= 0x200)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(2, value, 12);
             break;
         case 3:
             if (value >= 0x400)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(3, value, 14);
             break;
         case 4:
             if (value >= 0x800)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(4, value, 16);
             break;
         case 5:
             if (value >= 0x2000)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(5, value, 19);
             break;
         case 6:
             if (value >= 0x8000)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(6, value, 22);
             break;
         case 7:
             if (value >= 0x20000)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_0(7, value, 25);
             break;
         default:
-            return NWK_OUT_OF_RANGE;
+            return ERR_CODE_NWK_OUT_OF_RANGE;
     }
     return 0;
 }
@@ -581,46 +582,46 @@ int DevAddr::setNwkId_1_1(uint8_t netIdType, uint32_t value)
     {
         case 0:
             if (value >= 0x40)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(0, value, 7);
             break;
         case 1:
             if (value >= 0x40)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(1, value, 8);
             break;
         case 2:
             if (value >= 0x200)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(2, value, 12);
             break;
         case 3:
             if (value >= 0x800)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(3, value, 14);
             break;
         case 4:
             if (value >= 0x1000)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(4, value, 16);
             break;
         case 5:
             if (value >= 0x2000)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(5, value, 19);
             break;
         case 6:
             if (value >= 0x8000)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(6, value, 22);
             break;
         case 7:
             if (value >= 0x20000)
-                return NWK_OUT_OF_RANGE;
+                return ERR_CODE_NWK_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ID_1_1(7, value, 25);
             break;
         default:
-            return NWK_OUT_OF_RANGE;
+            return ERR_CODE_NWK_OUT_OF_RANGE;
     }
     return 0;
 }
@@ -640,46 +641,46 @@ int DevAddr::setNwkAddr_1_0(uint8_t netIdType, uint32_t value)
     {
         case 0:
             if (value >= 0x2000000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(0, value);
             break;
         case 1:
             if (value >= 0x1000000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(1, value);
             break;
         case 2:
             if (value >= 0x100000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(2, value);
             break;
         case 3:
             if (value >= 0x40000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(3, value);
             break;
         case 4:
             if (value >= 0x10000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(4, value);
             break;
         case 5:
             if (value >= 0x2000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(5, value);
             break;
         case 6:
             if (value >= 0x400)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(6, value);
             break;
         case 7:
             if (value >= 0x80)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_0(7, value);
             break;
         default:
-            return ADDR_OUT_OF_RANGE;
+            return ERR_CODE_ADDR_OUT_OF_RANGE;
     }
     return 0;
 }
@@ -689,46 +690,46 @@ int DevAddr::setNwkAddr_1_1(uint8_t netIdType, uint32_t value)
     {
         case 0:
             if (value >= 0x2000000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(0, value);
             break;
         case 1:
             if (value >= 0x1000000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(1, value);
             break;
         case 2:
             if (value >= 0x100000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(2, value);
             break;
         case 3:
             if (value >= 0x20000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(3, value);
             break;
         case 4:
             if (value >= 0x8000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(4, value);
             break;
         case 5:
             if (value >= 0x2000)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(5, value);
             break;
         case 6:
             if (value >= 0x400)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(6, value);
             break;
         case 7:
             if (value >= 0x80)
-                return ADDR_OUT_OF_RANGE;
+                return ERR_CODE_ADDR_OUT_OF_RANGE;
             DEVADDR_SET_NWK_ADDR_1_1(7, value);
             break;
         default:
-            return ADDR_OUT_OF_RANGE;
+            return ERR_CODE_ADDR_OUT_OF_RANGE;
     }
     return 0;
 }
@@ -790,7 +791,7 @@ uint32_t DevAddr::getMaxNwkId(uint8_t netTypeId) {
         case 7:
             return 0x20000 - 1;
         default:
-            return NWK_OUT_OF_RANGE;
+            return ERR_CODE_NWK_OUT_OF_RANGE;
     }
 }
 
@@ -822,7 +823,7 @@ uint32_t DevAddr::getMaxNwkAddr_1_0(uint8_t netTypeId) {
         case 7:
             return 0x80 - 1;
         default:
-            return ADDR_OUT_OF_RANGE;
+            return ERR_CODE_ADDR_OUT_OF_RANGE;
     }
 }
 
@@ -846,7 +847,7 @@ uint32_t DevAddr::getMaxNwkAddr_1_1(uint8_t netTypeId) {
         case 7:
             return 0x80 - 1;
         default:
-            return ADDR_OUT_OF_RANGE;
+            return ERR_CODE_ADDR_OUT_OF_RANGE;
     }
 }
 

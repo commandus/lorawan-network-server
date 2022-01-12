@@ -9,7 +9,7 @@ do
 	read -r name
 	read -r region
 	read -r dummy
-	crline=`../lsnetid $id`
+	crline=`../print-netid $id`
 	arr_crline=(${crline//\t/ })
 	echo "$id $addrmin $addrmax ${arr_crline[4]} ${arr_crline[5]}"
 	if [ $arr_crline[4] = $addrmin ]; then

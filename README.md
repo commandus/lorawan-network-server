@@ -1149,13 +1149,13 @@ echo 02030b0000006cc3743eed467b227278706b223a5b7b22746d7374223a31323631333833343
 
 ## Tools
 
-- lsnetid
+- print-netid
 
-### lsnetid
+### print-netid
 
 Print NetId details by value (3 bytes):
 ```
-lsnetid C0004A
+print-netid C0004A
 c0004f	6	4f	4f	fc013c00	fc013fff
 ```
 First column (tab delimited) show NetId in hex.
@@ -1175,14 +1175,14 @@ Column 5 show maximum possible NwkAddr.
 To print header use -v option:
 
 ```
-lsnetid -vv c0004f
+print-netid -vv c0004f
 NetId   Type Id NwkId DevAddr min  DevAddr max
 c0004f  6    4f 4f    fc013c00     fc013fff
 ```
 
 To print bit fields use -vv option:
 ```
-./lsnetid -vv C0004F
+./print-netid -vv C0004F
 NetId	Type	Id	NwkId	DevAddr min	DevAddr max
 c0004f	6	4f	4f	fc013c00	fc013fff	
 
@@ -1209,7 +1209,7 @@ List of copied from [NetID and DevAddr Prefix Assignments](https://www.thethings
 - tests/netid-list.txt
 - tests/netid-list.sh
 
-netid-list.sh shell script tests lsnetid utility by the list.
+netid-list.sh shell script tests print-netid utility by the list.
 
 ## Implementation 
 

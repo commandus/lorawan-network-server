@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 108
+#define ERR_COUNT 113
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -104,7 +104,12 @@ static const char *errList[ERR_COUNT] = {
     ERR_REGION_BAND_NO_DEFAULT,
     ERR_IS_JOIN,
     ERR_BAD_JOIN_REQUEST,
-    ERR_NETID_OR_NETTYPE_MISSED
+    ERR_NETID_OR_NETTYPE_MISSED,
+	ERR_NETTYPE_OUT_OF_RANGE,
+	ERR_NETID_OUT_OF_RANGE,
+	ERR_TYPE_OUT_OF_RANGE,
+	ERR_NWK_OUT_OF_RANGE,
+	ERR_ADDR_OUT_OF_RANGE
 };
 
 const char *strerror_lorawan_ns
