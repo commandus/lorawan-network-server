@@ -19,6 +19,8 @@
 		"gwStatStorageType": "post",
 		"logGWStatisticsFileName": "http://localhost:50002/post.php",
 
-        "controlFPort": 223
+        "controlFPort": 223,
+
+		"netId": 1
 	}
 }

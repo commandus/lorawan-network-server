@@ -41,6 +41,7 @@ class ServerConfig {
 		int messageQueueDirFormat;					// 0- bin, 1- hex, 2- base64
 		std::string logGWStatisticsFileName;
 		std::string logDeviceStatisticsFileName;
+		NetId netid;
 
 		void clear();
 		ServerConfig();

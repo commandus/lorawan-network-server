@@ -10,7 +10,8 @@
  */ 
 class IdentityService {
 private:
-    NETID netid;
+    // LoraWAN network identifier
+    NetId netid;
 public:
     /**
     * get device identifier(w/o address) by network address. Return 0 if success, retval = EUI and keys
@@ -69,10 +70,8 @@ public:
             const NetworkIdentity &networkIdentity
     );
 
-    void getNetworkId(NETID &retval);
-
-    void setNetworkId(const NETID &value);
-
+    NetId * getNetworkId();
+    void setNetworkId(const NetId &value);
 };
 
 #endif
