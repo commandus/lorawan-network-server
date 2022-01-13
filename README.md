@@ -222,11 +222,16 @@ Server config:
 - listenAddressIPv6 array of IPv6address:port
 - gwStatStorageType log gateway statistics storage type, "file" or "post". Default none
 - logGWStatisticsFileName e.g. log gateway statistics file name "gateway-stat.json"
+- netId LoraWAN network identifier. Decimal number e.g. 0 or 1 or hexadecimal number string e.g. "60000C" or "c00007"
 
 - readBufferSize UDP buffer size Default 4096.
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
 - daemonize false..true Indicates does network server starts as daemon or not
 - controlFPort 0: no remote control, 1..223- FPort bands used by network service to control server. Default 0.
+
+netId parameter is 3 bytes long network identifier, leading zeroes can be omitted. 
+
+Please note NetId 0 and 1 are reserved for private use.   
 
 configFileName can used to load configuration from different location. 
 Do not use this parameter except when you really need it.
