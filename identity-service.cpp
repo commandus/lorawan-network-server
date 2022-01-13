@@ -6,7 +6,7 @@ int IdentityService::joinAccept(
         const NetworkIdentity &networkIdentity
 ) {
     // return network identifier
-    getNetworkId(retval.netId);
+    netid.get(retval.netId);
     // return address
     if (isDEVADDREmpty(networkIdentity.devaddr)) {
         // a new one
@@ -18,10 +18,10 @@ int IdentityService::joinAccept(
     return 0;
 }
 
-void IdentityService::getNetworkId(NETID &retval) {
-    memmove(&retval, &netid, sizeof(NETID));
+NetId *IdentityService::getNetworkId() {
+    return &netid;
 }
 
-void IdentityService::setNetworkId(const NETID &value) {
-    memmove(&netid, value, sizeof(NETID));
+void IdentityService::setNetworkId(const NetId &value) {
+    netid = value;
 }

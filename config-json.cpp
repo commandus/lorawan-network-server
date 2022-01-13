@@ -66,7 +66,6 @@ ServerConfig::ServerConfig()
       messageQueueType(MESSAGE_QUEUE_STORAGE_JSON), messageQueueDirFormat(0),
       logGWStatisticsFileName(""), logDeviceStatisticsFileName("")
 {
-
 }
 
 int ServerConfig::parse(
@@ -193,6 +192,17 @@ int ServerConfig::parse(
 		}
 	}
 
+	if (value.HasMember("netId")) {
+		rapidjson::Value &vnetid = value["netId"];
+		if (vnetid.IsString()) {
+			netid.set(vnetid.GetString());
+		} else {
+			if (vnetid.IsNumber()) {
+				netid.set(vnetid.GetInt());
+			}
+		}
+	}
+
 	return LORA_OK;
 }
 
@@ -284,6 +294,11 @@ void ServerConfig::toJson(
 	rapidjson::Value ldsfn;
 	ldsfn.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size(), allocator);
 	value.AddMember("logDeviceStatisticsFileName", ldsfn, allocator);
+
+	rapidjson::Value vnetid;
+	std::string sni = netid.toString();
+	vnetid.SetString(sni.c_str(), sni.size(), allocator);
+	value.AddMember("netId", vnetid, allocator);
 }
 
 int Configuration::parse(

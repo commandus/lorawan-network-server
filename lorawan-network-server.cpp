@@ -437,8 +437,12 @@ int main(
 		default:
 			identityService = new JsonFileIdentityService();
 	}
+    // set network identifier
+    identityService->setNetworkId(config->serverConfig.netid);
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize identity service..");
+    std::stringstream ss;
+    ss << "Initialize identity service NetId: " << identityService->getNetworkId()->toString() << "..";
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
     int rs = identityService->init(config->serverConfig.identityStorageName, NULL);
     if (rs) {
         std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs)
