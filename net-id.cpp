@@ -16,6 +16,14 @@ NetId::NetId(const NetId &value) {
     memmove(&netid, &value.netid, sizeof(NETID));
 }
 
+NetId::NetId(
+    uint8_t netType,
+    uint32_t value
+)
+{
+    set(netType, value);
+}
+
 uint8_t NetId::getType() const
 {
     return ((NETID_TYPE*) &netid)->networkType;

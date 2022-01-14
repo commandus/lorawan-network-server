@@ -326,7 +326,9 @@ test_join_request_LDADD = $(L_LORAWAN)
 test_join_request_CPPFLAGS = $(commoncppflags)
 
 test_dev_addr_SOURCES = \
-	tests/test-dev-addr.cpp
+	tests/test-dev-addr.cpp \
+	identity-service-file-json.cpp
+
 test_dev_addr_LDADD = $(L_LORAWAN)
 test_dev_addr_CPPFLAGS = $(commoncppflags)
 

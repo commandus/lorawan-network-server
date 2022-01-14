@@ -5,6 +5,8 @@
 #include "errlist.h"
 #include "dev-addr.h"
 #include <sys/time.h>
+#include <identity-service-file-json.h>
+#include <iomanip>
 
 static void printBits(const DevAddr &value)
 {
@@ -135,24 +137,34 @@ static int timeval_subtract (struct timeval *result, struct timeval *x, struct t
     return x->tv_sec < y->tv_sec;
 }
 
-static void testIncrementSpeed(
+static void testIncrementSpeed2(
         uint8_t netTypeId,
         uint32_t netId
 )
 {
+    JsonFileIdentityService identityService;
+    // set network identifier
+    NetId ni(netTypeId, netId);
+    identityService.setNetworkId(ni);
+
     DevAddr a(netTypeId, netId, 0);
     struct timeval t0;
     gettimeofday(&t0, NULL);
+    NetworkIdentity netwIdent;
     while (true) {
-        /*
-        std::cout << a.toString() << "    ";
-        printBits(a);
-        std::cout << "    ";
-        printDetails(a);
-        std::cout << std::endl;
-        */
         if (a.increment())
             break;
+        // a.get(netwIdent.devaddr);
+        if (identityService.next(netwIdent) == 0) {
+            // ok
+            /*
+            std::cout << a.toString() << "    ";
+            printBits(a);
+            std::cout << "    ";
+            printDetails(a);
+            std::cout << std::endl;
+             */
+        }
     }
     struct timeval t1;
     gettimeofday(&t1, NULL);
@@ -163,6 +175,58 @@ static void testIncrementSpeed(
     std::cout
         << "Elapsed time: " << std::dec << df.tv_sec << "." << df.tv_usec % 1000000
         <<  ", size: 0x" << std::hex << a.size() << std::endl;
+}
+
+static void fillUp
+(
+    IdentityService &service,
+    DevAddr &addr,
+    int start,
+    int finish
+)
+{
+    DEVICEID id;
+    for (int i = start; i <= finish; i++) {
+        addr.setAddr(i);
+        service.put(addr.devaddr, id);
+    }
+}
+
+static void testIncrementSpeed(
+        uint8_t netTypeId,
+        uint32_t netId
+)
+{
+    JsonFileIdentityService identityService;
+    // set network identifier
+    NetId ni(netTypeId, netId);
+    identityService.setNetworkId(ni);
+    DevAddr a(netTypeId, netId, 0);
+    fillUp(identityService, a, 0, 0xffffff);
+
+    struct timeval t0;
+    gettimeofday(&t0, NULL);
+    NetworkIdentity netwIdent;
+    if (identityService.next(netwIdent) == 0) {
+        // ok
+        /*
+        std::cout << a.toString() << "    ";
+        printBits(a);
+        std::cout << "    ";
+        printDetails(a);
+        std::cout << std::endl;
+         */
+    }
+    struct timeval t1;
+    gettimeofday(&t1, NULL);
+
+    struct timeval df;
+    timeval_subtract(&df, &t1, &t0);
+
+    std::cout
+            << "Elapsed time: " << std::dec << df.tv_sec << "."
+            << std::setfill('0') << std::setw(6) << df.tv_usec % 1000000
+            <<  ", size: 0x" << std::hex << a.size() << std::endl;
 }
 
 int main(int argc, char **argv)

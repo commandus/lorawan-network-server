@@ -530,7 +530,7 @@ bool JsonFileIdentityService::canControlService
 }
 
 /**
-  * Return next network address if available
+  * Return next available network address
   * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
   */
 int JsonFileIdentityService::next
