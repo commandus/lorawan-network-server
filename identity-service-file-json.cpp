@@ -378,6 +378,12 @@ void JsonFileIdentityService::put(
     mutexMap.lock();
     storage[devaddr] = id;
     mutexMap.unlock();
+
+    DevAddr a(devaddr);
+    uint32_t na = a.getNwkAddr();
+    if (na > maxDevNwkAddr) {
+        maxDevNwkAddr = na;
+    }
 }
 
 void JsonFileIdentityService::rm(
