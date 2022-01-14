@@ -138,6 +138,17 @@ int DevAddr::setMinAddress(const NetId &netId)
     return setNwkAddr(t, 0);
 }
 
+size_t DevAddr::size()
+{
+    uint8_t typ = getNetIdType();
+#if DEFAULT_LORAWAN_BACKEND_VERSION_MINOR == 1
+    return (1 << DEVADDR_TYPE_SIZES_1_1[typ].devDddrBits) - 1;
+#else
+    return (1 << DEVADDR_TYPE_SIZES_1_0[typ].devDddrBits) - 1;
+#endif
+
+}
+
 std::string DevAddr::toString() const
 {
     return DEVADDR2string(devaddr);

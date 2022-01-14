@@ -100,6 +100,9 @@ public:
     static uint8_t getNwkIdBitsCount(uint8_t typ);
 
     static uint8_t getNwkAddrBitsCount(uint8_t typ);
+
+    // return dev address space size
+    size_t size();
 };
 
 #endif
