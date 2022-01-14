@@ -4,6 +4,7 @@
 
 #include "errlist.h"
 #include "dev-addr.h"
+#include <sys/time.h>
 
 static void printBits(const DevAddr &value)
 {
@@ -11,15 +12,15 @@ static void printBits(const DevAddr &value)
         << std::bitset<8>{value.devaddr[3]}.to_string() << " "
         << std::bitset<8>{value.devaddr[2]}.to_string() << " "
         << std::bitset<8>{value.devaddr[1]}.to_string() << " "
-        << std::bitset<8>{value.devaddr[0]}.to_string() << std::endl;
+        << std::bitset<8>{value.devaddr[0]}.to_string();
 }
 
 static void printDetails(const DevAddr &value)
 {
     std::cout << std::hex
-              << "Type: " << value.getNetIdType() << " "
+              << "Type: " << (int) value.getNetIdType() << " "
               << "NwkId: " << value.getNwkId() << " "
-              << "NetAddr: " << value.getNwkAddr() << std::endl;
+              << "NetAddr: " << value.getNwkAddr();
 }
 
 static void testSet(
@@ -36,6 +37,7 @@ static void testSet(
     }
     std::cout << a.toString() << std::endl;
     printBits(a);
+    std::cout << std::endl;
     std::cout << std::hex
         << "Type: " << (int) netTypeId << " "
         << "NwkId: " << nwkId << " "
@@ -74,12 +76,93 @@ static void testNetIdSet(
     }
     std::cout << a.toString() << std::endl;
     printBits(a);
+    std::cout << std::endl;
     std::cout << std::hex
         << "Type: " << (int) netTypeId << " "
         << "NetId: " << netId << " "
         << "NetAddr: " << nwkAddr << std::endl;
     printDetails(a);
     std::cout << std::endl;
+}
+
+static void testIncrement(
+    uint8_t netTypeId,
+    uint32_t netId,
+    uint32_t nwkAddr
+)
+{
+    nwkAddr -= 10;
+    DevAddr a(netTypeId, netId, nwkAddr);
+
+    while (true) {
+        std::cout << a.toString() << "    ";
+        printBits(a);
+        std::cout << "    ";
+        printDetails(a);
+        std::cout << std::endl;
+
+        if (a.increment())
+            break;
+    }
+}
+
+/**
+ * @param result
+ * @param x
+ * @param y
+ * @return
+ * @see https://www.gnu.org/software/libc/manual/html_node/Calculating-Elapsed-Time.html
+ */
+static int timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
+{
+    /* Perform the carry for the later subtraction by updating y. */
+    if (x->tv_usec < y->tv_usec) {
+        int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+        y->tv_usec -= 1000000 * nsec;
+        y->tv_sec += nsec;
+    }
+    if (x->tv_usec - y->tv_usec > 1000000) {
+        int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+        y->tv_usec += 1000000 * nsec;
+        y->tv_sec -= nsec;
+    }
+
+    /* Compute the time remaining to wait. tv_usec is certainly positive. */
+    result->tv_sec = x->tv_sec - y->tv_sec;
+    result->tv_usec = x->tv_usec - y->tv_usec;
+
+    /* Return 1 if result is negative. */
+    return x->tv_sec < y->tv_sec;
+}
+
+static void testIncrementSpeed(
+        uint8_t netTypeId,
+        uint32_t netId
+)
+{
+    DevAddr a(netTypeId, netId, 0);
+    struct timeval t0;
+    gettimeofday(&t0, NULL);
+    while (true) {
+        /*
+        std::cout << a.toString() << "    ";
+        printBits(a);
+        std::cout << "    ";
+        printDetails(a);
+        std::cout << std::endl;
+        */
+        if (a.increment())
+            break;
+    }
+    struct timeval t1;
+    gettimeofday(&t1, NULL);
+
+    struct timeval df;
+    timeval_subtract(&df, &t1, &t0);
+
+    std::cout
+        << "Elapsed time: " << std::dec << df.tv_sec << "." << df.tv_usec % 1000000
+        <<  ", size: 0x" << std::hex << a.size() << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -94,7 +177,7 @@ int main(int argc, char **argv)
     testSet(6, 0x7fff, 0x3ff);
     testSet(7, 0x1ffff, 0x7f);
     */
-
+    /*
     testNetIdSet(0, 0x3f, 0x1ffffff);
     testNetIdSet(1, 0x3f, 0xffffff);
     testNetIdSet(2, 0x1ff, 0xfffff);
@@ -103,54 +186,10 @@ int main(int argc, char **argv)
     testNetIdSet(5, 0x1fffff, 0x1fff);
     testNetIdSet(6, 0x1fffff, 0x3ff);
     testNetIdSet(7, 0x1fffff, 0x7f);
+    */
 
-    exit(0);
+    testIncrement(0, 0x3f, 0x1ffffff);
 
-    testSet(0, 1, 0x1ffffff);
-    testSet(1, 2, 0xffffff);
-    testSet(2, 3, 0xfffff);
-    testSet(3, 4, 0x3ffff);
-    testSet(4, 5, 0xffff);
-    testSet(5, 6, 0x1fff);
-    testSet(6, 7, 0x3ff);
-    testSet(7, 8, 0x7f);
-   
-    testSet(0, 0x3f, 0);
-    testSet(1, 0x3f, 0);
-    testSet(2, 0x1ff, 0);
-    testSet(3, 0x3ff, 0);
-    testSet(4, 0x7ff, 0);
-    testSet(5, 0x1fff, 0);
-    testSet(6, 0x7fff, 0);
-    testSet(7, 0x1ffff, 0);
-    
-    exit(0);
-
-    testSet(0, 1, 0x1234567);
-    testSet(1, 1, 0x123456);
-    testSet(2, 1, 0x12345);
-    testSet(3, 1, 0x12345);
-    testSet(4, 1, 0x1234);
-    testSet(5, 1, 0x1234);
-    testSet(6, 1, 0x123);
-    testSet(7, 1, 0x12);
-
-    testSet(0, 1, 0x1);
-    testSet(1, 1, 0x1);
-    testSet(2, 1, 0x1);
-    testSet(3, 1, 0x1);
-    testSet(4, 1, 0x1);
-    testSet(5, 1, 0x1);
-    testSet(6, 1, 0x1);
-    testSet(7, 1, 0x1);
-
-    testSet(0, 1, 0);
-    testSet(1, 1, 0);
-    testSet(2, 1, 0);
-    testSet(3, 1, 0);
-    testSet(4, 1, 0);
-    testSet(5, 1, 0);
-    testSet(6, 1, 0);
-    testSet(7, 1, 0);
-
+    testIncrementSpeed(0, 0x3f);
+    testIncrementSpeed(7, 0x1fffff);
 }

@@ -331,7 +331,7 @@ test_dev_addr_LDADD = $(L_LORAWAN)
 test_dev_addr_CPPFLAGS = $(commoncppflags)
 
 check_PROGRAMS = \
-	test-dev-addr
+    test-dev-addr
 #   test-queue-processor \
 #	test-join-request \
 #	test-message-queue test-fb test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json \
