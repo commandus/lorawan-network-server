@@ -16,12 +16,22 @@ class JsonFileIdentityService: public IdentityService {
 		virtual int save();
 	protected:
 		std::mutex mutexMap;
+        // assigned addresses
 		std::map<DEVADDRINT, DEVICEID, DEVADDRINTCompare> storage;
+        // devices which has special rights
 		std::map<DEVADDRINT, uint32_t, DEVADDRINTCompare> rightsMask;
 		std::string path;
-		void clear();		
-
+		void clear();
+        /**
+          * Return next network address if available
+          * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
+          */
+        int nextBruteForce(NetworkIdentity &retval);
 	public:
+        // helper data
+        // helps to find out free address in the space
+        uint32_t maxDevNwkAddr;
+
 		JsonFileIdentityService();
 		~JsonFileIdentityService();
 		int get(DeviceId &retval, DEVADDR &devaddr) override;

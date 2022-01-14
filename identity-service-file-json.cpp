@@ -75,7 +75,7 @@ static std::string getActivationName(
 }
 
 JsonFileIdentityService::JsonFileIdentityService()
-        : path(""), errcode(0), errmessage("")
+        : path(""), errcode(0), errmessage(""), maxDevNwkAddr(0)
 {
 
 }
@@ -103,15 +103,19 @@ private:
     JsonFileIdentityService *service;
     bool isNetworkIdentity;
     int idx;
-    DEVADDR k;
+    DevAddr k;
     DEVICEID v;
     uint32_t flags;
 public:
     RegionBandsJsonEmptyHandler(JsonFileIdentityService *svc)
             : service(svc), isNetworkIdentity(false), idx(-1)
     {
-        memset(&k, 0, sizeof(DEVADDR));
+        memset(&k.devaddr, 0, sizeof(DEVADDR));
         memset(&v, 0, sizeof(DEVICEID));
+        if (service) {
+            // service->maxDevNwkAddr = 0;
+            // service->clear();
+        }
         flags = 0;
     }
 
@@ -155,7 +159,14 @@ public:
          */
         switch(idx) {
             case 0:
-                string2DEVADDR(k, str);
+                string2DEVADDR(k.devaddr, str);
+                {
+                    uint32_t na = k.getNwkAddr();
+                    if (na > service->maxDevNwkAddr) {
+                        // update helper data to remember last assigned address
+                        service->maxDevNwkAddr = na;
+                    }
+                }
                 break;
             case 1:
                 v.activation = getActivationByName(str);
@@ -215,10 +226,10 @@ public:
     bool EndObject(rapidjson::SizeType memberCount)
     {
         isNetworkIdentity = false;
-        if (*((uint64_t *) &k))
+        if (*((uint64_t *) &k.devaddr))
         {
-            service->put(k, v);
-            service->setRightsMask(k, flags);
+            service->put(k.devaddr, v);
+            service->setRightsMask(k.devaddr, flags);
         }
         return true;
     }
@@ -235,6 +246,7 @@ public:
 void JsonFileIdentityService::clear()
 {
     storage.clear();
+    maxDevNwkAddr = 0;
 }
 
 int JsonFileIdentityService::load()
@@ -530,23 +542,34 @@ bool JsonFileIdentityService::canControlService
 }
 
 /**
+  * Return next network address if available
+  * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
+  */
+int JsonFileIdentityService::next(NetworkIdentity &retval)
+{
+    DevAddr nextAddr(netid, maxDevNwkAddr);
+    if (nextAddr.increment())
+        return nextBruteForce(retval);
+    DEVADDRINT dai;
+    std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.find(dai);
+    if (it == storage.end())
+        return nextBruteForce(retval);
+    nextAddr.get(retval.devaddr);
+}
+
+/**
   * Return next available network address
   * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
   */
-int JsonFileIdentityService::next
+int JsonFileIdentityService::nextBruteForce
 (
     NetworkIdentity &retval
 )
 {
     int r = ERR_CODE_ADDR_SPACE_FULL;
-    DevAddr minAddr(netid, false);
-    DevAddr maxAddr(netid, true);
-
-    DEVADDRINT dai;
-
     DevAddr nextAddr(netid, false);
-
     while(true) {
+        DEVADDRINT dai;
         nextAddr.get(dai);
         std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.find(dai);
         if (it == storage.end()) {
@@ -562,6 +585,5 @@ int JsonFileIdentityService::next
             return r;
         }
     }
-
     return r;
 }
