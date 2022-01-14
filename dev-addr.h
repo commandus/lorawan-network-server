@@ -12,6 +12,23 @@
 #include "net-id.h"
 
 typedef unsigned char DEVADDR[4];
+class DEVADDRINT
+{
+public:
+    uint32_t a;
+    DEVADDRINT();
+    DEVADDRINT(const DEVADDR &v);
+};
+
+struct DEVADDRCompare
+{
+    bool operator() (const DEVADDR& lhs, const DEVADDR& rhs) const;
+};
+
+struct DEVADDRINTCompare
+{
+    bool operator() (const DEVADDRINT& lhs, const DEVADDRINT& rhs) const;
+};
 
 uint32_t DEVADDR2int(const DEVADDR &value);
 
@@ -29,7 +46,6 @@ private:
 
     int setMaxAddress(const NetId &netId);
     int setMinAddress(const NetId &netId);
-    int getTypeMask() const;
     static uint32_t getMaxNwkId(uint8_t netTypeId);
     static uint32_t getMaxNwkAddr_1_0(uint8_t netTypeId);
     static uint32_t getMaxNwkAddr_1_1(uint8_t netTypeId);
@@ -52,6 +68,7 @@ public:
     DevAddr(const NetId &netId, bool retMax);
     
     void get(DEVADDR &retval) const;
+    void get(DEVADDRINT &retval) const;
     uint32_t get() const;
     std::string toString() const;
 
@@ -65,13 +82,18 @@ public:
     void set(uint32_t value);
 
     int set(uint8_t netTypeId, uint32_t nwkId, uint32_t nwkAddr);
+    // Set address only (w/o nwkId)
+    int setAddr(uint32_t nwkAddr);
     int set(const NETID &netid, uint32_t nwkAddr);
     int set(const NetId &netid, uint32_t nwkAddr);
 
-    /**
-     * Invalidate DEVADDR, set RFU to zeroes
-     */
-    void applyTypeMask();
+    bool operator==(const DevAddr &value) const;
+    bool operator==(const DEVADDR &value) const;
+
+    int increment();
+    int decrement();
+    DevAddr& operator++();  // prefix increment operator
+    DevAddr& operator--();  // prefix decrement operator
 
     static uint8_t getTypePrefixBitsCount(uint8_t netTypeId);
 

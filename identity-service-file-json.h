@@ -60,7 +60,11 @@ class JsonFileIdentityService: public IdentityService {
 			const DEVADDR &addr,
 			uint32_t value
 		);
-
+        /**
+          * Return next network address if available
+          * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
+          */
+        int next(NetworkIdentity &retval);
 };
 
 #endif

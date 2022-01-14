@@ -122,7 +122,7 @@
 #define ERR_CODE_TYPE_OUT_OF_RANGE          -602
 #define ERR_CODE_NWK_OUT_OF_RANGE           -603
 #define ERR_CODE_ADDR_OUT_OF_RANGE          -604
-
+#define ERR_CODE_ADDR_SPACE_FULL            -605
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -237,6 +237,7 @@
 #define ERR_TYPE_OUT_OF_RANGE           "Address type out of range"
 #define ERR_NWK_OUT_OF_RANGE            "Address NwkId out of range"
 #define ERR_ADDR_OUT_OF_RANGE           "Address out of range"
+#define ERR_ADDR_SPACE_FULL             "Address space is full, no free address available"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

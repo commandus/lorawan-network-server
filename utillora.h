@@ -61,35 +61,6 @@ std::string DEVICENAME2string(const DEVICENAME &value);
 uint64_t str2gatewayId(const char *value);
 std::string gatewayId2str(uint64_t value);
 
-class DEVADDRINT
-{
-	public:
-		uint32_t a;
-		DEVADDRINT() 
-			: a(0)
-		{
-
-		}
-
-		DEVADDRINT(const DEVADDR &v) {
-			memmove(&a, &v, sizeof(DEVADDR));
-		}
-};
-
-struct DEVADDRCompare
-{
-	bool operator() (const DEVADDR& lhs, const DEVADDR& rhs) const {
-		return lhs < rhs;
-	}
-};
-
-struct DEVADDRINTCompare
-{
-	bool operator() (const DEVADDRINT& lhs, const DEVADDRINT& rhs) const {
-		return lhs.a < rhs.a;
-	}
-};
-
 class TDEVEUI
 {
 	public:
