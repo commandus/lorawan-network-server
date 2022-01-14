@@ -20,29 +20,29 @@
  */
 #define ATTRS_COUNT	13
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
-        "addr", 		// 0 network address (hex string, 4 bytes)
-        "activation",	// 1 ABP or OTAA
-        "deveui",   	// 2 device identifier (hex string, 8 bytes)
-        "nwkSKey",		// 3 shared session key (hex string, 16 bytes)
-        "appSKey",		// 4 private key (hex string, 16 bytes)
-        "class", 		// 5 A, B or C
-        "version",		// 6 LoraWAN version
-        "appeui",   	// 7 OTAA application identifier (JoinEUI) (hex string, 8 bytes)
-        "appKey",   	// 8 device identifier (hex string, 8 bytes)
-        "devNonce",   	// 9 device identifier (hex string, 8 bytes)
-        "joinNonce",   	// 10 device identifier (hex string, 8 bytes)
-        "name",			// 11 added for search
-        // not copied to the storage
-        "flags"			// 12 if bit 0 is set it means allow control network service
+    "addr", 		// 0 network address (hex string, 4 bytes)
+    "activation",	// 1 ABP or OTAA
+    "deveui",   	// 2 device identifier (hex string, 8 bytes)
+    "nwkSKey",		// 3 shared session key (hex string, 16 bytes)
+    "appSKey",		// 4 private key (hex string, 16 bytes)
+    "class", 		// 5 A, B or C
+    "version",		// 6 LoraWAN version
+    "appeui",   	// 7 OTAA application identifier (JoinEUI) (hex string, 8 bytes)
+    "appKey",   	// 8 device identifier (hex string, 8 bytes)
+    "devNonce",   	// 9 device identifier (hex string, 8 bytes)
+    "joinNonce",   	// 10 device identifier (hex string, 8 bytes)
+    "name",			// 11 added for search
+    // not copied to the storage
+    "flags"			// 12 if bit 0 is set it means allow control network service
 };
 
 static const char *ACTIVATION_NAMES[2] = {
-        "ABP",
-        "OTAA"
+    "ABP",
+    "OTAA"
 };
 
 static int getAttrByName(
-        const char *name
+    const char *name
 )
 {
     int r = -1;
@@ -54,7 +54,7 @@ static int getAttrByName(
 }
 
 static ACTIVATION getActivationByName(
-        const char *name
+    const char *name
 )
 {
     for (int i = 0; i < 2; i++) {
@@ -66,7 +66,7 @@ static ACTIVATION getActivationByName(
 }
 
 static std::string getActivationName(
-        ACTIVATION value
+    ACTIVATION value
 )
 {
     if (value > OTAA)
@@ -323,8 +323,8 @@ int JsonFileIdentityService::get(DeviceId &retval, DEVADDR &devaddr)
 * @return LORA_OK- success
 */
 int JsonFileIdentityService::getNetworkIdentity(
-        NetworkIdentity &retval,
-        const DEVEUI &eui
+    NetworkIdentity &retval,
+    const DEVEUI &eui
 ) {
     mutexMap.lock();
     for (std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.begin()); it != storage.end(); it++) {
@@ -359,8 +359,8 @@ void JsonFileIdentityService::list(
 }
 
 void JsonFileIdentityService::put(
-        DEVADDR &devaddr,
-        DEVICEID &id
+    DEVADDR &devaddr,
+    DEVICEID &id
 )
 {
     mutexMap.lock();
@@ -369,7 +369,7 @@ void JsonFileIdentityService::put(
 }
 
 void JsonFileIdentityService::rm(
-        DEVADDR &addr
+    DEVADDR &addr
 )
 {
     mutexMap.lock();
@@ -378,8 +378,8 @@ void JsonFileIdentityService::rm(
 }
 
 int JsonFileIdentityService::init(
-        const std::string &option,
-        void *data
+    const std::string &option,
+    void *data
 )
 {
     path = option;
@@ -397,9 +397,9 @@ void JsonFileIdentityService::done()
 }
 
 int JsonFileIdentityService::parseIdentifiers(
-        std::vector<TDEVEUI> &retval,
-        const std::vector<std::string> &list,
-        bool useRegex
+    std::vector<TDEVEUI> &retval,
+    const std::vector<std::string> &list,
+    bool useRegex
 ) {
     for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
         if (isHex(*it)) {
@@ -435,9 +435,9 @@ int JsonFileIdentityService::parseIdentifiers(
 }
 
 int JsonFileIdentityService::parseNames(
-        std::vector<TDEVEUI> &retval,
-        const std::vector<std::string> &list,
-        bool useRegex
+    std::vector<TDEVEUI> &retval,
+    const std::vector<std::string> &list,
+    bool useRegex
 ) {
     for (std::vector<std::string>::const_iterator it(list.begin()); it != list.end(); it++) {
         try {
@@ -493,9 +493,9 @@ std::string JsonFileIdentityService::toJsonString()
 }
 
 uint32_t JsonFileIdentityService::getRightsMask
-        (
-                const DEVADDR &addr
-        )
+(
+    const DEVADDR &addr
+)
 {
     std::map<DEVADDRINT, uint32_t>::const_iterator it(rightsMask.find(DEVADDRINT(addr)));
     if (it == rightsMask.end())
@@ -505,10 +505,10 @@ uint32_t JsonFileIdentityService::getRightsMask
 }
 
 void JsonFileIdentityService::setRightsMask
-        (
-                const DEVADDR &addr,
-                uint32_t value
-        )
+(
+    const DEVADDR &addr,
+    uint32_t value
+)
 {
     if (value)
         rightsMask[DEVADDRINT(addr)] = value;
@@ -522,9 +522,46 @@ void JsonFileIdentityService::setRightsMask
 }
 
 bool JsonFileIdentityService::canControlService
-        (
-                const DEVADDR &addr
-        )
+(
+    const DEVADDR &addr
+)
 {
     return getRightsMask(addr) & IDENTITY_FLAG_CAN_CONTROL_SERVICE;
+}
+
+/**
+  * Return next network address if available
+  * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
+  */
+int JsonFileIdentityService::next
+(
+    NetworkIdentity &retval
+)
+{
+    int r = ERR_CODE_ADDR_SPACE_FULL;
+    DevAddr minAddr(netid, false);
+    DevAddr maxAddr(netid, true);
+
+    DEVADDRINT dai;
+
+    DevAddr nextAddr(netid, false);
+
+    while(true) {
+        nextAddr.get(dai);
+        std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.find(dai);
+        if (it == storage.end()) {
+            // not used. This is first free address. Return it
+            nextAddr.get(retval.devaddr);
+            r = LORA_OK;
+            break;
+        }
+        // go to next address
+        r = nextAddr.increment();
+        if (r) {
+            // full of space
+            return r;
+        }
+    }
+
+    return r;
 }

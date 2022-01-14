@@ -20,6 +20,25 @@ typedef struct {
     uint8_t devDddrBits;
 } DEVADDR_TYPE_SIZE;
 
+DEVADDRINT::DEVADDRINT()
+    : a(0)
+{
+
+}
+
+DEVADDRINT::DEVADDRINT(const DEVADDR &v) {
+    memmove(&a, &v, sizeof(DEVADDR));
+}
+
+bool DEVADDRINTCompare::operator() (const DEVADDRINT& lhs, const DEVADDRINT& rhs) const {
+    return lhs.a < rhs.a;
+}
+
+bool DEVADDRCompare::operator() (const DEVADDR& lhs, const DEVADDR& rhs) const
+{
+    return lhs < rhs;
+}
+
 // version 1.0
 static const DEVADDR_TYPE_SIZE DEVADDR_TYPE_SIZES_1_0[8] = {
         {.networkIdBits = 6, .devDddrBits = 25 },    // 0
@@ -90,6 +109,11 @@ void DevAddr::get(DEVADDR &retval) const
     memmove(&retval, &devaddr, sizeof(DEVADDR));
 }
 
+void DevAddr::get(DEVADDRINT &retval) const
+{
+    memmove(&retval.a, &devaddr, sizeof(DEVADDR));
+}
+
 int DevAddr::setMaxAddress(const NetId &netId)
 {
     uint8_t t = netId.getType();
@@ -130,14 +154,6 @@ void DevAddr::set(const DEVADDR &value) {
 
 void DevAddr::set(uint32_t value) {
     int2DEVADDR(devaddr, value);
-}
-
-/**
- * Invalidate DevAddr, set RFU to zeroes
- */
-void DevAddr::applyTypeMask()
-{
-    set((uint32_t) get() & getTypeMask());
 }
 
 /**
@@ -749,6 +765,17 @@ int DevAddr::set(
     return setNwkAddr(netTypeId, nwkAddr);
 }
 
+// Set address only (w/o nwkId)
+int DevAddr::setAddr(
+    uint32_t nwkAddr
+) {
+    uint8_t netTypeId = getNetIdType();
+    int r = setNetIdType(netTypeId);
+    if (r)
+        return r;
+    return setNwkAddr(netTypeId, nwkAddr);
+}
+
 int DevAddr::set(
     const NETID &netid,
     uint32_t nwkAddr
@@ -766,9 +793,38 @@ int DevAddr::set(
     return set(netid.getType(), netid.getNwkId(), nwkAddr);
 }
 
-int DevAddr::getTypeMask() const
+bool DevAddr::operator==(const DevAddr &value) const
 {
-    return 0;
+    return memcmp(&value.devaddr, &devaddr, sizeof(DEVADDR)) == 0;
+}
+
+bool DevAddr::operator==(const DEVADDR &value) const
+{
+    return memcmp(&value, &devaddr, sizeof(DEVADDR)) == 0;
+}
+
+// prefix increment operator
+DevAddr& DevAddr::operator++()
+{
+    increment();
+    return *this;
+}
+
+// prefix decrement operator
+DevAddr& DevAddr::operator--()
+{
+    decrement();
+    return *this;
+}
+
+int DevAddr::increment()
+{
+    return setAddr(getNwkAddr() + 1);
+}
+
+int DevAddr::decrement()
+{
+    return setAddr(getNwkAddr() - 1);
 }
 
 uint32_t DevAddr::getMaxNwkId(uint8_t netTypeId) {

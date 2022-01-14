@@ -9,7 +9,7 @@
  * Get device identifier and keys by the network address
  */ 
 class IdentityService {
-private:
+protected:
     // LoraWAN network identifier
     NetId netid;
 public:
@@ -72,6 +72,12 @@ public:
 
     NetId * getNetworkId();
     void setNetworkId(const NetId &value);
+
+    /**
+     * Return next network address if available
+     * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
+     */
+    virtual int next(NetworkIdentity &retval) = 0;
 };
 
 #endif
