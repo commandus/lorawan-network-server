@@ -25,6 +25,7 @@ public:
     NetId();
     NetId(const NETID &value);
     NetId(const NetId &value);
+    NetId(uint8_t netType, uint32_t value);
     uint8_t getType() const;
     void get(NETID &retval)  const;
     uint32_t get() const;
