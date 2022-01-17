@@ -554,13 +554,15 @@ bool JsonFileIdentityService::canControlService
 int JsonFileIdentityService::next(NetworkIdentity &retval)
 {
     DevAddr nextAddr(netid, maxDevNwkAddr);
-    if (nextAddr.increment())
-        return nextBruteForce(retval);
+    if (nextAddr.increment())   // if reach last address
+        return nextBruteForce(retval);  // try harder
     DEVADDRINT dai;
+    nextAddr.get(dai);
     std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.find(dai);
-    if (it == storage.end())
+    if (it != storage.end())
         return nextBruteForce(retval);
     nextAddr.get(retval.devaddr);
+    return 0;
 }
 
 /**

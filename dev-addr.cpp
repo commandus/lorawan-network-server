@@ -780,11 +780,7 @@ int DevAddr::set(
 int DevAddr::setAddr(
     uint32_t nwkAddr
 ) {
-    uint8_t netTypeId = getNetIdType();
-    int r = setNetIdType(netTypeId);
-    if (r)
-        return r;
-    return setNwkAddr(netTypeId, nwkAddr);
+    return setNwkAddr(getNetIdType(), nwkAddr);
 }
 
 int DevAddr::set(
