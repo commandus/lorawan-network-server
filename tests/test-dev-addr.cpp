@@ -185,11 +185,25 @@ static void fillUp
     int finish
 )
 {
+    struct timeval t0;
+    gettimeofday(&t0, NULL);
+
     DEVICEID id;
     for (int i = start; i <= finish; i++) {
         addr.setAddr(i);
         service.put(addr.devaddr, id);
     }
+
+    struct timeval t1;
+    gettimeofday(&t1, NULL);
+
+    struct timeval df;
+    timeval_subtract(&df, &t1, &t0);
+
+    std::cout
+            << "Fill up elapsed time: " << std::dec << df.tv_sec << "."
+            << std::setfill('0') << std::setw(6) << df.tv_usec % 1000000
+            <<  ", size: 0x" << std::hex << (finish - start) << std::endl;
 }
 
 static void testIncrementSpeed(
@@ -224,15 +238,15 @@ static void testIncrementSpeed(
     timeval_subtract(&df, &t1, &t0);
 
     std::cout
-            << "Elapsed time: " << std::dec << df.tv_sec << "."
+            << "Test increment elapsed time: " << std::dec << df.tv_sec << "."
             << std::setfill('0') << std::setw(6) << df.tv_usec % 1000000
             <<  ", size: 0x" << std::hex << a.size() << std::endl;
 }
 
 int main(int argc, char **argv)
 {
-    /*
     testSet(0, 0x3f, 0x1ffffff);
+    /*
     testSet(1, 0x3f, 0xffffff);
     testSet(2, 0x1ff, 0xfffff);
     testSet(3, 0x3ff, 0x3ffff);
@@ -252,8 +266,8 @@ int main(int argc, char **argv)
     testNetIdSet(7, 0x1fffff, 0x7f);
     */
 
-    testIncrement(0, 0x3f, 0x1ffffff);
+    // testIncrement(0, 0x3f, 0x1ffffff);
 
     testIncrementSpeed(0, 0x3f);
-    testIncrementSpeed(7, 0x1fffff);
+    // testIncrementSpeed(7, 0x1fffff);
 }
