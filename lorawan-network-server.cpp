@@ -397,7 +397,7 @@ int main(
 		exit(ERR_CODE_NO_CONFIG);
 	}
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize UDP listener..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_UDP_LISTENER);
     listener = new UDPListener();
 	// check signal number when select() has been interrupted
 	listener->setSysSignalPtr(&lastSysSignal);
@@ -416,12 +416,15 @@ int main(
 	if (config->serverConfig.deviceHistoryStorageName.empty()) {
 		config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(DEF_DEVICE_HISTORY_STORAGE_NAME);
 	}
-	std::cerr << config->toString() << std::endl;
+    if (config->serverConfig.verbosity > 2) {
+        std::cerr << MSG_LISTEN_IP_ADDRESSES << std::endl;
+        std::cerr << config->toDescriptionTableString() << std::endl;
+    }
 
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
 	if (config->serverConfig.verbosity > 2)
-		std::cerr << gatewayList->toJsonString() << std::endl;
+		std::cerr << MSG_GATEWAY_LIST << gatewayList->toDescriptionTableString() << std::endl;
 
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start identity service..");
 	// Start identity service
@@ -564,7 +567,7 @@ int main(
     }
 
     if (config->serverConfig.verbosity > 3) {
-        std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlan->toJsonString() << std::endl;
+        std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlan->toDescriptionTableString() << std::endl;
     }
 
 	// Start received message queue service

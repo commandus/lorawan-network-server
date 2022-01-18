@@ -69,6 +69,8 @@ class Configuration {
 		);
 		void clear();
 		std::string toString();
+
+    std::string toDescriptionTableString() const;
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include <sstream>
 #include <cstdarg>
 #include <iostream>
+#include <iomanip>
 
 #include "regional-parameter-channel-plan.h"
 #include "errlist.h"
@@ -347,6 +348,19 @@ void RegionalParameterChannelPlan::setRx1DataRateOffsets(int dataRateIndex, int 
         rx1DataRateOffsets[dataRateIndex].push_back(va_arg(ap, int));
     }
     va_end(ap);
+}
+
+std::string RegionalParameterChannelPlan::toDescriptionTableString() const {
+    std::stringstream ss;
+    ss  << std::fixed << std::setprecision(2)
+        << "name: " << name << std::endl
+        << "Frequency, MHz. RX2 " << bandDefaults.RX2Frequency / 1000000. << std::endl;
+    int c = 0;
+    for (std::vector<Channel>::const_iterator it(uplinkChannels.begin()); it != uplinkChannels.end(); it++) {
+        ss << "Uplink channel " << c << "    " << it->frequency / 1000000. << std::endl;
+        c++;
+    }
+    return ss.str();
 }
 
 const RegionalParameterChannelPlan* RegionBands::get(const std::string &name) const

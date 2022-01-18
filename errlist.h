@@ -253,7 +253,7 @@
 #define MSG_GATEWAY						"Gateway "
 #define MSG_DEVICE						"Device "
 #define MSG_DEVICES						"Devices:"
-#define MSG_REGIONAL_SETTINGS   		"Regional parameters:"
+#define MSG_REGIONAL_SETTINGS   		"Regional parameters "
 #define MSG_DEVICE_EUI					"EUI "
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "
@@ -279,6 +279,9 @@
 #define MSG_ENQUEUE_DB                  "Enqueue payload to the database"
 #define MSG_ENQUEUE_JOIN_REQUEST        "Enqueue join request response "
 #define MSG_SEND_JOIN_REQUEST_REPLY     "Sent join request response "
+#define MSG_GATEWAY_LIST                "Gateways: "
+#define MSG_INIT_UDP_LISTENER           "Initialize UDP listener.."
+#define MSG_LISTEN_IP_ADDRESSES                "Listen IP addresses: "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

@@ -202,7 +202,6 @@ int ServerConfig::parse(
 			}
 		}
 	}
-
 	return LORA_OK;
 }
 
@@ -400,4 +399,15 @@ std::string Configuration::toString() {
 
 	doc.Accept(writer);
 	return std::string(buffer.GetString());
+}
+
+std::string Configuration::toDescriptionTableString() const {
+	std::stringstream ss;
+	for (std::vector<std::string>::const_iterator it(serverConfig.listenAddressIPv4.begin()); it != serverConfig.listenAddressIPv4.end(); it++) {
+		ss << "\t" << *it << std::endl;
+	}
+	for (std::vector<std::string>::const_iterator it(serverConfig.listenAddressIPv6.begin()); it != serverConfig.listenAddressIPv6.end(); it++) {
+		ss << "\t" << *it << std::endl;
+	}
+	return ss.str();
 }
