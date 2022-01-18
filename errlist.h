@@ -242,6 +242,7 @@
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
+#define MSG_LORA_PRINT_PROG_NAME		"lora-print helper utility"
 #define MSG_INTERRUPTED 				"Interrupted "
 #define MSG_GRACEFULLY_STOPPED			"Stopped gracefully"
 #define MSG_PG_CONNECTED        		"Connected"

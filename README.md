@@ -130,10 +130,11 @@ sudo apt install liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-
 
 Full set of libraries:
 ```
-sudo apt install autoconf build-essential libtool libprotobuf-dev liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
+sudo apt install autoconf build-essential libtool libprotobuf-dev liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev \
+firebird-dev libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
 ```
 
-If libmysqlclient-dev package is not available in repository, replace with package libmariadb-dev.
+If 'libmysqlclient-dev' package is not available in repository, replace with package 'libmariadb-dev'.
 
 To do cmake installed first run:
 
@@ -169,7 +170,7 @@ You must have database client and developer's tools (include files and libraries
 
 lorawan-network-server uses internal database to keep device's authentication information.
 
-By default this database keep in memory and flushes to the disk as JSON file.
+By default, this database keep in memory and flushes to the disk as JSON file.
 
 In some scenarios it is better store device's authentication information on the disk not in memory.
 
@@ -226,14 +227,14 @@ Server config:
 
 - readBufferSize UDP buffer size Default 4096.
 - verbosity 0..3 error logging verbosity (0- error only, 3- debug info)
-- daemonize false..true Indicates does network server starts as daemon or not
+- daemonize false, true. Indicate does network server starts as daemon or not
 - controlFPort 0: no remote control, 1..223- FPort bands used by network service to control server. Default 0.
 
 netId parameter is 3 bytes long network identifier, leading zeroes can be omitted. 
 
 Please note NetId 0 and 1 are reserved for private use.   
 
-configFileName can used to load configuration from different location. 
+configFileName may be used to load configuration from different location. 
 Do not use this parameter except when you really need it.
 
 identityStorageName is property of the server because network server is responsible for end-device.
@@ -287,7 +288,7 @@ post example:
 
 #### Message queue
 
-Received messages are sent to the database(s) as soon as possible. In case the database system is not avaliable
+Received messages are sent to the database(s) as soon as possible. In case the database system is not available
 for some reason, received messages stay in the queue until database has up.
 
 Option "messageQueueStorageName" set name of file name (or directory name).
@@ -314,7 +315,8 @@ Option "txt" is slow and useful for debug only.
 If option messageQueueStorageType value is "txt" then option "messageQueueStorageName" set directory name
 with ".bin", ".hex", ".b64" files.
 
-Other programs can put files to this directory and lorawan-network-server will parse files and put messages to the databases.
+Other programs can put files to this directory and lorawan-network-server will parse files and put messages
+to the databases.
 
 - ".bin" - binary payload, as-is
 - ".hex" - payload each byte represented as hexadecimal two digits number
@@ -326,7 +328,8 @@ Option "messageQueueDirFormat" bands are:
 - 1 or "hex"
 - 2 or "base64"
 
-lorawan-network-server try to parse payload and insert parsed data to database(s). Does not matter success or fail is database insertaion, file is deleted.
+lorawan-network-server try to parse payload and insert parsed data to database(s). Does not matter success or 
+fail is database insertion, file is deleted.
 
 ### gateway.json
 
@@ -541,6 +544,197 @@ Id  | Channel Plan | Common Name
 }
 ```
 
+## Tools
+
+- print-netid Print NetId details
+- lora-print
+- proto-db
+- mac-gw
+- mac-ns
+
+### print-netid
+
+NetId if 3 bytes long network identifier contains:
+
+- type 0..7
+- identifier itself
+
+Please note LoraWAN address (4 bytes long) also contains type and short version of network address (NwkId).
+
+print-netid utility print NetId details by value (3 bytes):
+```
+print-netid C0004A
+c0004f	6	4f	4f	fc013c00	fc013fff
+```
+First column (tab delimited) show NetId in hex.
+
+Column 2 show NetType value in rage of 0..7.
+
+Column 3 show network identifier.
+
+Column 4 show NwkId.
+
+It is same network identifier used in the network address except it can be shorter than network identifier.
+
+Column 4 show minimum possible NwkAddr.
+
+Column 5 show maximum possible NwkAddr.
+
+To print header use -v option:
+
+```
+print-netid -vv c0004f
+NetId   Type Id NwkId DevAddr min  DevAddr max
+c0004f  6    4f 4f    fc013c00     fc013fff
+```
+
+To print bit fields use -vv option:
+```
+./print-netid -vv C0004F
+NetId	Type	Id	NwkId	DevAddr min	DevAddr max
+c0004f	6	4f	4f	fc013c00	fc013fff	
+
+binary:
+110000000000000001001111
+TTTNNNNNNNNNNNNNNNNNNNNN
+
+DevAddr:
+Min 11111100000000010011110000000000 NwkId:   4f NetAddr: 0
+    TTTTTTTnnnnnnnnnnnnnnnAAAAAAAAAA
+Max 11111100000000010011111111111111 NwkId:   4f NetAddr: 3ff
+    TTTTTTTnnnnnnnnnnnnnnnAAAAAAAAAA
+```
+
+where T means NetType value in range 0..7,
+N- network identifier,
+n- NwkId,
+A- NwkAddr
+
+## lora-print
+
+lora-print utility parse packet received from the Semtech gateway and try to decode payload.
+
+Mandatory option is one of
+
+- -x, --hex=<hex-string>      LoraWAN packet to decode, hexadecimal string.
+- -6, --base64=<base64>       same, base64 encoded.
+
+lora-print utility parse payload by the packet description in one proto file.
+
+You can specify folder path where proto file stored using option:
+
+- -p, --proto=<path>          proto file directory. Default 'proto'
+
+You can force specific packet description by selecting specific proto message: 
+
+- -m, --message=<pkt.msg>     force message type packet and name
+
+You can chenge output format by option -f <number>:
+
+- 0- json(default)
+- 1- csv w/o header
+- 2- tab delimited w/o header
+- 3- sql
+- 4- sql (version 2)
+- 5- pbtext
+- 6- debug output
+- 7- hex string
+- 8- binary string
+- 11- csv header
+- 12- tab header
+
+Option "sql" insert data into databases. By default lora-print just print packet to stdout.
+
+Example:
+
+```
+./lora-print -x 024c7e0000006cc3743eed467b227278706b223a5b7b22746d7374223a313237353533303937322c226368616e223a362c2272666368223a312c2266726571223a3836382e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a2d392e352c2272737369223a2d3131352c2273697a65223a33372c2264617461223a2251444144525147416e5259436b4c72715672703677324a55547958744a4467315669464a354d44666b756e336f762f5653513d3d227d2c7b22746d7374223a313237353533303938302c226368616e223a342c2272666368223a302c2266726571223a3836342e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a31302e382c2272737369223a2d32372c2273697a65223a33372c2264617461223a2251444144525147416e5259436b4c72715672703677324a55547958744a4467315669464a354d44666b756e336f762f5653513d3d227d5d7d
+
+{"prefix": {"version":2, "token":32332, "tag":0, "mac": "00006cc3743eed46"}, "addr": "01450330", "id": {"activation":"ABP","class":"C","deveui":"3434383566378112","nwkSKey":"313747123434383535003a0066378888","appSKey":"35003a003434383531374712656b7f47","version":"1.0.0","appeui":"0000000000000000","appKey":"00000000000000000000000000000000","devNonce":"0000","joinNonce":"000000","name":"SI-13-23"}, "metadata": {"rxpk":[{"time":"2022-01-18T12:22:38Z","tmms":1326511376,"tmst":1275530980,"freq":864.900000,"chan":4,"rfch":0,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","rssi":-27,"lsnr":10.8,"size":37,"data":"QDADRQGAnRYCkLrqVrp6w2JUTyXtJDg1ViFJ5MDfkun3ov/VSQ=="}]}, "rfm": {"fport": 2, "fopts": "", "header": {"fcnt": 5789, "fctrl": {"foptslen": 0, "fpending": 0, "ack": 0, "adr": 1}, "addr": "01450330", "mac": {"major": 0, "mtype": "unconfirmed-data-up"}}}, "payload_size": 24, "payload": "010021a0c082581c000000004a0000000000000000000000"}
+{"vega.SI13p1":{"vega.SI13p1.temperature": 28, "vega.SI13p1.counter1": 0, "vega.SI13p1.counter2": 74, "vega.SI13p1.activation": 1, "vega.SI13p1.ackrequest": 0, "vega.SI13p1.timeout": 0, "vega.SI13p1.input1": 0, "vega.SI13p1.input2": 1}}
+```
+
+Please note Semtech packet can contain 1, 2 or more payloads with different download channels.
+
+### proto-db utility
+
+```
+Usage: proto-db
+ [-v?] [<command>] [-p <path>] [-c <file>] [-d <database-name>]... [-m <packet.message>] [-x <hex-string>] [-6 <base64-string>] [-o <number>] [-l <number>] [-s <field-name>]... [-S <field-name>]...
+proto-db helper utility
+  <command>                 print|list|create|insert. Default print
+  -p, --proto=<path>        proto files directory. Default 'proto'
+  -c, --dbconfig=<file>     database config file name. Default 'dbs.js'
+  -d, --dbname=<database>   database name, Default all
+  -m, --message=<pkt.msg>   Message type packet and name
+  -x, --hex=<hex-string>    print, insert command, payload data.
+  -6, --base64=<base64>     print, insert command, payload data.
+  -o, --offset=<number>     list command, offset. Default 0.
+  -l, --limit=<number>      list command, limit size. Default 10.
+  -s, --asc=<field-name>    list command, sort by field ascending.
+  -S, --desc=<field-name>   list command, sort by field descending.
+  -v, --verbose             Set verbosity level
+  -?, --help                Show this help```
+```
+
+Create table for iridium.IEPacket packet in the "mysql_1" database:
+
+```
+./proto-db -d mysql_1 -m iridium.IEPacket create
+```
+Message type name passed in the -m option.
+
+Message type may be detected by payload. In this case -m message can be omitted.
+
+Tin this case you must provide payload using -x <hex string> or -6 <base64 string> option.
+
+Determine message type by the payload using -x <payload-hex>:
+
+```
+./proto-db create -d mysql -x 0100213887c1601c000000004a0000000000000000000000
+./proto-db -d sqlite -x 010021b8b06b581f000000004a0000000000000000000000 create
+```
+
+Print "iridium.IEPacket" messages stored in the "mysql_1" database:
+
+```
+./proto-db -d mysql_1 -m iridium.IEPacket list
+```
+
+Print "vega.SI13p1" messages stored in the "mysql_1" database:
+
+```
+./proto-db -d sqlite -m vega.SI13p1 list
+
+28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635389922|
+28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635390222|
+...
+```
+
+Print "vega.SI13p1" messages stored in the "mysql_1" database:
+
+```
+./proto-db -d sqlite -m vega.SI13p1 list
+
+28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635389922|
+28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635390222|
+...
+```
+
+Print "vega.SI13p1" two messages stored in the "mysql_1" database skipping last 1000 records:
+
+```
+./proto-db -d sqlite -m vega.SI13p1 list -o 1000 -l 2
+29|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1636457951|
+29|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1636458251|
+```
+
+Insert data from payload to mysql database, force type to iridium.IEPacket 
+
+```
+./proto-db -d mysql -m iridium.IEPacket insert -x 014c00011c00e8444601333030323334303639323030383530001a070000e199205e030b00003eea3781fbcc05000000021c00c068b50328f1bd078999205e07050000009f1be60ca313f432000000
+```
+
 ## mac-gw, mac-ns utilities
 
 mac-gw send a command to a class C device bypassing the network server directly through the selected gateway.
@@ -658,48 +852,6 @@ You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
 ## Trapped signals
 
 - SIGUSR2 (12) flush files to the disk
-
-## Packet types sent by Semtech gateway
-
-Tag bands:
-
-- 0 PUSH_DATA
-- 1 PUSH_ACK
-- 2 PULL_DATA
-- 3 PULL_RESP
-- 4 PULL_ACK
-
-BS identifier 00006cc3743eed46
-
-- PV protocol version 1 byte
-- TOKE token 2 bytes long
-- TG tag 1 byte
-- GatewayId gateway identifier
-
-### Ping?
-
-Tag 2 (PULL_DATA)
-021be80200006cc3743eed46
-PV      GatewayIdentifie
-  TOKE
-      TG
-
-### Stat
-
-Tag 0 (PUSH_DATA)
-
-02e3460000006cc3743eed467b2273746174223a7b2274696d65223a22323032312d30322d32342030343a35343a303120474d54222c226c617469223a36322e30323737342c226c6f6e67223a3132392e37323838332c22616c7469223a3334382c2272786e62223a302c2272786f6b223a302c2272786677223a302c2261636b72223a302e302c2264776e62223a302c2274786e62223a307d7d
-
-02e3460000006cc3743eed46
-PV      GatewayIdentifie
-  TOKE
-      TG
-
-{"stat":{"time":"2021-02-24 04:54:01 GMT","lati":62.02774,"long":129.72883,"alti":348,"rxnb":0,"rxok":0,"rxfw":0,"ackr":0.0,"dwnb":0,"txnb":0}}
-
-
-021be80200006cc3743eed46
-02e3460000006cc3743eed46
 
 ## Database backend
 
@@ -888,53 +1040,6 @@ begin
 end
 ```
 
-### proto-db utility
-
-```
-Usage: proto-db
- [-v?] [<command>] [-p <path>] [-c <file>] [-d <database-name>]... [-m <packet.message>] [-x <hex-string>] [-6 <base64-string>] [-o <number>] [-l <number>] [-s <field-name>]... [-S <field-name>]...
-proto-db helper utility
-  <command>                 print|list|create|insert. Default print
-  -p, --proto=<path>        proto files directory. Default 'proto'
-  -c, --dbconfig=<file>     database config file name. Default 'dbs.js'
-  -d, --dbname=<database>   database name, Default all
-  -m, --message=<pkt.msg>   Message type packet and name
-  -x, --hex=<hex-string>    print, insert command, payload data.
-  -6, --base64=<base64>     print, insert command, payload data.
-  -o, --offset=<number>     list command, offset. Default 0.
-  -l, --limit=<number>      list command, limit size. Default 10.
-  -s, --asc=<field-name>    list command, sort by field ascending.
-  -S, --desc=<field-name>   list command, sort by field descending.
-  -v, --verbose             Set verbosity level
-  -?, --help                Show this help```
-
-Create table for iridium.IEPacket packet in the "mysql_1" database:
-
-Pass message type in the -m option:
-
-```
-./proto-db -d mysql_1 -m iridium.IEPacket create
-```
-
-Determine message type by the payload using -x <payload-hex>
-
-```
-./proto-db create -d mysql -x 0100213887c1601c000000004a0000000000000000000000
-./proto-db -d sqlite -x 010021b8b06b581f000000004a0000000000000000000000 create
-```
-
-Print "iridium.IEPacket" messages stored in the "mysql_1" database:
-
-```
-./proto-db -d mysql_1 -m iridium.IEPacket list
-```
-
-Insert data from payload
-
-```
-./proto-db -d mysql -m iridium.IEPacket insert -x 014c00011c00e8444601333030323334303639323030383530001a070000e199205e030b00003eea3781fbcc05000000021c00c068b50328f1bd078999205e07050000009f1be60ca313f432000000
-```
-
 ### MySQL
 
 Install
@@ -1077,9 +1182,8 @@ Firebird can use different library name. Check files in package:
 
 ```
 dpkg-query -L firebird-dev
-...
 /usr/lib/x86_64-linux-gnu/libfbclient.so
-...
+```
 
 ### LMDB
 
@@ -1095,44 +1199,7 @@ Javascript parser does not support merge using the spread operator like
 const mergeResult = [...array1, ...array2]
 ```
 
-in the dbs.js configuration file
-
-### References
-
-[Semtech LoRaWAN-lib](https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/) uses
-
-[arduino aes implementation](https://raw.githubusercontent.com/arduino-libraries/LoraNodeShield/master/src/system/crypto/cmac.h)
-
-[Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)
-
-
-Device 	DevEUI           NwkSKey                          AppSKey                          devAddr
-SI-13-232	3434383566378112 313747123434383535003A0066378888 35003A003434383531374712656B7F47 01450330
-sh-2-1	323934344A386D0C 3338470C32393434170026004A386D0C 17002600323934343338470C65717B40 00550116
-pak811-1  3231323549304C0A 34313235343132353431323534313235 34313235343132353431323534313235 34313235
-
-52 bytes
-d09ed09bd0afd0a0d09c2120d093d09ed09bd090d09ad0a2d095d09ad09e20d09ed09fd090d0a1d09dd09ed0a1d0a2d098212131
-
-
-проверка покрытия
-
-Message received 84.237.104.16:59233 (194 bytes): 02c99a0000006cc3743eed467b227278706b223a5b7b22746d7374223a39363133393232382c226368616e223a322c2272666368223a302c2266726571223a3836342e3530303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a312e302c2272737369223a2d3130362c2273697a65223a31342c2264617461223a225144414452514741657759414f51736a7730593d227d5d7d
-
-## Known bugs
-
-2021-07-23T11:39:28+09 Message received 84.237.104.16:47273 (198 bytes): 02f2fb0000006cc3743eed467b227278706b223a5b7b22746d7374223a34373235393339362c226368616e223a332c2272666368223a302c2266726571223a3836342e3730303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a332e382c2272737369223a2d3130382c2273697a65223a31382c2264617461223a225144414452514741686838452f594c2b364d342b46437752227d5d7d
-2021-07-23T11:39:28+09 Sent ACK to 84.237.104.16:47273
-2021-07-23T11:39:28+09 rxpk device 01450330: ffef2bfa60
-2021-07-23T11:39:28+09 2021-07-23T11:39:28+09.376298Device EUI 3434383566378112, 84.237.104.16:47273
-received packet {"activation":"ABP","class":"A","eui":"3434383566378112","nwkSKey":"313747123434383535003a0066378888","appSKey":"35003a003434383531374712656b7f47","name":"SI-13-23"}: ffef2bfa60
-Javascript error: uncaught: 'cannot read property \x27time5\x27 of ...' in 
-new Date(((field.packet46420.time5.day_month_year >> 9) & 0x7f) + 2000, ((field.packet46420.time5.day_month_year >> 5) & 0xf) - 1, (field.packet46420.time5.day_month_year & 0x1f), field.packet46420.time5.hour, field.packet46420.time5.minute, field.packet46420.time5.second, 00).getTime() / 1000
-Aborted
-
-## Tables
-
-"powe" values -6dBm..27dBm default 14dBm
+in the dbs.js configuration file.
 
 ## Tips
 
@@ -1152,71 +1219,14 @@ echo 02bbe50000006cc3743eed467b227278706b223a5b7b22746d7374223a34303233313131353
 echo 02030b0000006cc3743eed467b227278706b223a5b7b22746d7374223a313236313338333435322c226368616e223a362c2272666368223a312c2266726571223a3836382e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a225346374257313235222c22636f6472223a22342f35222c226c736e72223a31302e302c2272737369223a2d33372c2273697a65223a32332c2264617461223a2241424553457851564668635941514944424155474277694b717376724d71493d227d5d7d| xxd -r -p | nc -q1 -4u 84.237.104.128 5000
 ```
 
-## Tools
+## Extra files
 
-- print-netid
+List of registered LoraWAN networks "tests/netid-list.txt" copied from 
+[NetID and DevAddr Prefix Assignments](https://www.thethingsnetwork.org/docs/lorawan/prefix-assignments/)
 
-### print-netid
+Shell script "tests/netid-list.sh" tests print-netid utility by the tests/netid-list.txt list.
 
-Print NetId details by value (3 bytes):
-```
-print-netid C0004A
-c0004f	6	4f	4f	fc013c00	fc013fff
-```
-First column (tab delimited) show NetId in hex.
-
-Column 2 show NetType value in rage of 0..7.
-
-Column 3 show network identifier.
-
-Column 4 show NwkId.
-
-It is same network identifier used in the network address except it can be shorter than network identifier.
-
-Column 4 show minimum possible NwkAddr.
-
-Column 5 show maximum possible NwkAddr.
-
-To print header use -v option:
-
-```
-print-netid -vv c0004f
-NetId   Type Id NwkId DevAddr min  DevAddr max
-c0004f  6    4f 4f    fc013c00     fc013fff
-```
-
-To print bit fields use -vv option:
-```
-./print-netid -vv C0004F
-NetId	Type	Id	NwkId	DevAddr min	DevAddr max
-c0004f	6	4f	4f	fc013c00	fc013fff	
-
-binary:
-110000000000000001001111
-TTTNNNNNNNNNNNNNNNNNNNNN
-
-DevAddr:
-Min 11111100000000010011110000000000 NwkId:   4f NetAddr: 0
-    TTTTTTTnnnnnnnnnnnnnnnAAAAAAAAAA
-Max 11111100000000010011111111111111 NwkId:   4f NetAddr: 3ff
-    TTTTTTTnnnnnnnnnnnnnnnAAAAAAAAAA
-```
-
-where T means NetType value in range 0..7, 
-N- network identifier, 
-n- NwkId,
-A- NwkAddr
-
-## Files
-
-List of copied from [NetID and DevAddr Prefix Assignments](https://www.thethingsnetwork.org/docs/lorawan/prefix-assignments/)
-
-- tests/netid-list.txt
-- tests/netid-list.sh
-
-netid-list.sh shell script tests print-netid utility by the list.
-
-## Implementation 
+## Implementation details 
 
 ### MAC processing chain
 
@@ -1228,3 +1238,10 @@ packet-queue.cpp              PacketQueue::runner()
 packet-queue.cpp              PacketQueue::replyMAC()
 utillora.cpp                  SemtechUDPPacket::mkPullResponse()
 utillora.cpp                  SemtechUDPPacket::toTxJsonString()
+
+### References
+
+- [Semtech LoRaWAN-lib](https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/)
+- [arduino aes implementation](https://raw.githubusercontent.com/arduino-libraries/LoraNodeShield/master/src/system/crypto/cmac.h)
+- [Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)
+

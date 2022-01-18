@@ -12,9 +12,7 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <limits.h>
-#include <errno.h>
 
 #ifdef WIN32
 #else

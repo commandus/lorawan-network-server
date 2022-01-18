@@ -179,7 +179,7 @@ int parseCmd(
 			arg_print_errors(stderr, a_end, programName.c_str());
 		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << MSG_PROTO_DB_PROG_NAME << std::endl;
+		std::cerr << MSG_LORA_PRINT_PROG_NAME << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
@@ -285,25 +285,24 @@ int main(
 	}
 
 	if (gatewayStat.errcode == 0) {
-		std::cout << gatewayStat.toJsonString() << std::endl;
+		std::cerr << gatewayStat.toJsonString() << std::endl;
 	}
+
+    if (config.verbosity > 2) {
+        std::cerr << packets.size() << " packets" << std::endl;
+    }
 	for (std::vector<SemtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
 		if (it->errcode) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << ": " << ERR_INVALID_PACKET << std::endl;
 			continue;
 		}
-		std::cout << it->toJsonString() << std::endl;
-	
-		/*
 		if (config.verbosity > 2) {
-			
+    		std::cerr << it->toJsonString() << std::endl;
 			if (it->hasApplicationPayload())
 				std::cerr << "application payload " << (int) it->getHeader()->fport << std::endl;
 			if (it->hasMACPayload())
 				std::cerr << "MAC payload " << std::endl;
-
 		}
-		*/
 
 		std::string payload = it->payload;
 		if (config.command == "sql") {
