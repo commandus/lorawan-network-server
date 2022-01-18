@@ -17,14 +17,17 @@ DatabaseJSON::~DatabaseJSON()
 
 int DatabaseJSON::open(
 	const std::string &aUrl,
-	const std::string &login,
-	const std::string &password,
-	const std::string &aAuth,
+	const std::string &aLogin,
+	const std::string &aPassword,
+	const std::string &aAuthorizationUrl,
 	int port
 )
 {
     url = aUrl;
-    auth = aAuth;
+    login = aLogin;
+    password = aPassword;
+    authorizationUrl = aAuthorizationUrl;
+    auth = "";
 	return 0;
 }
 
@@ -39,11 +42,23 @@ int DatabaseJSON::exec(
 {
     if (json.empty())
         return ERR_CODE_PARAM_INVALID;
-    int r = postString(errMessage, url, auth, json);
+    int r = postString(errMessage, url, json, auth);
     if (r >= 200 && r < 300)
         return LORA_OK;
-    else
+    else {
+        // re-login
+        std::stringstream ss;
+        ss << "login=" << login << "&"
+                << "password=" << password;
+        r = postString(errMessage, authorizationUrl, ss.str(), "", "application/x-www-form-urlencoded");
+        if (r >= 200 && r < 300) {
+            // re-post data
+            r = postString(errMessage, url, json, auth);
+            if (r >= 200 && r < 300)
+                return LORA_OK;
+        }
         return ERR_CODE_DB_EXEC;
+    }
 }
 
 int DatabaseJSON::select

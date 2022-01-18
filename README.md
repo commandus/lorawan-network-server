@@ -351,7 +351,7 @@ Each entry has a gateway identifier, address, name and gateway statistics.
   - dwnb Number of downlink datagrams received
   - txnb Number of packets emitted
 
-Instead of an host address, you can use host name (domain name). 
+Instead of host address, you can use host name (domain name). 
 
 Example:
 ```
@@ -868,7 +868,12 @@ Each element is object with members
 
 Name is used to find out appropriate database.
 
-Valid bands for "type" are "sqlite3", "postgresql".
+Valid bands for "type" are 
+
+- "sqlite3"
+- "postgresql"
+- "firebird"
+- "json"
 
 Connection for database type "sqlite3" is file name of SQLite database.
 
@@ -962,6 +967,28 @@ databases = [
 
 ];
 ```
+
+### How to write database 'driver' roadmap
+
+You can write your own database 'driver'.
+
+To do this, override DatabaseIntf class methods.
+
+Most important class method is open():
+
+```
+	virtual int open(
+		const std::string &connection,
+		const std::string &login,
+		const std::string &password,
+		const std::string &db,
+		int port
+```
+
+In case of web service, connection parameter is POST URL to post JSON data,
+and connection db is URL to authorize using GET request. 
+
+If 'db' parameter empty, no authorization is required.
 
 ### MySQL
 

@@ -16,16 +16,20 @@ static size_t writeString(void *contents, size_t size, size_t nmemb, void *userp
 int postString(
     std::string &retval,
     const std::string &url,
-    const std::string &authKey,
-    const std::string &data
+    const std::string &data,
+    const std::string &authorizationHeader,
+    const std::string &contentType
 ) {
     CURL *curl = curl_easy_init();
     if (!curl)
         return CURLE_FAILED_INIT;
     struct curl_slist *chunk = NULL;
-    chunk = curl_slist_append(chunk, "Content-Type: application/json");
-    if (!authKey.empty())
-        chunk = curl_slist_append(chunk, std::string("Authorization: key=" + authKey).c_str());
+    if (contentType.empty())
+        chunk = curl_slist_append(chunk, "Content-Type: application/json");
+    else
+        chunk = curl_slist_append(chunk, ("Content-Type: " + contentType).c_str());
+    if (!authorizationHeader.empty())
+        chunk = curl_slist_append(chunk, std::string("Authorization: " + authorizationHeader).c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
