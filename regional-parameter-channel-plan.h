@@ -116,6 +116,8 @@ public:
     void setTxPowerOffsets(int count, ...);
 
     void setRx1DataRateOffsets(int dataRateIndex, int count, ...);
+
+    std::string toDescriptionTableString() const;
 };
 
 class RegionBands : public RBJsonIntf {

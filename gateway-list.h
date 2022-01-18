@@ -61,6 +61,8 @@ class GatewayList {
 			GatewayStat &value,
 			const struct sockaddr *gwAddress
 		) const;
+
+    std::string toDescriptionTableString() const;
 };
 
 #endif
