@@ -8,8 +8,11 @@
 class DatabaseJSON : public DatabaseIntf
 {
 private:
-    std::string url;
-    std::string auth;
+    std::string url;    // POST
+    std::string login;  // remember user credentials
+    std::string password;  // remember user credentials
+    std::string authorizationUrl;   // POST
+    std::string auth;   // session auth token
 public:
     DatabaseJSON();
 	~DatabaseJSON();

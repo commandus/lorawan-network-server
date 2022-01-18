@@ -9,8 +9,9 @@
 int postString(
     std::string &retval,
     const std::string &url,
-    const std::string &authKey,
-    const std::string &data
+    const std::string &data,
+    const std::string &authorizationHeader,  ///< e.g. "key=authToken"
+    const std::string &contentType = ""
 );
 
 #endif
