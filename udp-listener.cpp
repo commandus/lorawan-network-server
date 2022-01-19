@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <sys/select.h>
 
+#include "third_party/get_rss/get_rss.h"
 #include "utilstring.h"
 #include "errlist.h"
 
@@ -308,7 +309,7 @@ int UDPListener::parseBuffer
 					gatewayList->copyId(gatewayStat, (const sockaddr *) &gwAddress);
 				std::stringstream ss;
 				ss << MSG_GATEWAY_STAT
-					<< gatewayStat.toString();
+					<< gatewayStat.toString() << ". Server memory " << getCurrentRSS()/ 1024 << "K";
 				onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 				if (onGatewayStatDump)
 					onGatewayStatDump(gwStatEnv, &gatewayStat);
