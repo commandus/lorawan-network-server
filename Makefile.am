@@ -144,6 +144,7 @@ nobase_dist_include_HEADERS = \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
 	device-channel-plan-file-json.h device-channel-plan.h regional-parameter-channel-plan.h regional-parameter-channel-plans.h regional-parameter-channel-plan-file-json.h \
+	third_party/get_rss/get_rss.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -151,7 +152,7 @@ SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 lorawan_network_server_SOURCES = \
 	lorawan-network-server.cpp daemonize.cpp udp-listener.cpp \
 	config-json.cpp lora-packet-handler-impl.cpp \
-	config-filename.cpp \
+	config-filename.cpp third_party/get_rss/get_rss.c \
 	identity-service-dir-txt.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
 	gateway-stat-service-file.cpp gateway-stat-service-post.cpp  \
 	device-stat-service-file.cpp device-stat-service-post.cpp \
