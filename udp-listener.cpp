@@ -360,8 +360,8 @@ int UDPListener::listen() {
 			continue;
 		}
 
-		struct timeval recievedTime;
-		gettimeofday(&recievedTime, NULL);
+		struct timeval receivedTime;
+		gettimeofday(&receivedTime, NULL);
 		
 		// By default, two sockets: one for IPv4, second for IPv6
 		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
@@ -394,7 +394,7 @@ int UDPListener::listen() {
 			onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 
 			// parse packet result code
-			int pr = parseBuffer(buffer, bytesReceived, it->sock, recievedTime, gwAddress);
+			int pr = parseBuffer(buffer, bytesReceived, it->sock, receivedTime, gwAddress);
 		}
 	}
 	return LORA_OK;
