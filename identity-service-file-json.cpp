@@ -18,7 +18,7 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_COUNT	13
+#define ATTRS_COUNT	14
 static const char *ATTR_NAMES[ATTRS_COUNT] = {
     "addr", 		// 0 network address (hex string, 4 bytes)
     "activation",	// 1 ABP or OTAA
@@ -28,12 +28,13 @@ static const char *ATTR_NAMES[ATTRS_COUNT] = {
     "class", 		// 5 A, B or C
     "version",		// 6 LoraWAN version
     "appeui",   	// 7 OTAA application identifier (JoinEUI) (hex string, 8 bytes)
-    "appKey",   	// 8 device identifier (hex string, 8 bytes)
-    "devNonce",   	// 9 device identifier (hex string, 8 bytes)
-    "joinNonce",   	// 10 device identifier (hex string, 8 bytes)
-    "name",			// 11 added for search
+    "appKey",   	// 8 Application key (hex string, 16 bytes)
+    "nwkKey",   	// 9 Network key (hex string, 16 bytes)
+    "devNonce",   	// 10 device identifier (hex string, 8 bytes)
+    "joinNonce",   	// 11 device identifier (hex string, 8 bytes)
+    "name",			// 12 added for search
     // not copied to the storage
-    "flags"			// 12 if bit 0 is set it means allow control network service
+    "flags"			// 13 if bit 0 is set it means allow control network service
 };
 
 static const char *ACTIVATION_NAMES[2] = {
@@ -133,7 +134,7 @@ public:
 
     bool Uint(unsigned u) {
         switch(idx) {
-            case 12:
+            case 13:
                 flags = u;
                 break;
         }
@@ -196,12 +197,16 @@ public:
                 string2KEY(v.appKey, s);
                 break;
             case 9:
-                v.devNonce = string2DEVNONCE(str);
+                s = hex2string(str);
+                string2KEY(v.nwkKey, s);
                 break;
             case 10:
-                string2JOINNONCE(v.joinNonce, str);
+                v.devNonce = string2DEVNONCE(str);
                 break;
             case 11:
+                string2JOINNONCE(v.joinNonce, str);
+                break;
+            case 12:
                 string2DEVICENAME(v.name, str);
                 break;
             default:
@@ -293,9 +298,10 @@ int JsonFileIdentityService::save()
            << ATTR_NAMES[6] << "\": \"" << LORAWAN_VERSION2string(it->second.version) << "\",\""
            << ATTR_NAMES[7] << "\": \"" << DEVEUI2string(it->second.appEUI) << "\",\""
            << ATTR_NAMES[8] << "\": \"" << KEY2string(it->second.appKey) << "\",\""
-           << ATTR_NAMES[9] << "\": \"" << DEVNONCE2string(it->second.devNonce) << "\",\""
-           << ATTR_NAMES[10] << "\": \"" << JOINNONCE2string(it->second.joinNonce) << "\",\""
-           << ATTR_NAMES[11] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
+           << ATTR_NAMES[9] << "\": \"" << KEY2string(it->second.nwkKey) << "\",\""
+           << ATTR_NAMES[10] << "\": \"" << DEVNONCE2string(it->second.devNonce) << "\",\""
+           << ATTR_NAMES[11] << "\": \"" << JOINNONCE2string(it->second.joinNonce) << "\",\""
+           << ATTR_NAMES[12] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
         if (rightsMask) {
             os << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;
         }
@@ -498,9 +504,10 @@ std::string JsonFileIdentityService::toJsonString()
            << "\"" << ATTR_NAMES[6] << "\":\"" << LORAWAN_VERSION2string(dit->second.version) << "\", "
            << "\"" << ATTR_NAMES[7] << "\":\"" << DEVEUI2string(dit->second.appEUI) << "\", "
            << "\"" << ATTR_NAMES[8] << "\":\"" << KEY2string(dit->second.appKey) << "\", "
-           << "\"" << ATTR_NAMES[9] << "\":\"" << DEVNONCE2string(dit->second.devNonce) << "\", "
-           << "\"" << ATTR_NAMES[10] << "\":\"" << JOINNONCE2string(dit->second.joinNonce) << "\", "
-           << "\"" << ATTR_NAMES[11] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"";
+           << "\"" << ATTR_NAMES[9] << "\":\"" << KEY2string(dit->second.nwkKey) << "\", "
+           << "\"" << ATTR_NAMES[10] << "\":\"" << DEVNONCE2string(dit->second.devNonce) << "\", "
+           << "\"" << ATTR_NAMES[11] << "\":\"" << JOINNONCE2string(dit->second.joinNonce) << "\", "
+           << "\"" << ATTR_NAMES[12] << "\":\"" << DEVICENAME2string(dit->second.name) << "\"";
         uint32_t rightsMask = getRightsMask((DEVADDR &) (dit->first.a));
         if (rightsMask)
             ss << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;

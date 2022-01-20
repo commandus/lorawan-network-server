@@ -45,7 +45,7 @@ class SemtechUDPPacketItem {
 		// device address actually is gatreway address
 		DEVADDRINT getAddr() const;
 		SemtechUDPPacketItem();
-		SemtechUDPPacketItem(const SemtechUDPPacket &packet);
+		SemtechUDPPacketItem(const SemtechUDPPacket &aPacket);
 		SemtechUDPPacketItem(
 			int socket,
 			ITEM_PROCESS_MODE mode,

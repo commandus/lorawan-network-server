@@ -1,7 +1,7 @@
 #include "device-channel-plan.h"
 
 DeviceChannelPlan::DeviceChannelPlan()
-    : defaultRegioanlSettingsBamdChannelPlanIdentifer(0), regionalParameterChannelPlans(nullptr)
+    : defaultChannelPlanIdentifier(0), regionalParameterChannelPlans(nullptr)
 {
 
 }
@@ -13,7 +13,7 @@ void DeviceChannelPlan::setRegionalParameterChannelPlans(const RegionalParameter
 
 void DeviceChannelPlan::setDefaultPlanId(int id)
 {
-    defaultRegioanlSettingsBamdChannelPlanIdentifer = id;
+    defaultChannelPlanIdentifier = id;
 }
 
 bool DeviceChannelPlan::setDefaultPlanName(const std::string &name)
@@ -21,7 +21,7 @@ bool DeviceChannelPlan::setDefaultPlanName(const std::string &name)
     if (regionalParameterChannelPlans) {
         const RegionalParameterChannelPlan *p = regionalParameterChannelPlans->get(name);
         if (p) {
-            defaultRegioanlSettingsBamdChannelPlanIdentifer = p->id;
+            defaultChannelPlanIdentifier = p->id;
             return true;
         }
     }

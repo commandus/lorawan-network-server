@@ -8,7 +8,7 @@
 // Abstract class return device's channel plan
 class DeviceChannelPlan {
     protected:
-        int defaultRegioanlSettingsBamdChannelPlanIdentifer;
+        int defaultChannelPlanIdentifier;
         const RegionalParameterChannelPlans *regionalParameterChannelPlans;
     public:
         DeviceChannelPlan();

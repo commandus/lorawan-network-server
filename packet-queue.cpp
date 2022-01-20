@@ -19,9 +19,9 @@ SemtechUDPPacketItem::SemtechUDPPacketItem()
 }
 
 SemtechUDPPacketItem::SemtechUDPPacketItem(
-	const SemtechUDPPacket &apacket
+	const SemtechUDPPacket &aPacket
 )
-	: processMode(MODE_NONE), packet(apacket)
+	: processMode(MODE_NONE), packet(aPacket)
 {
 	gettimeofday(&timeAdded, NULL);
 }
@@ -846,8 +846,12 @@ int PacketQueue::replyJoinRequest(
     const RegionalParameterChannelPlan *regionalParameterChannelPlan;
     if (deviceChannelPlan)
         regionalParameterChannelPlan = deviceChannelPlan->get();
-    if (!regionalParameterChannelPlan)
+    if (!regionalParameterChannelPlan) {
+        if (onLog)
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_REGION_BAND, ERR_NO_REGION_BAND);
         return ERR_CODE_NO_REGION_BAND;
+
+    }
 
     // find out best gateway by the best SNR
     float snr;
@@ -881,9 +885,7 @@ int PacketQueue::replyJoinRequest(
     }
 
     // get RX1 delay in secs from regional settings
-    int secs = deviceChannelPlan->get()->bandDefaults.ReceiveDelay1;
-    if (secs <= 0)
-        secs = 1;
+
     // get default power from regional settings
     int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
 
@@ -902,7 +904,45 @@ int PacketQueue::replyJoinRequest(
 
     // make response
     JOIN_ACCEPT_FRAME frame;
-    identityService->joinAccept(frame.hdr, nid);
+    int rj = identityService->joinAccept(frame.hdr, nid);
+    if (rj) {
+        if (onLog) {
+            ss << ERR_MESSAGE << rj << ": " << strerror_lorawan_ns(rj);
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
+        }
+        // do not reply to the device
+        return rj;
+    }
+
+    frame.hdr.rxDelay = regionalParameterChannelPlan->bandDefaults.ReceiveDelay1;
+    frame.hdr.dlSettings.RX2DataRate = regionalParameterChannelPlan->bandDefaults.RX2DataRate;
+    frame.hdr.dlSettings.RX1DROffset = 0;
+    // optNeg = 0: LoraWAN v.1.0
+    // The device derives FNwkSIntKey & AppSKey from the NwkKey
+    // The device sets SNwkSIntKey & NwkSEncKey equal to FNwkSIntKey
+    frame.hdr.dlSettings.optNeg = 0;
+    // The MIC value of the join-accept message is calculated as follows: 2
+    // cmac = aes128_cmac(NwkKey, MHDR | JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList )
+
+    // set header
+    frame.mhdr.f.mtype = MTYPE_JOIN_ACCEPT;
+    frame.mhdr.f.rfu = 0;
+    frame.mhdr.f.major = LORAWAN_MAJOR_VERSION; // 0
+
+    // Calculate MIC starting with header
+    if (frame.hdr.dlSettings.optNeg == 0) {
+        // version 1.0 uses NwkKey
+        frame.mic = calculateMICJoinResponse(frame, nid.nwkKey);
+    } else {
+        // version 1.1 uses derived key
+        KEY128 JSIntKey;
+        deriveJSIntKey(JSIntKey, nid.nwkKey, nid.devEUI);
+        frame.mic = calculateOptNegMICJoinResponse(frame,
+           nid.devEUI,  // ?!!
+           nid.devNonce,
+           JSIntKey
+        );
+    }
 
     uint32_t fcntdown = 0;
     if (deviceHistoryService) {
@@ -918,8 +958,7 @@ int PacketQueue::replyJoinRequest(
         }
     }
 
-
-    std::string response = "";
+    std::string response = std::string( (char *) &frame, sizeof(JOIN_ACCEPT_FRAME));
     std::cerr << "==JOIN ACCEPT RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
     std::cerr << "==JOIN ACCEPT RESPONSE: " << hexString(response) << std::endl;
     size_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,

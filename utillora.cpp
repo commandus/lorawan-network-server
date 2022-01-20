@@ -196,6 +196,283 @@ uint32_t calculateMICJoinRequest(
     return (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
 }
 
+/**
+ * JSEncKey is used to encrypt the Join-Accept triggered by a Rejoin-Request
+ * @param retval return derived key
+ * @param tag Tag (first byte)
+ * @param nwkKey NwkKey network key
+ * @param value Device EUI
+ */
+static void deriveKeyBlock(
+        KEY128 &retval,
+        const KEY128 &nwkKey,
+        const void *value,
+        size_t size
+)
+{
+    aes_context aesContext;
+    memset(aesContext.ksch, '\0', 240);
+    aes_set_key(nwkKey, sizeof(KEY128), &aesContext);
+
+    AES_CMAC_CTX aesCmacCtx;
+    AES_CMAC_Init(&aesCmacCtx);
+    AES_CMAC_SetKey(&aesCmacCtx, nwkKey);
+    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &value, size);
+    AES_CMAC_Final(retval, &aesCmacCtx);
+}
+
+// The network session keys are derived from the NwkKey:
+// FNwkSIntKey = aes128_encrypt(NwkKey, 0x01 | JoinNonce | JoinEUI | DevNonce | pad 16 )
+// SNwkSIntKey = aes128_encrypt(NwkKey, 0x03 | JoinNonce | JoinEUI | DevNonce | pad 16 )
+// NwkSEncKey = aes128_encrypt(NwkKey, 0x04 | JoinNonce | JoinEUI | DevNonce | pad 16 )
+/**
+ * JSEncKey is used to encrypt the Join-Accept triggered by a Rejoin-Request
+ * @param retval return derived key
+ * @param tag Tag (first byte)
+ * @param nwkKey NwkKey network key
+ * @param value Device EUI
+ */
+static void deriveKey(
+        KEY128 &retval,
+        uint8_t tag,
+        const KEY128 &nwkKey,
+        const void *value,
+        size_t size
+)
+{
+    uint8_t block[16];
+    block[0] = tag;
+    memmove(&(block[1]), value, size);
+    memset(&(block[9]), '\0', 7);
+    deriveKeyBlock(retval, nwkKey, &block, sizeof(block));
+}
+
+/**
+ * Derive JSIntKey used in Accept Join response in MIC calculation
+ * @param retval return derived key
+ * @param nwkKey NwkKey network key
+ * @param devEUI Device EUI
+ */
+void deriveJSIntKey(
+        KEY128 &retval,
+        const KEY128 &nwkKey,
+        const DEVEUI &devEUI
+)
+{
+    deriveKey(retval, 6, nwkKey, &devEUI, sizeof(DEVEUI));
+}
+
+/**
+ * JSEncKey is used to encrypt the Join-Accept triggered by a Rejoin-Request
+ * @param retval return derived key
+ * @param nwkKey NwkKey network key
+ * @param devEUI Device EUI
+ */
+void deriveJSEncKey(
+    KEY128 &retval,
+    const KEY128 &nwkKey,
+    const DEVEUI &devEUI
+)
+{
+    deriveKey(retval, 5, nwkKey, &devEUI, sizeof(DEVEUI));
+}
+
+/**
+ * DeriveSessionKey
+ * @param retval
+ * @param tag
+ * @param key
+ * @param devEUI
+ * @param joinNonce
+ * @param devNonce
+ */
+static void deriveDevSessionKey(
+        KEY128 &retval,
+        uint8_t tag,
+        const KEY128 &key,
+        const DEVEUI &devEUI,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+)
+{
+    uint8_t block[16];
+    block[0] = tag;
+    memmove(&(block[1]), &joinNonce, sizeof(JOINNONCE));                // + 3 = 4
+    memmove(&(block[1 + sizeof(joinNonce)]), &devEUI, sizeof(DEVEUI));  // + 8 = 12
+    memmove(&(block[1 + sizeof(joinNonce) + sizeof(devEUI)]), &devNonce, sizeof(DEVNONCE)); // + 2 = 14
+    memset(&(block[14]), '\0', 2);
+    deriveKeyBlock(retval, key, &block, sizeof(block));
+}
+
+/**
+ * DeriveSessionKey
+ * @param retval
+ * @param tag
+ * @param key
+ * @param netId
+ * @param joinNonce
+ * @param devNonce
+ */
+static void deriveNetSessionKey(
+        KEY128 &retval,
+        uint8_t tag,
+        const KEY128 &key,
+        const NETID &netId,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+)
+{
+    uint8_t block[16];
+    block[0] = tag;
+    memmove(&(block[1]), &joinNonce, sizeof(JOINNONCE));                // + 3 = 4
+    memmove(&(block[1 + sizeof(joinNonce)]), &netId, sizeof(NETID));    // + 3 = 7
+    memmove(&(block[1 + sizeof(joinNonce) + sizeof(NETID)]), &devNonce, sizeof(DEVNONCE)); // + 2 = 9
+    memset(&(block[9]), '\0', 7);
+    deriveKeyBlock(retval, key, &block, sizeof(block));
+}
+
+// OptNeg is set
+// FNwkSIntKey = aes128_encrypt(NwkKey, 0x01 | JoinNonce | JoinEUI | DevNonce | pad 16 )
+// SNwkSIntKey = aes128_encrypt(NwkKey, 0x03 | JoinNonce | JoinEUI | DevNonce | pad 16 )
+// NwkSEncKey = aes128_encrypt(NwkKey, 0x04 | JoinNonce | JoinEUI | DevNonce | pad 16 )
+void deriveOptNegFNwkSIntKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const DEVEUI &joinEUI,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+)
+{
+    deriveDevSessionKey(retval, 1, key, joinEUI, joinNonce, devNonce);
+}
+
+void deriveOptNegSNwkSIntKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const DEVEUI &joinEUI,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+)
+{
+    deriveDevSessionKey(retval, 3, key, joinEUI, joinNonce, devNonce);
+}
+
+void deriveOptNegNwkSEncKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const DEVEUI &joinEUI,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+)
+{
+    deriveDevSessionKey(retval, 4, key, joinEUI, joinNonce, devNonce);
+}
+
+// AppSKey = aes128_encrypt(NwkKey, 0x02 | JoinNonce | NetID | DevNonce | pad 161 )
+// FNwkSIntKey = aes128_encrypt(NwkKey, 0x01 | JoinNonce | NetID | DevNonce | pad 16 )
+// SNwkSIntKey = NwkSEncKey = FNwkSIntKey.
+/**
+ * OptNeg is unset
+ * Derive AppSKey
+ * @param retval derived key
+ * @param key key
+ * @param netid Network identifier
+ * @param joinNonce Join nonce
+ * @param devNonce Device nonce
+ */
+void deriveAppSKey(
+    KEY128 &retval,
+    const KEY128 &key,
+    const NETID &netId,
+    const JOINNONCE &joinNonce,
+    const DEVNONCE &devNonce
+)
+{
+    deriveNetSessionKey(retval, 2, key, netId, joinNonce, devNonce);
+}
+
+/**
+ * OptNeg is unset
+ * Derive SNwkSIntKey = NwkSEncKey = FNwkSIntKey.
+ * @param retval derived key
+ * @param key key
+ * @param netid network identifier
+ * @param joinNonce Join nonce
+ * @param devNonce Device nonce
+ */
+void deriveFNwkSIntKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const NETID &netId,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+)
+{
+    deriveNetSessionKey(retval, 1, key, netId, joinNonce, devNonce);
+}
+
+/**
+ * Calculate Join Response MIC OptNeg is unset (version 1.0)
+ * MHDR | JoinNonce | NetID | DevAddr | DLSettings |RxDelay | [CFList]
+ * @see 6.2.3 Join-accept message
+ */
+uint32_t calculateMICJoinResponse(
+        const JOIN_ACCEPT_FRAME &frame,
+        const KEY128 &key
+) {
+    aes_context aesContext;
+    memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+
+    AES_CMAC_CTX aesCmacCtx;
+    AES_CMAC_Init(&aesCmacCtx);
+    AES_CMAC_SetKey(&aesCmacCtx, key);
+    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &frame, 1 + sizeof(JOIN_ACCEPT_FRAME_HEADER));
+    uint8_t mic[16];
+    AES_CMAC_Final(mic, &aesCmacCtx);
+    return (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
+}
+
+ /**
+  * Calculate Join Response MIC OptNeg is set (version 1.1)
+  * JoinReqType | JoinEUI | DevNonce | MHDR | JoinNonce | NetID | DevAddr | DLSettings |RxDelay | [CFList]
+  * @see 6.2.3 Join-accept message
+  * @param frame Join Accept frame
+  * @param joinEUI Join EUI
+  * @param devNonce Device nonce
+  * @param key Key
+  * @return MIC
+  */
+uint32_t calculateOptNegMICJoinResponse(
+        const JOIN_ACCEPT_FRAME &frame,
+        const DEVEUI &joinEUI,
+        const DEVNONCE &devNonce,
+        const KEY128 &key
+) {
+    // JoinReqType- 1, EUI- 8, DevNonce- 2, MHDR- 1, JOIN_ACCEPT_FRAME_HEADER- 12 = 24 bytes
+    uint8_t d[24];
+    // Join-request    0xFF, Rejoin-request type 0- 0x00,  Rejoin-request type 1- 0x01, Rejoin-request type 2- 0x02
+    d[0] = 0;   // JoinReqType
+    // JoinEUI
+    memmove(&(d[1]), &joinEUI, sizeof(DEVEUI)); // + 8
+    // DevNonce
+    memmove(&(d[9]), &devNonce, sizeof(DEVNONCE)); // + 2
+    // same as OptNeg unset (version 1.0)
+    memmove(&(d[10]), &frame, 1 + sizeof(JOIN_ACCEPT_FRAME_HEADER));
+
+    aes_context aesContext;
+    memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+
+    AES_CMAC_CTX aesCmacCtx;
+    AES_CMAC_Init(&aesCmacCtx);
+    AES_CMAC_SetKey(&aesCmacCtx, key);
+    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &d, 1 + sizeof(d));
+    uint8_t mic[16];
+    AES_CMAC_Final(mic, &aesCmacCtx);
+    return (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
+}
+
 NetworkIdentity::NetworkIdentity()
 {
 }
@@ -301,6 +578,7 @@ std::string NetworkIdentity::toString() const
 		<< " " << LORAWAN_VERSION2string(version)
         << " " << DEVEUI2string(appEUI)
         << " " << KEY2string(appKey)
+        << " " << KEY2string(nwkKey)
         << " " << DEVNONCE2string(devNonce)
         << " " << JOINNONCE2string(joinNonce)
 		<< " " << std::string(name, sizeof(DEVICENAME));
@@ -314,6 +592,7 @@ DeviceId::DeviceId() {
 	memset(&name, 0, sizeof(DEVICENAME));
     memset(&appEUI, 0, sizeof(DEVEUI));
     memset(&appKey, 0, sizeof(KEY128));
+    memset(&nwkKey, 0, sizeof(KEY128));
     devNonce = 0;
     memset(joinNonce, 0, sizeof(JOINNONCE));
 	version.major = 1;
@@ -329,6 +608,7 @@ DeviceId::DeviceId(
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
+    memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
     devNonce = 0;
     memset(joinNonce, 0, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
@@ -356,6 +636,7 @@ DeviceId& DeviceId::operator=(const DeviceId& value)
 	version = value.version;		///< device LoraWAN version
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
+    memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
     devNonce = value.devNonce;
     memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
@@ -371,6 +652,7 @@ DeviceId& DeviceId::operator=(const NetworkIdentity& value)
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
+    memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
     devNonce = value.devNonce;
     memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	version = value.version;		///< device LoraWAN version
@@ -390,6 +672,7 @@ void DeviceId::set(
 	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
+    memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
     devNonce = value.devNonce;
     memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
@@ -445,6 +728,7 @@ std::string DeviceId::toJsonString() const
 
         << "\",\"appeui\":\"" << DEVEUI2string(appEUI)
         << "\",\"appKey\":\"" << KEY2string(appKey)
+        << "\",\"nwkKey\":\"" << KEY2string(nwkKey)
         << "\",\"devNonce\":\"" << DEVNONCE2string(devNonce)
         << "\",\"joinNonce\":\"" << JOINNONCE2string(joinNonce)
 
@@ -463,6 +747,7 @@ void DeviceId::setProperties
 	retval["deveui"] = DEVEUI2string(devEUI);
     retval["appeui"] = DEVEUI2string(appEUI);
     retval["appKey"] = KEY2string(appKey);
+    retval["nwkKey"] = KEY2string(nwkKey);
     retval["devNonce"] = DEVNONCE2string(devNonce);
     retval["joinNonce"] = JOINNONCE2string(joinNonce);
 	retval["name"] = DEVICENAME2string(name);
@@ -482,6 +767,7 @@ void NetworkIdentity::set(
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
     memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
     memmove(&appKey, &value.appKey, sizeof(KEY128));
+    memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
     devNonce = value.devNonce;
     memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
@@ -505,20 +791,6 @@ rfmMetaData::rfmMetaData()
 	time(&t);			// UTC time of pkt RX, us precision, ISO 8601 'compact' format
 }
 
-/*
-200:
-203:
-
-400:
-406:
-
-800:
-812:
-
-1600:
-1625:
-
-*/
 /**
  * @return  LoRa datarate identifier e.g. "SF7BW125"
  */
@@ -1970,8 +2242,8 @@ std::string SemtechUDPPacket::toTxJsonString
 
 std::string SemtechUDPPacket::mkPullResponse(
 	const std::string &data,
-	const DeviceId &deviceid,
-	uint32_t recievedTime,
+	const DeviceId &deviceId,
+	uint32_t receivedTime,
 	const int fcnt,
 	const int power
 ) const
@@ -1982,9 +2254,9 @@ std::string SemtechUDPPacket::mkPullResponse(
 	// encrypt frame payload
 	int direction = 1;	// downlink
 	std::string frmPayload(data);
-	size_t psize = frmPayload.size();
-	if (deviceid.version.minor == 1) {
-		encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);	// network key
+	size_t payloadSize = frmPayload.size();
+	if (deviceId.version.minor == 1) {
+		encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);	// network key
 	}
 
 	std::stringstream sMsg;
@@ -1994,9 +2266,9 @@ std::string SemtechUDPPacket::mkPullResponse(
 	rfmHeader.header.fctrl.i = 0;
 	rfmHeader.header.fcnt = fcnt;
 
-	if (psize <= 15) {
+	if (payloadSize <= 15) {
 		// use FOpts
-		rfmHeader.header.fctrl.f.foptslen = psize;
+		rfmHeader.header.fctrl.f.foptslen = payloadSize;
 		// device controlled by service
 		rfmHeader.header.fctrl.f.adr = 1;
 		sMsg << rfmHeader.toBinary();
@@ -2009,9 +2281,9 @@ std::string SemtechUDPPacket::mkPullResponse(
 
 	std::string msg = sMsg.str();
 	// calc mic
-	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceid.nwkSKey);
+	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);
 	sMsg << std::string((char *) &mic, 4);
-	return toTxJsonString(sMsg.str(), recievedTime, power);
+	return toTxJsonString(sMsg.str(), receivedTime, power);
 }
 
 /**

@@ -23,8 +23,7 @@
 
 #include "gateway-stat.h"
 
-#define TX_MIN_POWER_DBM    -6
-#define TX_MAX_POWER_DBM    27
+#define LORAWAN_MAJOR_VERSION   0
 
 typedef unsigned char KEY128[16];
 typedef unsigned char DEVEUI[8];
@@ -229,9 +228,9 @@ typedef ALIGN struct {
 } PACKED JOIN_REQUEST_HEADER;	// 1 + 18 + 2 = 21 bytes
 
 typedef ALIGN struct {
-    uint8_t RX2DataRate: 4;	    // downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
-    uint8_t RX1DROffset: 3;	    // offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
-    uint8_t rfu: 1;     	    //
+    uint8_t RX2DataRate: 4;	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
+    uint8_t RX1DROffset: 3;	    ///< offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
+    uint8_t optNeg: 1;     	    ///< 1.0- RFU, 1.1- optNeg
 } PACKED DLSETTINGS;	        // 1 byte
 
 /**
@@ -248,7 +247,7 @@ typedef ALIGN struct {
 
 typedef ALIGN struct {
     MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
-    JOIN_ACCEPT_FRAME_HEADER hdr; //
+    JOIN_ACCEPT_FRAME_HEADER hdr;   //
     uint16_t mic;			        // MIC
 } PACKED JOIN_ACCEPT_FRAME;	        // 1 12 2 = 15 bytes
 
@@ -324,6 +323,7 @@ typedef struct {
 	// OTAA
 	DEVEUI appEUI;			///< OTAA application identifier
 	KEY128 appKey;			///< OTAA application private key
+    KEY128 nwkKey;          ///< OTAA network key
 	DEVNONCE devNonce;      ///< last device nonce
 	JOINNONCE joinNonce;    ///< last Join nonce
 	// added for searching
@@ -354,6 +354,7 @@ public:
 	// OTAA
 	DEVEUI appEUI;			///< OTAA application identifier
 	KEY128 appKey;			///< OTAA application private key
+    KEY128 nwkKey;          ///< OTAA network key
     DEVNONCE devNonce;      ///< last device nonce
 	JOINNONCE joinNonce;    ///< last Join nonce
 	// added for searching
@@ -370,7 +371,7 @@ public:
 class DeviceId {
 private:
 public:
-	ACTIVATION activation;	///< activation type: ABP or OTAA
+	ACTIVATION activation;	    ///< activation type: ABP or OTAA
 	DEVICECLASS deviceclass;
 	DEVEUI devEUI;				///< device identifier
 	KEY128 nwkSKey;				///< ABP shared session key
@@ -379,8 +380,9 @@ public:
 	// OTAA
 	DEVEUI appEUI;				///< OTAA application identifier
 	KEY128 appKey;				///< OTAA application key
+    KEY128 nwkKey;              ///< OTAA network key
     DEVNONCE devNonce;          ///< last device nonce
-	JOINNONCE joinNonce;    ///< last Join nonce
+	JOINNONCE joinNonce;        ///< last Join nonce
 	// added for searching
 	DEVICENAME name;
 	
@@ -579,8 +581,8 @@ public:
 	 */ 
 	std::string mkPullResponse(
 		const std::string &payload,
-		const DeviceId &deviceid,
-		uint32_t recievedTime,
+		const DeviceId &deviceId,
+		uint32_t receivedTime,
 		const int fcnt,
 		const int power = 14
 	) const;
@@ -656,6 +658,32 @@ uint32_t calculateMIC(
  */
 uint32_t calculateMICJoinRequest(
         const JOIN_REQUEST_HEADER *header,
+        const KEY128 &key
+);
+
+/**
+ * Calculate Join Response MIC OptNeg is unset (version 1.0)
+ * @see 6.2.3 Join-accept message
+ */
+uint32_t calculateMICJoinResponse(
+    const JOIN_ACCEPT_FRAME &frame,
+    const KEY128 &key
+);
+
+/**
+  * Calculate Join Response MIC OptNeg is set (version 1.1)
+  * JoinReqType | JoinEUI | DevNonce | MHDR | JoinNonce | NetID | DevAddr | DLSettings |RxDelay | [CFList]
+  * @see 6.2.3 Join-accept message
+  * @param frame Join Accept frame
+  * @param joinEUI Join EUI
+  * @param devNonce Device nonce
+  * @param key Key
+  * @return MIC
+  */
+uint32_t calculateOptNegMICJoinResponse(
+        const JOIN_ACCEPT_FRAME &frame,
+        const DEVEUI &joinEUI,
+        const DEVNONCE &devNonce,
         const KEY128 &key
 );
 
@@ -741,5 +769,90 @@ BANDWIDTH int2BANDWIDTH(int value);
 BANDWIDTH double2BANDWIDTH(double value);
 
 bool isDEVADDREmpty(const DEVADDR &addr);
+
+/**
+ * Derive JSIntKey user in Accept Join response
+ * @param retval derived key
+ * @param nwkKey NwkKey network key
+ * @param devEUI Device EUI
+ */
+void deriveJSIntKey(
+        KEY128 &retval,
+        const KEY128 &nwkKey,
+        const DEVEUI &devEUI
+);
+
+/**
+ * JSEncKey is used to encrypt the Join-Accept triggered by a Rejoin-Request
+ * @param retval return derived key
+ * @param nwkKey NwkKey network key
+ * @param devEUI Device EUI
+ */
+void deriveJSEncKey(
+        KEY128 &retval,
+        const KEY128 &nwkKey,
+        const DEVEUI &devEUI
+);
+
+/**
+ * OptNeg is unset
+ * Derive AppSKey
+ * @param retval derived key
+ * @param key key
+ * @param netid Network identifier
+ * @param joinNonce Join nonce
+ * @param devNonce Device nonce
+ */
+void deriveAppSKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const NETID &netId,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+);
+
+/**
+ * OptNeg is unset
+ * Derive SNwkSIntKey = NwkSEncKey = FNwkSIntKey.
+ * @param retval derived key
+ * @param key key
+ * @param netid network identifier
+ * @param joinNonce Join nonce
+ * @param devNonce Device nonce
+ */
+void deriveFNwkSIntKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const NETID &netId,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+);
+
+// If the OptNeg is set
+void deriveOptNegFNwkSIntKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const DEVEUI &joinEUI,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+);
+
+// If the OptNeg is set
+void deriveOptNegSNwkSIntKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const DEVEUI &joinEUI,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+);
+
+// If the OptNeg is set
+void deriveOptNegNwkSEncKey(
+        KEY128 &retval,
+        const KEY128 &key,
+        const DEVEUI &joinEUI,
+        const JOINNONCE &joinNonce,
+        const DEVNONCE &devNonce
+);
 
 #endif
