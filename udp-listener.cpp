@@ -180,10 +180,6 @@ int UDPListener::parseBuffer
                         // send ACK immediately too
                         handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
                         if (packets.size() > 0) {
-                            // log event
-                            std::cerr << "Join request: "
-                                      << JOIN_REQUEST_FRAME2string(packets[0].getJoinRequestFrame())
-                                      << std::endl;
                             // enqueue packet
                             handler->join(receivedTime, socket, (const sockaddr_in *) &gwAddress, packets[0]);
                         }
@@ -248,6 +244,8 @@ int UDPListener::parseBuffer
 
 	// std::cerr << "===" << pr << ": " << strerror_lorawan_ns(pr) << std::endl;
 	switch (pr) {
+        case ERR_CODE_IS_JOIN:
+            break;
 		case ERR_CODE_PACKET_TOO_SHORT:
 		case ERR_CODE_INVALID_PROTOCOL_VERSION:
 		case ERR_CODE_NO_GATEWAY_STAT:
@@ -269,15 +267,16 @@ int UDPListener::parseBuffer
 			{
 			}
 			break;
-		default: // including ERR_CODE_INVALID_PACKET, it can contains some valid packets in the JSON, continue
+		default: // including ERR_CODE_INVALID_PACKET, it will contain some valid packets in the JSON, continue
 			// process data packets if exists
 			for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
 				if (itp->errcode) {
 					std::string v = std::string(buffer.c_str(), bytesReceived);
 					std::stringstream ss;
 					ss << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << " "
-						<< UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-						<< ": " << ERR_INVALID_PACKET << ", " << hexString(v);
+						<< ": " << ERR_INVALID_PACKET
+                        << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
+                        << ", packet: " << hexString(v);
 					onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
 					continue;
 				} else {

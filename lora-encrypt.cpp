@@ -187,7 +187,7 @@ void decryptPayload(
  */
 
 /*
-static std::string encryptJoinAccept
+static std::string encryptJoinAcceptResponse
 (
     const std::string &payload,
     const KEY128 &key
@@ -255,4 +255,37 @@ std::string decryptJoinAccept(
     }
 	
  	return encBuffer;
+}
+
+/**
+ * Encrypt Join-Accept
+ * aes128_decrypt(NwkKey or JSEncKey, JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList | MIC).
+ * @param frame return value
+ * @param key NwkKey or JSEncKey
+ */
+void encryptJoinAcceptResponse
+(
+    JOIN_ACCEPT_FRAME &frame,
+    const KEY128 &key   // NwkKey or JSEncKey
+)
+{
+    aes_context aesContext;
+    memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+
+    uint8_t a[16];
+    memset(a, 0, sizeof(a));
+    uint8_t s[16];
+    memset(s, 0, sizeof(s));
+
+    int size = sizeof(JOIN_ACCEPT_FRAME_HEADER) + sizeof(uint16_t); // JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList | MIC
+    uint8_t bufferIndex = 1;
+    uint8_t *p = (uint8_t *) &frame.hdr;
+
+    while (size >= 16) {
+        aes_encrypt((const uint8_t*) p + bufferIndex,
+                    (uint8_t*) p + bufferIndex, &aesContext);
+        size -= 16;
+        bufferIndex += 16;
+    }
 }

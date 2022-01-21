@@ -684,7 +684,8 @@ uint32_t calculateOptNegMICJoinResponse(
         const JOIN_ACCEPT_FRAME &frame,
         const DEVEUI &joinEUI,
         const DEVNONCE &devNonce,
-        const KEY128 &key
+        const KEY128 &key,
+        const uint8_t rejoinType = 0xff
 );
 
 uint32_t getMic(const std::string &v);

@@ -12,6 +12,7 @@
 #include "lorawan-mac.h"
 #include "identity-service.h"
 #include "control-packet.h"
+#include "lora-encrypt.h"
 
 SemtechUDPPacketItem::SemtechUDPPacketItem()
 	: processMode(MODE_NONE)
@@ -820,6 +821,12 @@ int PacketQueue::replyJoinRequest(
         struct timeval &t
 )
 {
+    if (onLog) {
+        std::stringstream ss;
+        ss << "PacketQueue::replyJoinRequest " << item.toString();
+        onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
+    }
+
     // get Join request
     JOIN_REQUEST_FRAME *joinRequestFrame = item.packet.getJoinRequestFrame();
     // check does it exist
@@ -908,7 +915,7 @@ int PacketQueue::replyJoinRequest(
     if (rj) {
         if (onLog) {
             ss << ERR_MESSAGE << rj << ": " << strerror_lorawan_ns(rj);
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, rj, ss.str());
         }
         // do not reply to the device
         return rj;
@@ -929,13 +936,14 @@ int PacketQueue::replyJoinRequest(
     frame.mhdr.f.rfu = 0;
     frame.mhdr.f.major = LORAWAN_MAJOR_VERSION; // 0
 
+    KEY128 JSIntKey;
+
     // Calculate MIC starting with header
     if (frame.hdr.dlSettings.optNeg == 0) {
         // version 1.0 uses NwkKey
         frame.mic = calculateMICJoinResponse(frame, nid.nwkKey);
     } else {
         // version 1.1 uses derived key
-        KEY128 JSIntKey;
         deriveJSIntKey(JSIntKey, nid.nwkKey, nid.devEUI);
         frame.mic = calculateOptNegMICJoinResponse(frame,
            nid.devEUI,  // ?!!
@@ -958,12 +966,19 @@ int PacketQueue::replyJoinRequest(
         }
     }
 
+    if (frame.hdr.dlSettings.optNeg == 0) {
+        // version 1.0 uses NwkKey
+        encryptJoinAcceptResponse(frame, nid.nwkKey);
+    } else {
+        encryptJoinAcceptResponse(frame, JSIntKey);
+    }
+
     std::string response = std::string( (char *) &frame, sizeof(JOIN_ACCEPT_FRAME));
     std::cerr << "==JOIN ACCEPT RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
     std::cerr << "==JOIN ACCEPT RESPONSE: " << hexString(response) << std::endl;
     size_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
-                      (const struct sockaddr*) &gwit->second.sockaddr,
-                      ((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+          (const struct sockaddr*) &gwit->second.sockaddr,
+          ((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 
     if (sz == response.size()) {
         if (deviceHistoryService)
@@ -991,5 +1006,4 @@ int PacketQueue::replyJoinRequest(
         }
     }
     return LORA_OK;
-
 }

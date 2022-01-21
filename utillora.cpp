@@ -179,9 +179,14 @@ uint32_t calculateMIC(
 	);
 }
 
-uint32_t calculateMICJoinRequest(
-        const JOIN_REQUEST_HEADER *header,
-        const KEY128 &key
+/**
+ * Calculate ReJoin Request MIC
+ * @see 6.2.5 Join-request frame
+ */
+uint32_t calculateMICReJoinRequest(
+    const JOIN_REQUEST_HEADER *header,
+    const KEY128 &key,
+    const uint8_t rejoinType
 ) {
     aes_context aesContext;
     memset(aesContext.ksch, '\0', 240);
@@ -194,6 +199,13 @@ uint32_t calculateMICJoinRequest(
     uint8_t mic[16];
     AES_CMAC_Final(mic, &aesCmacCtx);
     return (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
+}
+
+uint32_t calculateMICJoinRequest(
+        const JOIN_REQUEST_HEADER *header,
+        const KEY128 &key
+) {
+    return calculateMICReJoinRequest(header, key, 0xff);
 }
 
 /**
@@ -444,15 +456,16 @@ uint32_t calculateMICJoinResponse(
   * @return MIC
   */
 uint32_t calculateOptNegMICJoinResponse(
-        const JOIN_ACCEPT_FRAME &frame,
-        const DEVEUI &joinEUI,
-        const DEVNONCE &devNonce,
-        const KEY128 &key
+    const JOIN_ACCEPT_FRAME &frame,
+    const DEVEUI &joinEUI,
+    const DEVNONCE &devNonce,
+    const KEY128 &key,
+    const uint8_t rejoinType
 ) {
     // JoinReqType- 1, EUI- 8, DevNonce- 2, MHDR- 1, JOIN_ACCEPT_FRAME_HEADER- 12 = 24 bytes
     uint8_t d[24];
     // Join-request    0xFF, Rejoin-request type 0- 0x00,  Rejoin-request type 1- 0x01, Rejoin-request type 2- 0x02
-    d[0] = 0;   // JoinReqType
+    d[0] = rejoinType;   // JoinReqType 0xFF- join, 0, 1- rejoin
     // JoinEUI
     memmove(&(d[1]), &joinEUI, sizeof(DEVEUI)); // + 8
     // DevNonce
@@ -2075,14 +2088,6 @@ int SemtechUDPPacket::parseData(
     if (((MHDR *)data.c_str())->f.mtype <= MTYPE_JOIN_ACCEPT) {
         int payloadSize = data.size() - sizeof(MHDR) - sizeof(uint32_t);
         payload = data.substr(sizeof(MHDR), payloadSize);
-        // calc MIC
-        uint32_t mic = getMic(data);
-        KEY128 APPSKEY = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-        uint32_t micCalc = calculateMICJoinRequest((JOIN_REQUEST_HEADER *) data.c_str(), APPSKEY);
-        errcode = mic == micCalc ? ERR_CODE_IS_JOIN : ERR_CODE_INVALID_MIC;
-std::cerr << "*** JOIN request *** parseData MIC: " << std::hex << mic << ", calculated MIC: " << micCalc
-    << ", payload: " << hexString(payload)
-    << std::endl;
         errcode = ERR_CODE_IS_JOIN;
         return errcode;
     }
