@@ -282,7 +282,8 @@
 #define MSG_SEND_JOIN_REQUEST_REPLY     "Sent join request response "
 #define MSG_GATEWAY_LIST                "Gateways: "
 #define MSG_INIT_UDP_LISTENER           "Initialize UDP listener.."
-#define MSG_LISTEN_IP_ADDRESSES                "Listen IP addresses: "
+#define MSG_LISTEN_IP_ADDRESSES         "Listen IP addresses: "
+#define MSG_TO_REQUEST                   " to request "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

@@ -34,4 +34,16 @@ std::string decryptJoinAccept(
 	const KEY128 &key
 );
 
+/**
+ * Encrypt Join-Accept response
+ * aes128_decrypt(NwkKey or JSEncKey, JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList | MIC).
+ * @param frame return value
+ * @param key NwkKey or JSEncKey
+ */
+void encryptJoinAcceptResponse
+(
+        JOIN_ACCEPT_FRAME &frame,
+        const KEY128 &key   // NwkKey or JSEncKey
+);
+
 #endif
