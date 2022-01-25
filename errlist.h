@@ -107,7 +107,7 @@
 #define ERR_CODE_INIT_GW_STAT   			-587
 #define ERR_CODE_DEVICE_NAME_NOT_FOUND      -588
 #define ERR_CODE_DEVICE_EUI_NOT_FOUND       -589
-#define ERR_CODE_APP_EUI_NOT_FOUND          -590
+#define ERR_CODE_JOIN_EUI_NOT_MATCHED          -590
 #define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -591
 #define ERR_CODE_REGION_BAND_EMPTY          -592
 #define ERR_CODE_INIT_REGION_BANDS          -593
@@ -222,14 +222,14 @@
 #define ERR_INIT_GW_STAT   			    "Gateway statistics log initialization error "
 #define ERR_DEVICE_NAME_NOT_FOUND       "Device name not found"
 #define ERR_DEVICE_EUI_NOT_FOUND        "Device EUI not found"
-#define ERR_APP_EUI_NOT_FOUND           "Join (App) EUI not found"
+#define ERR_JOIN_EUI_NOT_MATCHED        "Join EUI not matched"
 #define ERR_GATEWAY_NO_YET_PULL_DATA    "Gateway does not sent PULL_DATA request, can not send to gateway "
 #define ERR_REGION_BAND_EMPTY           "RegionBands array element disappeared"
 #define ERR_INIT_REGION_BANDS			"Regional settings does not loaded "
 #define ERR_INIT_REGION_NO_DEFAULT		"No default regional settings loaded"
 #define ERR_NO_REGION_BAND              "Regional settings not available"
 #define ERR_REGION_BAND_NO_DEFAULT      "No default region assigned"
-#define ERR_IS_JOIN					    "Jpin request or response"
+#define ERR_IS_JOIN					    "Join request or response"
 #define ERR_BAD_JOIN_REQUEST			"Bad Join request "
 #define ERR_NETID_OR_NETTYPE_MISSED     "NetId identifier or type missed"
 #define ERR_NETTYPE_OUT_OF_RANGE        "NetType out of 0..7 range"

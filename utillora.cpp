@@ -519,14 +519,14 @@ std::string DEVNONCE2string(
 }
 
 std::string JOINNONCE2string(
-        const JOINNONCE &value
+    const JOINNONCE &value
 )
 {
     return hexString(&value, sizeof(value));
 }
 
 DEVNONCE string2DEVNONCE(
-        const std::string &value
+    const std::string &value
 )
 {
     return strtol(value.c_str(), NULL, 16);
@@ -541,14 +541,64 @@ void string2JOINNONCE(JOINNONCE &retval, const std::string &value)
 }
 
 std::string JOIN_REQUEST_FRAME2string(
-    const JOIN_REQUEST_FRAME *value
+    const JOIN_REQUEST_FRAME &value
 ) {
-    if (value)
-        return "{\"joinEUI\": \"" + DEVEUI2string(value->joinEUI) + "\", "
-           + "\"devEUI\": \"" + DEVEUI2string(value->devEUI) + "\", "
-           + "\"devNonce\": \"" + DEVNONCE2string(value->devNonce) + "\"}";
-    else
-        return "";
+    return "{\"joinEUI\": \"" + DEVEUI2string(value.joinEUI) + "\", "
+       + "\"devEUI\": \"" + DEVEUI2string(value.devEUI) + "\", "
+       + "\"devNonce\": \"" + DEVNONCE2string(value.devNonce) + "\"}";
+}
+
+std::string CFLIST2string(const CFLIST &value)
+{
+    std::stringstream ss;
+
+    ss << "{\"cflisttype\": " << (int) value.cflisttype
+       << ", \"frequency\": [";
+    for (int i = 0; i < 5; i++) {
+        ss << FREQUENCY2int(value.frequency[i]);
+        if (i < 4)
+            ss << ", ";
+    }
+    ss << "]}";
+    return ss.str();
+}
+
+std::string JOIN_ACCEPT_FRAME_HEADER2string(
+    const JOIN_ACCEPT_FRAME_HEADER &value
+) {
+    std::stringstream ss;
+    ss << "{\"joinNonce\": \"" << JOINNONCE2string(value.joinNonce) << "\", "
+       << "\"netId\": \"" << NETID2String(value.netId) << "\", "
+       << "\"devAddr\": \"" << DEVADDR2string(value.devAddr)
+       << "\"dlSettings\": {"
+       << "\"RX2DataRate\": " << (int) value.dlSettings.RX2DataRate	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
+       << ", \"RX1DROffset\": " << (int) value.dlSettings.RX1DROffset         	    ///< offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
+       << ", \"optNeg\": " << (int) value.dlSettings.optNeg     	    ///< 1.0- RFU, 1.1- optNeg
+       << "}, "
+       << "\"rxDelay\": \"" << (int) value.rxDelay
+       << "\"}";
+    return ss.str();
+}
+
+std::string JOIN_ACCEPT_FRAME2string(
+    const JOIN_ACCEPT_FRAME &value
+) {
+    std::stringstream ss;
+    ss << "{\"mhdr\": " << MHDR2String(value.mhdr)
+        << ", \"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr) << ", "
+        << ", \"mic\": \"" << MIC2String(value.mic) << "\"}";
+    return ss.str();
+}
+
+std::string JOIN_ACCEPT_FRAME_CFLIST2string(
+    const JOIN_ACCEPT_FRAME_CFLIST &value
+) {
+    std::stringstream ss;
+    ss << "{\"mhdr\": " << MHDR2String(value.mhdr)
+       << ", \"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr) << ", "
+       << ", \"cflist\": " << CFLIST2string(value.cflist) << ", "
+       << ", \"mic\": \"" << MIC2String(value.mic) << "\"}";
+    return ss.str();
 }
 
 uint32_t NETID2int(
@@ -565,6 +615,16 @@ void int2NETID(
 	retval[0] = value & 0xff;
 	retval[1] = (value >> 8) & 0xff;
 	retval[2] = (value >> 16) & 0xff;
+}
+
+std::string NETID2String(
+    const NETID &value
+)
+{
+    uint32_t r = NETID2int(value);
+    std::stringstream ss;
+    ss << std::hex << std::setw(6) << std::setfill('0') << r;
+    return ss.str();
 }
 
 int FREQUENCY2int(
@@ -1166,6 +1226,24 @@ void int2DEVADDR(
 {
 	// *((uint32_t*) &retval) = NTOH4(value);
 	*((uint32_t*) &retval) = value;
+}
+
+std::string MHDR2String(const MHDR &value)
+{
+    // return hexString(&value, 1);
+    std::stringstream ss;
+    ss << "{\"mtype\": " << (int) value.f.mtype
+        << ", \"major\": " << (int) value.f.major
+        << ", \"rfu\": " << (int) value.f.rfu
+        << "}";
+    return ss.str();
+}
+
+std::string MIC2String(uint16_t value)
+{
+    // hex string is MSB first, swap if need it
+    value = NTOH2(value);
+    return hexString(&value, sizeof(value));
 }
 
 std::string DEVADDR2string(
@@ -2406,9 +2484,35 @@ void SemtechUDPPacket::appendMACs(const std::string &macsString) {
 
 JOIN_REQUEST_FRAME *SemtechUDPPacket::getJoinRequestFrame() const
 {
+    // after parse
     if (errcode != ERR_CODE_IS_JOIN)
         return NULL;
-    return (JOIN_REQUEST_FRAME *) payload.c_str();
+    size_t sz = payload.size();
+    if (sz == sizeof(JOIN_REQUEST_FRAME))
+        return (JOIN_REQUEST_FRAME *) payload.c_str();
+    return NULL;
+}
+
+JOIN_ACCEPT_FRAME *SemtechUDPPacket::getJoinAcceptFrame() const
+{
+    // after parse
+    if (errcode != ERR_CODE_IS_JOIN)
+        return NULL;
+    size_t sz = payload.size();
+    if (sz == sizeof(JOIN_ACCEPT_FRAME))
+        return (JOIN_ACCEPT_FRAME *) payload.c_str();
+    return NULL;
+}
+
+JOIN_ACCEPT_FRAME_CFLIST *SemtechUDPPacket::getJoinAcceptCFListFrame() const
+{
+    // after parse
+    if (errcode != ERR_CODE_IS_JOIN)
+        return NULL;
+    size_t sz = payload.size();
+    if (sz == sizeof(JOIN_ACCEPT_FRAME_CFLIST))
+        return (JOIN_ACCEPT_FRAME_CFLIST *) payload.c_str();
+    return NULL;
 }
 
 uint64_t deveui2int(

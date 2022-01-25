@@ -279,18 +279,55 @@ int main(
 	std::vector<SemtechUDPPacket> packets;
 
 	int r = SemtechUDPPacket::parse(NULL, dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
-	
-	if (r) {
-        std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
+
+    switch (r) {
+        case ERR_CODE_IS_JOIN:
+            if (packets.size()) {
+                switch (((MHDR *)config.payload.c_str())->f.mtype) {
+                    case MTYPE_JOIN_REQUEST:
+                        {
+                            JOIN_REQUEST_FRAME *joinRequestFrame = packets[0].getJoinRequestFrame();
+                            if (joinRequestFrame) {
+                                std::cerr << "Join request "
+                                          << JOIN_REQUEST_FRAME2string(*joinRequestFrame)
+                                          << std::endl;
+                            }
+                        }
+                        break;
+                    case  MTYPE_JOIN_ACCEPT:
+                        {
+                            const JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
+                            if (joinAcceptFrame) {
+                                std::cerr << "Join accept "
+                                          << JOIN_ACCEPT_FRAME2string(*joinAcceptFrame)
+                                          << std::endl;
+                            }
+                            const JOIN_ACCEPT_FRAME_CFLIST *joinAcceptCFListFrame = packets[0].getJoinAcceptCFListFrame();
+                            if (joinAcceptCFListFrame) {
+                                std::cerr << "Join accept CFList "
+                                          << JOIN_ACCEPT_FRAME_CFLIST2string(*joinAcceptCFListFrame)
+                                          << std::endl;
+                            }
+                        }
+                        break;
+                }
+            }
+            break;
+        default:
+            std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
 	}
 
 	if (gatewayStat.errcode == 0) {
 		std::cerr << gatewayStat.toJsonString() << std::endl;
 	}
 
+    if (r)
+        exit(r);
+
     if (config.verbosity > 2) {
         std::cerr << packets.size() << " packets" << std::endl;
     }
+
 	for (std::vector<SemtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
 		if (it->errcode) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << ": " << ERR_INVALID_PACKET << std::endl;

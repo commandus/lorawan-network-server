@@ -132,11 +132,11 @@ int LoraPacketProcessor::enqueueJoinResponse(
 {
     std::stringstream ss;
     std::string macs = value.getMACs();
-    JOIN_REQUEST_FRAME *joinRequestFrame = value.getJoinRequestFrame();
+    const JOIN_REQUEST_FRAME *joinRequestFrame = value.getJoinRequestFrame();
 
     // log Join event
     ss << MSG_ENQUEUE_JOIN_REQUEST << MSG_TO_REQUEST
-        << JOIN_REQUEST_FRAME2string(joinRequestFrame)
+        << JOIN_REQUEST_FRAME2string(*joinRequestFrame)
         << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
         << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI);
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());

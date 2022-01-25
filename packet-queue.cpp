@@ -733,7 +733,16 @@ void PacketQueue::runner()
 				replyMAC(item, t);
 				break;
             case MODE_JOIN_REQUEST:
-                replyJoinRequest(item, t);
+                {
+                    int r = replyJoinRequest(item, t);
+                    if (r) {
+                        if (onLog) {
+                            std::stringstream ss;
+                            ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r);
+                            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, r, ss.str());
+                        }
+                    }
+                }
                 break;
 			case MODE_CONTROL_NS:
 				// control packet
@@ -842,9 +851,19 @@ int PacketQueue::replyJoinRequest(
         // Device not found. Device must be registered in the database before Join procedure
         return ERR_CODE_DEVICE_EUI_NOT_FOUND;
     }
+    // Check does Join EUI matched
+    // if (memcmp(&(nid.appEUI[0]), &(joinRequestFrame->joinEUI[0]), sizeof(DEVEUI)) != 0) {
     if (memcmp(nid.appEUI, joinRequestFrame->joinEUI, sizeof(DEVEUI)) != 0) {
+    // if (strncmp((const char *) &nid.appEUI, (const char *) &joinRequestFrame->joinEUI, sizeof(DEVEUI))  != 0) {
         // Device record is invalid. Set correct Join(App)EUI
-        return ERR_CODE_APP_EUI_NOT_FOUND;
+        if (onLog) {
+            std::stringstream ss;
+            ss << ERR_JOIN_EUI_NOT_MATCHED
+                << " received Join EUI " << DEVEUI2string(joinRequestFrame->joinEUI)
+                << ", expected Join (App) EUI " << DEVEUI2string(nid.appEUI);
+            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_JOIN_EUI_NOT_MATCHED, ss.str());
+        }
+        return ERR_CODE_JOIN_EUI_NOT_MATCHED;
     }
     // check just in case gateway
     if (!gatewayList)

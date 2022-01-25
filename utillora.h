@@ -606,11 +606,15 @@ public:
 
 	// can return NULL
 	JOIN_REQUEST_FRAME *getJoinRequestFrame() const;
+    JOIN_ACCEPT_FRAME *getJoinAcceptFrame() const;
+    JOIN_ACCEPT_FRAME_CFLIST *getJoinAcceptCFListFrame() const;
 };
 
 uint64_t deveui2int(const DEVEUI &value);
 void int2DEVADDR(DEVADDR &retval, uint32_t value);
 
+std::string MHDR2String(const MHDR &value);
+std::string MIC2String(uint16_t value);
 std::string DEVADDR2string(const DEVADDR &value);
 std::string uint64_t2string(const uint64_t &value);
 std::string DEVADDRINT2string(const DEVADDRINT &value);
@@ -622,10 +626,16 @@ std::string JOINNONCE2string(const JOINNONCE &value);
 DEVNONCE string2DEVNONCE(const std::string &value);
 void string2JOINNONCE(JOINNONCE &retval, const std::string &value);
 
-std::string JOIN_REQUEST_FRAME2string(const JOIN_REQUEST_FRAME *value);
+std::string JOIN_ACCEPT_FRAME_HEADER2string(const JOIN_ACCEPT_FRAME_HEADER &value);
+std::string CFLIST2string(const CFLIST &value);
+
+std::string JOIN_REQUEST_FRAME2string(const JOIN_REQUEST_FRAME &value);
+std::string JOIN_ACCEPT_FRAME2string(const JOIN_ACCEPT_FRAME &value);
+std::string JOIN_ACCEPT_FRAME_CFLIST2string(const JOIN_ACCEPT_FRAME_CFLIST &value);
 
 uint32_t NETID2int(const NETID &value);
 void int2NETID(NETID &retval, uint32_t value);
+std::string NETID2String(const NETID &value);
 
 uint32_t JOINNONCE2int(const JOINNONCE &value);
 int FREQUENCY2int(const FREQUENCY &frequency);
