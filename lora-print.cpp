@@ -294,7 +294,7 @@ int main(
                             }
                         }
                         break;
-                    case  MTYPE_JOIN_ACCEPT:
+                    case MTYPE_JOIN_ACCEPT:
                         {
                             const JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
                             if (joinAcceptFrame) {

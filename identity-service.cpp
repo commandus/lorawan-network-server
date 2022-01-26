@@ -1,16 +1,11 @@
-#include <map>
-#include <iostream>
 #include "identity-service.h"
 
 int IdentityService::joinAccept(
         JOIN_ACCEPT_FRAME_HEADER &retval,
-        const NetworkIdentity &networkIdentity
+        NetworkIdentity &networkIdentity
 ) {
-    std::cerr << "IdentityService::joinAccept 1" << std::endl;
     if (isDEVADDREmpty(networkIdentity.devaddr)) {
-        std::cerr << "IdentityService::joinAccept a new one" << std::endl;
-
-        // a new one
+        // No assigned address, generate a new one
         // return network identifier
         netid.get(retval.netId);
         NetworkIdentity newNetworkIdentity(networkIdentity);
@@ -22,14 +17,16 @@ int IdentityService::joinAccept(
         // return address
         memmove(&retval.devAddr, &newNetworkIdentity.devaddr, sizeof(DEVADDR));
         memmove(&retval.joinNonce, &newNetworkIdentity.joinNonce, sizeof(JOINNONCE));
+        // return address in the identity too
+        memmove(&networkIdentity.devaddr, &newNetworkIdentity.devaddr, sizeof(DEVADDR));
     } else {
-        std::cerr << "IdentityService::joinAccept re-use old address" << std::endl;
-        // re-use old address
-        // return network identifier
+        // re-use old address, return network identifier
         netid.get(retval.netId);
         // return address
         memmove(&retval.devAddr, &networkIdentity.devaddr, sizeof(DEVADDR));
         memmove(&retval.joinNonce, &networkIdentity.joinNonce, sizeof(JOINNONCE));
+        // return address in the identity too
+        memmove(&networkIdentity.devaddr, &networkIdentity.devaddr, sizeof(DEVADDR));
     }
     return 0;
 }

@@ -1628,7 +1628,23 @@ char *SemtechUDPPacket::getSemtechJSONCharPtr
 {
 	if (size <= sizeof(SEMTECH_PREFIX_GW))
 		return NULL;
-	return (char *) packet + sizeof(SEMTECH_PREFIX_GW);
+    switch (((SEMTECH_PREFIX_GW *) packet)->tag) {
+        case SEMTECH_GW_PUSH_DATA:  // 0 network server responds on PUSH_DATA to acknowledge immediately all the PUSH_DATA packets received
+            return (char *) packet + sizeof(SEMTECH_PREFIX_GW); // 12 bytes
+        case SEMTECH_GW_PUSH_ACK:   // 1 gateway initiate receiving packets from the network server (because of NAT)
+            return (char *) packet + sizeof(SEMTECH_PREFIX); // 4 bytes
+        case SEMTECH_GW_PULL_DATA:  // 2 network server responds on PULL_DATA
+            return (char *) packet + sizeof(SEMTECH_PREFIX_GW); // 12 bytes
+        case SEMTECH_GW_PULL_ACK:   // 3 network server send packet to the gateway after PULL_DATA - PULL_ACK sequence
+            return (char *) packet + sizeof(SEMTECH_PREFIX); // 4 bytes
+        case SEMTECH_GW_PULL_RESP:  // 4
+            return (char *) packet + sizeof(SEMTECH_PREFIX); // 4 bytes
+        case SEMTECH_GW_TX_ACK:  // 5 gateway inform network server about does PULL_RESP data transmission was successful or not
+            return (char *) packet + sizeof(SEMTECH_PREFIX_GW); // 12 bytes
+        default:
+            return NULL;
+    }
+
 }
 
 /**
@@ -2253,7 +2269,7 @@ uint64_t SemtechUDPPacket::getBestGatewayAddress(
 
 /**
  * @param payloadString RFM header and encrypted data
- * @param receivedTime time when gateway recived, microseconds, internal counter
+ * @param receivedTime time when gateway received, microseconds, internal counter
  * @param power transmission power
  * @return JSON serialized metadata and payloadString
  */
@@ -2367,6 +2383,21 @@ std::string SemtechUDPPacket::mkPullResponse(
 	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);
 	sMsg << std::string((char *) &mic, 4);
 	return toTxJsonString(sMsg.str(), receivedTime, power);
+}
+
+/**
+	 * Make Semtech UDP protocol packet Join Accept response
+	 * @param frame Join accept payload frame payload
+	 * @param receivedTime time
+	 * @param power transmission power
+	 */
+std::string SemtechUDPPacket::mkJoinAcceptResponse(
+        const JOIN_ACCEPT_FRAME &frame,
+        uint32_t receivedTime,
+        const int power
+) const
+{
+    return toTxJsonString(std::string((const char *) &frame, sizeof(JOIN_ACCEPT_FRAME)), receivedTime, power);
 }
 
 /**

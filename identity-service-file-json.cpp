@@ -120,6 +120,15 @@ public:
         flags = 0;
     }
 
+    void resetEntry() {
+        isNetworkIdentity = true;
+
+        memset(&k.devaddr, '\0', sizeof(DEVADDR));
+        memset(&v, '\0', sizeof(DEVICEID));
+        v.version.major = 1;
+        flags = 0;
+    }
+
     bool Null() {
         return true;
     }
@@ -215,12 +224,7 @@ public:
         return true;
     }
     bool StartObject() {
-        isNetworkIdentity = true;
-        v.version.major = 1;
-        v.version.minor = 0;
-        v.version.release = 0;
-        v.devNonce = 0;
-        flags = 0;
+        resetEntry();
         return true;
     }
 

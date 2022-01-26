@@ -206,7 +206,7 @@
 #define ERR_SEGMENTATION_FAULT			"Segmentation fault"
 #define ERR_ABRT                        "Abnormal program termination"
 #define ERR_BEST_GATEWAY_NOT_FOUND		"Best gateway not found"
-#define ERR_REPLY_MAC					"Error send MAC reply "
+#define ERR_REPLY_MAC					"Can not send MAC reply"
 #define ERR_NO_MAC			           	"No MAC command"
 #define ERR_NO_DEVICE_STAT				"No device statistics"
 #define ERR_INIT_DEVICE_STAT			"Device counter initialization error "

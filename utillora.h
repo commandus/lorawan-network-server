@@ -123,7 +123,7 @@ typedef ALIGN struct {
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// random token
-	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
+	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
 } PACKED SEMTECH_PREFIX_GW;	// 12 bytes
 // After prefix "JSON object", starting with {, ending with }, see section 4
@@ -573,7 +573,7 @@ public:
 	uint64_t getBestGatewayAddress(float *retvalLsnr = NULL) const;
 	
 	/**
-	 * Make PULL_RESP Semtech UDP protocol packet repsonse
+	 * Make PULL_RESP Semtech UDP protocol packet response
 	 * @param data payload
 	 * @param version LoraWAN version
 	 * @param key key
@@ -587,7 +587,19 @@ public:
 		const int power = 14
 	) const;
 
-	std::string mkMACRequest(
+    /**
+	 * Make Semtech UDP protocol packet Join Accept response
+	 * @param frame Join accept payload frame payload
+	 * @param receivedTime time
+	 * @param power transmission power
+	 */
+    std::string mkJoinAcceptResponse(
+            const JOIN_ACCEPT_FRAME &frame,
+            uint32_t receivedTime,
+            const int power = 14
+    ) const;
+
+    std::string mkMACRequest(
         const DEVEUI *gwId,
 		const std::string &payload,
 		const NetworkIdentity &networkId,

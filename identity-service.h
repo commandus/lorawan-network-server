@@ -67,7 +67,7 @@ public:
 
     int joinAccept(
             JOIN_ACCEPT_FRAME_HEADER &retval,
-            const NetworkIdentity &networkIdentity
+            NetworkIdentity &networkIdentity
     );
 
     NetId * getNetworkId();

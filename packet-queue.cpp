@@ -43,11 +43,22 @@ DEVADDRINT SemtechUDPPacketItem::getAddr() const
 	return packet.getDeviceAddr();
 }
 
-std::string SemtechUDPPacketItem::toString() const
+std::string SemtechUDPPacketItem::toJsonString() const
 {
 	std::stringstream ss;
-	ss << timeval2string(timeAdded) << " " << packet.getDeviceAddrStr() << " " << packet.metadataToJsonString();
+	ss << "{\"time\": \"" << timeval2string(timeAdded)
+        << "\", \"devaddr\": \"" << packet.getDeviceAddrStr()
+        << "\", \"metadata\": " << packet.metadataToJsonString()
+        << "}";
 	return ss.str();
+}
+
+std::string SemtechUDPPacketItem::toString() const
+{
+    std::stringstream ss;
+    ss << "time: " << timeval2string(timeAdded) << ", device address: " << packet.getDeviceAddrStr()
+        << ", metadata: " << packet.metadataToJsonString();
+    return ss.str();
 }
 
 std::string SemtechUDPPacketItems::toString() const
@@ -830,12 +841,6 @@ int PacketQueue::replyJoinRequest(
         struct timeval &t
 )
 {
-    if (onLog) {
-        std::stringstream ss;
-        ss << "PacketQueue::replyJoinRequest " << item.toString();
-        onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
-    }
-
     // get Join request
     JOIN_REQUEST_FRAME *joinRequestFrame = item.packet.getJoinRequestFrame();
     // check does it exist
@@ -852,9 +857,7 @@ int PacketQueue::replyJoinRequest(
         return ERR_CODE_DEVICE_EUI_NOT_FOUND;
     }
     // Check does Join EUI matched
-    // if (memcmp(&(nid.appEUI[0]), &(joinRequestFrame->joinEUI[0]), sizeof(DEVEUI)) != 0) {
     if (memcmp(nid.appEUI, joinRequestFrame->joinEUI, sizeof(DEVEUI)) != 0) {
-    // if (strncmp((const char *) &nid.appEUI, (const char *) &joinRequestFrame->joinEUI, sizeof(DEVEUI))  != 0) {
         // Device record is invalid. Set correct Join(App)EUI
         if (onLog) {
             std::stringstream ss;
@@ -876,7 +879,6 @@ int PacketQueue::replyJoinRequest(
         if (onLog)
             onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_REGION_BAND, ERR_NO_REGION_BAND);
         return ERR_CODE_NO_REGION_BAND;
-
     }
 
     // find out best gateway by the best SNR
@@ -918,18 +920,10 @@ int PacketQueue::replyJoinRequest(
     // log end-device internal time and elected gateway
     std::stringstream ss;
     uint32_t internalTime = item.packet.tmst();
-    if (onLog) {
-        ss << MSG_SEND_JOIN_REQUEST_REPLY
-           << " tmst: " << internalTime
-           << ", "  << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId)
-           << " (" << gwit->second.name << ")"
-           << MSG_GATEWAY_SNR  << snr << ", address: "
-           << UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr);
-        onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
-    }
 
     // make response
     JOIN_ACCEPT_FRAME frame;
+    // fill up address in the frame
     int rj = identityService->joinAccept(frame.hdr, nid);
     if (rj) {
         if (onLog) {
@@ -939,7 +933,10 @@ int PacketQueue::replyJoinRequest(
         // do not reply to the device
         return rj;
     }
+    // copy assigned address to the item
+    memmove(&item.packet.header.header.devaddr, nid.devaddr, sizeof(DEVADDR));
 
+    // fill up regional settings in the frame
     frame.hdr.rxDelay = regionalParameterChannelPlan->bandDefaults.ReceiveDelay1;
     frame.hdr.dlSettings.RX2DataRate = regionalParameterChannelPlan->bandDefaults.RX2DataRate;
     frame.hdr.dlSettings.RX1DROffset = 0;
@@ -982,6 +979,7 @@ int PacketQueue::replyJoinRequest(
                 ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
                 onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
             }
+            return ERR_CODE_NO_FCNT_DOWN;
         }
     }
 
@@ -991,10 +989,8 @@ int PacketQueue::replyJoinRequest(
     } else {
         encryptJoinAcceptResponse(frame, JSIntKey);
     }
-
-    std::string response = std::string( (char *) &frame, sizeof(JOIN_ACCEPT_FRAME));
-    std::cerr << "==JOIN ACCEPT RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
-    std::cerr << "==JOIN ACCEPT RESPONSE: " << hexString(response) << std::endl;
+    item.packet.header.header.fcnt = fcntdown;
+    std::string response = item.packet.mkJoinAcceptResponse(frame, internalTime, power);
     size_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
           (const struct sockaddr*) &gwit->second.sockaddr,
           ((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
@@ -1008,20 +1004,36 @@ int PacketQueue::replyJoinRequest(
     if (onLog) {
         if (r != response.size()) {
             std::stringstream ss;
-            ss << ERR_MESSAGE << ERR_CODE_REPLY_MAC << ERR_REPLY_MAC
-               << " socket " << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
+            ss << ERR_MESSAGE << ERR_CODE_REPLY_MAC << ": " << ERR_REPLY_MAC
+                    << ", tmst: " << internalTime
+                    << ", " << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId)
+                    << " (" << gwit->second.name << ")"
+                    << MSG_GATEWAY_SNR << snr << ", address: "
+                    << UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr)
+                    << ", device address: " << DEVADDR2string(item.packet.header.header.devaddr)
+                    << ", payload: " << hexString(response) << " (" << response.size()
+                    << " bytes) to " << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
             if (r == -1)
-                ss << ", sent " << r << " of " << response.size();
-            ss << ", errno: " << errno << ": " << strerror(errno);
+                ss << ", sent " << r << " bytes of " << response.size();
+            if (errno)
+                ss << ", system errno: " << errno << ": " << strerror(errno);
             if (onLog)
                 onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
         } else {
             std::stringstream ss;
-            ss << MSG_SENT_REPLY_TO
-               << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-               << " payload: " << hexString(response) << ", size: " << response.size();
-            if (onLog)
+            // log assigned network address
+            if (onLog) {
+                ss << MSG_SEND_JOIN_REQUEST_REPLY
+                   << "tmst: " << internalTime
+                   << ", " << MSG_BEST_GATEWAY << gatewayId2str(gwit->second.gatewayId)
+                   << " (" << gwit->second.name << ")"
+                   << MSG_GATEWAY_SNR << snr << ", address: "
+                   << UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr)
+                   << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
+                   << ", device address: " << DEVADDR2string(item.packet.header.header.devaddr)
+                   << ", payload: " << hexString(response) << ", size: " << response.size();
                 onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+            }
         }
     }
     return LORA_OK;

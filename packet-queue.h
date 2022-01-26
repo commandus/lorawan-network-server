@@ -52,7 +52,8 @@ class SemtechUDPPacketItem {
 			const struct timeval &time,
 			const SemtechUDPPacket &aPacket
 		);
-		std::string toString() const;
+		std::string toJsonString() const;
+        std::string toString() const;
 };
 
 class SemtechUDPPacketItems {
