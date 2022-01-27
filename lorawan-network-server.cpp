@@ -79,7 +79,7 @@ static DeviceStatService *deviceStatService = NULL;
 static UDPListener *listener = NULL;
 // Device identity service
 static IdentityService *identityService = NULL;
-// ReceiverQueueProcessor get payload from the queue, parse and put parsed data
+// ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
 static ReceiverQueueProcessor *receiverQueueProcessor = NULL;
 // LoraPacketProcessor handles uplink messages
 static LoraPacketProcessor *processor = NULL;
@@ -547,7 +547,7 @@ int main(
         std::cerr << ERR_MESSAGE << ERR_CODE_INIT_REGION_BANDS << ": " << ERR_INIT_REGION_BANDS
             << ", code " << rs << ": " << strerror_lorawan_ns(rs)
                   << ", file: " << config->serverConfig.regionalSettingsStorageName
-                  << ", parse error " << parseCode << ": " << parseDescription
+                  << ", parseRX error " << parseCode << ": " << parseDescription
                   << std::endl;
         exit(ERR_CODE_INIT_REGION_BANDS);
     }

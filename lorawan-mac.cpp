@@ -107,7 +107,7 @@ MAC_COMMAND_TYPE isMACCommand(uint8_t cmd)
 /**
  * Parse transmitted by the server client side
  * @param retval returns MAC command
- * @param value packet to parse
+ * @param value packet to parseRX
  * @return size of first MAC command, if error, return <0
  */
 int parseClientSide(
@@ -192,7 +192,7 @@ int parseClientSide(
 /**
  * Parse MAC command transmitted by end-device (server side)
  * @param retval returns MAC command
- * @param value packet to parse
+ * @param value packet to parseRX
  * @param sz packet size
  * @return size of first MAC command, if error, return <0
  */
@@ -279,7 +279,7 @@ int parseServerSide(
 /**
  * Parse transmitted by the server client side
  * @param retval if not NULL, return pointer to MAC command
- * @param value packet to parse
+ * @param value packet to parseRX
  * @param sz packet size
  * @return size of first MAC command, if error, return <0
  */
@@ -365,7 +365,7 @@ int parseClientSidePtr(
 /**
  * Parse MAC command transmitted by end-device (server side)
  * @param retval if not NULL, return pointer to MAC command
- * @param value packet to parse
+ * @param value packet to parseRX
  * @param sz packet size
  * @return size of first MAC command, if error, return <0
  */
@@ -1826,7 +1826,7 @@ void MacPtr::parse(
 {
 	MAC_COMMAND *m;
 	int r;
-    std::cerr << "MacPtr::parse " << hexString(parseData) << std::endl;
+    std::cerr << "MacPtr::parseRX " << hexString(parseData) << std::endl;
 	const char *p = parseData.c_str();
 	size_t sz = parseData.size();
 	while (sz > 0)

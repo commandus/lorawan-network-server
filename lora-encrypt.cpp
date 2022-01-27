@@ -46,22 +46,21 @@ void encryptPayload(
 	uint16_t ctr = 1;
 	uint8_t bufferIndex = 0;
 	std::string encBuffer(payload);
-	while( size >= 16 ) {
+	while (size >= 16) {
         a[15] = ctr & 0xff;
         ctr++;
         aes_encrypt(a, s, &aesContext);
-        for(int i = 0; i < 16; i++) {
+        for (int i = 0; i < 16; i++) {
             encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
         }
         size -= 16;
         bufferIndex += 16;
     }
  
-    if( size > 0 )
-    {
+    if (size > 0) {
         a[15] = ctr & 0xff;
         aes_encrypt(a, s, &aesContext);
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             encBuffer[bufferIndex + i] = payload[bufferIndex + i] ^ s[i];
         }
     }
@@ -274,18 +273,15 @@ void encryptJoinAcceptResponse
     aes_set_key(key, sizeof(KEY128), &aesContext);
 
     uint8_t a[16];
-    memset(a, 0, sizeof(a));
-    uint8_t s[16];
-    memset(s, 0, sizeof(s));
+	memset(a, 0, sizeof(a));
+	uint8_t s[16];
+	memset(s, 0, sizeof(s));
 
-    int size = sizeof(JOIN_ACCEPT_FRAME_HEADER) + sizeof(uint16_t); // JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList | MIC
-    uint8_t bufferIndex = 1;
-    uint8_t *p = (uint8_t *) &frame.hdr;
+    uint8_t *e = (uint8_t *) &frame.hdr;
 
-    while (size >= 16) {
-        aes_encrypt((const uint8_t*) p + bufferIndex,
-                    (uint8_t*) p + bufferIndex, &aesContext);
-        size -= 16;
-        bufferIndex += 16;
-    }
+	// a[15] = 1;
+	aes_encrypt(a, s, &aesContext);
+	for (int i = 0; i < sizeof(JOIN_ACCEPT_FRAME) - 1; i++) {
+		e[i] = e[i] ^ s[i];
+	}
 }

@@ -237,7 +237,7 @@ int main(
 	if (config->serverConfig.verbosity > 2)
 		std::cerr << "Gateways: " << std::endl <<gatewayList->toJsonString() << std::endl;
 	
-	// parse gateway ids, expand regex 
+	// parseRX gateway ids, expand regex
 	int r;	
 	if ((r = gatewayList->parseIdentifiers(macGwConfig->gatewayIds, macGwConfig->gatewayMasks, macGwConfig->useRegex))) {
 		std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
@@ -256,12 +256,12 @@ int main(
 	if (config->serverConfig.verbosity > 2)
 		std::cerr << "Devices: " << std::endl <<identityService.toJsonString() << std::endl;
 
-	// parse device ids, expand regex
+	// parseRX device ids, expand regex
 	if (identityService.parseIdentifiers(macGwConfig->euis, macGwConfig->euiMasks, macGwConfig->useRegex)) {
 		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
 	}
-	// parse device names, expand regex
+	// parseRX device names, expand regex
 	if (identityService.parseNames(macGwConfig->euis, macGwConfig->deviceNames, macGwConfig->useRegex)) {
 		std::cerr << ERR_INVALID_DEVICE_EUI << std::endl;
 		exit(ERR_CODE_INVALID_DEVICE_EUI);
@@ -279,7 +279,7 @@ int main(
 		exit(ERR_CODE_MISSED_GATEWAY);
 	}
 
-	// parse MAC command(s)
+	// parseRX MAC command(s)
 	r = macGwConfig->parse(true);
 	if (r) {
 		std::cerr << "MAC command error " << r << ": " << macGwConfig->errmessage << std::endl;

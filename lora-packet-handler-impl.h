@@ -29,7 +29,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 
 		// ReceiverQueueService enqueue data payload packets received from gateways (with deduplication)
 		ReceiverQueueService *receiverQueueService;
-		// ReceiverQueueProcessor get payload from the queue, parse and put parsed data
+		// ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
 		ReceiverQueueProcessor *receiverQueueProcessor;
 		PacketQueue packetQueue;
 

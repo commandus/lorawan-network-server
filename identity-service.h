@@ -47,14 +47,14 @@ public:
     // close resources
     virtual void done() = 0;
 
-    // parse list of identifiers, wildcards or regexes and copy found EUI into retval
+    // parseRX list of identifiers, wildcards or regexes and copy found EUI into retval
     virtual int parseIdentifiers(
             std::vector<TDEVEUI> &retval,
             const std::vector<std::string> &list,
             bool useRegex
     ) = 0;
 
-    // parse list of names, wildcards or regexes and copy found EUI into retval
+    // parseRX list of names, wildcards or regexes and copy found EUI into retval
     virtual int parseNames(
             std::vector<TDEVEUI> &retval,
             const std::vector<std::string> &list,

@@ -567,15 +567,14 @@ std::string JOIN_ACCEPT_FRAME_HEADER2string(
     const JOIN_ACCEPT_FRAME_HEADER &value
 ) {
     std::stringstream ss;
-    ss << "{\"joinNonce\": \"" << JOINNONCE2string(value.joinNonce) << "\", "
-       << "\"netId\": \"" << NETID2String(value.netId) << "\", "
-       << "\"devAddr\": \"" << DEVADDR2string(value.devAddr)
-       << "\"dlSettings\": {"
+    ss << "{\"joinNonce\": \"" << JOINNONCE2string(value.joinNonce)
+       << "\", \"netId\": \"" << NETID2String(value.netId)
+       << "\", \"devAddr\": \"" << DEVADDR2string(value.devAddr)
+       << "\", \"dlSettings\": {"
        << "\"RX2DataRate\": " << (int) value.dlSettings.RX2DataRate	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
        << ", \"RX1DROffset\": " << (int) value.dlSettings.RX1DROffset         	    ///< offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
        << ", \"optNeg\": " << (int) value.dlSettings.optNeg     	    ///< 1.0- RFU, 1.1- optNeg
-       << "}, "
-       << "\"rxDelay\": \"" << (int) value.rxDelay
+       << "}, \"rxDelay\": \"" << (int) value.rxDelay
        << "\"}";
     return ss.str();
 }
@@ -585,7 +584,7 @@ std::string JOIN_ACCEPT_FRAME2string(
 ) {
     std::stringstream ss;
     ss << "{\"mhdr\": " << MHDR2String(value.mhdr)
-        << ", \"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr) << ", "
+        << ", \"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr)
         << ", \"mic\": \"" << MIC2String(value.mic) << "\"}";
     return ss.str();
 }
@@ -1350,9 +1349,13 @@ void rfmMetaData::toJSON(
 }
 
 /**
- * @return 0
- */ 
-int rfmMetaData::parse(
+ * Parse RXPK
+ * @param retSize
+ * @param retData
+ * @param value
+ * @return
+ */
+int rfmMetaData::parseRX(
 	int &retSize,
 	std::string &retData,
 	rapidjson::Value &value
@@ -1454,6 +1457,101 @@ int rfmMetaData::parse(
 		}
 	}
 	return 0;
+}
+
+/**
+ * Parse TXPK
+ * @param retSize
+ * @param retData
+ * @param value
+ *
+ *         "imme", // 1 bool     Send packet immediately (will ignore tmst & time)
+            "tmms", // 3 number   Send packet at a certain GPS time (GPS synchronization required)
+            "powe", // 6 number   TX output power in dBm (unsigned integer, dBm precision)
+
+            "fdev", // 10 number FSK frequency deviation (unsigned integer, in Hz)
+            "ipol", // 11 bool   Lora modulation polarization inversion
+            "prea", // 12 number RF preamble size (unsigned integer)
+            "ncrc", // 15 bool   If true, disable the CRC of the physical layer (optional)
+
+ * @return
+ */
+int rfmMetaData::parseTX(
+        int &retSize,
+        std::string &retData,
+        rapidjson::Value &value
+) {
+    // "tmst" 2 number   Send packet on a certain timestamp value (will ignore time)
+    if (value.HasMember(METADATA_TX_NAMES[2])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[2]];
+        if (v.IsUint()) {
+            tmst = v.GetUint();
+        }
+    }
+
+    // "freq" 4 number   TX central frequency in MHz (unsigned float, Hz precision)
+    if (value.HasMember(METADATA_TX_NAMES[4])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[4]];
+        if (v.IsDouble()) {
+            freq = v.GetDouble() * 1000000;
+        }
+    }
+
+    // "rfch" 5 number   Concentrator "RF chain" used for TX (unsigned integer)
+    if (value.HasMember(METADATA_TX_NAMES[6])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[6]];
+        if (v.IsInt()) {
+            rfch = v.GetInt();
+        }
+    }
+
+    // "datr" 8 string or number  LoRa data rate identifier (eg. SF12BW500) or FSK datarate (unsigned, in bits per second)
+    if (value.HasMember(METADATA_TX_NAMES[8])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[8]];
+        if (v.IsString()) {
+            setDatr(v.GetString());
+        }
+    }
+
+    // "codr" 9 string  LoRa ECC coding rate identifier
+    if (value.HasMember(METADATA_TX_NAMES[9])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[9]];
+        if (v.IsString()) {
+            setCodr(v.GetString());
+        }
+    }
+
+    // "modu" 7 string   Modulation identifier "LORA" or "FSK"
+    if (value.HasMember(METADATA_TX_NAMES[7])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[7]];
+        if (v.IsString()) {
+            setModulation(v.GetString());
+        }
+    }
+
+    // "size" 13 number RF packet payload size in bytes (unsigned integer)
+    if (value.HasMember(METADATA_TX_NAMES[13])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[13]];
+        if (v.IsInt()) {
+            retSize = v.GetInt();
+        }
+    }
+
+    // "data" 14 string Base64 encoded RF packet payload, padded
+    if (value.HasMember(METADATA_TX_NAMES[14])) {
+        rapidjson::Value &v = value[METADATA_TX_NAMES[14]];
+        if (v.IsString()) {
+            try {
+                // base64
+                retData = base64_decode(v.GetString());
+            } catch (const std::exception& e) {
+                retData = "";
+            }
+
+        }
+    }
+
+    return 0;
 }
 
 std::string rfmMetaData::toJsonString(
@@ -1714,9 +1812,32 @@ int SemtechUDPPacket::parse
 		}
 	}
 
-	if (!doc.HasMember(METADATA_RX_NAMES[0]))   // rxpk
-		return 0;	// that's ok, it is PING
+	if (!doc.HasMember(METADATA_RX_NAMES[0])) // check rxpk
+    {
+        // is it txpk?
+        if (doc.HasMember(METADATA_TX_NAMES[0])) {
+            rapidjson::Value &jm = doc[METADATA_TX_NAMES[0]];
+            if (!jm.IsObject())
+                return ERR_CODE_INVALID_JSON;
+            rfmMetaData m;
+            int sz;
+            std::string data;
+            // extract txpk.data
+            int rr = m.parseTX(sz, data, jm);
+            if (rr)
+                return rr;
+            SemtechUDPPacket packet(gwAddress, &retPrefix, &m, data, identityService);
 
+            if ((packet.errcode == LORA_OK) || (packet.errcode == ERR_CODE_IS_JOIN))
+                retPackets.push_back(packet);
+            r = packet.errcode;
+
+            return r;
+        }
+        return 0;    // that's ok, it is PING
+    }
+
+    // rxpk
 	rapidjson::Value &rxpk = doc[METADATA_RX_NAMES[0]];
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
@@ -1729,7 +1850,7 @@ int SemtechUDPPacket::parse
 		int sz;
 		std::string data;
         // extract rxpk.data
-		int rr = m.parse(sz, data, jm);
+		int rr = m.parseRX(sz, data, jm);
 		if (rr)
 			return rr;
 		SemtechUDPPacket packet(gwAddress, &retPrefix, &m, data, identityService);
@@ -2179,11 +2300,22 @@ int SemtechUDPPacket::parseData(
 	const std::string &data,
 	IdentityService *identityService
 ) {
-    if (((MHDR *)data.c_str())->f.mtype <= MTYPE_JOIN_ACCEPT) {
-        int payloadSize = data.size() - sizeof(MHDR) - sizeof(uint32_t);
-        payload = data.substr(sizeof(MHDR), payloadSize);
-        errcode = ERR_CODE_IS_JOIN;
-        return errcode;
+    header.header.macheader = * (MHDR *)data.c_str();
+    switch (header.header.macheader.f.mtype) {
+        case MTYPE_JOIN_REQUEST:
+        {
+            int payloadSize = data.size() - sizeof(MHDR) - sizeof(uint32_t);
+            payload = data.substr(sizeof(MHDR), payloadSize);
+            errcode = ERR_CODE_IS_JOIN;
+            return errcode;
+        }
+        case MTYPE_JOIN_ACCEPT:
+        {
+            // with MHDR and MIC
+            payload = data;
+            errcode = ERR_CODE_IS_JOIN;
+            return errcode;
+        }
     }
 
     if (!header.parse(data)) {
@@ -2515,7 +2647,7 @@ void SemtechUDPPacket::appendMACs(const std::string &macsString) {
 
 JOIN_REQUEST_FRAME *SemtechUDPPacket::getJoinRequestFrame() const
 {
-    // after parse
+    // after parseRX
     if (errcode != ERR_CODE_IS_JOIN)
         return NULL;
     size_t sz = payload.size();
@@ -2526,7 +2658,7 @@ JOIN_REQUEST_FRAME *SemtechUDPPacket::getJoinRequestFrame() const
 
 JOIN_ACCEPT_FRAME *SemtechUDPPacket::getJoinAcceptFrame() const
 {
-    // after parse
+    // after parseRX
     if (errcode != ERR_CODE_IS_JOIN)
         return NULL;
     size_t sz = payload.size();
@@ -2537,7 +2669,7 @@ JOIN_ACCEPT_FRAME *SemtechUDPPacket::getJoinAcceptFrame() const
 
 JOIN_ACCEPT_FRAME_CFLIST *SemtechUDPPacket::getJoinAcceptCFListFrame() const
 {
-    // after parse
+    // after parseRX
     if (errcode != ERR_CODE_IS_JOIN)
         return NULL;
     size_t sz = payload.size();

@@ -392,7 +392,7 @@ int UDPListener::listen() {
 			}
 			onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 
-			// parse packet result code
+			// parseRX packet result code
 			int pr = parseBuffer(buffer, bytesReceived, it->sock, receivedTime, gwAddress);
 		}
 	}

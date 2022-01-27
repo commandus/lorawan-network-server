@@ -432,11 +432,16 @@ public:
 	std::string frequency() const;
 	std::string snrratio() const;
 	void toJSON(rapidjson::Value &value, rapidjson::Document::AllocatorType& allocator, const std::string &data);
-	int parse(
+	int parseRX(
 		int &retSize,
 		std::string &retData,
 		rapidjson::Value &value
 	);
+    int parseTX(
+            int &retSize,
+            std::string &retData,
+            rapidjson::Value &value
+    );
 	std::string toJsonString(const std::string &payload) const;
 	std::string datr() const;			// LoRa datarate identifier e.g. "SF7BW125"
 	void setDatr(const std::string &value);			// LoRa datarate identifier e.g. "SF7BW125"
@@ -494,7 +499,7 @@ public:
 	RFMHeader header;
 	std::vector<rfmMetaData> metadata;	// at least one(from one or many BS)
 	struct sockaddr_in6 gatewayAddress;
-	// parse error code
+	// parseRX error code
 	int errcode;
 	// downlink direction 01, uplink direction 00
 	bool downlink;
@@ -526,7 +531,7 @@ public:
 	);
 	SemtechUDPPacket();
     SemtechUDPPacket(const SemtechUDPPacket &value);
-	// Called from parse()
+	// Called from parseRX()
 	SemtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_PREFIX_GW *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
 	// TODO I dont remember what is it for
 	SemtechUDPPacket(const struct sockaddr *gatewayAddress, const std::string &data, const std::string &devaddr, const std::string &appskey);

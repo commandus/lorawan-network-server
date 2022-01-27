@@ -278,17 +278,19 @@ int main(
 	GatewayStat gatewayStat;
 	std::vector<SemtechUDPPacket> packets;
 
-	int r = SemtechUDPPacket::parse(NULL, dataprefix, gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
+	int r = SemtechUDPPacket::parse(NULL, dataprefix,
+        gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
+
 
     switch (r) {
         case ERR_CODE_IS_JOIN:
             if (packets.size()) {
-                switch (((MHDR *)config.payload.c_str())->f.mtype) {
+                switch (packets[0].header.header.macheader.f.mtype) {
                     case MTYPE_JOIN_REQUEST:
                         {
                             JOIN_REQUEST_FRAME *joinRequestFrame = packets[0].getJoinRequestFrame();
                             if (joinRequestFrame) {
-                                std::cerr << "Join request "
+                                std::cout << "Join request "
                                           << JOIN_REQUEST_FRAME2string(*joinRequestFrame)
                                           << std::endl;
                             }
@@ -298,16 +300,19 @@ int main(
                         {
                             const JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
                             if (joinAcceptFrame) {
-                                std::cerr << "Join accept "
+                                std::cout << "Join accept "
                                           << JOIN_ACCEPT_FRAME2string(*joinAcceptFrame)
                                           << std::endl;
+                                break;
                             }
                             const JOIN_ACCEPT_FRAME_CFLIST *joinAcceptCFListFrame = packets[0].getJoinAcceptCFListFrame();
                             if (joinAcceptCFListFrame) {
-                                std::cerr << "Join accept CFList "
+                                std::cout << "Join accept CFList "
                                           << JOIN_ACCEPT_FRAME_CFLIST2string(*joinAcceptCFListFrame)
                                           << std::endl;
+                                break;
                             }
+                            std::cerr << "Invalid Join Accept frame" << std::endl;
                         }
                         break;
                 }

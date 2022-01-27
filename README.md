@@ -315,7 +315,7 @@ Option "txt" is slow and useful for debug only.
 If option messageQueueStorageType value is "txt" then option "messageQueueStorageName" set directory name
 with ".bin", ".hex", ".b64" files.
 
-Other programs can put files to this directory and lorawan-network-server will parse files and put messages
+Other programs can put files to this directory and lorawan-network-server will parseRX files and put messages
 to the databases.
 
 - ".bin" - binary payload, as-is
@@ -328,7 +328,7 @@ Option "messageQueueDirFormat" bands are:
 - 1 or "hex"
 - 2 or "base64"
 
-lorawan-network-server try to parse payload and insert parsed data to database(s). Does not matter success or 
+lorawan-network-server try to parseRX payload and insert parsed data to database(s). Does not matter success or 
 fail is database insertion, file is deleted.
 
 ### gateway.json
@@ -612,14 +612,14 @@ A- NwkAddr
 
 ## lora-print
 
-lora-print utility parse packet received from the Semtech gateway and try to decode payload.
+lora-print utility parseRX packet received from the Semtech gateway and try to decode payload.
 
 Mandatory option is one of
 
 - -x, --hex=<hex-string>      LoraWAN packet to decode, hexadecimal string.
 - -6, --base64=<base64>       same, base64 encoded.
 
-lora-print utility parse payload by the packet description in one proto file.
+lora-print utility parseRX payload by the packet description in one proto file.
 
 You can specify folder path where proto file stored using option:
 

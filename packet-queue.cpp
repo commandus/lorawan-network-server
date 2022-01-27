@@ -990,6 +990,7 @@ int PacketQueue::replyJoinRequest(
         encryptJoinAcceptResponse(frame, JSIntKey);
     }
     item.packet.header.header.fcnt = fcntdown;
+    // item.packet.header.header.macheader.f.mtype = MTYPE_JOIN_ACCEPT;
     std::string response = item.packet.mkJoinAcceptResponse(frame, internalTime, power);
     size_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
           (const struct sockaddr*) &gwit->second.sockaddr,

@@ -425,7 +425,7 @@ static void putMacCommand(
 }
 
 /**
- * @brief parse already tokenized cmd array (from the command line)
+ * @brief parseRX already tokenized cmd array (from the command line)
  * @return 0- success, <0- error
  * states: 0- wait next command, 1- wait next parameters (if exists), 2- eof
  */ 

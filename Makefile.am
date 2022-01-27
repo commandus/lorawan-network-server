@@ -333,11 +333,18 @@ test_dev_addr_SOURCES = \
 test_dev_addr_LDADD = $(L_LORAWAN)
 test_dev_addr_CPPFLAGS = $(commoncppflags)
 
-check_PROGRAMS =
+
+test_encrypt_join_accept_response_SOURCES = \
+	tests/test-encrypt-join-accept-response.cpp
+test_encrypt_join_accept_response_LDADD = $(L_LORAWAN)
+test_encrypt_join_accept_response_CPPFLAGS = $(commoncppflags)
+
+check_PROGRAMS = \
+	test-encrypt-join-accept-response
 #   test-dev-addr
 #   test-queue-processor \
 #	test-join-request \
-#	test-message-queue test-fb test-sqlite test-pkt2-parse test-join-accept-decrypt test-dir-txt test-identity-file-json \
+#	test-message-queue test-fb test-sqlite test-pkt2-parseRX test-join-accept-decrypt test-dir-txt test-identity-file-json \
 #	test-file-watch test-mac-gw	test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json \
 #	test-region-band-file-json
 
