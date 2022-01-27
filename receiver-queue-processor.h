@@ -19,7 +19,7 @@
 
 /**
  * ReceiverQueueService enqueue application data payload,
- * ReceiverQueueProcessor get payload from the queue, parse and put parsed data
+ * ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
  * to the database(s) async
  */ 
 class ReceiverQueueProcessor {

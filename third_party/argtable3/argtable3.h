@@ -63,7 +63,7 @@ typedef void (arg_errorfn)(void *parent, FILE *fp, int error, const char *argval
 * datatype string, and glossary strings, and so on.
 * Moreover, the arg_hdr struct contains pointers to custom functions that
 * are provided by each arg_xxx struct which perform the tasks of parsing
-* that particular arg_xxx arguments, performing post-parse checks, and
+* that particular arg_xxx arguments, performing post-parseRX checks, and
 * reporting errors.
 * These functions are private to the individual arg_xxx source code
 * and are the pointer to them are initiliased by that arg_xxx struct's
@@ -139,7 +139,7 @@ struct arg_file
 struct arg_date
 {
     struct arg_hdr hdr;      /* The mandatory argtable header struct */
-    const char *format;      /* strptime format string used to parse the date */
+    const char *format;      /* strptime format string used to parseRX the date */
     int count;               /* Number of matching command line args */
     struct tm *tmval;        /* Array of parsed time bands */
 };

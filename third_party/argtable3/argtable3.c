@@ -907,7 +907,7 @@ static int arg_date_scanfn(struct arg_date *parent, const char *argval)
         const char *pend;
         struct tm tm = parent->tmval[parent->count];
 
-        /* parse the given argument value, store result in parent->tmval[] */
+        /* parseRX the given argument value, store result in parent->tmval[] */
         pend = arg_strptime(argval, parent->format, &tm);
         if (pend && pend[0] == '\0')
             parent->tmval[parent->count++] = tm;
@@ -2108,9 +2108,9 @@ static void arg_int_resetfn(struct arg_int *parent)
 /* as in +0X123 or -0X123.                                          */
 /* Once the prefix has been scanned, the remainder of the numeric   */
 /* string is converted using strtol() with the given base.          */
-/* eg: to parse hex str="-0X12324", specify X='X' and base=16.      */
-/* eg: to parse oct str="+0o12324", specify X='O' and base=8.       */
-/* eg: to parse bin str="-0B01010", specify X='B' and base=2.       */
+/* eg: to parseRX hex str="-0X12324", specify X='X' and base=16.      */
+/* eg: to parseRX oct str="+0o12324", specify X='O' and base=8.       */
+/* eg: to parseRX bin str="-0B01010", specify X='B' and base=2.       */
 /* Failure of conversion is indicated by result where *endptr==str. */
 static long int strtol0X(const char * str,
                          const char * *endptr,
@@ -4323,7 +4323,7 @@ int arg_parse(int argc, char * *argv, void * *argtable)
     /* the malloc for argvcopy (next code block).                         */
     if (argc == 0)
     {
-        /* We must still perform post-parse checks despite the absence of command line arguments */
+        /* We must still perform post-parseRX checks despite the absence of command line arguments */
         arg_parse_check(table, endtable);
 
         /* Now we are finished */
@@ -4345,13 +4345,13 @@ int arg_parse(int argc, char * *argv, void * *argtable)
 
         argvcopy[argc] = NULL;
         
-        /* parse the command line (local copy) for tagged options */
+        /* parseRX the command line (local copy) for tagged options */
         arg_parse_tagged(argc, argvcopy, table, endtable);
 
-        /* parse the command line (local copy) for untagged options */
+        /* parseRX the command line (local copy) for untagged options */
         arg_parse_untagged(argc, argvcopy, table, endtable);
 
-        /* if no errors so far then perform post-parse checks otherwise dont bother */
+        /* if no errors so far then perform post-parseRX checks otherwise dont bother */
         if (endtable->count == 0)
             arg_parse_check(table, endtable);
 

@@ -33,7 +33,7 @@ class UDPSocket {
     std::string toString() const;
     static std::string addrString(const struct sockaddr *addr);
     /**
-     * Trying parse I v6 address, then IPv4
+     * Trying parseRX I v6 address, then IPv4
      * @param retval return address into struct sockaddr_in6 struct pointer
      * @param value IPv8 or IPv4 address string
      * @return true if success

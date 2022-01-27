@@ -761,7 +761,7 @@ class MacDataList {
 };
 
 /**
- * Good for parse MAC commands sent by the client
+ * Good for parseRX MAC commands sent by the client
  */
 class MacPtr {
 	protected:
