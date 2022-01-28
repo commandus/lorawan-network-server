@@ -31,7 +31,7 @@ typedef enum {
 	MODE_NONE = 0,
 	MODE_ACK = 1,
 	MODE_REPLY_MAC = 2,
-    MODE_JOIN_REQUEST = 3,
+	MODE_JOIN_RESPONSE = 3,
 	MODE_CONTROL_NS = 4 // manage network service
 } ITEM_PROCESS_MODE;
 

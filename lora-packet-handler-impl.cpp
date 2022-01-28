@@ -149,7 +149,7 @@ int LoraPacketProcessor::enqueueJoinResponse(
 
     incTimeval(t, 0, DEF_TIMEOUT_US);
 
-    packetQueue.push(0, MODE_JOIN_REQUEST, t, value);
+    packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
     packetQueue.wakeUp();
     return LORA_OK;
 }

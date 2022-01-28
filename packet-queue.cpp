@@ -743,7 +743,7 @@ void PacketQueue::runner()
 			case MODE_REPLY_MAC:
 				replyMAC(item, t);
 				break;
-            case MODE_JOIN_REQUEST:
+            case MODE_JOIN_RESPONSE:
                 {
                     int r = replyJoinRequest(item, t);
                     if (r) {
@@ -754,7 +754,7 @@ void PacketQueue::runner()
                         }
                     }
                 }
-                break;
+                    break;
 			case MODE_CONTROL_NS:
 				// control packet
 				if (onLog) {
@@ -992,7 +992,7 @@ int PacketQueue::replyJoinRequest(
     item.packet.header.header.fcnt = fcntdown;
     // item.packet.header.header.macheader.f.mtype = MTYPE_JOIN_ACCEPT;
     std::string response = item.packet.mkJoinAcceptResponse(frame, internalTime, power);
-    size_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
+    ssize_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
           (const struct sockaddr*) &gwit->second.sockaddr,
           ((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 
@@ -1003,7 +1003,7 @@ int PacketQueue::replyJoinRequest(
 
     // log result
     if (onLog) {
-        if (r != response.size()) {
+        if (sz != response.size()) {
             std::stringstream ss;
             ss << ERR_MESSAGE << ERR_CODE_REPLY_MAC << ": " << ERR_REPLY_MAC
                     << ", tmst: " << internalTime
