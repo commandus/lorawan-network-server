@@ -10,6 +10,7 @@
 // tme window delay, s
 #define DEF_TIME_WINDOW_1	1
 #define DEF_TIME_WINDOW_2	2
+#define DEF_TIME_WINDOW_2	2
 // default queue timeout in microseconds, less than 1s, e.g. 1/4s
 #define DEF_TIMEOUT_US	250 * 1000
 
@@ -394,7 +395,9 @@ int LoraPacketProcessor::join(
         if (onLog) {
             // report error
             std::stringstream ss;
-            ss << ERR_MESSAGE << ERR_CODE_BAD_JOIN_REQUEST << ": " << ERR_BAD_JOIN_REQUEST;
+            ss << ERR_MESSAGE << ERR_CODE_BAD_JOIN_REQUEST << ": " << ERR_BAD_JOIN_REQUEST
+                << "request: " << hexString(packet.payload)
+                << " (" << packet.payload.size() << " bytes)";
             onLog(this, LOG_CRIT, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
         }
         return ERR_CODE_BAD_JOIN_REQUEST;

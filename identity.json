@@ -43,8 +43,8 @@
 },
 {
   "activation": "OTAA",
-  "deveui": "0807060504030201",
-  "appeui": "1817161514131211",
+  "deveui": "0102030405060708",
+  "appeui": "1112131415161718",
   "appKey": "7E151628AED2A6ABF7158809CF4F3C",
   "class": "A",
   "version": "1.0.0",

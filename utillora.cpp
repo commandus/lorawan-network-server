@@ -2311,7 +2311,7 @@ int SemtechUDPPacket::parseData(
         }
         case MTYPE_JOIN_ACCEPT:
         {
-            // with MHDR and MIC
+            // with MHDR and MIC, ciphered
             payload = data;
             errcode = ERR_CODE_IS_JOIN;
             return errcode;
@@ -3075,4 +3075,9 @@ BANDWIDTH double2BANDWIDTH(double value)
 bool isDEVADDREmpty(const DEVADDR &addr)
 {
     return *((uint32_t *) &addr) == 0;
+}
+
+bool isDEVEUIEmpty(const DEVEUI &eui)
+{
+    return *((uint64_t *) &eui) == 0;
 }

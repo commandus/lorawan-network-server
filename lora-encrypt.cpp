@@ -279,9 +279,33 @@ void encryptJoinAcceptResponse
 
     uint8_t *e = (uint8_t *) &frame.hdr;
 
-	// a[15] = 1;
 	aes_encrypt(a, s, &aesContext);
 	for (int i = 0; i < sizeof(JOIN_ACCEPT_FRAME) - 1; i++) {
 		e[i] = e[i] ^ s[i];
 	}
+}
+
+void encryptJoinAcceptCFListResponse(
+    JOIN_ACCEPT_FRAME_CFLIST &frame,
+    const KEY128 &key   // NwkKey or JSEncKey
+)
+{
+    aes_context aesContext;
+    memset(aesContext.ksch, '\0', 240);
+    aes_set_key(key, sizeof(KEY128), &aesContext);
+
+    uint8_t a[16];
+    memset(a, 0, sizeof(a));
+    uint8_t s[16];
+    memset(s, 0, sizeof(s));
+
+    uint8_t *e = (uint8_t *) &frame.hdr;
+    aes_encrypt(a, s, &aesContext);
+    for (int i = 0; i < 16; i++) {
+        e[i] = e[i] ^ s[i];
+    }
+    aes_encrypt(a, s, &aesContext);
+    for (int i = 16; i < sizeof(JOIN_ACCEPT_FRAME_CFLIST) - 1; i++) {
+        e[i] = e[i] ^ s[i - 16];
+    }
 }

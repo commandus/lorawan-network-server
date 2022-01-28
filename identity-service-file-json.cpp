@@ -350,7 +350,7 @@ int JsonFileIdentityService::getNetworkIdentity(
 ) {
     mutexMap.lock();
     for (std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.begin()); it != storage.end(); it++) {
-        if (memcmp(it->second.devEUI, eui, sizeof(DEVEUI)) == 0) {
+        if (memcmp(&it->second.devEUI, &eui, sizeof(DEVEUI)) == 0) {
             retval.set(it->first, it->second);
             mutexMap.unlock();
             return 0;

@@ -1274,3 +1274,4 @@ utillora.cpp                  SemtechUDPPacket::toTxJsonString()
 - [arduino aes implementation](https://raw.githubusercontent.com/arduino-libraries/LoraNodeShield/master/src/system/crypto/cmac.h)
 - [Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)
 
+vega SI-13 Bus 003 Device 014: ID 0483:5740 STMicroelectronics STM32F407

@@ -797,6 +797,7 @@ BANDWIDTH int2BANDWIDTH(int value);
 BANDWIDTH double2BANDWIDTH(double value);
 
 bool isDEVADDREmpty(const DEVADDR &addr);
+bool isDEVEUIEmpty(const DEVEUI &eui);
 
 /**
  * Derive JSIntKey user in Accept Join response

@@ -27,6 +27,7 @@
 #include "identity-service-file-json.h"
 #include "identity-service-dir-txt.h"
 #include "utilidentity.h"
+#include "lora-encrypt.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
@@ -49,6 +50,7 @@ public:
 	// identity service
 	std::string identityStorageName;
 	IDENTITY_STORAGE identityStorageType;
+    DEVEUI devEUI;                      // used for getting key to decipher Join Accept frame
 	int outputFormat;					// 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
 	int verbosity;						// verbosity level
 };
@@ -64,10 +66,8 @@ int parseCmd(
 	int argc,
 	char *argv[])
 {
-	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, 
-		*a_payload_hex, *a_payload_base64,
-		*a_identityStorageName,
-		*a_identityStorageType;
+	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, *a_payload_hex,
+            *a_payload_base64, *a_dev_eui, *a_identityStorageName, *a_identityStorageType;
 	struct arg_int *a_output_format;
 	struct arg_lit *a_verbosity, *a_help;
 	struct arg_end *a_end;
@@ -77,6 +77,8 @@ int parseCmd(
 
 		a_payload_hex = arg_str0("x", "hex", "<hex-string>", "LoraWAN packet to decode, hexadecimal string."),
 		a_payload_base64 = arg_str0("6", "base64", "<base64>", "same, base64 encoded."),
+
+        a_dev_eui = arg_str0("e", "eui", "<hex>", "Device EUI, used to decipher Join Accept frame"),
 
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
 		a_message_type = arg_str0("m", "message", "<pkt.msg>", "force nessage type packet and name"),
@@ -124,6 +126,11 @@ int parseCmd(
 		else
 			config->message_type = "";
 
+        if (a_dev_eui->count) {
+            string2DEVEUI(config->devEUI, *a_dev_eui->sval);
+        } else {
+            memset(&config->devEUI, '\0', sizeof(DEVEUI));
+        }
 		for (int i = 0; i < a_dbname->count; i++) {
 			config->dbname.push_back(a_dbname->sval[i]);
 		}
@@ -281,7 +288,6 @@ int main(
 	int r = SemtechUDPPacket::parse(NULL, dataprefix,
         gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
 
-
     switch (r) {
         case ERR_CODE_IS_JOIN:
             if (packets.size()) {
@@ -298,15 +304,31 @@ int main(
                         break;
                     case MTYPE_JOIN_ACCEPT:
                         {
-                            const JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
+                            JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
+                            if (isDEVEUIEmpty(config.devEUI)) {
+                                std::cerr << "Device EUI missed. Provide -e <EUI> option." << std::endl;
+                                exit(ERR_CODE_PARAM_INVALID);
+                            }
+
+                            NetworkIdentity ni;
+                            int ir = identityService->getNetworkIdentity(ni, config.devEUI);
+                            if (ir) {
+                                std::cerr << "Device EUI " << DEVEUI2string(config.devEUI) << " not found." << std::endl;
+                                exit(ERR_CODE_PARAM_INVALID);
+                            }
+
+                            const KEY128 *key = &ni.nwkKey;
                             if (joinAcceptFrame) {
+                                encryptJoinAcceptResponse(*joinAcceptFrame, *key);
                                 std::cout << "Join accept "
                                           << JOIN_ACCEPT_FRAME2string(*joinAcceptFrame)
                                           << std::endl;
                                 break;
                             }
-                            const JOIN_ACCEPT_FRAME_CFLIST *joinAcceptCFListFrame = packets[0].getJoinAcceptCFListFrame();
+
+                            JOIN_ACCEPT_FRAME_CFLIST *joinAcceptCFListFrame = packets[0].getJoinAcceptCFListFrame();
                             if (joinAcceptCFListFrame) {
+                                encryptJoinAcceptCFListResponse(*joinAcceptCFListFrame, *key);
                                 std::cout << "Join accept CFList "
                                           << JOIN_ACCEPT_FRAME_CFLIST2string(*joinAcceptCFListFrame)
                                           << std::endl;
