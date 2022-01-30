@@ -1,4 +1,5 @@
 #include <regex>
+#include <sstream>
 
 #include "gateway-list.h"
 #include "errlist.h"

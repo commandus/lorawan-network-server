@@ -108,6 +108,7 @@ size_t config::filesInPath
 (
 	const std::string &path,
 	const std::string &suffix,
+	int flags,
 	std::vector<std::string> *retval
 )
 {
@@ -257,8 +258,8 @@ static time_t filetime2time_t
 )
 {
 	ULARGE_INTEGER ull;
-	ull.LowPart = ft.LowPart;
-	ull.HighPart = ft.HighPart;
+	ull.LowPart = ft.dwLowDateTime;		//  was LowPart;
+	ull.HighPart = ft.dwHighDateTime;	//  was HighPart;
 	return ull.QuadPart / 10000000ULL - 11644473600ULL;
 }
 #endif
@@ -272,7 +273,7 @@ time_t fileModificationTime(
 {
 #ifdef _MSC_VER
 	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-	GetFileAttributesEx(storageName.c_str(), GetFileExInfoStandard, (void *)&fileInfo);
+	GetFileAttributesEx(fileName.c_str(), GetFileExInfoStandard, (void *)&fileInfo);
 	return filetime2time_t(fileInfo.ftLastWriteTime);
 #else
 	struct stat attrib;
@@ -280,3 +281,33 @@ time_t fileModificationTime(
 	return attrib.st_mtime;
 #endif	
 }
+
+#ifdef _MSC_VER
+/**
+ * @see https://stackoverflow.com/questions/10905892/equivalent-of-gettimeday-for-windows
+ */
+int gettimeofday(struct timeval* tp, struct timezone* tzp)
+{
+	// Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
+	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
+	// until 00:00:00 January 1, 1970 
+	static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+	SYSTEMTIME  system_time;
+	FILETIME    file_time;
+	uint64_t    time;
+
+	GetSystemTime(&system_time);
+	SystemTimeToFileTime(&system_time, &file_time);
+	time = ((uint64_t)file_time.dwLowDateTime);
+	time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+	tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+	return 0;
+}
+#endif
+
+
+
+

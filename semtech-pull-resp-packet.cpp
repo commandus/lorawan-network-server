@@ -1,3 +1,4 @@
+#include <sstream>
 #include "semtech-pull-resp-packet.h"
 
 #include "lora-encrypt.h"

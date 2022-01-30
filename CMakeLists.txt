@@ -7,12 +7,18 @@ set(CMAKE_CXX_STANDARD 11)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+
+find_package(CURL REQUIRED) 
+# find_package(unofficial-sqlite3 REQUIRED)
+set(CURL_LIBRARIES curl)
+set(DB_LIBRARIES sqlite3)
+
 find_library(LIBPKT2
 	NAMES pkt2
 	HINTS "." ".." "../../pkt2" "~/src/pkt2"
 )
 
-INCLUDE_DIRECTORIES("third_party")
+include_directories("third_party" ${CURL_INCLUDE_DIR})
 
 set(SRC_AES
 	third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -59,7 +65,7 @@ add_library(lorawan STATIC
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf curl
+	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${DB_LIBRARIES}
 )
 
 set(SRC_MAC_GW
@@ -71,7 +77,7 @@ set(SRC_MAC_GW
 )
 add_executable(mac-gw ${SRC_MAC_GW})
 target_link_libraries(mac-gw PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf curl
+	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES}
 )
 
 set(SRC_PRINT_NETID
@@ -91,7 +97,7 @@ set(LORA_PRINT_SOURCES
 )
 add_executable(lora-print ${LORA_PRINT_SOURCES})
 target_link_libraries(lora-print PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf curl
+	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES}
 )
 
 set(PROTO_DB_SOURCES
@@ -101,7 +107,7 @@ set(PROTO_DB_SOURCES
 )
 add_executable(proto-db ${PROTO_DB_SOURCES})
 target_link_libraries(proto-db PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf curl
+	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES}
 )
 
 # Strip binary for release builds

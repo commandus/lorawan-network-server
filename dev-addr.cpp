@@ -41,26 +41,26 @@ bool DEVADDRCompare::operator() (const DEVADDR& lhs, const DEVADDR& rhs) const
 
 // version 1.0
 static const DEVADDR_TYPE_SIZE DEVADDR_TYPE_SIZES_1_0[8] = {
-        {.networkIdBits = 6, .devDddrBits = 25 },    // 0
-        {.networkIdBits = 6, .devDddrBits = 24 },    // 1
-        {.networkIdBits = 9, .devDddrBits = 20 },    // 2
-        {.networkIdBits = 10, .devDddrBits = 18 },   // 3
-        {.networkIdBits = 11, .devDddrBits = 16 },   // 4
-        {.networkIdBits = 13, .devDddrBits = 13 },   // 5
-        {.networkIdBits = 15, .devDddrBits = 10 },   // 6
-        {.networkIdBits = 17, .devDddrBits = 7 }     // 7
+        { 6, 25 },    // 0
+        { 6, 24 },    // 1
+        { 9, 20 },    // 2
+        { 10, 18 },   // 3
+        { 11, 16 },   // 4
+        { 13, 13 },   // 5
+        { 15, 10 },   // 6
+        { 17, 7 }     // 7
 };
 
 // version 1.1
 static const DEVADDR_TYPE_SIZE DEVADDR_TYPE_SIZES_1_1[8] = {
-        {.networkIdBits = 6, .devDddrBits = 25},    // 0
-        {.networkIdBits = 6, .devDddrBits = 24},    // 1
-        {.networkIdBits = 9, .devDddrBits = 20},    // 2
-        {.networkIdBits = 11, .devDddrBits = 17},   // 3
-        {.networkIdBits = 12, .devDddrBits = 15},   // 4
-        {.networkIdBits = 13, .devDddrBits = 13},   // 5
-        {.networkIdBits = 15, .devDddrBits = 10},   // 6
-        {.networkIdBits = 17, .devDddrBits = 7}     // 7
+        { 6, 25 },    // 0
+        { 6, 24 },    // 1
+        { 9, 20 },    // 2
+        { 11, 17 },   // 3
+        { 12, 15 },   // 4
+        { 13, 13 },   // 5
+        { 15, 10 },   // 6
+        { 17, 7 }     // 7
 };
 
 DevAddr::DevAddr() {

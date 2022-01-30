@@ -4,10 +4,12 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
-#include <sys/time.h>
 #include "platform.h"
 
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+#include "strptime.h"
+#else
+#include <sys/time.h>
 #include "strptime.h"
 #define TMSIZE sizeof(struct tm)
 #define localtime_s(tm, time) memmove(tm, localtime(time), TMSIZE)
@@ -148,7 +150,8 @@ std::string timeval2string(
 )
 {
 	char buf[64];
-	struct tm *tm = localtime(&val.tv_sec);
+	const time_t t = val.tv_sec;	// time_t 32/64 bits
+	struct tm *tm = localtime(&t);
 	strftime(buf, sizeof(buf), dateformat0, tm);
 	std::stringstream ss;
 	ss << buf << "." << std::setw(6) << std::setfill('0') << val.tv_usec;

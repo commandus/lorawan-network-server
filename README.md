@@ -198,6 +198,33 @@ export CC=/usr/bin/clang;export CXX=/usr/bin/clang++;cmake ..
 make
 ```
 
+### Windows
+
+You need install vcpkg. Do not forget integrate vcpkg with Visual Studio:
+
+```
+.\vcpkg\vcpkg integrate install
+```
+
+First of all, build pkt2 library.
+
+Then install curl, sqlite3 dependencies:
+
+```
+vcpkg install curl:x86-windows-static
+vcpkg install curl:x64-windows-static
+vcpkg install sqlite3:x64-windows-static
+vcpkg install sqlite3:x86-windows-static
+```
+
+Then build solution:
+```
+mkdir build
+cd build
+cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+```
+
+
 ## Configuration files
 
 ### server config ~/.lorawan-network-server.json

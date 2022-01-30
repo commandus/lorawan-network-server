@@ -1,6 +1,12 @@
 #include <sstream>
 #include <cstring>
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#define close(x) closesocket(x)
+#else
 #include <unistd.h>
+#endif
 
 #include "udp-socket.h"
 #include "errlist.h"
@@ -34,6 +40,7 @@ UDPSocket::~UDPSocket()
 
 void UDPSocket::closeSocket() {
 	if (sock > 0) {
+
 		close(sock);
 		sock = 0;
 	}
@@ -270,7 +277,7 @@ int UDPSocket::recv(
 	void *peerAddress
 ) const {
 	socklen_t sz = (addr.ai_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
-	return recvfrom(sock, retbuf, size, 0, (struct sockaddr *) peerAddress, &sz);
+	return recvfrom(sock, (char *) retbuf, size, 0, (struct sockaddr *) peerAddress, &sz);
 }
 
 bool UDPSocket::isPeerAddr(

@@ -1,6 +1,12 @@
 #include "lorawan-mac.h"
 #include <cstring>
+#include <sstream>
+#ifdef _MSC_VER
+#include <Windows.h>
+#else
 #include <sys/time.h>
+#endif
+
 
 #include <iostream>
 #include <iomanip>

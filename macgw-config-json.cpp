@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 
 #include "macgw-config-json.h"

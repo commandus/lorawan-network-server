@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -1957,7 +1958,7 @@ void setKey(
 ) {
 	if (value.size() == sizeof(KEY128)) {
 		memcpy(retval, value.c_str(), sizeof(KEY128));
-		swap16(retval)
+		swap16(retval);
 		return;
 	}
 	if (value.size() < sizeof(KEY128) * 2)

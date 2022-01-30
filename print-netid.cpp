@@ -7,6 +7,7 @@
  */
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <bitset>
 
