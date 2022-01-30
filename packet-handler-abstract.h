@@ -1,7 +1,11 @@
 #ifndef PACKET_HANDLER_ABSTRACT_H_
 #define PACKET_HANDLER_ABSTRACT_H_ 1
 
+#ifdef _MSC_VER
+#else
 #include <sys/time.h>
+#endif
+
 #include "utillora.h"
 
 /**

@@ -4,7 +4,10 @@
 #include <vector>
 #include <map>
 #include <string>
+#ifdef _MSC_VER
+#else
 #include <sys/time.h>
+#endif
 
 #include "utillora.h"
 
