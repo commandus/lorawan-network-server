@@ -23,6 +23,7 @@
  * receiverQueueProcessor->stop();
  * 
  */
+#include <sstream>
 #include "receiver-queue-processor.h"
 #include "udp-socket.h"
 #include "utilstring.h"
@@ -31,9 +32,12 @@
 
 #include "pkt2/str-pkt2.h"
 // #include "pkt2/database-config.h"
-
+#include "errlist.h"
+#ifdef _MSC_VER
+#else
 #include <sys/time.h>
 #include <unistd.h>
+#endif
 
 int ReceiverQueueProcessor::onPacket(
         struct timeval &time,

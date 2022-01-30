@@ -1,7 +1,11 @@
+#include <sstream>
 #include "packet-queue.h"
+#ifdef _MSC_VER
+#else
 #include <sys/time.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
+#endif
 
 #include <iostream>
 
@@ -356,7 +360,7 @@ int PacketQueue::ack
 			break;
 	}
 	
-	size_t r = sendto(socket, &response, sizeof(SEMTECH_ACK), 0,
+	size_t r = sendto(socket, (const char *) &response, sizeof(SEMTECH_ACK), 0,
 		(const struct sockaddr*) gwAddress,
 		((gwAddress->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)));
 
