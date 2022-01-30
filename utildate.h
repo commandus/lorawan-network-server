@@ -4,6 +4,12 @@
 #include <string>
 #include <inttypes.h>
 
+#ifdef _MSC_VER
+// #define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <stdint.h> // portable: uint64_t   MSVC: __int64 
+#endif
+
 /**
  * Format time
  * @param value Unix epoch time, seconds
@@ -62,5 +68,9 @@ void incTimeval(
 	int seconds,
 	int usec = 0
 );
+
+#ifdef _MSC_VER
+int gettimeofday(struct timeval* tp, struct timezone* tzp);
+#endif
 
 #endif

@@ -2,10 +2,16 @@
 #define UDP_SOCKET_H 1
 
 #include <string>
+
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#else
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
+
 
 enum MODE_OPEN_SOCKET {
   MODE_OPEN_SOCKET_LISTEN = 0,

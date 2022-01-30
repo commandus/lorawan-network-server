@@ -6,7 +6,12 @@
 #include <map>
 #include <inttypes.h>
 
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <ws2tcpip.h>
+#else
 #include <netinet/in.h>
+#endif
 
 #include "platform.h"
 

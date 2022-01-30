@@ -3,7 +3,11 @@
 
 #include <time.h>
 #include <inttypes.h>
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#else
 #include <netinet/in.h>
+#endif
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"

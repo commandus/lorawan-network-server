@@ -10,7 +10,9 @@
 namespace config {
 	bool rmDir(const std::string &path);
 	bool rmFile(const std::string &fn);
-
+#ifdef _MSC_VER
+	bool rmAllDir(const char* path);
+#endif
 	/**
 	 * Return list of files in specified path
 	 * @param path

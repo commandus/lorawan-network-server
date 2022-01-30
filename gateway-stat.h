@@ -1,9 +1,15 @@
 #ifndef GATEWAY_STAT_H_
 #define GATEWAY_STAT_H_	1
 
+#include <string>
 #include <time.h>
 #include <inttypes.h>
+#ifdef _MSC_VER
+#include <WinSock2.h>
+#include <ws2tcpip.h>
+#else
 #include <netinet/in.h>
+#endif
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
