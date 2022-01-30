@@ -1,9 +1,10 @@
 
-/* syslog
-#define	LOG_ERROR							1
+// syslog
+#ifdef _MSC_VER
+#define	LOG_ERR								1
 #define	LOG_INFO							2
 #define	LOG_DEBUG							3
-*/
+#endif
 
 // width in chars
 #define LOG_LEVEL_FIELD_WIDTH               2
