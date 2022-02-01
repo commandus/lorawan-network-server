@@ -86,6 +86,8 @@ int parseCmd(
     if ((!config->hasValue) && (a_nettype->count == 0 || a_netid_hex->count == 0 )) {
         std::cerr << ERR_NETID_OR_NETTYPE_MISSED << std::endl;
         nerrors++;
+        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+        return ERR_CODE_NETID_OR_NETTYPE_MISSED;
     }
 
     // special case: '--help' takes precedence over error reporting
@@ -231,10 +233,85 @@ static void printNetId(
     }
 }
 
+static void printClass
+(
+    const NetId &netid
+) {
+    DevAddr minAddr(netid, false);
+    DevAddr maxAddr(netid, true);
+    std::cout
+            << netid.toString() << TAB_DELIMITER
+            << std::hex
+            << (int) netid.getType() << TAB_DELIMITER
+            << netid.getNetId() << TAB_DELIMITER
+            << netid.getNwkId() << TAB_DELIMITER
+            << minAddr.toString() << TAB_DELIMITER
+            << maxAddr.toString() << TAB_DELIMITER
+            << std::endl;
+}
+
+static void printAllClasses() {
+    NetId netid;
+    // print header
+    std::cout
+        << "NetId" << TAB_DELIMITER
+        << "Type" << TAB_DELIMITER
+        << "Id" << TAB_DELIMITER
+        << "NwkId" << TAB_DELIMITER
+        << "DevAddr min" << TAB_DELIMITER
+        << "DevAddr max"
+        << std::endl;
+
+    netid.set(0, 0);
+    printClass(netid);
+    netid.set(0, (1 << 6) - 1);
+    printClass(netid);
+
+    netid.set(1, 0);
+    printClass(netid);
+    netid.set(1, (1 << 6) - 1);
+    printClass(netid);
+
+    netid.set(2, 0);
+    printClass(netid);
+    netid.set(2, (1 << 9) - 1);
+    printClass(netid);
+
+    netid.set(3, 0);
+    printClass(netid);
+    netid.set(3, (1 << 21) - 1);
+    printClass(netid);
+
+    netid.set(4, 0);
+    printClass(netid);
+    netid.set(4, (1 << 21) - 1);
+    printClass(netid);
+
+    netid.set(5, 0);
+    printClass(netid);
+    netid.set(5, (1 << 21) - 1);
+    printClass(netid);
+
+    netid.set(6, 0);
+    printClass(netid);
+    netid.set(6, (1 << 21) - 1);
+    printClass(netid);
+
+    netid.set(7, 0);
+    printClass(netid);
+    netid.set(7, (1 << 21) - 1);
+    printClass(netid);
+}
+
 int main(int argc, char **argv)
 {
     PrintNetIdConfiguration printNetidConfig;
-    if (parseCmd(&printNetidConfig, argc, argv) != 0) {
+    int r = parseCmd(&printNetidConfig, argc, argv);
+    if (r == ERR_CODE_NETID_OR_NETTYPE_MISSED) {
+        // print all classes
+        printAllClasses();
+    }
+    if (r != 0) {
         exit(ERR_CODE_COMMAND_LINE);
     }
     NetId netid;
