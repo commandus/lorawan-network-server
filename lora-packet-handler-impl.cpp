@@ -34,12 +34,12 @@ int LoraPacketProcessor::enqueuePayload(
             }
         } else {
             if (onLog) {
-                std::stringstream ss;
-                ss << ERR_DUPLICATED_PACKET
+                std::stringstream ss2;
+                ss2 << ERR_DUPLICATED_PACKET
                    << " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
                    //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
                    << " " << value.devId.toJsonString() << ": " << hexString(p);
-                onLog(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss.str());
+                onLog(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss2.str());
             }
         }
 	return 0;

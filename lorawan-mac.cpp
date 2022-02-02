@@ -548,7 +548,7 @@ bool MacData::set(
 			case RXParamSetup:
 				if (values.size() < 3)
 					break;
-				SET_FREQUENCY(command.data.rxparamsetupreq.frequency, values[0]);
+				SET_FREQUENCY(command.data.rxparamsetupreq.frequency, values[0])
 				command.data.rxparamsetupreq.rx1droffset = values[1];
 				command.data.rxparamsetupreq.rx2datatrate = values[2];
 				command.data.rxparamsetupreq.rfu = 0;
@@ -559,7 +559,7 @@ bool MacData::set(
 				if (values.size() < 4)
 					break;
 				command.data.newchacnnelreq.chindex = values[0];
-				SET_FREQUENCY(command.data.newchacnnelreq.frequency, values[1]);
+				SET_FREQUENCY(command.data.newchacnnelreq.frequency, values[1])
 				command.data.newchacnnelreq.mindr = values[2];
 				command.data.newchacnnelreq.maxdr = values[3];
 				break;
@@ -581,7 +581,7 @@ bool MacData::set(
 				if (values.size() < 2)
 					break;
 				command.data.dlcchannelreq.chindex = values[0];
-				SET_FREQUENCY(command.data.dlcchannelreq.frequency, values[1]);
+				SET_FREQUENCY(command.data.dlcchannelreq.frequency, values[1])
 				break;
 			case Rekey:
 				command.data.rekeyreq.minor = 1;		// LoRaWAN x.1
@@ -622,7 +622,7 @@ bool MacData::set(
 			case PingSlotChannel:
 				if (values.size() < 2)
 					break;
-				SET_FREQUENCY(command.data.pingslotchannelreq.frequency, values[0]);
+				SET_FREQUENCY(command.data.pingslotchannelreq.frequency, values[0])
 				command.data.pingslotchannelreq.dr = values[1];
 				command.data.pingslotchannelreq.rfu = 0;
 				break;
@@ -636,7 +636,7 @@ bool MacData::set(
 			case BeaconFreq:
 				if (values.size() < 1)
 					break;
-				SET_FREQUENCY(command.data.beaconfrequencyreq.frequency, values[0]);
+				SET_FREQUENCY(command.data.beaconfrequencyreq.frequency, values[0])
 				break;
 			// Class-C
 			case DeviceMode:
@@ -862,7 +862,7 @@ std::string MAC_DATA2JSONString(
 			case DLChannel:
 				MDPREFIX(dlcchannelreq)
 				MD2JSONSSCOMMA(dlcchannelreq, chindex)
-				MD2JSONSS_FREQUENCY(dlcchannelreq);
+				MD2JSONSS_FREQUENCY(dlcchannelreq)
 				MDSUFFIX(dlcchannelreq)
 				break;
 			case Rekey:

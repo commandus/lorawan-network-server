@@ -1,7 +1,6 @@
 #include "lora-rejoin.h"
 
 #include <iostream>
-
 #include <sstream>
 #include "system/crypto/aes.h"
 #include "system/crypto/cmac.h"
