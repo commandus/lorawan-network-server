@@ -24,7 +24,7 @@ class GatewayList {
 		std::map<uint64_t, GatewayStat> gateways;
 		std::string errmessage;
 		GatewayList();
-		GatewayList(const std::string &filename);
+		GatewayList(const std::string &aFileName);
 		GatewayList(const GatewayList &value);
 		int put(uint64_t gatewayId, const std::string &value);
 		std::string getAddress(uint64_t gatewayId);
@@ -46,15 +46,15 @@ class GatewayList {
 			bool useRegex
 		) const;
 		bool setSocketAddress(
-			const DEVEUI  &gwid,
+			const DEVEUI  &gwId,
 			int socket,
 			const struct sockaddr_in *gwAddress
 		);
 		bool has(
-			const DEVEUI &gwid
+			const DEVEUI &gwId
 		) const;
 		bool has(
-			const uint64_t gwid
+			const uint64_t gwId
 		) const;
 		// Set identifier, name and geolocation if found. Return true if found
 		bool copyId(
