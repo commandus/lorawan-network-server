@@ -8,7 +8,7 @@ GW_STAT_STORAGE string2gwStatStorageType(
     if (value == "post")
         return GW_STAT_POST;
     return GW_STAT_NONE;
-};
+}
 
 std::string gwStatStorageType2String(
     GW_STAT_STORAGE value

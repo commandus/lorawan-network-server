@@ -22,7 +22,7 @@ GatewayStat::GatewayStat()
 	dwnb(0),				// Number of downlink datagrams received (unsigned integer)
 	txnb(0)					// Number of packets emitted (unsigned integer)
 {
-
+    memset(&sockaddr, 0, sizeof(sockaddr));
 }
 
 /**
@@ -248,7 +248,7 @@ int GatewayStat::parse(
 			cnt++;
 		}
 	}
-	return (cnt > 0 ? 0 : ERR_CODE_NO_GATEWAY_STAT);	// means no any properties found
+	return (cnt > 0 ? 0 : ERR_CODE_NO_GATEWAY_STAT);	// means no properties found
 }
 
 /**

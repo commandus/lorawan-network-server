@@ -36,12 +36,12 @@ GatewayList::GatewayList(
 }
 
 /**
- * Loads gateways fron JSON file
+ * Loads gateways from JSON file
  */
 GatewayList::GatewayList(
-	const std::string &afilename
+	const std::string &aFileName
 )
-	: errmessage(""), filename(afilename)
+	: errmessage(""), filename(aFileName)
 {
 	parse(file2string(filename.c_str()));
 }
@@ -167,7 +167,6 @@ int GatewayList::parseIdentifiers(
 		    }
     		catch (const std::regex_error& e) {
 				return ERR_CODE_INVALID_REGEX;
-				break;
 			}
 		}
 	}
@@ -212,7 +211,6 @@ int GatewayList::parseNames(
 		    }
     		catch (const std::regex_error& e) {
 				return ERR_CODE_INVALID_REGEX;
-				break;
 			}
 		}
 	}
@@ -258,27 +256,27 @@ void GatewayList::save()
 
 /**
  * Check does gateway exists
- * @param gwid gateway identifier
+ * @param gwId gateway identifier
  * @return true is gateway exists
  */
 bool GatewayList::has(
-	const DEVEUI &gwid
+	const DEVEUI &gwId
 ) const
 {
-	uint64_t k = *(uint64_t *) &gwid;
+	uint64_t k = *(uint64_t *) &gwId;
 	return (gateways.find(k) != gateways.end());
 }
 
 /**
  * Check does gateway exists
- * @param gwid gateway identifier
+ * @param gwId gateway identifier
  * @return true is gateway exists
  */
 bool GatewayList::has(
-	const uint64_t gwid
+	const uint64_t gwId
 ) const
 {
-	return (gateways.find(gwid) != gateways.end());
+	return (gateways.find(gwId) != gateways.end());
 }
 
 /**
@@ -287,18 +285,18 @@ bool GatewayList::has(
  * This port number is opened for communication until next PULL request.
  * Network server must remember this port and then send packet to this port number.
  * Please note gateway address can be different from assigned address in configuration file because of NAT.
- * @param gwid gateway identifier
+ * @param gwId gateway identifier
  * @param gwAddress gateway socket address to be set(update)
- * @return true if gateway with gwid identifier found and successfully updated
+ * @return true if gateway with gwId identifier found and successfully updated
  */
 bool GatewayList::setSocketAddress
 (
-	const DEVEUI &gwid,
+	const DEVEUI &gwId,
 	int socket,
 	const struct sockaddr_in *gwAddress
 )
 {
-	uint64_t k = *(uint64_t *) &gwid;
+	uint64_t k = *(uint64_t *) &gwId;
 	std::map<uint64_t, GatewayStat>::iterator it(gateways.find(k));
 	if (it == gateways.end())
 		return false;

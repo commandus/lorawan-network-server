@@ -29,5 +29,4 @@ void GatewayStatServicePost::save()
     ss << "]";
     std::string ret;
     int r = postString(ret, storageName, "", ss.str());
-    // std::cerr << "==POST data " << ss.str() << " to " << storageName << " return " << r << " result: " << ret << std::endl;
 }

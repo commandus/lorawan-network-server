@@ -56,11 +56,9 @@ void GatewayStatServiceFile::runner()
 {
     // MAX_GW_STAT_TIMEOUT_SECONDS
     while (state == 1) { // 0- stopped, 1- run, 2- stop request
-        struct timeval timeout;
         if (timeoutSeconds <= 0)
             timeoutSeconds = MIN_GW_STAT_TIMEOUT_SECONDS;
-        timeout.tv_sec = timeoutSeconds;
-        timeout.tv_usec = 0;
+        struct timeval timeout = { timeoutSeconds, 0 };
         int r = select(0, NULL, NULL, NULL, &timeout);
         switch (r) {
             case -1:

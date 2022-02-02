@@ -129,36 +129,12 @@ public:
         flags = 0;
     }
 
-    bool Null() {
-        return true;
-    }
-
-    bool Bool(bool b) {
-        return true;
-    }
-
-    bool Int(int i) {
-        return true;
-    }
-
     bool Uint(unsigned u) {
         switch(idx) {
             case 13:
                 flags = u;
                 break;
         }
-        return true;
-    }
-
-    bool Int64(int64_t i) {
-        return true;
-    }
-
-    bool Uint64(uint64_t u) {
-        return true;
-    }
-
-    bool Double(double d) {
         return true;
     }
 
@@ -291,7 +267,7 @@ int JsonFileIdentityService::save()
     for (std::map<DEVADDRINT, DEVICEID>::const_iterator it = storage.begin(); it != storage.end(); it++) {
         if (addSeparator)
             os << ",";
-        uint32_t rightsMask = getRightsMask((DEVADDR &) (it->first.a));
+        uint32_t addrRightsMask = getRightsMask((DEVADDR &) (it->first.a));
         os << std::endl << "{\""
            << ATTR_NAMES[0] << "\": \"" << DEVADDRINT2string(it->first) << "\",\""
            << ATTR_NAMES[1] << "\": \"" << getActivationName(it->second.activation) << "\",\""
@@ -306,8 +282,8 @@ int JsonFileIdentityService::save()
            << ATTR_NAMES[10] << "\": \"" << DEVNONCE2string(it->second.devNonce) << "\",\""
            << ATTR_NAMES[11] << "\": \"" << JOINNONCE2string(it->second.joinNonce) << "\",\""
            << ATTR_NAMES[12] << "\": \"" << DEVICENAME2string(it->second.name) << "\"";
-        if (rightsMask) {
-            os << ",\""  << ATTR_NAMES[8] << "\": " << rightsMask;
+        if (addrRightsMask) {
+            os << ",\""  << ATTR_NAMES[8] << "\": " << addrRightsMask;
         }
         os << "}";
 
