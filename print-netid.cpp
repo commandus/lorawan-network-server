@@ -28,6 +28,7 @@ public:
     uint32_t value;         // or
     uint8_t netTypeId;
     uint32_t netId;
+    bool printRange;
     int verbosity;			// verbosity level
     bool hasValue;
 };
@@ -48,13 +49,14 @@ int parseCmd(
     struct arg_int *a_nettype = arg_int0("t", "type", "<0..7>", "Network type");
     struct arg_str *a_netid_hex = arg_str0("n", "net", "<id>", "Network identifier, hex");
 
+    struct arg_lit *a_range = arg_lit0("r", "range", "Print network type min/max network id address ranges");
     struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
     struct arg_lit *a_help = arg_lit0("?", "help", "Show this help");
     struct arg_end *a_end = arg_end(20);
 
     void *argtable[] = {
         a_value_hex, a_nettype, a_netid_hex,
-        a_verbosity, a_help, a_end
+        a_range, a_verbosity, a_help, a_end
     };
 
     // verify the argtable[] entries were allocated successfully
@@ -83,11 +85,10 @@ int parseCmd(
             config->value = 0;
     }
     config->hasValue = a_value_hex->count > 0;
+    config->printRange = a_range->count > 0;
     if ((!config->hasValue) && (a_nettype->count == 0 || a_netid_hex->count == 0 )) {
         std::cerr << ERR_NETID_OR_NETTYPE_MISSED << std::endl;
         nerrors++;
-        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-        return ERR_CODE_NETID_OR_NETTYPE_MISSED;
     }
 
     // special case: '--help' takes precedence over error reporting
@@ -98,7 +99,7 @@ int parseCmd(
         arg_print_syntax(stderr, argtable, "\n");
         std::cerr
             << "Print NetId by value, e.g." << std::endl
-            << "  print-snetid C0004A" << std::endl
+            << "  print-netid C0004A" << std::endl
             << "or compose NetId from the network type and network identifier, e.g." << std::endl
             << "  print-netid -t 7 -n 1 " << std::endl
             << "where " << std::endl;
@@ -307,7 +308,7 @@ int main(int argc, char **argv)
 {
     PrintNetIdConfiguration printNetidConfig;
     int r = parseCmd(&printNetidConfig, argc, argv);
-    if (r == ERR_CODE_NETID_OR_NETTYPE_MISSED) {
+    if (printNetidConfig.printRange) {
         // print all classes
         printAllClasses();
     }
@@ -323,9 +324,11 @@ int main(int argc, char **argv)
             std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
             exit(r);
         }
+        /*
         std::cerr << netid.toString() << std::endl;
         std::cerr << (int) printNetidConfig.netTypeId << std::endl;
         std::cerr << printNetidConfig.netId << std::endl;
+        */
     }
     printNetId(netid, printNetidConfig.verbosity);
 }
