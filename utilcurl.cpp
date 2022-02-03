@@ -48,5 +48,5 @@ int postString(
         curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
     }
     curl_easy_cleanup(curl);
-    return http_code;
+    return (int) http_code;
 }

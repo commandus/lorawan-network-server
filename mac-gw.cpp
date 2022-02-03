@@ -84,14 +84,14 @@ void setSignalHandler()
  *        2- output file does not exists or can not open to write
  **/
 int parseCmd(
-	Configuration *config,
+	Configuration *programConfig,
 	MacGwConfig *macGwConfig,
 	int argc,
 	char *argv[])
 {
 	// device path
 	struct arg_str *a_command = arg_strn(NULL, NULL, "<command>", 0, 255, "mac command");
-	struct arg_str *a_config = arg_str0("c", "config", "<file>", "configuration file. Default ./" DEF_CONFIG_FILE_NAME ". ~/" DEF_CONFIG_FILE_NAME);
+	struct arg_str *a_config = arg_str0("c", "programConfig", "<file>", "configuration file. Default ./" DEF_CONFIG_FILE_NAME ". ~/" DEF_CONFIG_FILE_NAME);
 	//  ", storage ~/" DEF_IDENTITY_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME );
 	struct arg_str *a_gatewayid = arg_strn("g", "gateway", "<id>", 0, 100, "gateway identifier. Mask \"*\" - all");
 	struct arg_str *a_gatewayname = arg_strn("G", "gatewayname", "<name>", 0, 100, "gateway name. Mask \"*\" - all");
@@ -123,12 +123,12 @@ int parseCmd(
 	nerrors = arg_parse(argc, argv, argtable);
 
 	if (a_config->count)
-		config->configFileName = *a_config->sval;
+        programConfig->configFileName = *a_config->sval;
 	else
-		config->configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
+        programConfig->configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
 
-	config->serverConfig.daemonize = false;
-	config->serverConfig.verbosity = a_verbosity->count;
+    programConfig->serverConfig.daemonize = false;
+    programConfig->serverConfig.verbosity = a_verbosity->count;
 
 	if (!nerrors) {
 		for (int i = 0; i < a_command->count; i++) {
@@ -151,7 +151,7 @@ int parseCmd(
 		}
 		
 		if (a_gateway_port->count) {
-			config->gatewayPort = (*a_gateway_port->ival);
+            programConfig->gatewayPort = (*a_gateway_port->ival);
 		}
 	}
 
@@ -166,7 +166,7 @@ int parseCmd(
 		std::cerr << MSG_PROG_NAME << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-		// print commands avaliable
+		// print commands available
 		std::cerr << MSG_MAC_COMMANDS << ": " << std::endl << macCommandlist() << std::endl;
 		return ERR_CODE_COMMAND_LINE;
 	}
@@ -209,13 +209,15 @@ int main(
 	}
 	// reload config if required
 	bool hasConfig = false;
-	if (!config->configFileName.empty()) {
-		std::string js = file2string(config->configFileName.c_str());
-		if (!js.empty()) {
-			config->parse(js.c_str());
-			hasConfig = true;
-		}
-	}
+    if (config) {
+        if (!config->configFileName.empty()) {
+            std::string js = file2string(config->configFileName.c_str());
+            if (!js.empty()) {
+                config->parse(js.c_str());
+                hasConfig = true;
+            }
+        }
+    }
 	if (!hasConfig) {
 		std::cerr << ERR_NO_CONFIG << std::endl;
 		exit(ERR_CODE_NO_CONFIG);

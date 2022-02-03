@@ -25,7 +25,7 @@ typedef struct {
 	uint8_t paramcount;
 	std::string shortname;
 	std::string fullname;
-	std::string descpription;
+	std::string description;
 	const COMMAND_PARAM** param;
 } COMMAND_DESCRIPTION;
 
@@ -526,15 +526,15 @@ std::string macCommandlist() {
 	for (int i = 0; i < sizeof(gatewayCommands) / sizeof(COMMAND_DESCRIPTION); i++) {
 		COMMAND_DESCRIPTION *c = &gatewayCommands[i];
 		ss << std::left << std::setw(2) << c->shortname << " "
-			<< std::setw(13) << c->fullname
-			<< c->descpription << std::endl;
+           << std::setw(13) << c->fullname
+           << c->description << std::endl;
 		// parameters
 		for (int p = 0; p < c->paramcount; p++) {
 			const COMMAND_PARAM *cp = (c->param[p]);
 			ss << "     " << cp->name << ":";
-			for (int c = 0; c < cp->count; c++) {
-				const COMMAND_PARAM_CHOICE *ch = (cp->list[c]);
-				if (c > 0)
+			for (int cc = 0; cc < cp->count; cc++) {
+				const COMMAND_PARAM_CHOICE *ch = (cp->list[cc]);
+				if (cc > 0)
 					ss << ",";
 				if (ch->maxvalue != ch->minvalue) {
 					ss << " " << (int) ch->minvalue << ".." << (int) ch->maxvalue << ch->name;

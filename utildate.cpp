@@ -87,7 +87,7 @@ static const uint32_t gpsLeap[] = {
  * Determines whether a leap second should be added.  Logic works slightly differently
  * for unix->gps and gps->unix.
  * @param {number} gpsMS GPS time in milliseconds.
- * @param {number} curGPSLeapMS Currenly leap represented in milliseconds.
+ * @param {number} curGPSLeapMS Currently leap represented in milliseconds.
  * @param {number} totalLeapsMS Total accumulated leaps in milliseconds.
  * @param {boolean} isUnixToGPS True if this operation is for unix->gps, falsy if gps->unix.
  * @return {boolean} Whether a leap second should be added.
@@ -105,7 +105,7 @@ static bool shouldAddLeap (
     	// for gps->unix
     	return gps >= curGPSLeap;
   }
-};
+}
 
 /**
  * Counts the leaps from the GPS epoch to the inputted GPS time.
@@ -125,7 +125,7 @@ static uint32_t countLeaps(
     	}
   	}
 	return numLeaps;
-};
+}
 
 time_t gps2utc(
 	 uint32_t value

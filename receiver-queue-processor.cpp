@@ -153,12 +153,12 @@ void ReceiverQueueProcessor::processQueue()
 		cnt = MAX_QUEUE_CNT_PER_STEP;
 	for (int i = 0; i < cnt; i++) {	// do not use while(!receiverQueueService->count()) to prevent endless loop
 		ReceiverQueueEntry entry;
-		for (int i = 0; i < databaseByConfig->count(); i++) {
-			DatabaseNConfig *db = databaseByConfig->get(i);
+		for (int j = 0; j < databaseByConfig->count(); j++) {
+			DatabaseNConfig *db = databaseByConfig->get(j);
             if (!db) {
 				if (onLog) {
 					std::stringstream ss;
-					ss <<  ERR_DB_DATABASE_NOT_FOUND << " " << i;
+					ss << ERR_DB_DATABASE_NOT_FOUND << " " << j;
 					onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 				}
 				continue;

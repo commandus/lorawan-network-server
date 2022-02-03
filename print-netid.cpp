@@ -319,10 +319,10 @@ int main(int argc, char **argv)
     if (printNetidConfig.hasValue)
         netid.set(printNetidConfig.value);
     else {
-        int r = netid.set(printNetidConfig.netTypeId, printNetidConfig.netId);
-        if (r) {
-            std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
-            exit(r);
+        int rr = netid.set(printNetidConfig.netTypeId, printNetidConfig.netId);
+        if (rr) {
+            std::cerr << ERR_MESSAGE << rr << ": " << strerror_lorawan_ns(rr) << std::endl;
+            exit(rr);
         }
         /*
         std::cerr << netid.toString() << std::endl;

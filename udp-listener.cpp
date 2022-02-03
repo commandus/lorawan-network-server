@@ -3,8 +3,8 @@
 #include <cstring>
 #include <unistd.h>
 #include <syslog.h>
-#include <signal.h>
-#include <errno.h>
+#include <csignal>
+#include <cerrno>
 #include <sys/select.h>
 
 #include "third_party/get_rss/get_rss.h"

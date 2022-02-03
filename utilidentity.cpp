@@ -8,7 +8,7 @@ IDENTITY_STORAGE string2storageType(
 	if (value == "lmdb")
 		return IDENTITY_STORAGE_LMDB;
 	return IDENTITY_STORAGE_FILE_JSON;
-};
+}
 
 std::string storageType2String
 (

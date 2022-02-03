@@ -397,8 +397,8 @@ static bool isAnyRegionalParametersVersion(REGIONAL_PARAMETERS_VERSION value) {
 }
 
 RegionBands::RegionBands()
+    : regionalParametersVersion({ 0, 0, 0 })
 {
-    regionalParametersVersion = { 0, 0, 0 };
 }
 
 RegionBands::RegionBands(const RegionBands &value)

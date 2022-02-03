@@ -14,10 +14,14 @@ SemtechPullResponsePacket::SemtechPullResponsePacket(
 
 }
 
+/**
+ * Not used?
+ * @return
+ */
 std::string SemtechPullResponsePacket::toString() {
     uint16_t token;
     // radio prefix
-    SEMTECH_PREFIX_GW prefix = { 2, token, 2 };
+    prefix = { 2, token, 2 };
     memmove(&prefix.mac, identity.devEUI, sizeof(DEVEUI));
 
 	// direction of frame is down

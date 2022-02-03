@@ -603,7 +603,7 @@ int main(
 
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start output database service ..");
 	ConfigDatabases configDatabases(config->databaseConfigFileName);
-	if (configDatabases.dbs.size() == 0) {
+	if (configDatabases.dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		// exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
@@ -682,7 +682,7 @@ int main(
 	listener->setIdentityService(identityService);
     listener->setDeviceHistoryService(deviceHistoryService);
 
-	if (config->serverConfig.listenAddressIPv4.size() == 0 && config->serverConfig.listenAddressIPv6.size() == 0) {
+	if (config->serverConfig.listenAddressIPv4.empty() && config->serverConfig.listenAddressIPv6.empty()) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;
 			exit(ERR_CODE_PARAM_NO_INTERFACE);
 	}

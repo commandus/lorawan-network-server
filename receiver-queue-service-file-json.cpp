@@ -80,14 +80,6 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 		{
 		}
 
-		bool Null() {
-			return true; 
-		}
-
-		bool Bool(bool b) {
-			return true;
-		}
-
 		void putUInt(unsigned int value) {
 			switch(idx) {
 				case 0:	// time

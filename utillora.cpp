@@ -1281,7 +1281,7 @@ std::string DEVEUI2string(
 	const DEVEUI &value
 )
 {
-	// EUI stored in memory as 8 bit integer x86 LSB first, ARM MSB first
+	// EUI stored in memory as 8-bit integer x86 LSB first, ARM MSB first
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
 	// hex string is MSB first, swap if need it
@@ -1835,7 +1835,7 @@ int SemtechUDPPacket::parse
 
             return r;
         }
-        return 0;    // that's ok, it is PING
+        return 0;    // that's ok, it is a PING
     }
 
     // rxpk
@@ -1958,7 +1958,7 @@ void setKey(
 ) {
 	if (value.size() == sizeof(KEY128)) {
 		memcpy(retval, value.c_str(), sizeof(KEY128));
-		swap16(retval);
+		swap16(retval)
 		return;
 	}
 	if (value.size() < sizeof(KEY128) * 2)
@@ -3068,9 +3068,37 @@ BANDWIDTH int2BANDWIDTH(int value)
     return BW_7KHZ;
 }
 
+/**
+ * @param value 7..500 or 7000..
+ */
 BANDWIDTH double2BANDWIDTH(double value)
 {
-    return int2BANDWIDTH(value);
+    if (value <= 500)
+        return int2BANDWIDTH((int) value);
+    else {
+        if (value >= 7000)
+            return BW_7KHZ;
+        if (value >= 10000)
+            return BW_10KHZ;
+        if (value >= 15000)
+            return BW_15KHZ;
+        if (value >= 20000)
+            return BW_20KHZ;
+        if (value >= 31000)
+            return BW_31KHZ;
+        if (value >= 41000)
+            return BW_41KHZ;
+        if (value >= 62000)
+            return BW_62KHZ;
+        if (value >= 125000)
+            return BW_125KHZ;
+        if (value >= 250000)
+            return BW_250KHZ;
+        if (value >= 500000)
+            return BW_500KHZ;
+        return BW_7KHZ;
+
+    }
 }
 
 bool isDEVADDREmpty(const DEVADDR &addr)

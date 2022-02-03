@@ -9,11 +9,11 @@
 #include <fstream>
 
 #include <sys/time.h>
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #include <sys/types.h>
-#include <limits.h>
-#include <errno.h>
+#include <climits>
+#include <cerrno>
 #include <sys/select.h>
 
 #include "argtable3/argtable3.h"
@@ -275,7 +275,7 @@ int recvACK
 	recvBuffer.resize(MAX_RECV_BUFFER_SIZE + 1);
 	struct sockaddr_in6 cliAddr;
 	socklen_t cliAddrLen = sizeof(cliAddr);
-	int rr = recvfrom(socket.sock, (void*) recvBuffer.c_str(), MAX_RECV_BUFFER_SIZE, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
+	int rr = (int) recvfrom(socket.sock, (void*) recvBuffer.c_str(), MAX_RECV_BUFFER_SIZE, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
 	if (rr < 0) { 
 		std::cerr << ERR_SOCKET_READ
 			<< " " << UDPSocket::addrString(&socket.addrStorage)
@@ -446,13 +446,13 @@ int main(
 	}
 
 	// check at least one device specified
-	if (macGwConfig->euis.size() == 0) {
+	if (macGwConfig->euis.empty()) {
 		std::cerr << ERR_MISSED_DEVICE << std::endl;
 		exit(ERR_CODE_MISSED_DEVICE);
 	}
 
 	// check at least one device specified
-	if (macGwConfig->gatewayIds.size() == 0) {
+	if (macGwConfig->gatewayIds.empty()) {
 		std::cerr << ERR_MISSED_GATEWAY << std::endl;
 		exit(ERR_CODE_MISSED_GATEWAY);
 	}
@@ -465,7 +465,7 @@ int main(
 	}
 
 	// check MAC commands
-	if ((macGwConfig->macCommands.list.size() == 0) && (macGwConfig->payload.size() == 0)) {
+	if ((macGwConfig->macCommands.list.empty()) && (macGwConfig->payload.empty())) {
 		std::cerr << ERR_NO_MAC_NO_PAYLOAD << std::endl;
 		exit(ERR_CODE_NO_MAC_NO_PAYLOAD);
 	}

@@ -41,7 +41,7 @@ const std::string programName = "proto-db";
 class Configuration {
 public:
 	std::string command;				// print|list|create|insert
-	std::string proto_path;				// proto files directory. Default 'proto
+	std::string proto_path;				// proto file directory. Default 'proto
 	std::string dbConfigFileName;		// Default dbs.js'
 	std::vector<std::string> dbname;	// database names
 
@@ -543,7 +543,7 @@ int main(
 		time_t t(time(NULL));
 		properties["addr"] = config.addr;						// addr network address string
 		properties["fport"] = std::to_string(config.fport);		// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
-		properties["time"] = std::to_string(t);					// time (32 bit integer, seconds since Unix epoch)
+		properties["time"] = std::to_string(t);					// time (seconds since Unix epoch)
 		properties["timestamp"] = time2string(t);				// timestamp string
 		// TODO get it from command line
 		properties["deveui"] = "3232323232323232";				// eui global end-device identifier in IEEE EUI64 address space

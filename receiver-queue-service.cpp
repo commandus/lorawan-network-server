@@ -10,7 +10,7 @@
 #define CLEAR_COUNT	2048
 
 ReceiverQueueKey::ReceiverQueueKey()
-	: id(0)
+	: time({0, 0}), id(0)
 {
 
 }

@@ -80,7 +80,7 @@ static bool splitAddress(
 	const std::string &address
 )
 {
-	size_t pos = address.find_last_of(":");
+	size_t pos = address.find_last_of(':');
 	if (pos == std::string::npos)
 		return false;
 	retAddress = address.substr(0, pos);
