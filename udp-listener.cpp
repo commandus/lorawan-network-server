@@ -180,7 +180,7 @@ int UDPListener::parseBuffer
                         // send ACK immediately too
                         handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
                         if (packets.size() > 0) {
-                            // enqueue packet
+                            // enqueue JOIN request packet
                             handler->join(receivedTime, socket, (const sockaddr_in *) &gwAddress, packets[0]);
                         }
                     }

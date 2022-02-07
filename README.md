@@ -1302,6 +1302,10 @@ SemtechUDPPacket::parse
 lora-packet-handler-impl.cpp LoraPacketProcessor::join() JOIN_REQUEST_FRAME
 enqueueJoinResponse()
 
+packet-queue.cpp PacketQueue::replyJoinRequest()
+
+utillora.cpp SemtechUDPPacket::mkJoinAcceptResponse()
+
 ### References
 
 - [Semtech LoRaWAN-lib](https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/)
