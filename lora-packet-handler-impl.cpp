@@ -396,9 +396,12 @@ int LoraPacketProcessor::join(
             // report error
             std::stringstream ss;
             ss << ERR_MESSAGE << ERR_CODE_BAD_JOIN_REQUEST << ": " << ERR_BAD_JOIN_REQUEST
-                << "request: " << hexString(packet.payload)
-                << " (" << packet.payload.size() << " bytes)";
-            onLog(this, LOG_CRIT, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+                << ", payload: " << hexString(packet.payload)
+                << " (" << packet.payload.size() << " bytes)."
+                << "Expected " << sizeof(JOIN_REQUEST_FRAME) << " bytes";
+
+
+            onLog(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
         }
         return ERR_CODE_BAD_JOIN_REQUEST;
     }

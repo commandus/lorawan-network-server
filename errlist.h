@@ -231,7 +231,7 @@
 #define ERR_NO_REGION_BAND              "Regional settings not available"
 #define ERR_REGION_BAND_NO_DEFAULT      "No default region assigned"
 #define ERR_IS_JOIN					    "Join request or response"
-#define ERR_BAD_JOIN_REQUEST			"Bad Join request "
+#define ERR_BAD_JOIN_REQUEST			"Bad Join request"
 #define ERR_NETID_OR_NETTYPE_MISSED     "NetId identifier or type missed"
 #define ERR_NETTYPE_OUT_OF_RANGE        "NetType out of 0..7 range"
 #define ERR_NETID_OUT_OF_RANGE          "NetId out of range"

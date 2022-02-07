@@ -1295,6 +1295,13 @@ lorawan-mac.cpp               MacPtr::mkResponseMAC()
 utillora.cpp                  SemtechUDPPacket::mkPullResponse()
 utillora.cpp                  SemtechUDPPacket::toTxJsonString()
 
+### Join processing chain
+
+udp-listener.cpp UDPListener::parseBuffer()
+SemtechUDPPacket::parse
+lora-packet-handler-impl.cpp LoraPacketProcessor::join() JOIN_REQUEST_FRAME
+enqueueJoinResponse()
+
 ### References
 
 - [Semtech LoRaWAN-lib](https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/)
