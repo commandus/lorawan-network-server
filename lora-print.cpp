@@ -69,7 +69,7 @@ int parseCmd(
 	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, *a_payload_hex,
             *a_payload_base64, *a_dev_eui, *a_identityStorageName, *a_identityStorageType;
 	struct arg_int *a_output_format;
-	struct arg_lit *a_verbosity, *a_help;
+	struct arg_lit *a_payload_json, *a_verbosity, *a_help;
 	struct arg_end *a_end;
 
 	void *argtable[] = {
@@ -77,6 +77,7 @@ int parseCmd(
 
 		a_payload_hex = arg_str0("x", "hex", "<hex-string>", "LoraWAN packet to decode, hexadecimal string."),
 		a_payload_base64 = arg_str0("6", "base64", "<base64>", "same, base64 encoded."),
+        a_payload_json = arg_lit0("j", "json", "Read JSON from stdin"),
 
         a_dev_eui = arg_str0("e", "eui", "<hex>", "Device EUI, used to decipher Join Accept frame"),
 
@@ -147,6 +148,16 @@ int parseCmd(
 				nerrors++;
 			}
 		}
+        if (a_payload_json->count) {
+            SEMTECH_PREFIX_GW prefix;
+            prefix.token = 0;
+            prefix.tag = 0;
+            prefix.version = 2;
+            memset(prefix.mac, 1, sizeof(DEVEUI));
+            std::string json;
+            std::cin >> json;
+            config->payload = std::string((const char *) &prefix, sizeof(SEMTECH_PREFIX_GW)) + json;
+        }
 		config->verbosity = a_verbosity->count;
 	}
 
@@ -334,7 +345,10 @@ int main(
                                           << std::endl;
                                 break;
                             }
-                            std::cerr << "Invalid Join Accept frame" << std::endl;
+                            std::cerr << "Invalid Join Accept frame "
+                                << hexString(packets[0].payload) << " (" << packets[0].payload.size() << " bytes)"
+                                << ". Expected size is " << sizeof(JOIN_ACCEPT_FRAME_CFLIST) << " or " << sizeof(JOIN_ACCEPT_FRAME)
+                                << std::endl;
                         }
                         break;
                 }

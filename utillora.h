@@ -229,8 +229,8 @@ typedef ALIGN struct {
 typedef ALIGN struct {
     MHDR mhdr;  			    // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_REQUEST_FRAME frame;
-    uint16_t mic;			    // MIC
-} PACKED JOIN_REQUEST_HEADER;	// 1 + 18 + 2 = 21 bytes
+    uint32_t mic;			    // MIC
+} PACKED JOIN_REQUEST_HEADER;	// 1 + 18 + 4 = 23 bytes
 
 typedef ALIGN struct {
     uint8_t RX2DataRate: 4;	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
@@ -253,8 +253,8 @@ typedef ALIGN struct {
 typedef ALIGN struct {
     MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_ACCEPT_FRAME_HEADER hdr;   //
-    uint16_t mic;			        // MIC
-} PACKED JOIN_ACCEPT_FRAME;	        // 1 12 2 = 15 bytes
+    uint32_t mic;			        // MIC
+} PACKED JOIN_ACCEPT_FRAME;	        // 1 12 4 = 17 bytes
 
 // Channel frequency list
 typedef ALIGN struct {
@@ -266,8 +266,8 @@ typedef ALIGN struct {
     MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_ACCEPT_FRAME_HEADER hdr;   // 12
     CFLIST cflist;
-    uint16_t mic;			        // MIC
-} PACKED JOIN_ACCEPT_FRAME_CFLIST;	// 1 12 16 2 = 21 bytes
+    uint32_t mic;			        // MIC
+} PACKED JOIN_ACCEPT_FRAME_CFLIST;	// 1 12 16 4 = 33 bytes
 
 typedef ALIGN struct {
 	uint8_t fopts[15];

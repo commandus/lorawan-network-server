@@ -9,17 +9,6 @@
   "name": "sh-2-1"
 },
 {
-  "addr": "01450330",
-  "activation": "ABP",
-  "deveui": "3434383566378112",
-  "nwkSKey": "313747123434383535003a0066378888",
-  "appSKey": "35003a003434383531374712656b7f47",
-  "class": "C",
-  "version": "1.0.0",
-  "name": "SI-13-23",
-  "flags": 1
-},
-{
   "addr": "34313235",
   "activation": "ABP",
   "deveui": "3231323549304c0a",
@@ -45,10 +34,20 @@
   "activation": "OTAA",
   "deveui": "0102030405060708",
   "appeui": "1112131415161718",
-  "appKey": "7E151628AED2A6ABF7158809CF4F3C",
+  "appKey": "2B7E151628AED2A6ABF7158809CF4F3C",
   "class": "A",
   "version": "1.0.0",
   "name": "oledotaa",
   "flags": 0
+},
+{
+  "activation": "OTAA",
+  "deveui": "3434383566378112",
+  "appeui": "3032676173693133",
+  "appKey": "04377D120000000004377D12035C8888",
+  "class": "C",
+  "version": "1.0.0",
+  "name": "SI-13-23",
+  "flags": 1
 }
 ]
