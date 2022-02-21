@@ -366,6 +366,7 @@ public:
 	DEVICENAME name;
 	NetworkIdentity();
 	NetworkIdentity(const DEVADDRINT &a, const DEVICEID &id);
+    NetworkIdentity(const DEVICEID &id);
 	void set(
 		const DEVADDRINT &addr,
 		const DEVICEID &value

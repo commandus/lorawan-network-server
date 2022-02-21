@@ -211,11 +211,15 @@ public:
     bool EndObject(rapidjson::SizeType memberCount)
     {
         isNetworkIdentity = false;
-        if (*((uint64_t *) &k.devaddr))
-        {
-            service->put(k.devaddr, v);
-            service->setRightsMask(k.devaddr, flags);
+        if (*((uint64_t *) &k.devaddr)) {
+            // OTAA unassigned address, get a new one
+            NetworkIdentity identity(v);
+            int r = service->next(identity);
+            if (r)
+                return false;
         }
+        service->put(k.devaddr, v);
+        service->setRightsMask(k.devaddr, flags);
         return true;
     }
 

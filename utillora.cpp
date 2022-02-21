@@ -505,6 +505,20 @@ NetworkIdentity::NetworkIdentity(
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
+NetworkIdentity::NetworkIdentity
+(
+        const DEVICEID &value
+)
+{
+    memset(&devaddr, 0, sizeof(DEVADDR));
+    memmove(&activation, &value.activation, sizeof(activation));
+    memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
+    memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
+    memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
+    memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+    memmove(&name, &value.name, sizeof(DEVICENAME));
+}
+
 std::string KEY2string(
 	const KEY128 &value
 )
