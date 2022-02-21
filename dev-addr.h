@@ -90,6 +90,8 @@ public:
     bool operator==(const DevAddr &value) const;
     bool operator==(const DEVADDR &value) const;
 
+    bool empty() const;
+
     int increment();
     int decrement();
     DevAddr& operator++();  // prefix increment operator
