@@ -810,6 +810,11 @@ bool DevAddr::operator==(const DEVADDR &value) const
     return memcmp(&value, &devaddr, sizeof(DEVADDR)) == 0;
 }
 
+bool DevAddr::empty() const
+{
+    return isDEVADDREmpty(devaddr);
+}
+
 // prefix increment operator
 DevAddr& DevAddr::operator++()
 {
