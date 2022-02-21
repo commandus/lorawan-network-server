@@ -108,7 +108,7 @@
 #define ERR_CODE_INIT_GW_STAT   			-587
 #define ERR_CODE_DEVICE_NAME_NOT_FOUND      -588
 #define ERR_CODE_DEVICE_EUI_NOT_FOUND       -589
-#define ERR_CODE_JOIN_EUI_NOT_MATCHED          -590
+#define ERR_CODE_JOIN_EUI_NOT_MATCHED       -590
 #define ERR_CODE_GATEWAY_NO_YET_PULL_DATA   -591
 #define ERR_CODE_REGION_BAND_EMPTY          -592
 #define ERR_CODE_INIT_REGION_BANDS          -593
@@ -230,7 +230,7 @@
 #define ERR_INIT_REGION_NO_DEFAULT		"No default regional settings loaded"
 #define ERR_NO_REGION_BAND              "Regional settings not available"
 #define ERR_REGION_BAND_NO_DEFAULT      "No default region assigned"
-#define ERR_IS_JOIN					    "Join request or response"
+#define ERR_IS_JOIN					    "Join request"
 #define ERR_BAD_JOIN_REQUEST			"Bad Join request"
 #define ERR_NETID_OR_NETTYPE_MISSED     "NetId identifier or type missed"
 #define ERR_NETTYPE_OUT_OF_RANGE        "NetType out of 0..7 range"
@@ -256,7 +256,9 @@
 #define MSG_DEVICE						"Device "
 #define MSG_DEVICES						"Devices:"
 #define MSG_REGIONAL_SETTINGS   		"Regional parameters "
-#define MSG_DEVICE_EUI					"EUI "
+#define MSG_DEVICE_EUI					"Device EUI "
+#define MSG_JOIN_EUI					"Join EUI "
+#define MSG_DEV_NONCE                   "Dev nonce "
 #define MSG_DEVICE_ACTIVATION			"Device activation "
 #define MSG_READ_BYTES					"Read bytes "
 #define MSG_RECEIVED					"Message received "
@@ -285,6 +287,8 @@
 #define MSG_INIT_UDP_LISTENER           "Initialize UDP listener.."
 #define MSG_LISTEN_IP_ADDRESSES         "Listen IP addresses: "
 #define MSG_TO_REQUEST                   " to request "
+#define MSG_JOIN_REQUEST			    "Join request"
+#define MSG_DEVICE_COUNT                "device(s)"
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

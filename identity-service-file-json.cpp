@@ -356,6 +356,12 @@ void JsonFileIdentityService::list(
     }
 }
 
+// Entries count
+size_t JsonFileIdentityService::size()
+{
+    return storage.size();
+}
+
 void JsonFileIdentityService::put(
     DEVADDR &devaddr,
     DEVICEID &id

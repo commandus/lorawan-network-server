@@ -69,6 +69,7 @@ const std::string programName = "lorawan-network-server";
 #define DEF_PROTO_PATH "proto"
 
 static int lastSysSignal = 0;
+#define MAX_DEVICE_LIST_COUNT   20
 
 static Configuration *config = NULL;
 static GatewayList *gatewayList = NULL;
@@ -501,15 +502,24 @@ int main(
     if (config->serverConfig.verbosity > 3) {
 		std::vector<NetworkIdentity> identities;
 		std::cerr << MSG_DEVICES << std::endl;
-		identityService->list(identities, 0, 0);
+		identityService->list(identities, 0, MAX_DEVICE_LIST_COUNT + 1);
+        size_t c = 0;
 		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
-			std::cerr << "\t" << DEVADDR2string(it->devaddr)
+			std::cerr
+                << "\t" << activation2string(it->activation)
+                << "\t" << DEVADDR2string(it->devaddr)
                 << "\t" << DEVEUI2string(it->devEUI)
                 << "\t" << DEVICENAME2string(it->name);
             if (identityService->canControlService(it->devaddr))
 				std::cerr << "\tmaster";
 			std::cerr << std::endl;
+            if (c > MAX_DEVICE_LIST_COUNT) {
+                std::cerr << "\t..." << std::endl;
+                break;
+            }
+            c++;
 		}
+        std::cerr << "\t" << identityService->size() << " " << MSG_DEVICE_COUNT << std::endl;
 	}
 
     switch (config->serverConfig.deviceStatStorageType) {

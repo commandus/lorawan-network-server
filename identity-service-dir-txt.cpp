@@ -57,7 +57,13 @@ int DirTxtIdentityService::load()
             r = rr;
 	}
 	return r;
-} 
+}
+
+// Entries count
+size_t DirTxtIdentityService::size()
+{
+    return storage.size();
+}
 
 int DirTxtIdentityService::save()
 {

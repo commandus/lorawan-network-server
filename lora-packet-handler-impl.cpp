@@ -449,8 +449,11 @@ int LoraPacketProcessor::join(
             // report error
             std::stringstream ss;
             ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r)
-               << ", " << MSG_DEVICE_EUI << DEVEUI2string(joinRequestFrame->joinEUI)
-               << ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
+                << ". " << MSG_JOIN_REQUEST
+                << " " << MSG_DEVICE_EUI << DEVEUI2string(joinRequestFrame->devEUI)
+                << " " << MSG_JOIN_EUI << DEVEUI2string(joinRequestFrame->joinEUI)
+                << " " << MSG_DEV_NONCE << DEVNONCE2string(joinRequestFrame->devNonce)
+                << ", gateway address " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
             onLog(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
         }
     }

@@ -38,7 +38,9 @@ class JsonFileIdentityService: public IdentityService {
 		int getNetworkIdentity(NetworkIdentity &retval, const DEVEUI &eui) override;
 		// List entries
 		void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size) override;
-		void put(DEVADDR &devaddr, DEVICEID &id) override;
+        // Entries count
+        size_t size() override;
+        void put(DEVADDR &devaddr, DEVICEID &id) override;
 		void rm(DEVADDR &addr) override;
 		
 		int init(const std::string &option, void *data) override;

@@ -38,6 +38,9 @@ public:
     // List entries
     virtual void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size) = 0;
 
+    // Entries count
+    virtual size_t size() = 0;
+
     // force save
     virtual void flush() = 0;
 
