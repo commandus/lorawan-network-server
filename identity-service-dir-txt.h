@@ -31,6 +31,8 @@ class DirTxtIdentityService: public JsonFileIdentityService {
 	public:
 		int startListen(OnIdentitiesUpdate *callback);
 		int stopListen();
+        // Entries count
+        size_t size() override;
 };
 
 #endif
