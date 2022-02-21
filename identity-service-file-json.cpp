@@ -211,7 +211,7 @@ public:
     bool EndObject(rapidjson::SizeType memberCount)
     {
         isNetworkIdentity = false;
-        if (*((uint64_t *) &k.devaddr)) {
+        if (*((uint64_t *) &k.devaddr) == 0) {
             // OTAA unassigned address, get a new one
             NetworkIdentity identity(v);
             int r = service->next(identity);
