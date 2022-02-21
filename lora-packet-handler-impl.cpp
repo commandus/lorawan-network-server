@@ -126,6 +126,12 @@ int LoraPacketProcessor::enqueueMAC(
 	return LORA_OK;
 }
 
+/**
+ * Enqueue Join Request to be replied in 5s or 6s
+ * @param time time received Join Request
+ * @param value Join Request packet
+ * @return 0- success
+ */
 int LoraPacketProcessor::enqueueJoinResponse(
     const struct timeval &time,
     SemtechUDPPacket &value
@@ -143,11 +149,18 @@ int LoraPacketProcessor::enqueueJoinResponse(
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
     // delay time
+    int delaySecs = 5;
+    if (this->deviceChannelPlan) {
+        const RegionalParameterChannelPlan *plan = this->deviceChannelPlan->get();
+        if (plan) {
+            delaySecs = plan->joinAcceptDelay1();
+        }
+    }
     struct timeval t;
     t.tv_sec = time.tv_sec;
     t.tv_usec = time.tv_usec;
 
-    incTimeval(t, 0, DEF_TIMEOUT_US);
+    incTimeval(t, 0, delaySecs);
 
     packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
     packetQueue.wakeUp();
@@ -370,6 +383,19 @@ void LoraPacketProcessor::setDeviceChannelPlan(const DeviceChannelPlan *value)
     packetQueue.setDeviceChannelPlan(value);
 }
 
+/**
+ * Prepare response to the Join Request.
+ * Check does device identifier exists, if it does,
+ * enqueue Join Request to be replied in 5s or 6s
+ *
+ * Called from UDPListener::parseBuffer()
+ *
+ * @param time time received
+ * @param socket network socket to the gateway
+ * @param socketAddress gateway address
+ * @param packet Join Request packet
+ * @return 0- success
+ */
 int LoraPacketProcessor::join(
         const struct timeval &time,
         int socket,
@@ -415,7 +441,7 @@ int LoraPacketProcessor::join(
             deviceHistoryService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
         // set device identifier
         packet.devId = networkIdentity;
-        // enqueue response
+        // enqueue response to be replied in 5s or 6s
         enqueueJoinResponse(time, packet);
     } else {
         // device EUI is NOT identified

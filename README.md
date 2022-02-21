@@ -1300,7 +1300,7 @@ utillora.cpp                  SemtechUDPPacket::toTxJsonString()
 udp-listener.cpp UDPListener::parseBuffer()
 SemtechUDPPacket::parse
 lora-packet-handler-impl.cpp LoraPacketProcessor::join() JOIN_REQUEST_FRAME
-enqueueJoinResponse()
+lora-packet-handler-impl.cpp enqueueJoinResponse()
 
 packet-queue.cpp PacketQueue::replyJoinRequest()
 

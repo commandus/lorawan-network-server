@@ -108,6 +108,9 @@ public:
     std::vector<int8_t> txPowerOffsets;
     std::vector<Channel> uplinkChannels;
     std::vector<Channel> downlinkChannels;
+    // Join Accept delay
+    int joinAcceptDelay1() const; // 5s
+    int joinAcceptDelay2() const; // 6s
 
     RegionalParameterChannelPlan();
     RegionalParameterChannelPlan(const RegionalParameterChannelPlan &value);

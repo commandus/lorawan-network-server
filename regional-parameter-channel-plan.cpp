@@ -350,6 +350,17 @@ void RegionalParameterChannelPlan::setRx1DataRateOffsets(int dataRateIndex, int 
     va_end(ap);
 }
 
+
+int RegionalParameterChannelPlan::joinAcceptDelay1() const
+{
+    return 5; // 5s
+}
+
+int RegionalParameterChannelPlan::joinAcceptDelay2() const
+{
+   return 6; // 6s
+}
+
 std::string RegionalParameterChannelPlan::toDescriptionTableString() const {
     std::stringstream ss;
     ss  << std::fixed << std::setprecision(2)
@@ -405,4 +416,3 @@ RegionBands::RegionBands(const RegionBands &value)
     : regionalParametersVersion(value.regionalParametersVersion), bands(value.bands)
 {
 }
-

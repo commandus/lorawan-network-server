@@ -2432,7 +2432,8 @@ std::string SemtechUDPPacket::toTxJsonString
 	}
 
 	ss << ",\"" << METADATA_TX_NAMES[4] << "\":" << metadata[metadataIdx].frequency()       // "868.900"
-        << ",\"" << METADATA_TX_NAMES[5] << "\":" << 0 // (int) metadata[metadataIdx].rfch	// Concentrator "RF chain" used for TX (unsigned integer)
+        // "rfch": 0. @see https://github.com/brocaar/chirpstack-network-server/issues/19
+        << ",\"" << METADATA_TX_NAMES[5] << "\":" << 0                                      // Concentrator "RF chain" used for TX (unsigned integer)
 		<< ",\"" << METADATA_TX_NAMES[6] << "\":" << power									// TX output power in dBm (unsigned integer, dBm precision)
 		<< ",\"" << METADATA_TX_NAMES[7] << "\":\"" << metadata[metadataIdx].modulation()	// Modulation identifier "LORA" or "FSK"
 		<< "\",\"" << METADATA_TX_NAMES[8] << "\":\"" << metadata[metadataIdx].datr()

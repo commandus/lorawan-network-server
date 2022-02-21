@@ -840,6 +840,16 @@ void PacketQueue::setDeviceChannelPlan(const DeviceChannelPlan *value) {
     deviceChannelPlan = value;
 }
 
+/**
+ * Send Join Accept to Semtech packet forwarder protocol in
+ * JOIN_ACCEPT_DELAY1 = 5s or JOIN_ACCEPT_DELAY2 = 6s
+ *
+ * Called from PacketQueue::runner()
+ *
+ * @param item Join Request packet
+ * @param t time received
+ * @return 0- success
+ */
 int PacketQueue::replyJoinRequest(
         SemtechUDPPacketItem &item,
         struct timeval &t
