@@ -157,7 +157,7 @@ int LoraPacketProcessor::enqueueJoinResponse(
     std::vector<rfmMetaData>::iterator it(value.metadata.begin());
     if (it != value.metadata.end()) {
         // increment tmst
-        it->tmst += delaySecs;
+        it->tmst += delaySecs * 1000000;
         it->t += delaySecs;
     }
 

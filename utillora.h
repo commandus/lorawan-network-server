@@ -413,7 +413,7 @@ class rfmMetaData {
 public:
 	uint64_t gatewayId;
 	time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
-	uint32_t tmst;				// Internal timestamp of "RX finished" event (32b unsigned)
+	uint32_t tmst;				// Internal timestamp of "RX finished" event (32b unsigned). In microseconds
 	uint8_t chan;				// Concentrator "IF" channel used for RX (unsigned integer)
 	uint8_t rfch;				// Concentrator "RF chain" used for RX (unsigned integer)
 	uint32_t freq;				// RX central frequency in Hz, not Mhz. MHz (unsigned float, Hz precision) 868.900000
