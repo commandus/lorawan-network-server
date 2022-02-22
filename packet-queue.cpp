@@ -28,7 +28,7 @@ SemtechUDPPacketItem::SemtechUDPPacketItem(
 )
 	: processMode(MODE_NONE), packet(aPacket)
 {
-	gettimeofday(&timeAdded, NULL);
+	gettimeofday(&time2send, NULL);
 }
 
 SemtechUDPPacketItem::SemtechUDPPacketItem(
@@ -37,7 +37,7 @@ SemtechUDPPacketItem::SemtechUDPPacketItem(
 	const struct timeval &time,
 	const SemtechUDPPacket &aPacket
 )
-	: processMode(mode), timeAdded(time), packet(aPacket)
+	: processMode(mode), time2send(time), packet(aPacket)
 {
 	
 }
@@ -50,7 +50,7 @@ DEVADDRINT SemtechUDPPacketItem::getAddr() const
 std::string SemtechUDPPacketItem::toJsonString() const
 {
 	std::stringstream ss;
-	ss << "{\"time\": \"" << timeval2string(timeAdded)
+	ss << "{\"time\": \"" << timeval2string(time2send)
         << "\", \"devaddr\": \"" << packet.getDeviceAddrStr()
         << "\", \"metadata\": " << packet.metadataToJsonString()
         << "}";
@@ -60,7 +60,7 @@ std::string SemtechUDPPacketItem::toJsonString() const
 std::string SemtechUDPPacketItem::toString() const
 {
     std::stringstream ss;
-    ss << "time: " << timeval2string(timeAdded) << ", device address: " << packet.getDeviceAddrStr()
+    ss << "time: " << timeval2string(time2send) << ", device address: " << packet.getDeviceAddrStr()
         << ", metadata: " << packet.metadataToJsonString();
     return ss.str();
 }
@@ -192,8 +192,9 @@ void PacketQueue::push(
 }
 
 /**
+ * Return time difference, in microseconds
  * @param t1 current time
- * @param t2 future time
+ * @param t2 future time t2 > t1
  * @return time difference in microseconds (>0)
  **/
 int PacketQueue::diffMicroSeconds(
@@ -217,11 +218,11 @@ size_t PacketQueue::count()
 	return packets.size();
 }
 
-const int TIME_LEAD_MICROSECONDS = 1000;
+const int TIME_LEAD_MICROSECONDS = 1000000;
 
 bool PacketQueue::getFirstExpired(
 	SemtechUDPPacketItem &retval,
-	struct timeval &currenttime
+	struct timeval &currentTime
 )
 {
 	if (addrs.empty())
@@ -245,13 +246,13 @@ bool PacketQueue::getFirstExpired(
 	}
 
 	// first packet is the earliest packet, check time using first earliest packet
-	if (diffMicroSeconds(currenttime, it->second.packets[0].timeAdded) > TIME_LEAD_MICROSECONDS) {
-		// not ready, wait
+	if (diffMicroSeconds(currentTime, it->second.packets[0].time2send) > TIME_LEAD_MICROSECONDS) {
+		// too early. Wait.
 		mutexq.unlock();
 		return false;
 	}
 
-	// return packet with received signal strength indicator. Worst is -85 dBm.
+	// get packet with received signal strength indicator. Worst is -85 dBm.
 	float lsnr = -3.402823466E+38;
 	uint64_t gwid;
 	std::vector<SemtechUDPPacketItem>::const_iterator pit(it->second.packets.begin());
@@ -281,8 +282,10 @@ bool PacketQueue::getFirstExpired(
 		}
 		i++;
 	}
+    // return packet
 	retval = it->second.packets[idx];
 
+    // remove packet from the queue
 	if (hasOtherPacket) {
 		// remove first received packet and others with the same fcnt
 		for (std::vector<SemtechUDPPacketItem>::iterator pit(it->second.packets.begin()); pit != it->second.packets.end();) {
@@ -296,6 +299,8 @@ bool PacketQueue::getFirstExpired(
 		// entirely remove all packets
 		packets.erase(it);
 	}
+
+    // remove address from the queue
 	addrs.pop_front();
 
 	mutexq.unlock();
@@ -321,7 +326,7 @@ int PacketQueue::getNextTimeout(struct timeval &currenttime)
 		return DEF_TIMEOUT_MS * 1000;
 	}
 	// first packet is the earliest packet
-	return diffMicroSeconds(currenttime, it->second.packets[0].timeAdded);
+	return diffMicroSeconds(currenttime, it->second.packets[0].time2send);
 }
 
 std::string PacketQueue::toString() const
@@ -802,7 +807,7 @@ void PacketQueue::wakeUp()
 		return;
 	uint8_t u = 1;
 	if (write(fdWakeup, &u, sizeof(u)) != sizeof(u)) {
-		// TODO smth
+		// nothing to do
 	}
 }
 
@@ -984,12 +989,12 @@ int PacketQueue::replyJoinRequest(
         );
     }
 
-    uint32_t fcntdown = 0;
+    uint32_t fcntDown = 0;
     if (deviceHistoryService) {
         DeviceHistoryItem ds;
         int rs = deviceHistoryService->get(item.packet.header.header.devaddr, ds);
         if (rs == 0) {
-            fcntdown = ds.fcntdown;
+            fcntDown = ds.fcntdown;
         } else {
             if (onLog) {
                 ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
@@ -1005,7 +1010,7 @@ int PacketQueue::replyJoinRequest(
     } else {
         encryptJoinAcceptResponse(frame, JSIntKey);
     }
-    item.packet.header.header.fcnt = fcntdown;
+    item.packet.header.header.fcnt = fcntDown;
     // item.packet.header.header.macheader.f.mtype = MTYPE_JOIN_ACCEPT;
     std::string response = item.packet.mkJoinAcceptResponse(frame, internalTime, power);
     ssize_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
@@ -1014,7 +1019,7 @@ int PacketQueue::replyJoinRequest(
 
     if (sz == response.size()) {
         if (deviceHistoryService)
-            deviceHistoryService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntdown);
+            deviceHistoryService->putDown(item.packet.header.header.devaddr, t.tv_sec, fcntDown);
     }
 
     // log result

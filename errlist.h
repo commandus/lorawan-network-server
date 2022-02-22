@@ -286,7 +286,7 @@
 #define MSG_GATEWAY_LIST                "Gateways: "
 #define MSG_INIT_UDP_LISTENER           "Initialize UDP listener.."
 #define MSG_LISTEN_IP_ADDRESSES         "Listen IP addresses: "
-#define MSG_TO_REQUEST                   " to request "
+#define MSG_TO_REQUEST                   "to request "
 #define MSG_JOIN_REQUEST			    "Join request"
 #define MSG_DEVICE_COUNT                "device(s)"
 #define MSG_BYTES                       "bytes"

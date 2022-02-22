@@ -37,7 +37,7 @@ typedef enum {
 
 class SemtechUDPPacketItem {
 	public:
-		struct timeval timeAdded;
+		struct timeval time2send;
 		SemtechUDPPacket packet;
 		ITEM_PROCESS_MODE processMode;
 		// socket
@@ -128,12 +128,12 @@ class PacketQueue {
 		/**
 		 * @param retval returned packet from queue
 		 * @param retmode returned what to do with packet
-		 * @param currenttime time
+		 * @param currentTime time
 		 * @return  true if packet ready for send returned in the retval parameter
 		 */
 		bool getFirstExpired(
 			SemtechUDPPacketItem &retval,
-			struct timeval &currenttime
+			struct timeval &currentTime
 		);
 		int getNextTimeout(struct timeval &currenttime);
 		void start(PacketHandler &value);

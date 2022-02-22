@@ -161,7 +161,8 @@ int LoraPacketProcessor::enqueueJoinResponse(
        << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
        << ", delay " << delaySecs << "s"
-       << ", send at time: " << timeval2string(t);
+       << ", send at time: " << timeval2string(t)
+        << ", received time: " << timeval2string(time);
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
     packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
