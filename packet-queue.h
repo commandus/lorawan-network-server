@@ -121,7 +121,7 @@ class PacketQueue {
 		void push(
 			int socket,
 			ITEM_PROCESS_MODE mode,
-			const struct timeval &time,
+			const struct timeval &time2send,
 			const SemtechUDPPacket &value
 		);
 		size_t count();

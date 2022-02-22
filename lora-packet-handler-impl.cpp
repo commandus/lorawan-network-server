@@ -154,6 +154,12 @@ int LoraPacketProcessor::enqueueJoinResponse(
     t.tv_usec = time.tv_usec;
 
     incTimeval(t, delaySecs, 0);
+    std::vector<rfmMetaData>::iterator it(value.metadata.begin());
+    if (it != value.metadata.end()) {
+        // increment tmst
+        it->tmst += delaySecs;
+        it->t += delaySecs;
+    }
 
     // log Join event
     ss << MSG_ENQUEUE_JOIN_REQUEST << MSG_TO_REQUEST

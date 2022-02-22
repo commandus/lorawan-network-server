@@ -141,15 +141,15 @@ PacketQueue::~PacketQueue()
 void PacketQueue::push(
 	int socket,
 	ITEM_PROCESS_MODE mode,
-	const struct timeval &time,
+	const struct timeval &time2send,
 	const SemtechUDPPacket &value
 ) {
 	if (onLog) {
 		std::stringstream ss;
-		ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time);
+		ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time2send);
 		onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
 	}
-    SemtechUDPPacketItem item(socket, mode, time, value);
+    SemtechUDPPacketItem item(socket, mode, time2send, value);
 
 	DEVADDRINT a(item.getAddr());
 	mutexq.lock();
