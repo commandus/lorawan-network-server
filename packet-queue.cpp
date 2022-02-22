@@ -193,8 +193,8 @@ void PacketQueue::push(
 
 /**
  * @param t1 current time
- * @param t2 furure time
- * @return time dirrerence in microseconds (>0)
+ * @param t2 future time
+ * @return time difference in microseconds (>0)
  **/
 int PacketQueue::diffMicroSeconds(
 	struct timeval &t1,
@@ -224,13 +224,14 @@ bool PacketQueue::getFirstExpired(
 	struct timeval &currenttime
 )
 {
-	if (!addrs.size()) {
-		return false;
-	}
+	if (addrs.empty())
+		return false;   // nothing to do
 
 	mutexq.lock();
 
+    // get first address
 	DEVADDRINT a = addrs.front();
+    // get corresponding packet
 	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
 	if (it == packets.end()) {
 		mutexq.unlock();
@@ -243,7 +244,7 @@ bool PacketQueue::getFirstExpired(
 		return false;
 	}
 
-	// first packet is earliest packet, check time using first earliest packet
+	// first packet is the earliest packet, check time using first earliest packet
 	if (diffMicroSeconds(currenttime, it->second.packets[0].timeAdded) > TIME_LEAD_MICROSECONDS) {
 		// not ready, wait
 		mutexq.unlock();
@@ -259,7 +260,7 @@ bool PacketQueue::getFirstExpired(
 		return false;
 	}
 		
-	// validate have an other packet (by fcnt)
+	// validate have another packet (by fcnt)
 	uint16_t fcntFirst = pit->packet.header.header.fcnt;
 	bool hasOtherPacket = false;
 	int idx = 0;
@@ -283,7 +284,7 @@ bool PacketQueue::getFirstExpired(
 	retval = it->second.packets[idx];
 
 	if (hasOtherPacket) {
-		// remove first received packet and aothers wit the sama fcnt
+		// remove first received packet and others with the same fcnt
 		for (std::vector<SemtechUDPPacketItem>::iterator pit(it->second.packets.begin()); pit != it->second.packets.end();) {
 			if (pit->packet.header.header.fcnt == fcntFirst) {
 				pit = it->second.packets.erase(pit);
@@ -316,10 +317,10 @@ int PacketQueue::getNextTimeout(struct timeval &currenttime)
 	}
 
 	// always keep at least 1 item
-	if (!it->second.packets.size()) {
+	if (it->second.packets.empty()) {
 		return DEF_TIMEOUT_MS * 1000;
 	}
-	// first packet is earliest packet
+	// first packet is the earliest packet
 	return diffMicroSeconds(currenttime, it->second.packets[0].timeAdded);
 }
 
@@ -526,7 +527,7 @@ std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
 			std::stringstream ss;
 			ss << MSG_SENT_REPLY_TO
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-				<< " payload: " << hexString(response) << ", size: " << response.size();
+				<< " " << MSG_PAYLOAD << ": " << hexString(response) << ", size: " << response.size();
 			if (onLog)
 				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
@@ -563,7 +564,7 @@ int PacketQueue::replyControl(
 	if (sz < sizeof(CONTROL_DEVICE_PACKET)) {
 		if (onLog) {
 			std::stringstream ss;
-			ss << ERR_INVALID_CONTROL_PACKET << ", size: " << sz << " is too small";
+			ss << ERR_INVALID_CONTROL_PACKET << ", " << MSG_SIZE << ": " << sz << MSG_IS_TOO_SMALL;
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 		}
 		return ERR_CODE_INVALID_CONTROL_PACKET;
@@ -600,8 +601,8 @@ int PacketQueue::replyControl(
 		ss << "Control packet EUI: " << DEVEUI2string(controlPacket->header.eui)
             << ", gateway id: " << uint64_t2string(controlPacket->header.gwid)
             << ", tag: " << (int) controlPacket->header.tag
-            << ", MAC payload size: " << macPayloadSize
-            << ", MAC payload: " << hexString(macPayload);
+            << ", MAC " << MSG_PAYLOAD << " size: " << macPayloadSize
+            << ", MAC " << MSG_PAYLOAD << ": " << hexString(macPayload);
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 	}
 
@@ -682,13 +683,13 @@ std::cerr << "==SEND MAC command to device addr: " << DEVADDR2string(nid.devaddr
 			if (r == -1)
 				ss << ", sent " << r << " of " << response.size()
 					<< ", errno: " << errno << ": " << strerror(errno)
-					<< ", payload: " << hexString(response);
+					<< ", " << MSG_PAYLOAD << ": " << hexString(response);
 			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
 		} else {
 			std::stringstream ss;
 			ss << MSG_SENT_REPLY_TO
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
-				<< " payload: " << hexString(response) << ", size: " << response.size();
+				<< " " << MSG_PAYLOAD << ": " << hexString(response) << ", size: " << response.size();
 			if (onLog)
 				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
@@ -738,7 +739,8 @@ void PacketQueue::runner()
 		SemtechUDPPacketItem item;
 		struct timeval t;
 		gettimeofday(&t, NULL);
-		while (getFirstExpired(item, t)) {
+		while (getFirstExpired(item, t))
+        {
 			switch (item.processMode)
 			{
 			case MODE_ACK:
@@ -758,12 +760,12 @@ void PacketQueue::runner()
                         }
                     }
                 }
-                    break;
+                break;
 			case MODE_CONTROL_NS:
 				// control packet
 				if (onLog) {
 					std::stringstream ss;
-					ss << "== Control message processing, payload: "
+					ss << "== Control message processing, " << MSG_PAYLOAD << ": "
 						<< hexString(item.packet.payload)
 						<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
 					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
@@ -1026,7 +1028,7 @@ int PacketQueue::replyJoinRequest(
                     << MSG_GATEWAY_SNR << snr << ", address: "
                     << UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr)
                     << ", device address: " << DEVADDR2string(item.packet.header.header.devaddr)
-                    << ", payload: " << hexString(response) << " (" << response.size()
+                    << ", " << MSG_PAYLOAD << ": " << hexString(response) << " (" << response.size()
                     << " bytes) to " << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
             if (r == -1)
                 ss << ", sent " << r << " bytes of " << response.size();
@@ -1046,7 +1048,7 @@ int PacketQueue::replyJoinRequest(
                    << UDPSocket::addrString((const sockaddr *) &gwit->second.sockaddr)
                    << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
                    << ", device address: " << DEVADDR2string(item.packet.header.header.devaddr)
-                   << ", payload: " << hexString(response) << ", size: " << response.size();
+                   << ", " << MSG_PAYLOAD << ": " << hexString(response) << ", size: " << response.size();
                 onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
             }
         }

@@ -289,6 +289,11 @@
 #define MSG_TO_REQUEST                   " to request "
 #define MSG_JOIN_REQUEST			    "Join request"
 #define MSG_DEVICE_COUNT                "device(s)"
+#define MSG_BYTES                       "bytes"
+#define MSG_EXPECTED                    "Expected"
+#define MSG_PAYLOAD                     "payload"
+#define MSG_SIZE                        "size"
+#define MSG_IS_TOO_SMALL                " is too small"
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

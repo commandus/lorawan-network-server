@@ -99,7 +99,9 @@ class PacketQueue {
         void runner();
 
 	public:
+        // packets
 		std::map<DEVADDRINT, SemtechUDPPacketItems, DEVADDRINTCompare> packets;
+        // and their addresses
 		std::deque <DEVADDRINT> addrs;
 		// statistics, packets read since last start()
 		size_t packetsRead;

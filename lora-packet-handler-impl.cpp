@@ -61,7 +61,7 @@ int LoraPacketProcessor::enqueueControl(
 	ss << MSG_MAC_COMMAND_RECEIVED
        << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI) << ", "
-       << "payload: " << hexString(value.payload);
+       << MSG_PAYLOAD << ": " << hexString(value.payload);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
 	// wait until gateways all send packet
@@ -113,7 +113,7 @@ int LoraPacketProcessor::enqueueMAC(
        << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI) << ", "
 		// << " " << value.devId.toJsonString()
-        << ", payload: " << hexString(value.payload)
+        << ", " << MSG_PAYLOAD << ": " << hexString(value.payload)
         << ", MACs: " << hexString(macs);
 	onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 	// wait until gateways all send packet
@@ -141,13 +141,6 @@ int LoraPacketProcessor::enqueueJoinResponse(
     std::string macs = value.getMACs();
     const JOIN_REQUEST_FRAME *joinRequestFrame = value.getJoinRequestFrame();
 
-    // log Join event
-    ss << MSG_ENQUEUE_JOIN_REQUEST << MSG_TO_REQUEST
-        << JOIN_REQUEST_FRAME2string(*joinRequestFrame)
-        << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI);
-    onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
-
     // delay time
     int delaySecs = 5;
     if (this->deviceChannelPlan) {
@@ -160,7 +153,16 @@ int LoraPacketProcessor::enqueueJoinResponse(
     t.tv_sec = time.tv_sec;
     t.tv_usec = time.tv_usec;
 
-    incTimeval(t, 0, delaySecs);
+    incTimeval(t, delaySecs, 0);
+
+    // log Join event
+    ss << MSG_ENQUEUE_JOIN_REQUEST << MSG_TO_REQUEST
+       << JOIN_REQUEST_FRAME2string(*joinRequestFrame)
+       << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+       << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
+       << ", delay " << delaySecs << "s"
+       << ", send at time: " << timeval2string(t);
+    onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
     packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
     packetQueue.wakeUp();
@@ -422,9 +424,9 @@ int LoraPacketProcessor::join(
             // report error
             std::stringstream ss;
             ss << ERR_MESSAGE << ERR_CODE_BAD_JOIN_REQUEST << ": " << ERR_BAD_JOIN_REQUEST
-                << ", payload: " << hexString(packet.payload)
-                << " (" << packet.payload.size() << " bytes)."
-                << "Expected " << sizeof(JOIN_REQUEST_FRAME) << " bytes";
+                << ", " << MSG_PAYLOAD << ": " << hexString(packet.payload)
+                << " (" << packet.payload.size() << " " << MSG_BYTES << ")."
+                << " " << MSG_EXPECTED << " " << sizeof(JOIN_REQUEST_FRAME) << " " << MSG_BYTES;
 
 
             onLog(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
