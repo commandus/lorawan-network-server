@@ -18,6 +18,8 @@ class DeviceHistoryService {
 		virtual void putUp(DEVADDR &devaddr, const time_t &time, uint32_t fcntup) = 0;
 		// Add or replace Address = FCntDown
 		virtual void putDown(DEVADDR &devaddr, const time_t &time, uint32_t fcntdown) = 0;
+		// increment downstream from network server to the device
+		virtual uint32_t incrementDown(const DEVADDR &devaddr, const time_t &time) = 0;
 		// Remove entry
 		virtual void rm(DEVADDR &addr) = 0;
 		// List entries

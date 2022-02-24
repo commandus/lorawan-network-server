@@ -29,7 +29,9 @@ class JsonFileDeviceHistoryService: public DeviceHistoryService {
 		void put(DEVADDR &devaddr, DEVICE_HISTORY_ITEM &value);
 		void putUp(DEVADDR &devaddr, const time_t &time, uint32_t fcntup);
 		void putDown(DEVADDR &devaddr, const  time_t &time, uint32_t fcntdown);
-		void rm(DEVADDR &addr);
+        // increment downstream from network server to the device
+        uint32_t incrementDown(const DEVADDR &devaddr, const time_t &time);
+        void rm(DEVADDR &addr);
 		// List entries
 		void list(std::vector<DeviceHistoryItem> &retval, size_t offset, size_t size);
 		void flush();
