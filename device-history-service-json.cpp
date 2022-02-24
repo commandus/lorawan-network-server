@@ -283,6 +283,22 @@ void JsonFileDeviceHistoryService::putDown(
 	mutexMap.unlock();
 }
 
+// increment downstream from network server to the device
+uint32_t JsonFileDeviceHistoryService::incrementDown
+(
+	const DEVADDR &devaddr,
+	const time_t &time
+)
+{
+	mutexMap.lock();
+	DEVICE_HISTORY_ITEM v = storage[devaddr];
+	v.fcntdown++;
+	v.t = time;
+	storage[devaddr] = v;
+	mutexMap.unlock();
+	return v.fcntdown;
+}
+
 void JsonFileDeviceHistoryService::rm(
 	DEVADDR &addr
 )

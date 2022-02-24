@@ -74,7 +74,6 @@ int LoraPacketProcessor::enqueueControl(
 	return LORA_OK;
 }
 
-
 /**
  * @param time receive time
  * @param value Semtech packet
@@ -134,6 +133,7 @@ int LoraPacketProcessor::enqueueMAC(
  */
 int LoraPacketProcessor::enqueueJoinResponse(
     const struct timeval &time,
+    const DEVADDR &addr,
     SemtechUDPPacket &value
 )
 {
@@ -142,37 +142,31 @@ int LoraPacketProcessor::enqueueJoinResponse(
     const JOIN_REQUEST_FRAME *joinRequestFrame = value.getJoinRequestFrame();
 
     // delay time
-    int delaySecs = 5;
-    if (this->deviceChannelPlan) {
-        const RegionalParameterChannelPlan *plan = this->deviceChannelPlan->get();
-        if (plan) {
-            delaySecs = plan->joinAcceptDelay1();
-        }
-    }
-    struct timeval t;
-    t.tv_sec = time.tv_sec;
-    t.tv_usec = time.tv_usec;
+    timeval t;
+    setJoinAcceptDelay(t, value, time, true);
 
-    incTimeval(t, delaySecs, 0);
-    std::vector<rfmMetaData>::iterator it(value.metadata.begin());
-    if (it != value.metadata.end()) {
-        // increment tmst
-        it->tmst += delaySecs * 1000000;
-        it->t += delaySecs;
-    }
+    if (deviceHistoryService)
+        value.header.header.fcnt = deviceHistoryService->incrementDown(addr, time.tv_sec);  // downstream from the network server to the device
+
+    // 5s window
+    packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
+
+    if (deviceHistoryService)
+        value.header.header.fcnt = deviceHistoryService->incrementDown(addr, time.tv_sec);  // downstream from the network server to the device
+    // 6s window
+    setJoinAcceptDelay(t, value, time, false);
+    packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
+
+    packetQueue.wakeUp();
 
     // log Join event
     ss << MSG_ENQUEUE_JOIN_REQUEST << MSG_TO_REQUEST
        << JOIN_REQUEST_FRAME2string(*joinRequestFrame)
        << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
-       << ", delay " << delaySecs << "s"
-       << ", send at time: " << timeval2string(t)
-        << ", received time: " << timeval2string(time);
+       << ", received time: " << timeval2string(time);
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
-    packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
-    packetQueue.wakeUp();
     return LORA_OK;
 }
 
@@ -347,7 +341,7 @@ void LoraPacketProcessor::setLogger(
 
 void LoraPacketProcessor::setReceiverQueueProcessor
 (
-        ReceiverQueueProcessor *value
+    ReceiverQueueProcessor *value
 )
 {
 	if (receiverQueueProcessor)
@@ -412,9 +406,6 @@ int LoraPacketProcessor::join(
         SemtechUDPPacket &packet
 )
 {
-    DEVADDR addr;
-    memmove(&addr, &packet.getHeader()->header.devaddr, sizeof(DEVADDR));
-
     if (!identityService) {
         if (onLog) {
             // report error
@@ -446,12 +437,10 @@ int LoraPacketProcessor::join(
     int r = identityService->getNetworkIdentity(networkIdentity, joinRequestFrame->devEUI);
     if (r == 0) {
         // device has been identified
-        if (deviceHistoryService)				// collect statistics if statistics collector is running
-            deviceHistoryService->putUp(addr, time.tv_sec, packet.header.header.fcnt);
         // set device identifier
         packet.devId = networkIdentity;
         // enqueue response to be replied in 5s or 6s
-        enqueueJoinResponse(time, packet);
+        enqueueJoinResponse(time, networkIdentity.devaddr, packet);
     } else {
         // device EUI is NOT identified
         if (onLog) {
@@ -468,3 +457,51 @@ int LoraPacketProcessor::join(
     }
     return r;
 }
+
+/**
+ * Set time to send, packet's tmst and frequency
+ * @param retval return time to send
+ * @param value modify Semtech packet tmst and frequency
+ * @param time recieve time
+ * @param firstWindow true- first window(5s), false- second window=(6s)
+ * @return delay time in seconds
+ */
+int LoraPacketProcessor::setJoinAcceptDelay(
+    timeval &retval,
+    SemtechUDPPacket &value,
+    const timeval &time,
+    bool firstWindow
+)
+{
+    int delaySecs = firstWindow ? 5 : 6;
+    std::vector<rfmMetaData>::iterator it(value.metadata.begin());
+    uint32_t frequency;
+    if (this->deviceChannelPlan) {
+        const RegionalParameterChannelPlan *plan = this->deviceChannelPlan->get();
+        if (plan) {
+            if (firstWindow) {
+                delaySecs = plan->joinAcceptDelay1();
+                if (it != value.metadata.end()) {
+                    frequency = it->freq;
+                }
+            } else {
+                delaySecs = plan->joinAcceptDelay2();
+                frequency = plan->bandDefaults.RX2Frequency;
+            }
+        }
+    }
+    retval.tv_sec = time.tv_sec;
+    retval.tv_usec = time.tv_usec;
+
+    incTimeval(retval, delaySecs, 0);
+    if (it != value.metadata.end()) {
+        // increment tmst
+        it->tmst += delaySecs * 1000000;
+        // just in case
+        it->t += delaySecs;
+        // set frequency
+        it->freq = frequency;
+    }
+    return delaySecs;
+}
+

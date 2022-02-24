@@ -82,6 +82,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		);
         int enqueueJoinResponse(
                 const struct timeval &time,
+                const DEVADDR &addr,
                 SemtechUDPPacket &value
         );
         int putMACRequests(
@@ -114,6 +115,13 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
             const sockaddr_in *socketAddress,
             SemtechUDPPacket &packet
         );
+
+    int setJoinAcceptDelay(
+        timeval &retval,
+        SemtechUDPPacket &value,
+        const timeval &time,
+        bool firstWindow
+    );
 };
 
 #endif
