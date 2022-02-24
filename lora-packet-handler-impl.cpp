@@ -143,17 +143,16 @@ int LoraPacketProcessor::enqueueJoinResponse(
 
     // delay time
     timeval t;
-    setJoinAcceptDelay(t, value, time, true);
-
-    if (deviceHistoryService)
-        value.header.header.fcnt = deviceHistoryService->incrementDown(addr, time.tv_sec);  // downstream from the network server to the device
 
     // 5s window
-    packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
-
+    setJoinAcceptDelay(t, value, time, true);
     if (deviceHistoryService)
         value.header.header.fcnt = deviceHistoryService->incrementDown(addr, time.tv_sec);  // downstream from the network server to the device
+    packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
+
     // 6s window
+    if (deviceHistoryService)
+        value.header.header.fcnt = deviceHistoryService->incrementDown(addr, time.tv_sec);  // downstream from the network server to the device
     setJoinAcceptDelay(t, value, time, false);
     packetQueue.push(0, MODE_JOIN_RESPONSE, t, value);
 

@@ -144,19 +144,14 @@ void PacketQueue::push(
 	const struct timeval &time2send,
 	const SemtechUDPPacket &value
 ) {
-	if (onLog) {
-		std::stringstream ss;
-		ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time2send);
-		onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
-	}
     SemtechUDPPacketItem item(socket, mode, time2send, value);
-
 	DEVADDRINT a(item.getAddr());
+
 	mutexq.lock();
 	std::map<DEVADDRINT, SemtechUDPPacketItems>::iterator it(packets.find(a));
 	// add first packet, add metadata only for others
 	if (it != packets.end()) {
-		// there are already some packets from the device
+		// there are already some packets to send to the device
 		if (it->second.packets.size() == 0)
 			// actually, no ;(
 			it->second.packets.push_back(item);
@@ -166,7 +161,8 @@ void PacketQueue::push(
 			bool found = false;
 			for (std::vector<SemtechUDPPacketItem>::iterator itp(it->second.packets.begin()); itp != it->second.packets.end(); itp++)
 			{
-				if (itp->packet.header.fport == value.header.fport) 
+				if ((itp->packet.header.fport == value.header.fport) &&
+                    (itp->packet.header.header.fcnt == value.header.header.fcnt))
 				{
 					// we need metadata only for calc the best gateway with the strongest signal
 					if (value.metadata.size()) {
@@ -179,9 +175,11 @@ void PacketQueue::push(
 					break;
 				}
 			}
-			if (!found)
-				// add a new packet as a new one
-				packets[a].packets.push_back(item);
+			if (!found) {
+                // add a new packet as a new one
+                packets[a].packets.push_back(item);
+                addrs.push_back(a);
+            }
 		}
 	} else {
 		// this is first packet received from the device
@@ -189,6 +187,12 @@ void PacketQueue::push(
 		addrs.push_back(a);
 	}
 	mutexq.unlock();
+
+    if (onLog) {
+        std::stringstream ss;
+        ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time2send);
+        onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
+    }
 }
 
 /**
