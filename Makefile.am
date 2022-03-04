@@ -5,8 +5,10 @@ commoncppflags = -Ithird_party
 
 GEN = 
 
-# LIB_PKT2 = -L./libs/ -lpkt2
 LIB_PKT2 = -L/home/andrei/src/pkt2/ -lpkt2
+LIB_LOGGER_HUFFMAN = -L/home/andrei/src/logger-huffman/ -llogger-huffman
+
+LIB_PACKET_DECODE = $(LIB_PKT2) $(LIB_LOGGER_HUFFMAN)
 
 AM_CPPFLAGS=-std=c++11 -O0
 AM_CXXFLAGS=-std=c++11 -O0
@@ -140,6 +142,7 @@ nobase_dist_include_HEADERS = \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
 	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
+	third_party/logger-huffman/logger-huffman.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h db-json.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
@@ -162,7 +165,9 @@ lorawan_network_server_SOURCES = \
 	third_party/argtable3/argtable3.c
 	
 
-lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf $(BACKEND_DB_LIB) -lcurl
+lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
+    $(LIB_PACKET_DECODE) \
+    -lprotobuf $(BACKEND_DB_LIB) -lcurl
 lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 mac_gw_SOURCES = \
@@ -175,7 +180,9 @@ mac_gw_SOURCES = \
 	third_party/argtable3/argtable3.c
 	
 
-mac_gw_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lprotobuf -lcurl $(BACKEND_DB_LIB)
+mac_gw_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
+    $(LIB_PACKET_DECODE) \
+    -lprotobuf -lcurl $(BACKEND_DB_LIB)
 mac_gw_CPPFLAGS = $(commoncppflags)
 
 mac_ns_SOURCES = \
@@ -189,7 +196,9 @@ mac_ns_SOURCES = \
 	third_party/argtable3/argtable3.c \
 	control-packet.cpp
 
-mac_ns_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread $(LIB_PKT2) -lcurl -lprotobuf $(BACKEND_DB_LIB)
+mac_ns_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
+    $(LIB_PACKET_DECODE) \
+    -lcurl -lprotobuf $(BACKEND_DB_LIB)
 mac_ns_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
@@ -197,7 +206,9 @@ proto_db_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c
 	
-proto_db_LDADD = $(L_LORAWAN) $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
+proto_db_LDADD = $(L_LORAWAN) \
+    $(LIB_PACKET_DECODE) \
+    -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 lora_print_SOURCES = \
@@ -205,7 +216,9 @@ lora_print_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c \
 	identity-service-dir-txt.cpp $(C_STORAGE)
-lora_print_LDADD = $(L_LORAWAN) $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
+lora_print_LDADD = $(L_LORAWAN) \
+    $(LIB_PACKET_DECODE) \
+    -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 lora_print_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 print_netid_SOURCES = \
@@ -284,12 +297,16 @@ test_join_accept_decrypt_CPPFLAGS = $(commoncppflags)
 
 test_pkt2_parse_SOURCES = \
 	tests/test-pkt2-parse.cpp
-test_pkt2_parse_LDADD = $(L_LORAWAN) $(LIB_PKT2) -lprotobuf -lpthread
+test_pkt2_parse_LDADD = $(L_LORAWAN) \
+    $(LIB_PACKET_DECODE) \
+    -lprotobuf -lpthread
 test_pkt2_parse_CPPFLAGS = $(commoncppflags)
 
 test_sqlite_SOURCES = \
 	tests/test-sqlite.cpp db-any.cpp  $(BACKEND_DB_SRC)
-test_sqlite_LDADD = $(L_LORAWAN) $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
+test_sqlite_LDADD = $(L_LORAWAN) \
+    $(LIB_PACKET_DECODE) \
+    -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 test_sqlite_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 test_fb_SOURCES = \
@@ -309,7 +326,9 @@ test_queue_processor_SOURCES = \
 	identity-service-file-json.cpp \
 	receiver-queue-service-file-json.cpp \
 	db-any.cpp $(BACKEND_DB_SRC) \
-test_queue_processor_LDADD = $(L_LORAWAN) $(LIB_PKT2) -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
+test_queue_processor_LDADD = $(L_LORAWAN) \
+    $(LIB_PACKET_DECODE) \
+    -lprotobuf -lpthread -lcurl $(BACKEND_DB_LIB)
 test_queue_processor_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF)
 
 test_region_band_file_json_SOURCES = \
