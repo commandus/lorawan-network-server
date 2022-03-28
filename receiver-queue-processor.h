@@ -41,7 +41,8 @@ class ReceiverQueueProcessor {
 			const std::string &message
 		)> onLog;
 		void runner();
-		void processQueue();
+        void put2databases();
+        void processQueue();
 	public:
 		ReceiverQueueProcessor();
 		~ReceiverQueueProcessor();

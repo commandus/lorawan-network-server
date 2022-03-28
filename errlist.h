@@ -124,6 +124,7 @@
 #define ERR_CODE_NWK_OUT_OF_RANGE           -603
 #define ERR_CODE_ADDR_OUT_OF_RANGE          -604
 #define ERR_CODE_ADDR_SPACE_FULL            -605
+#define ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER -606
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -239,6 +240,7 @@
 #define ERR_NWK_OUT_OF_RANGE            "Address NwkId out of range"
 #define ERR_ADDR_OUT_OF_RANGE           "Address out of range"
 #define ERR_ADDR_SPACE_FULL             "Address space is full, no free address available"
+#define ERR_INIT_LOGGER_HUFFMAN_PARSER  "Error initialize logger-huffman parser"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
