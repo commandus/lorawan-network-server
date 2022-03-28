@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 114
+#define ERR_COUNT 115
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -110,7 +110,8 @@ static const char *errList[ERR_COUNT] = {
 	ERR_TYPE_OUT_OF_RANGE,
 	ERR_NWK_OUT_OF_RANGE,
 	ERR_ADDR_OUT_OF_RANGE,
-    ERR_ADDR_SPACE_FULL
+    ERR_ADDR_SPACE_FULL,
+    ERR_INIT_LOGGER_HUFFMAN_PARSER
 };
 
 const char *strerror_lorawan_ns

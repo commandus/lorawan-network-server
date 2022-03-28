@@ -25,8 +25,8 @@
 #include "utildate.h"
 #include "utilidentity.h"
 
-#include "pkt2/str-pkt2.h"
 #include "db-any.h"
+#include "pkt2/str-pkt2.h"
 
 #include "identity-service-file-json.h"
 #include "identity-service-dir-txt.h"
@@ -439,14 +439,28 @@ void doInsert
 		db->config->setProperties(properties, props);
 
 		if (verbosity) {
-			std::cout << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData, &properties) << std::endl;
+            std::vector<std::string> clauses;
+            db->insertClauses(clauses, env, messageType, 1, hexData, &properties);
+            std::string s;
+            for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
+                s += *it;
+                s += " ";
+            }
+            std::cout << s << std::endl;  // 1- INPUT_FORMAT_HEX
 		}
 
-		r = db->insert(env, messageType, INPUT_FORMAT_HEX, hexData, &properties);
+		r = db->insert(env, messageType, 1, hexData, &properties);   // 1- INPUT_FORMAT_HEX
 
 		if (r) {
 			std::cerr << ERR_DB_INSERT << r << " database " << *it << ": " << db->db->errmsg << std::endl;
-			std::cerr << "SQL statement: " << db->insertClause(env, messageType, INPUT_FORMAT_HEX, hexData, &properties) << std::endl;
+            std::vector<std::string> clauses;
+            db->insertClauses(clauses, env, messageType, 1, hexData, &properties);
+            std::string s;
+            for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
+                s += *it;
+                s += " ";
+            }
+			std::cerr << "SQL statement: " << s << std::endl; // 1- INPUT_FORMAT_HEX
 		}
 		r = db->close();
 	}

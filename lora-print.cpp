@@ -21,8 +21,8 @@
 #include "errlist.h"
 #include "utildate.h"
 
-#include "pkt2/str-pkt2.h"
 #include "db-any.h"
+#include "pkt2/str-pkt2.h"
 
 #include "identity-service-file-json.h"
 #include "identity-service-dir-txt.h"
@@ -224,7 +224,14 @@ void doInsert
 			std::cerr << ERR_DB_DATABASE_NOT_FOUND << *it << std::endl;
 			exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
 		}
-		std::cout << db->insertClause(env, messageType, INPUT_FORMAT_BINARY, binData, properties) << std::endl;
+        std::vector<std::string> clauses;
+        db->insertClauses(clauses, env, messageType, INPUT_FORMAT_BINARY, binData, properties);
+        std::string s;
+        for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
+            s += *it;
+            s += " ";
+        }
+        std::cout << s << std::endl;
 	}
 }
 

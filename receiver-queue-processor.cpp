@@ -30,8 +30,6 @@
 #include "utildate.h"
 #include "errlist.h"
 
-#include "pkt2/str-pkt2.h"
-// #include "pkt2/database-config.h"
 #include "errlist.h"
 #ifdef _MSC_VER
 #else
@@ -138,79 +136,93 @@ void ReceiverQueueProcessor::runner()
 }
 
 /**
+ * Called from processQueue()
+ */
+void ReceiverQueueProcessor::put2databases() {
+    if (!pkt2env)
+        return;
+    if (!databaseByConfig)
+        return;
+    if (!receiverQueueService)
+        return;
+    for (int j = 0; j < databaseByConfig->count(); j++) {
+        DatabaseNConfig *db = databaseByConfig->get(j);
+        if (!db) {
+            if (onLog) {
+                std::stringstream ss;
+                ss << ERR_DB_DATABASE_NOT_FOUND << " " << j;
+                onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+            }
+            continue;
+        }
+
+        int dbId = db->config->id;
+        ReceiverQueueEntry entry;
+        bool hasDbId = receiverQueueService->peek(dbId, entry) == 0;
+        if (hasDbId && db->config->active) {
+            int r = db->open();
+            if (r && onLog) {
+                std::stringstream ss;
+                ss << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_lorawan_ns(r);
+                onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+                continue;
+            }
+
+            std::map<std::string, std::string> properties;
+            entry.setProperties(properties, db->config->properties);
+
+            r = db->insert(pkt2env, "", 0, entry.value.payload, &properties);
+
+            if (onLog) {
+                std::stringstream ss;
+
+                std::vector<std::string> clauses;
+                db->insertClauses(clauses, pkt2env,  "", 0, entry.value.payload, &properties);
+                std::string clause;
+                for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
+                    clause += *it;
+                    clause += " ";
+                }
+                if (r) {
+                    ss << ERR_DB_INSERT << r
+                       << " database id " << db->config->id << " " << db->config->name
+                       << ": " << db->db->errmsg
+                       << ", SQL statement: " << clause
+                       << ", payload: " << hexString(entry.value.payload);
+                    onLog(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
+                } else {
+                    ss << MSG_DB_INSERT
+                       << " database id " << db->config->id << " " << db->config->name
+                       << ", SQL statement: " << clause;
+                    onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
+                }
+                db->close();
+            }
+        }
+        // remove database from queue if database connection is ok
+        if (hasDbId) {
+            if (receiverQueueService->pop(dbId, entry) != 0) {
+                if (onLog) {
+                    std::stringstream ss;
+                    ss << "Database: " << dbId << " " << db->config->name << " pop() error";
+                    onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
+                }
+            }
+        }
+    }
+}
+
+/**
  * Called from runner()
  */ 
 void ReceiverQueueProcessor::processQueue()
 {
-	if (!pkt2env)
-		return;
-	if (!databaseByConfig)
-		return;
 	if (!receiverQueueService)
 		return;
 	size_t cnt = receiverQueueService->count();
 	if (cnt > MAX_QUEUE_CNT_PER_STEP)
 		cnt = MAX_QUEUE_CNT_PER_STEP;
 	for (int i = 0; i < cnt; i++) {	// do not use while(!receiverQueueService->count()) to prevent endless loop
-		ReceiverQueueEntry entry;
-		for (int j = 0; j < databaseByConfig->count(); j++) {
-			DatabaseNConfig *db = databaseByConfig->get(j);
-            if (!db) {
-				if (onLog) {
-					std::stringstream ss;
-					ss << ERR_DB_DATABASE_NOT_FOUND << " " << j;
-					onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
-				}
-				continue;
-			}
-
-            int dbId = db->config->id;
-            bool hasDbId = receiverQueueService->peek(dbId, entry) == 0;
-            if (hasDbId && db->config->active) {
-                int r = db->open();
-                if (r && onLog) {
-                    std::stringstream ss;
-                    ss << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_lorawan_ns(r);
-                    onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
-                    continue;
-                }
-
-                std::map<std::string, std::string> properties;
-                entry.setProperties(properties, db->config->properties);
-
-                r = db->insert(pkt2env, "", INPUT_FORMAT_BINARY, entry.value.payload, &properties);
-
-                if (onLog) {
-                    std::stringstream ss;
-                    std::string clause = db->insertClause(pkt2env, "", INPUT_FORMAT_BINARY, entry.value.payload,
-                                                          &properties);
-                    if (r) {
-                        ss << ERR_DB_INSERT << r
-                           << " database id " << db->config->id << " " << db->config->name
-                           << ": " << db->db->errmsg
-                           << ", SQL statement: " << clause
-                           << ", payload: " << hexString(entry.value.payload);
-                        onLog(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
-                    } else {
-                        ss << MSG_DB_INSERT
-                           << " database id " << db->config->id << " " << db->config->name
-                           << ", SQL statement: " << clause;
-                        onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
-                    }
-                    db->close();
-                }
-            }
-			// remove database from queue if database connection is ok
-            if (hasDbId) {
-                if (receiverQueueService->pop(dbId, entry) != 0) {
-                    if (onLog) {
-                        std::stringstream ss;
-                        ss << "Database: " << dbId << " " << db->config->name << " pop() error";
-                        onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
-                    }
-                }
-            }
-		}
+        put2databases();
 	}
-
 }

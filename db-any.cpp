@@ -18,9 +18,12 @@
 
 #include "errlist.h"
 
-#include "pkt2/str-pkt2.h"
+#ifdef ENABLE_LOGGER_HUFFMAN
+#include "logger-huffman/logger-parse.h"
+#endif
 
 #define JSON_TYPE_NAME "json"
+
 
 DatabaseNConfig::DatabaseNConfig
 (
@@ -88,28 +91,61 @@ std::string DatabaseNConfig::tableName(
 		return it->second;
 }
 
+static int sqlDialectByName(const std::string &name)
+{
+    if (name == "postgresql")
+        return 0;
+    if (name == "mysql")
+        return 1;
+    if (name == "firebird")
+        return 2;
+    if (name == "sqlite3")
+        return 3;
+    return 0;
+}
+
 std::string DatabaseNConfig::createClause
 (
 	void *env,
 	const std::string &message
 ) const
 {
+#ifdef ENABLE_PKT2
 	return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, config->getDialect(), 
 		&config->tableAliases, &config->fieldAliases, &config->properties);
+#endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+    int dialect = 0;
+    if (db)
+        dialect = sqlDialectByName(db->type);
+    return sqlCreateTable(dialect);
+#endif
 }
 
-std::string DatabaseNConfig::insertClause(
-	void *env,
-	const std::string &message,
-	int inputFormat,
-	const std::string &data,
-	const std::map<std::string, std::string> *properties
+int DatabaseNConfig::insertClauses(
+    std::vector<std::string> &retClauses,
+    void *env,
+    const std::string &message,
+    int inputFormat,
+    const std::string &data,
+    const std::map<std::string, std::string> *properties
 )
 {
-	return parsePacket(env, inputFormat,
+#ifdef ENABLE_PKT2
+	std::string s = parsePacket(env, inputFormat,
        config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
        config->getDialect(), data, message,
 		&config->tableAliases, &config->fieldAliases, properties);
+    retClauses.push_back(s);
+    return 0;
+#endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+    parsePacket(env, data);
+    int dialect = 0;
+    if (db)
+        dialect = sqlDialectByName(db->type);
+    return sqlInsertPackets(env, retClauses, dialect, properties);
+#endif
 }
 
 int DatabaseNConfig::createTable(void *env, const std::string &message)
@@ -131,10 +167,17 @@ int DatabaseNConfig::insert(
 	const std::map<std::string, std::string> *properties
 )
 {
-	std::string clause = insertClause(env, message, inputFormat, data, properties);
-	if (clause.empty())
+	std::vector<std::string> clauses;
+    insertClauses(clauses, env, message, inputFormat, data, properties);
+	if (clauses.empty())
 		return ERR_CODE_INVALID_PACKET;
-	return db->exec(clause);
+    int r = 0;
+    for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
+        r = db->exec(*it);
+        if (r)
+            break;
+    }
+    return r;
 }
 
 int DatabaseNConfig::select(

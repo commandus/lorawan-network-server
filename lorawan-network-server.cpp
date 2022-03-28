@@ -41,14 +41,17 @@
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
 #include "receiver-queue-service-lmdb.h"
-#endif			
+#endif
+
+#ifdef ENABLE_LOGGER_HUFFMAN
+#include "logger-huffman/logger-parse.h"
+#endif
 
 #include "receiver-queue-processor.h"
 
 #include "gateway-list.h"
 #include "config-filename.h"
-#include "pkt2/database-config.h"
-#include "pkt2/str-pkt2.h"
+
 #include "db-any.h"
 
 #include "device-history-service-json.h"
@@ -93,7 +96,12 @@ static RegionalParameterChannelPlans *regionalParameterChannelPlans = NULL;
 static DeviceChannelPlan *deviceChannelPlan = NULL;
 
 // pkt2 environment
+#ifdef ENABLE_PKT2
 static void* pkt2env = NULL;
+#endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+static void* loggerParserEnv = NULL;
+#endif
 
 ReceiverQueueService *receiverQueueService = NULL;
 
@@ -180,9 +188,14 @@ static void done()
         deviceChannelPlan = nullptr;
     }
 
+#ifdef ENABLE_PKT2
 	if (pkt2env)
 		donePkt2(pkt2env);
-
+#endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+    if (loggerParserEnv)
+		doneLoggerParser(loggerParserEnv);
+#endif
 	exit(0);
 }
 
@@ -631,19 +644,26 @@ int main(
             continue;
 		DatabaseNConfig *dc = dbByConfig->find(it->name);
 		bool hasConn = dc != NULL;
-		if (!dc)
-			dbOk = false;
-		int r = dc->open();
-		hasConn = hasConn && (r == 0);
+        int r = 0;
+		if (hasConn) {
+            r = dc->open();
+            if (r == ERR_CODE_NO_DATABASE) {
+                hasConn = false;
+            }
+            hasConn = hasConn && (r == 0);
+        }
 		if (config->serverConfig.verbosity > 2) {
-			std::cerr << "\t" << it->name  << "\t " << MSG_CONNECTION << (hasConn?MSG_CONN_ESTABLISHED : MSG_CONN_FAILED) << std::endl;
-			if (r) {
-				if (dc->db)
-					std::cerr << dc->db->errmsg << std::endl;
-			}
+			std::cerr << "\t" << it->name  << "\t " << MSG_CONNECTION
+                << (hasConn ? MSG_CONN_ESTABLISHED : MSG_CONN_FAILED);
+            if (r)
+                std::cerr <<  ": " << strerror_lorawan_ns(r);
+            if (dc->db)
+                std::cerr << " " << dc->db->errmsg;
+            std::cerr << std::endl;
 		}
-		dc->close();
-		if (!hasConn)
+        if (hasConn)
+		    dc->close();
+		else
 			dbOk = false;
 	}
 	// exit, if it can not connect to the database
@@ -657,12 +677,22 @@ int main(
 		config->protoPath = DEF_PROTO_PATH;
 	}
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser ..");
+#ifdef ENABLE_PKT2
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser PKT2 ..");
 	pkt2env = initPkt2(config->protoPath, 0);
 	if (!pkt2env) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
 		exit(ERR_CODE_LOAD_PROTO);
 	}
+#endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser loger-huffman..");
+	loggerParserEnv = initLoggerParser();
+	if (!loggerParserEnv) {
+		std::cerr << ERR_INIT_LOGGER_HUFFMAN_PARSER << std::endl;
+		exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
+	}
+#endif
 
 	// Set up processor
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start LoRaWAN packet processor..");
@@ -678,7 +708,12 @@ int main(
 
 	// Set pkt2 environment
 	receiverQueueProcessor = new ReceiverQueueProcessor();
-	receiverQueueProcessor->setPkt2Env(pkt2env);
+#ifdef ENABLE_PKT2
+    receiverQueueProcessor->setPkt2Env(pkt2env);
+#endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+    // receiverQueueProcessor->setLoggerHuffmanEnv(loggerParserEnv);
+#endif
 	receiverQueueProcessor->setLogger(onLog);
 
 	// Set databases
