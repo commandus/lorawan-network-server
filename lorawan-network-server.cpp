@@ -97,7 +97,7 @@ static DeviceChannelPlan *deviceChannelPlan = NULL;
 
 // pkt2 environment
 #ifdef ENABLE_PKT2
-static void* pkt2env = NULL;
+static void* parserEnv = NULL;
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
 static void* loggerParserEnv = NULL;
@@ -189,8 +189,8 @@ static void done()
     }
 
 #ifdef ENABLE_PKT2
-	if (pkt2env)
-		donePkt2(pkt2env);
+	if (parserEnv)
+		donePkt2(parserEnv);
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
     if (loggerParserEnv)
@@ -679,8 +679,8 @@ int main(
 
 #ifdef ENABLE_PKT2
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser PKT2 ..");
-	pkt2env = initPkt2(config->protoPath, 0);
-	if (!pkt2env) {
+	parserEnv = initPkt2(config->protoPath, 0);
+	if (!parserEnv) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
 		exit(ERR_CODE_LOAD_PROTO);
 	}
@@ -709,10 +709,10 @@ int main(
 	// Set pkt2 environment
 	receiverQueueProcessor = new ReceiverQueueProcessor();
 #ifdef ENABLE_PKT2
-    receiverQueueProcessor->setPkt2Env(pkt2env);
+    receiverQueueProcessor->setParserEnv(parserEnv);
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
-    // receiverQueueProcessor->setLoggerHuffmanEnv(loggerParserEnv);
+    receiverQueueProcessor->setParserEnv(loggerParserEnv);
 #endif
 	receiverQueueProcessor->setLogger(onLog);
 

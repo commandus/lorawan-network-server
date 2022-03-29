@@ -100,7 +100,9 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server mac-ns mac-gw proto-db lora-print print-netid
+bin_PROGRAMS = lorawan-network-server lora-print print-netid \
+    dev-payload \
+    mac-ns mac-gw proto-db
 
 LIBLORAWANSRC = \
 	utillora.cpp errlist.cpp net-id.cpp dev-addr.cpp udp-socket.cpp device-history-item.cpp gateway-stat.cpp \
@@ -201,14 +203,22 @@ mac_ns_SOURCES = \
 	$(C_STORAGE) \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
-    device-history-service-json.cpp \
-	third_party/argtable3/argtable3.c \
-	control-packet.cpp
-
+    device-history-service-json.cpp control-packet.cpp \
+	third_party/argtable3/argtable3.c
 mac_ns_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
     -lcurl -lprotobuf $(BACKEND_DB_LIB)
 mac_ns_CPPFLAGS = $(commoncppflags)
+
+dev_payload_SOURCES = \
+	dev-payload.cpp \
+	config-json.cpp \
+	config-filename.cpp \
+	third_party/argtable3/argtable3.c
+dev_payload_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
+    $(PACKET_PARSER_LIB) \
+    -lcurl -lprotobuf $(BACKEND_DB_LIB)
+dev_payload_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
 	proto-db.cpp identity-service-dir-txt.cpp $(C_STORAGE) \

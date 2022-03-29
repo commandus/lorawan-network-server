@@ -210,6 +210,16 @@ int DatabaseNConfig::close() const
 	return db->close();
 }
 
+void DatabaseByConfig::prepare(
+    void *env,
+    const std::string &data
+)
+{
+#ifdef ENABLE_LOGGER_HUFFMAN
+    parsePacket(env, data);
+#endif
+}
+
 //------------------- DatabaseByConfig -------------------
 
 DatabaseByConfig::DatabaseByConfig

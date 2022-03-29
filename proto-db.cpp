@@ -422,6 +422,7 @@ void doInsert
 	int verbosity
 )
 {
+    dbAny->prepare(env, hex2string(hexData));
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
 		
 		DatabaseNConfig *db = dbAny->find(*it);

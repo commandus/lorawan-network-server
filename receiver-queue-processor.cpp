@@ -9,8 +9,8 @@
  * // create processor to serve queue
  * receiverQueueProcessor = new ReceiverQueueProcessor();
  * // create protobuf declarations
- * void *pkt2env = initPkt2("proto", 0);
- * receiverQueueProcessor->setPkt2Env(pkt2env);
+ * void *parserEnv = initPkt2("proto", 0);
+ * receiverQueueProcessor->setParserEnv(parserEnv);
  * // load database config
  * ConfigDatabases configDatabases("dbs.js");
  * // create helper object
@@ -52,8 +52,8 @@ int ReceiverQueueProcessor::onPacket(
 }
 
 ReceiverQueueProcessor::ReceiverQueueProcessor()
-	: isStarted(false), isDone(false), threadDb(NULL), onLog(NULL), 
-	pkt2env(NULL), databaseByConfig(NULL)
+	: isStarted(false), isDone(false), threadDb(NULL), onLog(NULL),
+      parserEnv(NULL), databaseByConfig(NULL)
 {
 }
 
@@ -72,12 +72,11 @@ void ReceiverQueueProcessor::setLogger(
 	onLog = value;
 }
 
-void ReceiverQueueProcessor::setPkt2Env
-(
+void ReceiverQueueProcessor::setParserEnv(
 	void *value
 )
 {
-	pkt2env = value;
+    parserEnv = value;
 }
 
 void ReceiverQueueProcessor::setDatabaseByConfig
@@ -139,12 +138,14 @@ void ReceiverQueueProcessor::runner()
  * Called from processQueue()
  */
 void ReceiverQueueProcessor::put2databases() {
-    if (!pkt2env)
+    if (!parserEnv)
         return;
     if (!databaseByConfig)
         return;
     if (!receiverQueueService)
         return;
+
+    bool prepared = false;
     for (int j = 0; j < databaseByConfig->count(); j++) {
         DatabaseNConfig *db = databaseByConfig->get(j);
         if (!db) {
@@ -171,13 +172,17 @@ void ReceiverQueueProcessor::put2databases() {
             std::map<std::string, std::string> properties;
             entry.setProperties(properties, db->config->properties);
 
-            r = db->insert(pkt2env, "", 0, entry.value.payload, &properties);
+            if (!prepared) {
+                databaseByConfig->prepare(parserEnv, entry.value.payload);
+                prepared = true;
+            }
+            r = db->insert(parserEnv, "", 0, entry.value.payload, &properties);
 
             if (onLog) {
                 std::stringstream ss;
 
                 std::vector<std::string> clauses;
-                db->insertClauses(clauses, pkt2env,  "", 0, entry.value.payload, &properties);
+                db->insertClauses(clauses, parserEnv, "", 0, entry.value.payload, &properties);
                 std::string clause;
                 for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
                     clause += *it;

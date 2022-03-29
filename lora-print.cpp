@@ -217,6 +217,7 @@ void doInsert
 	const std::map<std::string, std::string> *properties
 )
 {
+    databaseByConfig->prepare(env, binData);
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
 		
 		DatabaseNConfig *db = databaseByConfig->find(*it);
@@ -362,7 +363,8 @@ int main(
             }
             break;
         default:
-            std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
+            if (r)
+                std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
 	}
 
 	if (gatewayStat.errcode == 0) {
