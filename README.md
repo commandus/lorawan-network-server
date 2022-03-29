@@ -656,7 +656,7 @@ You can force specific packet description by selecting specific proto message:
 
 - -m, --message=<pkt.msg>     force message type packet and name
 
-You can chenge output format by option -f <number>:
+You can change output format by option -f <number>:
 
 - 0- json(default)
 - 1- csv w/o header

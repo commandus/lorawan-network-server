@@ -29,7 +29,7 @@ class ReceiverQueueProcessor {
 		std::mutex mutexq;
 		std::thread *threadDb;
 		
-		void *pkt2env;
+		void *parserEnv;
 		DatabaseByConfig *databaseByConfig;
 		ReceiverQueueService *receiverQueueService;
 
@@ -59,7 +59,8 @@ class ReceiverQueueProcessor {
 				int errorcode,
 				const std::string &message
 		)> value);
-		void setPkt2Env(void *pkt2env);
+		void setParserEnv(void *value);
+
 		void setDatabaseByConfig(DatabaseByConfig *value);
 
 		void start(ReceiverQueueService *queueService);

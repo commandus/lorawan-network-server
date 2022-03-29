@@ -41,7 +41,9 @@ public:
 	DatabaseByConfig(const ConfigDatabases *config);
 	~DatabaseByConfig();
 
-	size_t count() const;
+    void prepare(void *env, const std::string &data);
+
+    size_t count() const;
 	/**
 	 * @param retConfig return config
 	 * @param id 0..count() - 1
