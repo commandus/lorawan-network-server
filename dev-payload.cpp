@@ -333,6 +333,7 @@ int main(
     // packet.setFOpts(macdatabin);
     packet.header.fport = 0;
 
+    /*
     packet.payload = mkControlPacket(devEUIs[0].eui, macGwConfig->gatewayIds[g], macdatabin);
     std::cerr << "Payload: " << hexString(packet.payload) << std::endl;
 
@@ -344,12 +345,9 @@ int main(
     // TODO form correct data
     // packet.setPayload();
 
-
     // add default port value if missed
     if (network_server_address.empty()) {
-
         std::cout << packet.toJsonString() << std::endl;
-
     } else {
         if (network_server_address.find(":") == std::string::npos) {
             // add port
@@ -394,8 +392,8 @@ int main(
             std::cerr << "Received ACK successfully"
                       << std::endl;
         }
-
     }
+    */
 
 	done();
 	return 0;

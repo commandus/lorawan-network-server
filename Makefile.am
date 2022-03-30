@@ -214,6 +214,7 @@ dev_payload_SOURCES = \
 	dev-payload.cpp \
 	config-json.cpp \
 	config-filename.cpp \
+	$(C_STORAGE) \
 	third_party/argtable3/argtable3.c
 dev_payload_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \

@@ -37,6 +37,8 @@
 #include <unistd.h>
 #endif
 
+#include "logger-huffman/logger-parse.h"
+
 int ReceiverQueueProcessor::onPacket(
         struct timeval &time,
         DeviceId id,
@@ -174,35 +176,38 @@ void ReceiverQueueProcessor::put2databases() {
 
             if (!prepared) {
                 databaseByConfig->prepare(parserEnv, entry.value.payload);
+                if (onLog) {
+                    std::stringstream ss;
+                    ss << MSG_PREPARE << r
+                       << " database id " << db->config->id << " " << db->config->name
+                       << ": " << db->db->errmsg
+                       << ", payload: " << hexString(entry.value.payload);
+                    onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, r, ss.str());
+                }
                 prepared = true;
             }
-            r = db->insert(parserEnv, "", 0, entry.value.payload, &properties);
 
+            r = db->insert(parserEnv, "", 0, entry.value.payload, &properties);
             if (onLog) {
                 std::stringstream ss;
-
-                std::vector<std::string> clauses;
-                db->insertClauses(clauses, parserEnv, "", 0, entry.value.payload, &properties);
-                std::string clause;
-                for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
-                    clause += *it;
-                    clause += " ";
-                }
                 if (r) {
                     ss << ERR_DB_INSERT << r
                        << " database id " << db->config->id << " " << db->config->name
                        << ": " << db->db->errmsg
-                       << ", SQL statement: " << clause
+                       << ", SQL statement: " << db->lastErroneousStatement
                        << ", payload: " << hexString(entry.value.payload);
+                    ss << " loggerParsewrState: " << loggerParserState(parserEnv, 0);
                     onLog(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
                 } else {
                     ss << MSG_DB_INSERT
-                       << " database id " << db->config->id << " " << db->config->name
-                       << ", SQL statement: " << clause;
+                       << " database id " << db->config->id << " " << db->config->name;
+                    ss << " loggerParsewrState: " << loggerParserState(parserEnv, 0);
                     onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
                 }
-                db->close();
+
             }
+
+            db->close();
         }
         // remove database from queue if database connection is ok
         if (hasDbId) {

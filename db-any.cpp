@@ -143,7 +143,7 @@ int DatabaseNConfig::insertClauses(
     parsePacket(env, data);
     int dialect = 0;
     if (db)
-        dialect = sqlDialectByName(db->type);
+        dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
     return sqlInsertPackets(env, retClauses, dialect, properties);
 #endif
 }
@@ -174,8 +174,10 @@ int DatabaseNConfig::insert(
     int r = 0;
     for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
         r = db->exec(*it);
-        if (r)
+        if (r) {
+            lastErroneousStatement = *it;
             break;
+        }
     }
     return r;
 }

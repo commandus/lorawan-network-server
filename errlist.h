@@ -296,6 +296,7 @@
 #define MSG_PAYLOAD                     "payload"
 #define MSG_SIZE                        "size"
 #define MSG_IS_TOO_SMALL                " is too small"
+#define MSG_PREPARE                     "Prepare INSERT to database "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);
