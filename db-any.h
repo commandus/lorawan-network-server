@@ -12,6 +12,7 @@ class DatabaseNConfig
 public:
 	const ConfigDatabase *config;
 	DatabaseIntf* db;
+    std::string lastErroneousStatement;
 
 	DatabaseNConfig(const ConfigDatabase *aConfig);
 	~DatabaseNConfig();
