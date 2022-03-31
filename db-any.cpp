@@ -118,7 +118,7 @@ std::string DatabaseNConfig::createClause
     int dialect = 0;
     if (db)
         dialect = sqlDialectByName(db->type);
-    return sqlCreateTable(dialect);
+    return sqlCreateTable1(dialect);
 #endif
 }
 
@@ -140,10 +140,10 @@ int DatabaseNConfig::insertClauses(
     return 0;
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
-    parsePacket(env, data);
     int dialect = 0;
     if (db)
         dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
+    retClauses.push_back(sqlInsertRaw(dialect, data, properties));
     return sqlInsertPackets(env, retClauses, dialect, properties);
 #endif
 }

@@ -196,15 +196,16 @@ void ReceiverQueueProcessor::put2databases() {
                        << ": " << db->db->errmsg
                        << ", SQL statement: " << db->lastErroneousStatement
                        << ", payload: " << hexString(entry.value.payload);
-                    ss << " loggerParsewrState: " << loggerParserState(parserEnv, 0);
+                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0);
+                    ss << " loggerParserState json: " << loggerParserState(parserEnv, 4);
                     onLog(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
                 } else {
                     ss << MSG_DB_INSERT
                        << " database id " << db->config->id << " " << db->config->name;
-                    ss << " loggerParsewrState: " << loggerParserState(parserEnv, 0);
+                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0);
+                    ss << " loggerParserState json: " << loggerParserState(parserEnv, 4);
                     onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
                 }
-
             }
 
             db->close();
