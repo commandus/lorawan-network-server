@@ -221,6 +221,7 @@ void ReceiverQueueProcessor::put2databases() {
             }
         }
     }
+    rmCompletedOrExpired(parserEnv);
 }
 
 /**
