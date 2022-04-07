@@ -5,8 +5,8 @@ commoncppflags = -Ithird_party
 
 GEN = 
 
-AM_CPPFLAGS=-std=c++11 -O0
-AM_CXXFLAGS=-std=c++11 -O0
+AM_CPPFLAGS=-I. -Ithird_party -std=c++11
+AM_CXXFLAGS=-I. -Ithird_party -std=c++11
 COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
 BUILT_SOURCES = $(GEN)
@@ -55,8 +55,14 @@ BACKEND_DB_DEF =
 if ENABLE_DB_SQLITE
 BACKEND_DB_SRC += db-sqlite.cpp 
 BACKEND_DB_LIB += -lsqlite3 
-BACKEND_DB_C += 
 BACKEND_DB_DEF += -DENABLE_DB_SQLITE 
+
+if ENABLE_WS
+BACKEND_DB_SRC += ws-sqlite.cpp
+BACKEND_DB_LIB += -L../lorawan-ws -lws-sqlite
+BACKEND_DB_DEF += -DENABLE_DB_JSON
+endif
+
 endif
 
 if ENABLE_DB_POSTGRES
@@ -85,6 +91,11 @@ BACKEND_DB_SRC += db-json.cpp
 BACKEND_DB_LIB +=
 BACKEND_DB_C +=
 BACKEND_DB_DEF += -DENABLE_DB_JSON
+endif
+
+if ENABLE_WS
+	BACKEND_DB_SRC += ws-any.cpp
+	BACKEND_DB_DEF += -DENABLE_WS
 endif
 
 #
@@ -154,6 +165,7 @@ nobase_dist_include_HEADERS = \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
 	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
 	third_party/logger-huffman/logger-parse.h \
+	third_party/lorawan-ws/lorawan-ws.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h db-json.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
