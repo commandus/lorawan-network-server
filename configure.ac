@@ -41,7 +41,6 @@ AC_ARG_ENABLE([logger-huffman],
 esac],[logger_huffman=true])
 AM_CONDITIONAL([ENABLE_LOGGER_HUFFMAN], [test x$logger_huffman = xtrue])
 
-
 AC_ARG_ENABLE([json],
 [  --enable-json    Turn on JSON file storage],
 [case "${enableval}" in
@@ -116,6 +115,19 @@ AC_ARG_ENABLE([db-json],
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-json]) ;;
 esac],[db_json=true])
 AM_CONDITIONAL([ENABLE_DB_JSON], [test x$db_json = xtrue])
+
+# Embedded web service
+
+AC_ARG_ENABLE([ws],
+[  --enable-ws    Turn on embedded web service],
+[case "${enableval}" in
+  yes) enable_ws=true ;;
+  no)  enable_ws=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-ws]) ;;
+esac],[enable_ws=true])
+AM_CONDITIONAL([ENABLE_WS], [test x$enable_ws = xtrue])
+
+# Add database headers and libs
 
 if test "$db_sqlite" = "true"; then
 AC_CHECK_HEADERS(sqlite3.h)

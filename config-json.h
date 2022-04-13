@@ -21,6 +21,8 @@ typedef enum {
 	MESSAGE_QUEUE_STORAGE_LMDB = 3
 } MESSAGE_QUEUE_STORAGE;
 
+#define DEF_WS_PORT	5002
+
 class ServerConfig {
 	public:
 		std::vector<std::string> listenAddressIPv4;
@@ -54,6 +56,41 @@ class ServerConfig {
 		);
 };
 
+/**
+ * @brief web service configuration.
+ * 
+ * Example:
+ * "ws": {
+ * 		"enabled": true,
+ *		"port": 5002,
+ *		"html": "/home/andrei/src/lorawan-ws-angular/lorawan-ws-angular/dist/lorawan-ws-angular",
+ *		"default-database": "sqlite-logger",
+ *		"databases": []
+ *	}
+ */
+class WebServiceConfig {
+	public:
+		bool enabled;						///< enable or disable wev servic on start. Default- enabled
+		int port;							///< default port is 5002
+		std::string html;					///< web root directory. If not set, only JSON API available
+		std::string defaultDatabase;		///< default (no-name) database
+		std::vector<std::string> databases;	///< named databases (db=<database name> parameter is required in JSON API)
+
+		int threadCount;					///< If <=0, default 2
+		int connectionLimit;				///< If <=0, default 1024
+		uint32_t flags;						///< Default 0
+		
+		void clear();
+		WebServiceConfig();
+		int parse(
+			rapidjson::Value &value
+		);
+		void toJson(
+			rapidjson::Value &value,
+			rapidjson::Document::AllocatorType& allocator
+		);
+};
+
 class Configuration {
 	public:
 		std::string configFileName;
@@ -62,6 +99,7 @@ class Configuration {
 		std::string protoPath;
 		int gatewayPort;
 		ServerConfig serverConfig;
+		WebServiceConfig wsConfig;
 		Configuration();
 		Configuration(const char* value);
 		int parse(

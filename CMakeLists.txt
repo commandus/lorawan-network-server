@@ -18,7 +18,8 @@ find_library(LIBPKT2
 	HINTS "." ".." "../../pkt2" "~/src/pkt2"
 )
 
-include_directories("third_party" ${CURL_INCLUDE_DIR})
+include_directories("third_party" ${CURL_INCLUDE_DIR} ".")
+link_directories(${CMAKE_SOURCE_DIR}/../lorawan-ws)
 
 set(SRC_AES
 	third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -65,7 +66,7 @@ add_library(lorawan STATIC
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${DB_LIBRARIES}
+	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${DB_LIBRARIES} ws-sqlite microhttpd
 )
 
 set(SRC_MAC_GW
