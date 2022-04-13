@@ -196,14 +196,18 @@ void ReceiverQueueProcessor::put2databases() {
                        << ": " << db->db->errmsg
                        << ", SQL statement: " << db->lastErroneousStatement
                        << ", payload: " << hexString(entry.value.payload);
-                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0);
-                    ss << " loggerParserState json: " << loggerParserState(parserEnv, 4);
+#if ENABLE_LOGGER_HUFFMAN
+                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0)
+                        << " loggerParserState json: " << loggerParserState(parserEnv, 4);
+#endif
                     onLog(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
                 } else {
                     ss << MSG_DB_INSERT
                        << " database id " << db->config->id << " " << db->config->name;
-                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0);
-                    ss << " loggerParserState json: " << loggerParserState(parserEnv, 4);
+#if ENABLE_LOGGER_HUFFMAN                       
+                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0)
+                        << " loggerParserState json: " << loggerParserState(parserEnv, 4);
+#endif
                     onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
                 }
             }
@@ -221,7 +225,9 @@ void ReceiverQueueProcessor::put2databases() {
             }
         }
     }
+#if ENABLE_LOGGER_HUFFMAN    
     rmCompletedOrExpired(parserEnv);
+#endif
 }
 
 /**

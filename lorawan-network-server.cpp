@@ -54,6 +54,8 @@
 
 #include "db-any.h"
 
+#include "lorawan-ws/lorawan-ws.h"
+
 #include "device-history-service-json.h"
 
 #include "gateway-stat-service-file.h"
@@ -74,6 +76,8 @@ const std::string programName = "lorawan-network-server";
 static int lastSysSignal = 0;
 #define MAX_DEVICE_LIST_COUNT   20
 
+// sev service config
+WSConfig wsConfig;
 static Configuration *config = NULL;
 static GatewayList *gatewayList = NULL;
 static GatewayStatService *gatewayStatService = NULL;
@@ -670,6 +674,80 @@ int main(
 	if (!dbOk) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
+	}
+
+	// web service
+	if (config->wsConfig.enabled) {
+		wsConfig.threadCount = config->wsConfig.threadCount;
+		wsConfig.connectionLimit = config->wsConfig.connectionLimit;
+		wsConfig.flags = config->wsConfig.flags;
+
+		// listener port
+		wsConfig.port = config->wsConfig.port;
+		// html root
+		wsConfig.dirRoot = config->wsConfig.html.c_str();
+		// log verbosity
+		wsConfig.verbosity = config->serverConfig.verbosity;
+		// log callback
+		wsConfig.onLog = onLog;
+
+		// databases
+		// default database
+		bool defDbExists = false;
+		if (!config->wsConfig.defaultDatabase.empty()) {
+			DatabaseNConfig *dc = dbByConfig->find(config->wsConfig.defaultDatabase);
+			bool hasConn = dc != NULL;
+			if (hasConn) {
+				int r = dc->open();
+				if (!r) {
+					wsConfig.databases[""] = dc->db;
+					defDbExists = true;
+				}
+			}
+		}
+		
+		if (!defDbExists)
+			std::cerr << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase << std::endl;
+
+		// named databases
+		for (std::vector<std::string>::const_iterator it(config->wsConfig.databases.begin()); it != config->wsConfig.databases.end(); it++) {
+			DatabaseNConfig *dc = dbByConfig->find(*it);
+			bool hasConn = dc != NULL;
+			if (hasConn) {
+				int r = dc->open();
+				if (!r) {
+					wsConfig.databases[*it] = dc->db;
+				}
+			}
+		}
+
+		if (config->serverConfig.verbosity > 2) {
+			std::cerr << MSG_WS_START
+				<< " threads: " << config->wsConfig.threadCount
+				<< ", connections limit: " <<  config->wsConfig.connectionLimit
+				<< ", flags: " << config->wsConfig.flags
+				<< ", port: " << wsConfig.port
+				<< ", html root: " << wsConfig.dirRoot
+				<< ", log verbosity: " << wsConfig.verbosity
+				<< std::endl;
+			std::cerr << MSG_DATABASE_LIST << std::endl;
+			for (std::map<std::string, DatabaseIntf *>::const_iterator it(wsConfig.databases.begin()); it != wsConfig.databases.end(); it++) {
+				std::string n = it->first;
+				if (n.empty())
+					n = MSG_DEFAULT_DATABASE;
+				std::cerr << "\t" << n << std::endl;
+			}
+			std::cerr << std::endl;
+		}
+
+		if (startWS(wsConfig)) {
+			if (config->serverConfig.verbosity > 2)
+				std::cerr << MSG_WS_START_SUCCESS << std::endl;
+
+		} else {
+			std::cerr << ERR_WS_START_FAILED << std::endl;
+			exit(ERR_CODE_WS_START_FAILED);
+		}
 	}
 
 	if (config->protoPath.empty()) {

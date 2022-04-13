@@ -69,3 +69,77 @@ int DatabaseJSON::select
 {
 	return 0;
 }
+
+//
+// cursor
+// 
+int DatabaseJSON::cursorOpen(
+	void **retStmt,
+	std::string &statement
+)
+{
+	errmsg = ERR_DB_SELECT;
+	*retStmt = NULL;
+	return ERR_CODE_DB_SELECT;
+}
+
+int DatabaseJSON::cursorBindText(
+	void *stmt,
+	int position1,
+	const std::string &value
+)
+{
+	// int r = sqlite3_bind_text((sqlite3_stmt *) stmt, position1, value.c_str(), -1, SQLITE_STATIC);
+	long int v = strtol(value.c_str(), NULL, 10);
+	int r = ERR_CODE_DB_EXEC;
+	if (r)
+		errmsg = ERR_DB_EXEC;
+	return r;
+}
+
+int DatabaseJSON::cursorColumnCount(
+	void *stmt
+)
+{
+	return 0;
+}
+
+std::string DatabaseJSON::cursorColumnName(
+	void *stmt,
+	int column0
+)
+{
+	std::string r;
+	return r;
+}
+
+std::string DatabaseJSON::cursorColumnText(
+	void *stmt,
+	int column0
+)
+{
+	std::string r;
+	return r;
+}
+
+DB_FIELD_TYPE DatabaseJSON::cursorColumnType(
+	void *stmt,
+	int column0
+)
+{
+	return (DB_FIELD_TYPE) 0;
+}
+
+ bool DatabaseJSON::cursorNext(
+	void *stmt
+)
+{
+	return false;
+}
+
+int DatabaseJSON::cursorClose(
+	void *stmt
+)
+{
+	return 0;
+}

@@ -1,12 +1,12 @@
 SUBDIRS = .
 ACLOCAL_AMFLAGS = -I m4
 
-commoncppflags = -Ithird_party
+commoncppflags = -I. -Ithird_party -I../../third_party
 
 GEN = 
 
-AM_CPPFLAGS=-I. -Ithird_party -std=c++11
-AM_CXXFLAGS=-I. -Ithird_party -std=c++11
+AM_CPPFLAGS=$(commoncppflags) -std=c++11
+AM_CXXFLAGS=$(commoncppflags) -std=c++11
 COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
 BUILT_SOURCES = $(GEN)
@@ -59,7 +59,7 @@ BACKEND_DB_DEF += -DENABLE_DB_SQLITE
 
 if ENABLE_WS
 BACKEND_DB_SRC += ws-sqlite.cpp
-BACKEND_DB_LIB += -L../lorawan-ws -lws-sqlite
+BACKEND_DB_LIB += -L../lorawan-ws -lws-sqlite -lmicrohttpd
 BACKEND_DB_DEF += -DENABLE_DB_JSON
 endif
 

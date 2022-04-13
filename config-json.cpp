@@ -314,6 +314,12 @@ int Configuration::parse(
 			rapidjson::Value &server = doc["server"];
 			r |= serverConfig.parse(server);
 		}
+		if (doc.HasMember("ws")) {
+			rapidjson::Value &ws = doc["ws"];
+			r |= wsConfig.parse(ws);
+		} else {
+			wsConfig.enabled = false;
+		}
 		if (doc.HasMember("configFileName")) {
 			rapidjson::Value &cfn =  doc["configFileName"];
 			if (cfn.IsString())
@@ -371,7 +377,7 @@ std::string Configuration::toString() {
 	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
 	rapidjson::Document doc;
 	doc.SetObject();
-	rapidjson::Value server;
+	
 	rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
 
 	rapidjson::Value cfn;
@@ -382,8 +388,13 @@ std::string Configuration::toString() {
 	gfn.SetString(gatewaysFileName.c_str(), gatewaysFileName.length(), allocator);
 	doc.AddMember("gatewaysFileName", gfn, allocator);
 
+	rapidjson::Value server;
 	serverConfig.toJson(server, allocator);
 	doc.AddMember("server", server, allocator);
+
+	rapidjson::Value ws;
+	wsConfig.toJson(ws, allocator);
+	doc.AddMember("ws", ws, allocator);
 
 	rapidjson::Value dbcfn;
 	dbcfn.SetString(databaseConfigFileName.c_str(), databaseConfigFileName.size(), allocator);
@@ -410,4 +421,156 @@ std::string Configuration::toDescriptionTableString() const {
 		ss << "\t" << *it << std::endl;
 	}
 	return ss.str();
+}
+
+/**
+ * @brief web service configuration.
+ * 
+ * Example:
+ * "ws": {
+ * 		"enabled": true,
+ *		"port": 5002,
+ *		"html": "/home/andrei/src/lorawan-ws-angular/lorawan-ws-angular/dist/lorawan-ws-angular",
+ *		"defaultDatabase": "sqlite-logger",
+ *		"databases": []
+ *	}
+ */
+WebServiceConfig::WebServiceConfig()
+	: enabled(true), port(DEF_WS_PORT), html(""), defaultDatabase(""),
+	threadCount(2),	connectionLimit(1024), flags(0)
+{
+
+}
+
+void WebServiceConfig::clear()
+{
+	enabled = true;
+	port = DEF_WS_PORT;
+	html = "";
+	defaultDatabase = "";
+	databases.clear();
+	threadCount = 2;
+	connectionLimit = 1024;
+	flags = 0;
+}
+
+int WebServiceConfig::parse(
+	rapidjson::Value &value
+)
+{
+	enabled = true;
+	if (value.HasMember("enabled")) {
+		rapidjson::Value &venabled = value["enabled"];
+		if (venabled.IsBool()) {
+			enabled = venabled.GetBool();
+		}
+	}
+
+	port = DEF_WS_PORT;
+	if (value.HasMember("port")) {
+		rapidjson::Value &vport = value["port"];
+		if (vport.IsInt()) {
+			port = vport.GetInt();
+		}
+	}
+
+	html = "";
+	if (value.HasMember("html")) {
+		rapidjson::Value &vhtml = value["html"];
+		if (vhtml.IsString()) {
+			html = vhtml.GetString();
+		}
+	}
+
+	defaultDatabase = "";
+	if (value.HasMember("defaultDatabase")) {
+		rapidjson::Value &vdefaultDatabase = value["defaultDatabase"];
+		if (vdefaultDatabase.IsString()) {
+			defaultDatabase = vdefaultDatabase.GetString();
+		}
+	}
+
+	databases.clear();
+	if (value.HasMember("databases")) {
+		rapidjson::Value &vdatabases = value["databases"];
+		if (vdatabases.IsArray()) {
+			for (int i = 0; i < vdatabases.Size(); i++) {
+				rapidjson::Value &n = vdatabases[i];
+				if (n.IsString())
+					databases.push_back(n.GetString());
+			}
+		}
+	}
+
+	threadCount = 2;
+	if (value.HasMember("threadCount")) {
+		rapidjson::Value &vthreadCount = value["threadCount"];
+		if (vthreadCount.IsInt()) {
+			threadCount = vthreadCount.GetInt();
+		}
+	}
+
+	connectionLimit = 1024;
+	if (value.HasMember("connectionLimit")) {
+		rapidjson::Value &vconnectionLimit = value["connectionLimit"];
+		if (vconnectionLimit.IsInt()) {
+			connectionLimit = vconnectionLimit.GetInt();
+		}
+	}
+
+	flags = 0;
+	if (value.HasMember("flags")) {
+		rapidjson::Value &vflags = value["flags"];
+		if (vflags.IsInt()) {
+			flags = vflags.GetInt();
+		}
+	}
+
+	return LORA_OK;
+}
+
+void WebServiceConfig::toJson(
+	rapidjson::Value &value,
+	rapidjson::Document::AllocatorType& allocator
+)
+{
+	value.SetObject();
+
+	rapidjson::Value vEnabled;
+	vEnabled.SetBool(enabled);
+	vEnabled.AddMember("enabled", vEnabled, allocator);
+
+	rapidjson::Value vPort;
+	vPort.SetInt(port);
+	vPort.AddMember("port", vPort, allocator);
+
+	rapidjson::Value vHtml;
+	vHtml.SetString(html.c_str(), html.size(), allocator);
+	value.AddMember("html", vHtml, allocator);
+
+	rapidjson::Value vDefaultDatabase;
+	vDefaultDatabase.SetString(defaultDatabase.c_str(), defaultDatabase.size(), allocator);
+	value.AddMember("defaultDatabase", vDefaultDatabase, allocator);
+
+	rapidjson::Value vdatabases;
+	vdatabases.SetArray();
+	for (std::vector<std::string>::const_iterator it(databases.begin()); it != databases.end(); it++) {
+		rapidjson::Value name;
+		name.SetString(it->c_str(), it->size(), allocator);
+		vdatabases.PushBack(name, allocator);
+	}
+	value.AddMember("databases", vdatabases, allocator);
+
+
+	rapidjson::Value vThreadCount;
+	vThreadCount.SetInt(threadCount);
+	vThreadCount.AddMember("threadCount", vThreadCount, allocator);
+
+	rapidjson::Value vConnectionLimit;
+	vConnectionLimit.SetInt(connectionLimit);
+	vConnectionLimit.AddMember("connectionLimit", vConnectionLimit, allocator);
+
+	rapidjson::Value vFlags;
+	vFlags.SetInt(flags);
+	vFlags.AddMember("flags", vFlags, allocator);
 }

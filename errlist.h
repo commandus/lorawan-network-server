@@ -125,6 +125,8 @@
 #define ERR_CODE_ADDR_OUT_OF_RANGE          -604
 #define ERR_CODE_ADDR_SPACE_FULL            -605
 #define ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER -606
+#define ERR_CODE_WS_START_FAILED			-607
+#define ERR_CODE_NO_DEFAULT_WS_DATABASE		-608
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -241,6 +243,8 @@
 #define ERR_ADDR_OUT_OF_RANGE           "Address out of range"
 #define ERR_ADDR_SPACE_FULL             "Address space is full, no free address available"
 #define ERR_INIT_LOGGER_HUFFMAN_PARSER  "Error initialize logger-huffman parser"
+#define ERR_WS_START_FAILED				"Start web service failed "
+#define ERR_NO_DEFAULT_WS_DATABASE		"No default web service database name "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -272,6 +276,7 @@
 #define MSG_MAC_COMMANDS                "MAC commands"
 #define MSG_SEND_TO                     "Send to "
 #define MSG_DATABASE_LIST				"Databases: "
+#define MSG_DEFAULT_DATABASE			"(default)"
 #define MSG_CONN_ESTABLISHED			"established"
 #define MSG_CONN_FAILED					"failed"
 #define MSG_CONNECTION					"connection "
@@ -297,6 +302,9 @@
 #define MSG_SIZE                        "size"
 #define MSG_IS_TOO_SMALL                " is too small"
 #define MSG_PREPARE                     "Prepare INSERT to database "
+#define MSG_WS_START					"Start web service "
+#define MSG_WS_START_SUCCESS			"web service started successfully "
+
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);
