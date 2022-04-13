@@ -59,7 +59,7 @@ BACKEND_DB_DEF += -DENABLE_DB_SQLITE
 
 if ENABLE_WS
 BACKEND_DB_SRC += ws-sqlite.cpp
-BACKEND_DB_LIB += -L../lorawan-ws -lws-sqlite -lmicrohttpd
+BACKEND_DB_LIB += -L/home/andrei/src/lorawan-ws -lws-sqlite -lmicrohttpd
 BACKEND_DB_DEF += -DENABLE_DB_JSON
 endif
 
