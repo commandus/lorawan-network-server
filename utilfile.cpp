@@ -112,8 +112,30 @@ size_t config::filesInPath
 	std::vector<std::string> *retval
 )
 {
-	// TODO Implement Windows
-	return 0;
+	std::string search_path = path + "\\*.*";
+	WIN32_FIND_DATA fd;
+	HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+	size_t r = 0;
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			// read all (real) files in current folder
+			// , delete '!' read other 2 default folder . and ..
+			std::string f(fd.cFileName);
+			if ((f == ".") || (f == ".."))
+				continue;;
+			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				r += filesInPath(f, suffix, flags, retval);
+			} else {
+				if (f.find(suffix) != std::string::npos) {
+					if (retval)
+						retval->push_back(fd.cFileName);
+					r++;
+				}
+			}
+		} while (::FindNextFile(hFind, &fd));
+		::FindClose(hFind);
+	}
+	return r;
 }
 
 #else
