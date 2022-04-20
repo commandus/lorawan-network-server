@@ -213,6 +213,9 @@ size_t config::filesInPath
 	{
 		pathlist[0] = (char *) path.c_str();
 	}
+    if (!pathlist[0])
+        return 0;
+
 	int parent_len = strlen(pathlist[0]) + 1;	///< Arggh. Remove '/' path delimiter(I mean it 'always' present). Not sure is it works fine. It's bad, I know.
 
 	FTS* file_system = fts_open(pathlist, FTS_LOGICAL | FTS_NOSTAT, NULL);
