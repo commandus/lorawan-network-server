@@ -765,7 +765,7 @@ int main(
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser loger-huffman..");
-	loggerParserEnv = initLoggerParser();
+	loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames, onLog);
 	if (!loggerParserEnv) {
 		std::cerr << ERR_INIT_LOGGER_HUFFMAN_PARSER << std::endl;
 		exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);

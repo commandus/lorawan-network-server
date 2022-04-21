@@ -335,6 +335,17 @@ int Configuration::parse(
 			if (dbcfn.IsString())
 				databaseConfigFileName = dbcfn.GetString();
 		}
+        if (doc.HasMember("databaseExtraConfigFileNames")) {
+            rapidjson::Value &dbcefns =  doc["databaseExtraConfigFileNames"];
+            if (dbcefns.IsArray()) {
+                for (int i = 0; i < dbcefns.Size(); i++) {
+                    rapidjson::Value &dbcefn = dbcefns[i];
+                    if (dbcefn.IsString()) {
+                        databaseExtraConfigFileNames.push_back(dbcefn.GetString());
+                    }
+                }
+            }
+        }
 		if (doc.HasMember("protoPath")) {
 			rapidjson::Value &vpp =  doc["protoPath"];
 			if (vpp.IsString())
@@ -368,6 +379,7 @@ void Configuration::clear() {
 	configFileName = "";
 	gatewaysFileName = "";
 	databaseConfigFileName = "";
+    databaseExtraConfigFileNames.clear();
 	protoPath = "";
 	serverConfig.clear();
 }
@@ -399,6 +411,15 @@ std::string Configuration::toString() {
 	rapidjson::Value dbcfn;
 	dbcfn.SetString(databaseConfigFileName.c_str(), databaseConfigFileName.size(), allocator);
 	doc.AddMember("databaseConfigFileName", dbcfn, allocator);
+
+    rapidjson::Value dbecfns;
+    dbecfns.SetArray();
+    for (std::vector<std::string>::const_iterator it(databaseExtraConfigFileNames.begin()); it != databaseExtraConfigFileNames.end(); it++) {
+        rapidjson::Value fn;
+        fn.SetString(it->c_str(), it->size(), allocator);
+        dbecfns.PushBack(fn, allocator);
+    }
+    doc.AddMember("databaseExtraConfigFileNames", dbecfns, allocator);
 
 	rapidjson::Value pp;
 	pp.SetString(protoPath.c_str(), protoPath.size(), allocator);
@@ -560,7 +581,6 @@ void WebServiceConfig::toJson(
 		vdatabases.PushBack(name, allocator);
 	}
 	value.AddMember("databases", vdatabases, allocator);
-
 
 	rapidjson::Value vThreadCount;
 	vThreadCount.SetInt(threadCount);

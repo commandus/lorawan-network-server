@@ -1,4 +1,3 @@
-#include <iostream>
 #include "db-any.h"
 #ifdef ENABLE_DB_SQLITE
 #include "db-sqlite.h"
@@ -23,7 +22,6 @@
 #endif
 
 #define JSON_TYPE_NAME "json"
-
 
 DatabaseNConfig::DatabaseNConfig
 (

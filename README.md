@@ -154,16 +154,17 @@ sudo make install
 ```
 
 ./configure has several options to enable backend database support:
-
+- --enable-logger-huffman (on by default)
+- --enable-pkt2 (off by default)
 - --enable-db-sqlite=true (on by default)
 - --enable-db-postgres
 - --enable-db-mysql
 - --enable-db-firebird
 
-Configure all supported databases:
+Configure all supported databases and logger huffman:
 
 ```
-./configure --enable-db-sqlite --enable-db-postgres --enable-db-mysql --enable-db-firebird
+./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres --enable-db-mysql --enable-db-firebird
 ```
 
 You must have database client and developer's tools (include files and libraries at least) installed on the computer.
@@ -231,6 +232,7 @@ cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scr
 
 - gatewaysFileName Gateways list. Default ~/gateway.json
 - databaseConfigFileName databases list default "dbs.js"
+- databaseExtraConfigFileNames list of extra configuration files and subdirectories, e.g. device passport files folder path
 - protoPath protobuf message description files directory path. Default "proto"
 - server Network server properties, including end-device list served by the server
 - configFileName (optional) Redirect config file to another one
