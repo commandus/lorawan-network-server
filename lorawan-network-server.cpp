@@ -764,7 +764,7 @@ int main(
 	}
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser loger-huffman..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser logger-huffman..");
 	loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames, onLog);
 	if (!loggerParserEnv) {
 		std::cerr << ERR_INIT_LOGGER_HUFFMAN_PARSER << std::endl;
@@ -796,7 +796,8 @@ int main(
 
 	// Set databases
 	receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
-	// start processing queue
+
+    // start processing queue
     processor->setReceiverQueueProcessor(receiverQueueProcessor);
 	
 	// Set up listener

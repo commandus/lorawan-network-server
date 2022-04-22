@@ -43,7 +43,7 @@ PACKET_PARSER_DEF += -DENABLE_PKT2
 endif
 
 if ENABLE_LOGGER_HUFFMAN
-PACKET_PARSER_LIB += -L/home/andrei/src/logger-huffman -llogger-huffman
+PACKET_PARSER_LIB += -L/home/andrei/src/logger-passport -L/home/andrei/src/logger-huffman -llogger-huffman -llogger-passport
 PACKET_PARSER_DEF += -DENABLE_LOGGER_HUFFMAN
 endif
 
