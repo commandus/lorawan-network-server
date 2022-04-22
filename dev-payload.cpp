@@ -34,14 +34,13 @@
 #define MAX_RECV_BUFFER_SIZE	4096
 
 const std::string programName = "dev-payload";
+const std::string PROG_NAME_DEV_PAYLOAD = "Simulate sending a packet from the end device";
 
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
-
 
 static void done()
 {
 	// destroy and free all
-	exit(0);
 }
 
 static void stop()
@@ -91,6 +90,7 @@ int parseCmd
 	std::string &deviceName,
     std::string &payload,
     std::string &network_server_address,
+    bool &jsonOnly,
     int &verbosity,
 	int argc,
 	char *argv[])
@@ -98,19 +98,20 @@ int parseCmd
 	// device path
 	struct arg_str *a_identity_fn = arg_str0("i", "identity", "<file>", "identity JSON file. Default ./" DEF_IDENTITY_STORAGE_NAME);
 
-	struct arg_str *a_eui = arg_str0("e", "eui", "<id>", "end-device identifier.");
+	struct arg_str *a_eui = arg_str0("e", "eui", "<id>", "end-device identifier");
 	struct arg_str *a_device_name = arg_str0("E", "devicename", "<name>", "end-device name.");
 
 	struct arg_str *a_payload_hex = arg_str0("x", "payload", "<hex>", "payload bytes, in hex");
-    struct arg_str *a_network_server_address = arg_str0("a", "address", "<IP:port>", "Send packet to network server (default port 5000");
+    struct arg_str *a_network_server_address = arg_str0("a", "address", "<IP:port>", "Send packet to network server. Default port 5000");
 
+    struct arg_lit *a_json_only = arg_lit0("j", "json-only", "Suppress header (JSON only)");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
 	struct arg_lit *a_help = arg_lit0("?", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void *argtable[] = {
         a_identity_fn, a_eui, a_device_name, a_payload_hex,
-        a_network_server_address,
+        a_network_server_address, a_json_only,
 		a_verbosity, a_help, a_end};
 
 	int nerrors;
@@ -142,6 +143,7 @@ int parseCmd
         if (a_network_server_address->count) {
             network_server_address = std::string(*a_network_server_address->sval);
         }
+        jsonOnly = a_json_only->count > 0;
         verbosity = a_verbosity->count;
 	}
 
@@ -151,7 +153,7 @@ int parseCmd
 			arg_print_errors(stderr, a_end, programName.c_str());
 		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << MSG_PROG_NAME << std::endl;
+		std::cerr << PROG_NAME_DEV_PAYLOAD << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
@@ -171,11 +173,18 @@ void onLog(
 	std::cerr << message << std::endl;
 }
 
-int recvACK
+/**
+ * Wait for ACK response from network server
+ * @param socket socket to listen
+ * @param token
+ * @param timeoutSec wait timeout in seconds, default 1 second
+ * @return 0- success, <0- error code
+ */
+static int recvACK
 (
 	UDPSocket &socket,
 	uint64_t token,
-	int timeoutSec
+	const int timeoutSec = 1
 )
 {
 	fd_set readHandles;
@@ -258,6 +267,7 @@ int main(
     std::string deviceName;
     std::string payload;
     std::string network_server_address;
+    bool jsonOnly;
     int verbosity;
 
 #ifdef _MSC_VER
@@ -265,7 +275,9 @@ int main(
     setSignalHandler();
 #endif
 
-    if (parseCmd(identityFileName, eui, deviceName, payload, network_server_address, verbosity, argc, argv) != 0) {
+    if (parseCmd(identityFileName, eui, deviceName, payload, network_server_address,
+                 jsonOnly, verbosity, argc, argv) != 0)
+    {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
 
@@ -324,7 +336,6 @@ int main(
         exit(ERR_CODE_INVALID_DEVICE_EUI);
     }
 
-
     // compose packet
     SemtechUDPPacket packet;
     rfmMetaData rfmMD;
@@ -333,68 +344,74 @@ int main(
     // packet.setFOpts(macdatabin);
     packet.header.fport = 0;
 
-    /*
-    packet.payload = mkControlPacket(devEUIs[0].eui, macGwConfig->gatewayIds[g], macdatabin);
-    std::cerr << "Payload: " << hexString(packet.payload) << std::endl;
+    int fCnt = 0;
+    DeviceId deviceId;
+    deviceId = deviceNetId;
+    packet.payload = packet.mkPacket(MTYPE_UNCONFIRMED_DATA_UP, payload,
+        deviceId, time(NULL), fCnt);
+    if (verbosity > 0)
+        std::cerr << "Payload: " << hexString(packet.payload) << std::endl;
 
-    memmove(packet.prefix.mac, macGwConfig->euis[d].eui, sizeof(DEVEUI));
-    memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));
-    packet.devId = netId;
+    memmove(packet.prefix.mac, &devEUIs[0].eui, sizeof(DEVEUI));
+    memmove(packet.header.header.devaddr, deviceNetId.devaddr, sizeof(DEVADDR));
+    packet.devId = deviceNetId;
     //memmove(packet.devId.devEUI, netId.devEUI, sizeof(DEVEUI));
 
-    // TODO form correct data
-    // packet.setPayload();
 
-    // add default port value if missed
+    int operationResult = 0;
     if (network_server_address.empty()) {
-        std::cout << packet.toJsonString() << std::endl;
+        // just print packet
+        std::string s(packet.toString());
+        if (jsonOnly)   // remove semtech prefix
+            s = s.substr(sizeof(SEMTECH_PREFIX_GW));
+        std::cout << s << std::endl;
     } else {
+        // send to the IP address
         if (network_server_address.find(":") == std::string::npos) {
-            // add port
+            // add default port value if missed
             std::stringstream ss;
             ss << network_server_address << ":" << DEF_NS_PORT;
             network_server_address = ss.str();
         }
 
-        UDPSocket socket(address, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
+        UDPSocket socket(network_server_address, MODE_OPEN_SOCKET_CONNECT, MODE_FAMILY_HINT_UNSPEC);
 
         if (socket.errcode) {
             std::cerr << ERR_MESSAGE << socket.errcode << ": " << strerror_lorawan_ns(socket.errcode)
-                      << ", address: " << address
-                      << std::endl;
-            exit(socket.errcode);
+                  << ", address: " << network_server_address
+                  << std::endl;
+            exit(ERR_CODE_SOCKET_CREATE);
         }
 
-        std::string response = packet.toString();
+        std::string response(packet.toString());
         ssize_t r = sendto(socket.sock, response.c_str(), response.size(), 0,
-                           &socket.addrStorage,
-                           ((socket.addrStorage.sa_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
+           &socket.addrStorage,
+           ((socket.addrStorage.sa_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 
-
-        if (r != response.size())
+        if (r != response.size()) {
+            operationResult = ERR_CODE_SOCKET_WRITE;
             std::cerr << ERR_SOCKET_WRITE
                       << " " << UDPSocket::addrString(&socket.addrStorage)
                       << " sendto() return " << r
                       << " errno " << errno << ": " << strerror(errno)
                       << std::endl;
-        else
-        if (verbosity > 0)
-            std::cerr << MSG_SEND_TO
-                      << UDPSocket::addrString(&socket.addrStorage)
-                      << " " << r << " bytes, "
-                      << "packet: " << packet.toJsonString() << std::endl
-                      << ", hex: " << hexString(response)
-                      << std::endl;
+        } else
+            if (verbosity > 0)
+                std::cerr << MSG_SEND_TO
+                    << UDPSocket::addrString(&socket.addrStorage)
+                    << " " << r << " bytes, "
+                    << "packet: " << packet.toJsonString() << std::endl
+                    << ", hex: " << hexString(response)
+                    << std::endl;
 
-
-        // read ACK response
-        if (recvACK(socket, packet.prefix.token, 1) == 0) {
-            std::cerr << "Received ACK successfully"
-                      << std::endl;
+        // read ACK response for just sent token
+        operationResult = recvACK(socket, packet.prefix.token, 1);
+        if (operationResult == 0) {
+            if (verbosity > 0)
+                std::cerr << "Received ACK successfully" << std::endl;
         }
     }
-    */
 
 	done();
-	return 0;
+    return  operationResult;
 }

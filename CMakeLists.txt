@@ -60,6 +60,13 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	third_party/argtable3/argtable3.c
 )
 
+set(DEV_PAYLOAD_SOURCES 
+	dev-payload.cpp
+	config-json.cpp config-filename.cpp 
+	${C_STORAGE}
+    third_party/argtable3/argtable3.c
+)
+
 add_library(lorawan STATIC
 	${LIBLORAWANSRC}
 )
@@ -109,6 +116,12 @@ set(PROTO_DB_SOURCES
 add_executable(proto-db ${PROTO_DB_SOURCES})
 target_link_libraries(proto-db PRIVATE Threads::Threads
 	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES}
+)
+
+add_executable(dev-payload ${DEV_PAYLOAD_SOURCES})
+target_link_libraries(dev-payload PRIVATE Threads::Threads
+	lorawan protobuf
+	${LIBPKT2} ${CURL_LIBRARIES}
 )
 
 # Strip binary for release builds

@@ -2534,6 +2534,60 @@ std::string SemtechUDPPacket::mkPullResponse(
 }
 
 /**
+ * Make Semtech UDP protocol packet request or response
+ * @param data payload
+ * @param version LoraWAN version
+ * @param key key
+ * @param power transmission power
+ */
+std::string SemtechUDPPacket::mkPacket(
+        MTYPE typ,
+        const std::string &payload,
+        const DeviceId &deviceId,
+        uint32_t receivedTime,
+        const int fCnt,
+        const int power
+) const
+{
+    // copy macheader, addr, fCnt form received packet
+    RFMHeader rfmHeader(*getRfmHeader());
+
+    // encrypt frame payload
+    int direction = 1;	// downlink
+    std::string frmPayload(payload);
+    size_t payloadSize = frmPayload.size();
+    if (deviceId.version.minor == 1) {
+        encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);	// network key
+    }
+
+    std::stringstream sMsg;
+
+    rfmHeader.header.macheader.f.mtype = typ;
+    rfmHeader.header.fctrl.i = 0;
+    rfmHeader.header.fcnt = fCnt;
+
+    if (payloadSize <= 15) {
+        // use FOpts
+        rfmHeader.header.fctrl.f.foptslen = payloadSize;
+        // device controlled by service
+        rfmHeader.header.fctrl.f.adr = 1;
+        sMsg << rfmHeader.toBinary();
+    } else {
+        // use FrmPayload
+        sMsg << rfmHeader.toBinary();
+        sMsg << (uint8_t) 0;	// fport 0- MAC payload
+    }
+    sMsg << frmPayload;
+
+    std::string msg = sMsg.str();
+    // calc mic
+    uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);
+    sMsg << std::string((char *) &mic, 4);
+    return toTxJsonString(sMsg.str(), receivedTime, power);
+}
+
+
+/**
 	 * Make Semtech UDP protocol packet Join Accept response
 	 * @param frame Join accept payload frame payload
 	 * @param receivedTime time

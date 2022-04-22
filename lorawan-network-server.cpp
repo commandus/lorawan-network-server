@@ -7,7 +7,6 @@
 #include <iostream>
 #include <iomanip>
 #include <cstring>
-#include <fstream>
 
 #include <sys/time.h>
 #include <signal.h>
@@ -78,36 +77,36 @@ static int lastSysSignal = 0;
 
 // sev service config
 WSConfig wsConfig;
-static Configuration *config = NULL;
-static GatewayList *gatewayList = NULL;
-static GatewayStatService *gatewayStatService = NULL;
-static DeviceStatService *deviceStatService = NULL;
+static Configuration *config = nullptr;
+static GatewayList *gatewayList = nullptr;
+static GatewayStatService *gatewayStatService = nullptr;
+static DeviceStatService *deviceStatService = nullptr;
 
 // Listen UDP port(s) for packets sent by Semtech's gateway
-static UDPListener *listener = NULL;
+static UDPListener *listener = nullptr;
 // Device identity service
-static IdentityService *identityService = NULL;
+static IdentityService *identityService = nullptr;
 // ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
-static ReceiverQueueProcessor *receiverQueueProcessor = NULL;
+static ReceiverQueueProcessor *receiverQueueProcessor = nullptr;
 // LoraPacketProcessor handles uplink messages
-static LoraPacketProcessor *processor = NULL;
+static LoraPacketProcessor *processor = nullptr;
 // Database list
-static DatabaseByConfig *dbByConfig = NULL;
+static DatabaseByConfig *dbByConfig = nullptr;
 // Device counters and last received
-static DeviceHistoryService *deviceHistoryService = NULL;
+static DeviceHistoryService *deviceHistoryService = nullptr;
 // Regional settings
-static RegionalParameterChannelPlans *regionalParameterChannelPlans = NULL;
-static DeviceChannelPlan *deviceChannelPlan = NULL;
+static RegionalParameterChannelPlans *regionalParameterChannelPlans = nullptr;
+static DeviceChannelPlan *deviceChannelPlan = nullptr;
 
 // pkt2 environment
 #ifdef ENABLE_PKT2
-static void* parserEnv = NULL;
+static void* parserEnv = nullptr;
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
-static void* loggerParserEnv = NULL;
+static void* loggerParserEnv = nullptr;
 #endif
 
-ReceiverQueueService *receiverQueueService = NULL;
+ReceiverQueueService *receiverQueueService = nullptr;
 
 #ifdef _MSC_VER
 #undef ENABLE_TERM_COLOR
@@ -135,21 +134,21 @@ static void done()
 {
 	// destroy and free all
 	delete listener;
-	listener = NULL;
+	listener = nullptr;
 
 	if (config) {
 		if(config->serverConfig.verbosity > 1)
 			std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
 		delete config;
-		config = NULL;
+		config = nullptr;
 	}
 	if (processor) {
 		delete processor;
-		processor = NULL;
+		processor = nullptr;
 	}
 	if (receiverQueueProcessor) {
 		delete receiverQueueProcessor;
-        receiverQueueProcessor = NULL;
+        receiverQueueProcessor = nullptr;
 	}
 
     // save changes
@@ -157,35 +156,35 @@ static void done()
 
     if (receiverQueueService) {
 		delete receiverQueueService;
-		receiverQueueService = NULL;
+		receiverQueueService = nullptr;
 	}
 	if (identityService) {
 		delete identityService;
-		identityService = NULL;
+		identityService = nullptr;
 	}
     if (gatewayStatService) {
         delete gatewayStatService;
-        gatewayStatService = NULL;
+        gatewayStatService = nullptr;
     }
     if (deviceStatService) {
         delete deviceStatService;
-        deviceStatService = NULL;
+        deviceStatService = nullptr;
     }
     if (dbByConfig) {
 		delete dbByConfig;
-		dbByConfig = NULL;
+		dbByConfig = nullptr;
 	}
 	if (gatewayList) {
 		delete gatewayList;
-		gatewayList = NULL;
+		gatewayList = nullptr;
 	}
 	if (deviceHistoryService) {
 		delete deviceHistoryService;
-        deviceHistoryService = NULL;
+        deviceHistoryService = nullptr;
 	}
     if (regionalParameterChannelPlans) {
         delete regionalParameterChannelPlans;
-        regionalParameterChannelPlans = NULL;
+        regionalParameterChannelPlans = nullptr;
     }
     if (deviceChannelPlan) {
         delete deviceChannelPlan;
@@ -258,11 +257,11 @@ void setSignalHandler()
 	struct sigaction action;
 	memset(&action, 0, sizeof(struct sigaction));
 	action.sa_handler = &signalHandler;
-	sigaction(SIGINT, &action, NULL);
-	sigaction(SIGHUP, &action, NULL);
-	sigaction(SIGSEGV, &action, NULL);
-    sigaction(SIGABRT, &action, NULL);
-	sigaction(SIGUSR2, &action, NULL);
+	sigaction(SIGINT, &action, nullptr);
+	sigaction(SIGHUP, &action, nullptr);
+	sigaction(SIGSEGV, &action, nullptr);
+    sigaction(SIGABRT, &action, nullptr);
+	sigaction(SIGUSR2, &action, nullptr);
 }
 #endif
 
@@ -278,7 +277,7 @@ int parseCmd(
 	char *argv[])
 {
 	// device path
-	struct arg_str *a_address4 = arg_strn(NULL, NULL, "<IPv4 address:port>", 0, 8, "listener IPv4 interface e.g. *:8003");
+	struct arg_str *a_address4 = arg_strn(nullptr, nullptr, "<IPv4 address:port>", 0, 8, "listener IPv4 interface e.g. *:8003");
 	struct arg_str *a_address6 = arg_strn("6", "ipv6", "<IPv6 address:port>", 0, 8, "listener IPv6 interface e.g. :1700");
 	struct arg_str *a_config = arg_str0("c", "config", "<file>",
                                         "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME
@@ -355,7 +354,7 @@ void onLog(
 			return;
 	}
 	struct timeval t;
-	gettimeofday(&t, NULL);
+	gettimeofday(&t, nullptr);
 	// "\033[1;31mbold red text\033[0m\n";
 	std::cerr << timeval2string(t) << " " 
 #ifdef ENABLE_TERM_COLOR
@@ -462,7 +461,7 @@ int main(
     std::stringstream ss;
     ss << "Initialize identity service NetId: " << identityService->getNetworkId()->toString() << "..";
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
-    int rs = identityService->init(config->serverConfig.identityStorageName, NULL);
+    int rs = identityService->init(config->serverConfig.identityStorageName, nullptr);
     if (rs) {
         std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs)
                   << " " << config->serverConfig.identityStorageName << std::endl;
@@ -480,12 +479,12 @@ int main(
             gatewayStatService = new GatewayStatServicePost();
             break;
         default:
-            gatewayStatService = NULL;
+            gatewayStatService = nullptr;
     }
 
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize gateway statistics service..");
     if (gatewayStatService) {
-        rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, NULL);
+        rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, nullptr);
         if (rs) {
             std::cerr << ERR_INIT_GW_STAT << rs << ": " << strerror_lorawan_ns(rs)
                       << " " << config->serverConfig.logGWStatisticsFileName << std::endl;
@@ -503,12 +502,12 @@ int main(
             deviceStatService = new DeviceStatServicePost();
             break;
         default:
-            deviceStatService = NULL;
+            deviceStatService = nullptr;
     }
 
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize device statistics service..");
     if (deviceStatService) {
-        rs = deviceStatService->init(config->serverConfig.logDeviceStatisticsFileName, NULL);
+        rs = deviceStatService->init(config->serverConfig.logDeviceStatisticsFileName, nullptr);
         if (rs) {
             std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
                       << " " << config->serverConfig.logDeviceStatisticsFileName << std::endl;
@@ -552,7 +551,7 @@ int main(
     // std::cerr << "Device history name: " << config->serverConfig.deviceHistoryStorageName << std::endl;
     deviceHistoryService = new JsonFileDeviceHistoryService();
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize device history service..");
-    rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, NULL);
+    rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, nullptr);
     if (rs) {
         std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
                   << " " << config->serverConfig.deviceHistoryStorageName << std::endl;
@@ -567,7 +566,7 @@ int main(
         + config->serverConfig.regionalSettingsStorageName + "..");
 
     // initialize regional settings
-    rs = regionalParameterChannelPlans->init(config->serverConfig.regionalSettingsStorageName, NULL);
+    rs = regionalParameterChannelPlans->init(config->serverConfig.regionalSettingsStorageName, nullptr);
     if (rs) {
         int parseCode;
         std::string parseDescription = regionalParameterChannelPlans->getErrorDescription(parseCode);
@@ -597,7 +596,7 @@ int main(
 
 	// Start received message queue service
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start received message queue service ..");
-	void *options = NULL;
+	void *options = nullptr;
 	DirTxtReceiverQueueServiceOptions dirOptions;
 	switch (config->serverConfig.messageQueueType) {
 		case MESSAGE_QUEUE_STORAGE_LMDB:
@@ -647,7 +646,7 @@ int main(
         if (!it->active)
             continue;
 		DatabaseNConfig *dc = dbByConfig->find(it->name);
-		bool hasConn = dc != NULL;
+		bool hasConn = dc != nullptr;
         int r = 0;
 		if (hasConn) {
             r = dc->open();
@@ -696,7 +695,7 @@ int main(
 		bool defDbExists = false;
 		if (!config->wsConfig.defaultDatabase.empty()) {
 			DatabaseNConfig *dc = dbByConfig->find(config->wsConfig.defaultDatabase);
-			bool hasConn = dc != NULL;
+			bool hasConn = dc != nullptr;
 			if (hasConn) {
 				int r = dc->open();
 				if (!r) {
@@ -712,7 +711,7 @@ int main(
 		// named databases
 		for (std::vector<std::string>::const_iterator it(config->wsConfig.databases.begin()); it != config->wsConfig.databases.end(); it++) {
 			DatabaseNConfig *dc = dbByConfig->find(*it);
-			bool hasConn = dc != NULL;
+			bool hasConn = dc != nullptr;
 			if (hasConn) {
 				int r = dc->open();
 				if (!r) {

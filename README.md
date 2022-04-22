@@ -580,6 +580,7 @@ Id  | Channel Plan | Common Name
 - proto-db
 - mac-gw
 - mac-ns
+- dev-payload
 
 ### print-netid
 
@@ -764,7 +765,7 @@ Insert data from payload to mysql database, force type to iridium.IEPacket
 ./proto-db -d mysql -m iridium.IEPacket insert -x 014c00011c00e8444601333030323334303639323030383530001a070000e199205e030b00003eea3781fbcc05000000021c00c068b50328f1bd078999205e07050000009f1be60ca313f432000000
 ```
 
-## mac-gw, mac-ns utilities
+### mac-gw, mac-ns utilities
 
 mac-gw send a command to a class C device bypassing the network server directly through the selected gateway.
 
@@ -877,6 +878,54 @@ You can use symlink ~/.mac-gw.json to the ~/.lorawan-network-server.json.
 - server
 - configFileName
 - gatewaysFileName
+
+### dev-payload
+
+Simulate sending Semtech gateway protocol packet from the end device to the network server.
+
+End device identified in the identity JSON file by EUI identifier (-e option) or by name (-E option).
+
+Identity JSON file specified in the -i option.
+
+If -i omitted, dev-payload try ./identity.json file by default.
+
+All options are:
+- -i, --identity=<file>     identity JSON file
+- -e, --eui=<id>            end-device identifier
+- -E, --devicename=<name>   end-device name.
+- -x, --payload=<hex>       payload bytes, in hex
+- -a, --address=IP:port     Send packet to network server. Default port 5000
+- -j --json-only            Suppress header (JSON only)
+- -v, --verbose             Set verbosity level
+- -?, --help                Show this help
+
+It prints Semtech gateway protocol packet to be sent to the network server if no -a option is provided.
+
+Please note that Semtech gateway protocol packet is JSON string with a small has binary header.
+
+To avoid screen damage you can use -j --json-only option to suppress print header.
+
+Option -a force send generated Semtech gateway protocol packet to the network server at specified address.
+
+Address is IPv4 address with optional port number followed by ":" character.
+
+By default, network server port number is 5000.
+
+#### Error codes
+
+If packet successfully sent to the network server and dev-packet received ACK packet confirms successful 
+receiving, dev-packet exits with 0 error code.
+
+Otherwise, there are several error codes: 
+
+- ERR_CODE_COMMAND_LINE (-500) Invalid option
+- ERR_CODE_NO_CONFIG (-534) Identity JSON file not found or invalid
+- ERR_CODE_INVALID_DEVICE_EUI (-507) Invalid device EUI or device EUI not found in the identity file
+- ERR_CODE_DEVICE_NAME_NOT_FOUND (-588) Invalid device name or device name not found in the identity file
+- ERR_CODE_SOCKET_CREATE (-513) Error open UDP socket to send packet to the network server
+- ERR_CODE_SOCKET_WRITE (-518) Error send Semtech gateway protocol packet to the network server
+- ERR_CODE_SOCKET_READ (-517) Error read Semtech gateway protocol ACK packet from network server
+- ERR_CODE_INVALID_PACKET (-521) Network server sent invalid Semtech gateway protocol packet
 
 ## Trapped signals
 

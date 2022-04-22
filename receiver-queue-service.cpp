@@ -219,6 +219,11 @@ ReceiverQueueService::ReceiverQueueService()
 {
 }
 
+ReceiverQueueService::~ReceiverQueueService()
+{
+
+}
+
 int ReceiverQueueService::next()
 {
 	cnt++;
