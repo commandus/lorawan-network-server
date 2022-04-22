@@ -162,8 +162,8 @@ typedef ALIGN struct {
 typedef enum {
 	MTYPE_JOIN_REQUEST = 0,
  	MTYPE_JOIN_ACCEPT = 1,
- 	MTYPE_UNCONFIRMED_DATA_UP = 2,
- 	MTYPE_UNCONFIRMED_DATA_DOWN = 3,
+ 	MTYPE_UNCONFIRMED_DATA_UP = 2,      ///< sent by end-devices to the Network Server
+ 	MTYPE_UNCONFIRMED_DATA_DOWN = 3,    ///< sent by the Network Server to only one end-device and is relayed by a single gateway
  	MTYPE_CONFIRMED_DATA_UP = 4,
  	MTYPE_CONFIRMED_DATA_DOWN = 5,
  	MTYPE_REJOIN_REQUEST = 6,
@@ -599,17 +599,45 @@ public:
 	) const;
 
     /**
+     * Make Semtech UDP protocol packet request or response
+     * @param typ MTYPE_UNCONFIRMED_DATA_DOWN NS->end device, MTYPE_UNCONFIRMED_DATA_UP end-device->NS
+     * @param payload payload
+     * @param deviceId deviceId
+     * @param time time, seconds
+     * @param fCnt fCnt
+     * @param power transmission power
+     */
+    std::string mkPacket(
+        MTYPE typ,
+        const std::string &payload,
+        const DeviceId &deviceId,
+        uint32_t time,
+        const int fCnt,
+        const int power = 14
+    ) const;
+
+    /**
 	 * Make Semtech UDP protocol packet Join Accept response
 	 * @param frame Join accept payload frame payload
 	 * @param receivedTime time
 	 * @param power transmission power
 	 */
     std::string mkJoinAcceptResponse(
-            const JOIN_ACCEPT_FRAME &frame,
-            uint32_t receivedTime,
-            const int power = 14
+        const JOIN_ACCEPT_FRAME &frame,
+        uint32_t receivedTime,
+        const int power = 14
     ) const;
 
+    /**
+     * Make MAC request
+     * @param gwId
+     * @param payload payload
+     * @param networkId destination device network identifier
+     * @param receivedTime received time
+     * @param fCnt counter
+     * @param power power value
+     * @return MAC request string
+     */
     std::string mkMACRequest(
         const DEVEUI *gwId,
 		const std::string &payload,

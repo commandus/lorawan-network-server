@@ -111,6 +111,7 @@ class ReceiverQueueService {
 		std::map<DEVADDRINT, FCNT_TIME, DEVADDRINTCompare> fcnts; 
 		void clearFcnts();
 		ReceiverQueueService();
+        virtual ~ReceiverQueueService();
 		void setDbs(const std::vector<int> &values);
 		// return messages in queue
 		virtual int count() = 0;

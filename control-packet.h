@@ -19,8 +19,7 @@ typedef ALIGN struct {
 	uint8_t data[1];				// at least 1 byte
 } PACKED CONTROL_DEVICE_PACKET;		// 16 bytes
 
-std::string mkControlPacket
-(
+std::string mkControlPacket(
 	const DEVEUI &eui,
 	const uint64_t gatewayId,
 	const std::string &payload
