@@ -1,6 +1,9 @@
 {
 	"gatewaysFileName": "./gateway.json",
 	"databaseConfigFileName": "dbs.js",
+	"databaseExtraConfigFileNames": [
+		"/home/andrei/src/logger-passport/tests/passport"
+	],
 	"server": {
 		"identityStorageName": "identity.json",
 		"storageType": "json",
