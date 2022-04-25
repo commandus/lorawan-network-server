@@ -13,6 +13,7 @@
 #include "strptime.h"
 #define TMSIZE sizeof(struct tm)
 #define localtime_s(tm, time) memmove(tm, localtime(time), TMSIZE)
+#define gmtime_s(tm, time) memmove(tm, gmtime(time), TMSIZE)
 #endif
 
 const static char *dateformat0 = "%FT%T";
@@ -21,6 +22,30 @@ const static char *dateformat2 = "%F %T %Z";
 
 /**
  * Return formatted time stamp
+ * @param value tm structure, local ot GMT
+ * @param usec microseconds
+ * @param format format template string
+ * @return time stamp
+ */
+static std::string TM2String(
+    const struct tm &value,
+    int usec,
+    const std::string &format
+)
+{
+    char dt[64];
+    strftime(dt, sizeof(dt), format.c_str(), &value);
+    if (usec == -1)
+        return std::string(dt);
+    else {
+        std::stringstream ss;
+        ss << std::string(dt) << "." << std::setw(6) << std::setfill('0') << usec;
+        return ss.str();
+    }
+}
+
+/**
+ * Return formatted time stamp local time
  * @param value seconds
  * @param usec microseconds
  * @param format format template string
@@ -35,15 +60,26 @@ std::string ltimeString(
 		value = time(NULL);
 	struct tm tm;
 	localtime_s(&tm, &value);
-	char dt[64];
-	strftime(dt, sizeof(dt), format.c_str(), &tm);
-	if (usec == -1)
-		return std::string(dt);
-	else {
-		std::stringstream ss;
-		ss << std::string(dt) << "." << std::setw(6) << std::setfill('0') << usec;
-		return ss.str();
-	}
+    return TM2String(tm, usec, format);
+}
+
+/**
+ * Return formatted time stamp local time
+ * @param value seconds
+ * @param usec microseconds
+ * @param format format template string
+ * @return time stamp
+ */
+std::string gtimeString(
+        time_t value,
+        int usec,
+        const std::string &format
+) {
+    if (!value)
+        value = time(NULL);
+    struct tm tm;
+    gmtime_s(&tm, &value);
+    return TM2String(tm, usec, format);
 }
 
 /**

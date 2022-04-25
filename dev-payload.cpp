@@ -37,6 +37,7 @@ const std::string programName = "dev-payload";
 const std::string PROG_NAME_DEV_PAYLOAD = "Simulate sending a packet from the end device";
 
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
+#define DEF_GATEWAY_STORAGE_NAME "gateway.json"
 
 static void done()
 {
@@ -86,8 +87,10 @@ void setSignalHandler()
 int parseCmd
 (
 	std::string &identityFileName,
+    std::string &gatewayFileName,
 	std::string &eui,
 	std::string &deviceName,
+    DEVEUI &gwIdentifier,
     std::string &payload,
     std::string &network_server_address,
     bool &jsonOnly,
@@ -97,11 +100,15 @@ int parseCmd
 {
 	// device path
 	struct arg_str *a_identity_fn = arg_str0("i", "identity", "<file>", "identity JSON file. Default ./" DEF_IDENTITY_STORAGE_NAME);
+    // gateway path
+    // struct arg_str *a_gateway_fn = arg_str0("w", "gateway", "<file>", "gateway JSON file. Default ./" DEF_GATEWAY_STORAGE_NAME);
 
 	struct arg_str *a_eui = arg_str0("e", "eui", "<id>", "end-device identifier");
-	struct arg_str *a_device_name = arg_str0("E", "devicename", "<name>", "end-device name.");
+	struct arg_str *a_device_name = arg_str0("E", "name", "<name>", "end-device name.");
 
-	struct arg_str *a_payload_hex = arg_str0("x", "payload", "<hex>", "payload bytes, in hex");
+    struct arg_str *a_gw_id = arg_str0("g", "gw-id", "<id>", "gateway identifier");
+
+    struct arg_str *a_payload_hex = arg_str0("x", "payload", "<hex>", "payload bytes, in hex");
     struct arg_str *a_network_server_address = arg_str0("a", "address", "<IP:port>", "Send packet to network server. Default port 5000");
 
     struct arg_lit *a_json_only = arg_lit0("j", "json-only", "Suppress header (JSON only)");
@@ -110,7 +117,11 @@ int parseCmd
 	struct arg_end *a_end = arg_end(20);
 
 	void *argtable[] = {
-        a_identity_fn, a_eui, a_device_name, a_payload_hex,
+        a_identity_fn,
+        // a_gateway_fn,
+        a_eui, a_device_name,
+        a_gw_id,
+        a_payload_hex,
         a_network_server_address, a_json_only,
 		a_verbosity, a_help, a_end};
 
@@ -130,13 +141,22 @@ int parseCmd
             identityFileName = *a_identity_fn->sval;
         else
             identityFileName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
-
+        /*
+        if (a_gateway_fn->count)
+            gatewayFileName = *a_gateway_fn->sval;
+        else
+            gatewayFileName = getDefaultConfigFileName(DEF_GATEWAY_STORAGE_NAME);
+        */
 		if (a_eui->count) {
 			eui = *a_eui->sval;
 		}
 		if (a_device_name->count) {
 			deviceName = *a_device_name->sval;
 		}
+        if (a_gw_id->count) {
+            string2DEVEUI(gwIdentifier, *a_gw_id->sval);
+        }
+
 		if (a_payload_hex->count) {
 			payload = hex2string(*a_payload_hex->sval);
 		}
@@ -263,8 +283,10 @@ int main(
 {
     std::vector<TDEVEUI> devEUIs;
     std::string identityFileName;
+    std::string gatewayFileName;
     std::string eui;
     std::string deviceName;
+    DEVEUI gwIdentifier;
     std::string payload;
     std::string network_server_address;
     bool jsonOnly;
@@ -275,7 +297,10 @@ int main(
     setSignalHandler();
 #endif
 
-    if (parseCmd(identityFileName, eui, deviceName, payload, network_server_address,
+    if (parseCmd(identityFileName, gatewayFileName,
+                 eui, deviceName,
+                 gwIdentifier,
+                 payload, network_server_address,
                  jsonOnly, verbosity, argc, argv) != 0)
     {
 		exit(ERR_CODE_COMMAND_LINE);
@@ -336,35 +361,31 @@ int main(
         exit(ERR_CODE_INVALID_DEVICE_EUI);
     }
 
+    // gateways list, try find gateway by identifier or name
+    // GatewayList gwList(gatewayFileName);
+
     // compose packet
     SemtechUDPPacket packet;
-    rfmMetaData rfmMD;
-    rfmMD.setDatr("SF7BW125");
-    packet.metadata.push_back(rfmMD);
-    // packet.setFOpts(macdatabin);
-    packet.header.fport = 0;
 
     int fCnt = 0;
-    DeviceId deviceId;
-    deviceId = deviceNetId;
-    packet.payload = packet.mkPacket(MTYPE_UNCONFIRMED_DATA_UP, payload,
-        deviceId, time(NULL), fCnt);
-    if (verbosity > 0)
-        std::cerr << "Payload: " << hexString(packet.payload) << std::endl;
-
-    memmove(packet.prefix.mac, &devEUIs[0].eui, sizeof(DEVEUI));
-    memmove(packet.header.header.devaddr, deviceNetId.devaddr, sizeof(DEVADDR));
-    packet.devId = deviceNetId;
-    //memmove(packet.devId.devEUI, netId.devEUI, sizeof(DEVEUI));
-
+    int power = 14;
+    std::string semtechPacket = packet.mkPacket(MTYPE_UNCONFIRMED_DATA_UP, payload,
+        deviceNetId, time(NULL), fCnt, gwIdentifier, power);
+    if (verbosity > 0) {
+        std::cerr
+            << "Payload: " << hexString(payload) << std::endl
+            << "address: " << DEVADDR2string(packet.header.header.devaddr) << std::endl
+            << "nwkSKey: " << KEY2string(deviceNetId.nwkSKey) << std::endl
+            << "appSKey: " << KEY2string(deviceNetId.appSKey) << std::endl
+            << "gateway: " << DEVEUI2string(packet.prefix.mac) << std::endl;
+    }
 
     int operationResult = 0;
     if (network_server_address.empty()) {
         // just print packet
-        std::string s(packet.toString());
         if (jsonOnly)   // remove semtech prefix
-            s = s.substr(sizeof(SEMTECH_PREFIX_GW));
-        std::cout << s << std::endl;
+            semtechPacket = semtechPacket.substr(sizeof(SEMTECH_PREFIX_GW));
+        std::cout << semtechPacket << std::endl;
     } else {
         // send to the IP address
         if (network_server_address.find(":") == std::string::npos) {
@@ -383,12 +404,11 @@ int main(
             exit(ERR_CODE_SOCKET_CREATE);
         }
 
-        std::string response(packet.toString());
-        ssize_t r = sendto(socket.sock, response.c_str(), response.size(), 0,
+        ssize_t r = sendto(socket.sock, semtechPacket.c_str(), semtechPacket.size(), 0,
            &socket.addrStorage,
            ((socket.addrStorage.sa_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 
-        if (r != response.size()) {
+        if (r != semtechPacket.size()) {
             operationResult = ERR_CODE_SOCKET_WRITE;
             std::cerr << ERR_SOCKET_WRITE
                       << " " << UDPSocket::addrString(&socket.addrStorage)
@@ -401,7 +421,7 @@ int main(
                     << UDPSocket::addrString(&socket.addrStorage)
                     << " " << r << " bytes, "
                     << "packet: " << packet.toJsonString() << std::endl
-                    << ", hex: " << hexString(response)
+                    << ", hex: " << hexString(semtechPacket)
                     << std::endl;
 
         // read ACK response for just sent token

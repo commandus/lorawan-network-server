@@ -499,6 +499,17 @@ private:
 		uint32_t receivedTime,
 		const int power = 14
 	) const;
+    /**
+     * Return uplink Semtech packet
+     * @param payloadString RFM header and encrypted data
+     * @param receivedTime time when gateway received, microseconds, internal counter
+     * @return JSON serialized metadata and payloadString
+     */
+    std::string toRxJsonString(
+        const std::string &payloadString,
+        uint32_t receivedTime
+    ) const;
+
 protected:
 public:
 	std::string payload;
@@ -602,7 +613,7 @@ public:
      * Make Semtech UDP protocol packet request or response
      * @param typ MTYPE_UNCONFIRMED_DATA_DOWN NS->end device, MTYPE_UNCONFIRMED_DATA_UP end-device->NS
      * @param payload payload
-     * @param deviceId deviceId
+     * @param networkIdentity networkIdentity
      * @param time time, seconds
      * @param fCnt fCnt
      * @param power transmission power
@@ -610,11 +621,12 @@ public:
     std::string mkPacket(
         MTYPE typ,
         const std::string &payload,
-        const DeviceId &deviceId,
+        const NetworkIdentity &networkIdentity,
         uint32_t time,
         const int fCnt,
+        const DEVEUI &gwIdentifier,
         const int power = 14
-    ) const;
+    );
 
     /**
 	 * Make Semtech UDP protocol packet Join Accept response

@@ -1375,92 +1375,92 @@ int rfmMetaData::parseRX(
 	std::string &retData,
 	rapidjson::Value &value
 ) {
-	if (value.HasMember(METADATA_RX_NAMES[1])) {
+    if (value.HasMember(METADATA_RX_NAMES[1])) {    // time UTC time of pkt RX, us precision, ISO 8601 'compact' format
 		rapidjson::Value &v = value[METADATA_RX_NAMES[1]];
 		if (v.IsString()) {
 			t = parseDate(v.GetString());
 		}
 	}
-
-	if (value.HasMember(METADATA_RX_NAMES[3])) {
+    // skip tmms GPS time of pkt RX, number of milliseconds since 06.Jan.1980
+	if (value.HasMember(METADATA_RX_NAMES[3])) {    // tmst Internal timestamp of "RX finished" event (32b unsigned)
 		rapidjson::Value &v = value[METADATA_RX_NAMES[3]];
 		if (v.IsUint()) {
 			tmst = v.GetUint();
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[4])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[4]];
+	if (value.HasMember(METADATA_RX_NAMES[4])) {    // freq RX central frequency in MHz (unsigned float, Hz precision)
+        rapidjson::Value &v = value[METADATA_RX_NAMES[4]];
 		if (v.IsDouble()) {
 			freq = v.GetDouble() * 1000000;
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[5])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[5]];
+	if (value.HasMember(METADATA_RX_NAMES[5])) {    // chan Concentrator "IF" channel used for RX (unsigned integer
+        rapidjson::Value &v = value[METADATA_RX_NAMES[5]];
 		if (v.IsInt()) {
 			chan = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[6])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[6]];
+	if (value.HasMember(METADATA_RX_NAMES[6])) {    // rfch Concentrator "RF chain" used for RX (unsigned integer)
+        rapidjson::Value &v = value[METADATA_RX_NAMES[6]];
 		if (v.IsInt()) {
 			rfch = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[7])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[7]];
+	if (value.HasMember(METADATA_RX_NAMES[7])) {    // stat CRC status: 1 = OK, -1 = fail, 0 = no CRC
+        rapidjson::Value &v = value[METADATA_RX_NAMES[7]];
 		if (v.IsInt()) {
 			stat = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[8])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[8]];
+	if (value.HasMember(METADATA_RX_NAMES[8])) {    // modu Modulation identifier "LORA" or "FSK"
+        rapidjson::Value &v = value[METADATA_RX_NAMES[8]];
 		if (v.IsString()) {
 			setModulation(v.GetString());
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[9])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[9]];
+	if (value.HasMember(METADATA_RX_NAMES[9])) {    // datr LoRa data rate identifier (eg. SF12BW500) or FSK datarate (unsigned, in bits per second)
+        rapidjson::Value &v = value[METADATA_RX_NAMES[9]];
 		if (v.IsString()) {
 			setDatr(v.GetString());
 		}
 	}
 	
-	if (value.HasMember(METADATA_RX_NAMES[10])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[10]];
+	if (value.HasMember(METADATA_RX_NAMES[10])) {   // codr LoRa ECC coding rate identifier
+        rapidjson::Value &v = value[METADATA_RX_NAMES[10]];
 		if (v.IsString()) {
 			setCodr(v.GetString());
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[11])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[11]];
+	if (value.HasMember(METADATA_RX_NAMES[11])) {   // rssi RSSI in dBm (signed integer, 1 dB precision)
+        rapidjson::Value &v = value[METADATA_RX_NAMES[11]];
 		if (v.IsInt()) {
 			rssi = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[12])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[12]];
+	if (value.HasMember(METADATA_RX_NAMES[12])) {   // lsnr Lora SNR ratio in dB (signed float, 0.1 dB precision)
+        rapidjson::Value &v = value[METADATA_RX_NAMES[12]];
 		if (v.IsFloat()) {
 			lsnr = v.GetFloat();
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[13])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[13]];
+	if (value.HasMember(METADATA_RX_NAMES[13])) {   // size RF packet payload size in bytes (unsigned integer
+        rapidjson::Value &v = value[METADATA_RX_NAMES[13]];
 		if (v.IsInt()) {
 			retSize = v.GetInt();
 		}
 	}
 
-	if (value.HasMember(METADATA_RX_NAMES[14])) {
-		rapidjson::Value &v = value[METADATA_RX_NAMES[14]];
+	if (value.HasMember(METADATA_RX_NAMES[14])) {   // data Base64 encoded RF packet payload, padded
+        rapidjson::Value &v = value[METADATA_RX_NAMES[14]];
 		if (v.IsString()) {
 			try {
 				// base64
@@ -2156,7 +2156,7 @@ std::string SemtechUDPPacket::metadataToJsonString() const
 {
 	std::string d(serialize2RfmPacket());
 	std::stringstream ss;
-	ss << "{\"rxpk\":[";
+	ss << "{\"" << METADATA_RX_NAMES[0] << "\":[";  // rxpk
 	bool needColon = false;
 	for (std::vector<rfmMetaData>::const_iterator it(metadata.begin()); it != metadata.end(); it++) {
 		if (needColon)
@@ -2415,6 +2415,7 @@ uint64_t SemtechUDPPacket::getBestGatewayAddress(
 }
 
 /**
+ * Return downlink Semtech packet (from server to end-device)
  * @param payloadString RFM header and encrypted data
  * @param receivedTime time when gateway received, microseconds, internal counter
  * @param power transmission power
@@ -2437,9 +2438,9 @@ std::string SemtechUDPPacket::toTxJsonString
 
 	std::stringstream ss;
 	ss << std::string((const char *) &pullPrefix, sizeof(SEMTECH_PREFIX))
-		<< "{\"txpk\":{";
+		<< "{\"" << METADATA_TX_NAMES[0] << "\":{"; // txpk
 	if (receivedTime == 0)
-		ss << "\"" << METADATA_TX_NAMES[1] << "\":true";
+		ss << "\"" << METADATA_TX_NAMES[1] << "\":true";    // send immediately
 	else {
 		uint32_t sendTime = receivedTime + 1000000;
 		ss << "\"" << METADATA_TX_NAMES[2] << "\":" << sendTime;
@@ -2458,6 +2459,49 @@ std::string SemtechUDPPacket::toTxJsonString
         << ",\"" << METADATA_TX_NAMES[14] << "\":\"" << base64_encode(payloadString) << "\"}}";
 	
 	return ss.str();
+}
+
+/**
+ * Return uplink Semtech packet (from end-device to server)
+ * @param payloadString RFM header and encrypted data
+ * @param receivedTime time when gateway received, microseconds, internal counter
+ * @return JSON serialized metadata and payloadString
+ */
+std::string SemtechUDPPacket::toRxJsonString
+(
+    const std::string &payloadString,
+    uint32_t receivedTime
+) const
+{
+    if (metadata.size() == 0)
+        return "";
+    int rfCh = 0;
+    int metadataIdx = 0;
+    SEMTECH_PREFIX_GW gwPrefix;
+    memmove(&gwPrefix, &prefix, sizeof(SEMTECH_PREFIX_GW));
+    gwPrefix.tag = 0; // PUSH_DATA 0x00
+
+    std::stringstream ss;
+    ss << std::string((const char *) &gwPrefix, sizeof(SEMTECH_PREFIX_GW))
+       << "{\"" << METADATA_RX_NAMES[0] << "\": {"; // rxpk
+    std::string dt = gtimeString(receivedTime, -1, "%FT%T");
+    ss << "\"" << METADATA_RX_NAMES[1] << "\": \"" << dt;   // time UTC time of pkt RX, us precision, ISO 8601 'compact' format
+    // skip tmms GPS time of pkt RX, number of milliseconds since 06.Jan.1980
+    ss << "\", \"" << METADATA_RX_NAMES[3] << "\": " << 0;   // tmst Internal timestamp of "RX finished" event (32b unsigned)
+    ss << ", \"" << METADATA_RX_NAMES[4] << "\": " << metadata[metadataIdx].frequency(); // freq RX central frequency in MHz (unsigned float, Hz precision), e.g. 868.900
+    // "rfch": 0. @see https://github.com/brocaar/chirpstack-network-server/issues/19
+    ss << ", \"" << METADATA_RX_NAMES[5] << "\": " << (int) metadata[metadataIdx].chan; // chan Concentrator "IF" channel used for RX (unsigned integer
+    ss << ", \"" << METADATA_RX_NAMES[6] << "\": " << (int) metadata[metadataIdx].rfch;  // rfch Concentrator "RF chain" used for RX (unsigned integer)
+    ss << ", \"" << METADATA_RX_NAMES[7] << "\": " << (int) metadata[metadataIdx].stat;	// stat CRC status: 1 = OK, -1 = fail, 0 = no CRC
+    ss << ", \"" << METADATA_RX_NAMES[8] << "\": \"" << metadata[metadataIdx].modulation();	// modu Modulation identifier "LORA" or "FSK"
+    ss << "\", \"" << METADATA_RX_NAMES[9] << "\": \"" << metadata[metadataIdx].datr();	// datr LoRa data rate identifier (eg. SF12BW500) or FSK datarate (unsigned, in bits per second)
+    ss << "\", \"" << METADATA_RX_NAMES[10] << "\": \"" << metadata[metadataIdx].codr();	// codr LoRa ECC coding rate identifier
+    ss << "\", \"" << METADATA_RX_NAMES[11] << "\": " << metadata[metadataIdx].rssi;	// rssi RSSI in dBm (signed integer, 1 dB precision)
+    ss << ", \"" << METADATA_RX_NAMES[12] << "\": " << metadata[metadataIdx].lsnr;	// lsnr Lora SNR ratio in dB (signed float, 0.1 dB precision)
+    ss << ", \"" << METADATA_RX_NAMES[13] << "\": " << payloadString.size();	// size RF packet payload size in bytes (unsigned integer
+    ss << ", \"" << METADATA_RX_NAMES[14] << "\": \"" << base64_encode(payloadString);	// data Base64 encoded RF packet payload, padded
+    ss << "\"}}";
+    return ss.str();
 }
 
 /**
@@ -2536,32 +2580,46 @@ std::string SemtechUDPPacket::mkPullResponse(
 /**
  * Make Semtech UDP protocol packet request or response
  * @param data payload
- * @param version LoraWAN version
- * @param key key
+ * @param networkIdentity device address, keys
+ * @param receivedTime time
+ * @param fCnt fCnt
+ * @param gwIdentifier gateway identifier
  * @param power transmission power
  */
 std::string SemtechUDPPacket::mkPacket(
         MTYPE typ,
         const std::string &payload,
-        const DeviceId &deviceId,
+        const NetworkIdentity &networkIdentity,
         uint32_t receivedTime,
         const int fCnt,
+        const DEVEUI &gwIdentifier,
         const int power
-) const
+)
 {
+    header.fport = 0;
+    devId = networkIdentity;
+    memmove(header.header.devaddr, networkIdentity.devaddr, sizeof(DEVADDR));
+    // set gateway
+    memmove(prefix.mac, &gwIdentifier, sizeof(DEVEUI));
+
+    rfmMetaData rfmMD;
+    rfmMD.setDatr("SF7BW125");
+    metadata.push_back(rfmMD);
+
+    int direction = typ & 1;    // MTYPE_UNCONFIRMED_DATA_UP -> 0, MTYPE_CONFIRMED_DATA_UP -> 0, MTYPE_UNCONFIRMED_DATA_DOWN -> 1, MTYPE_CONFIRMED_DATA_DOWN -> 1,..
     // copy macheader, addr, fCnt form received packet
     RFMHeader rfmHeader(*getRfmHeader());
 
     // encrypt frame payload
-    int direction = 1;	// downlink
     std::string frmPayload(payload);
     size_t payloadSize = frmPayload.size();
-    if (deviceId.version.minor == 1) {
-        encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);	// network key
+    if (networkIdentity.version.minor == 1) {
+        encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, networkIdentity.nwkSKey);	// network key
+    } else {
+        encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, networkIdentity.nwkSKey);	// network key
     }
 
     std::stringstream sMsg;
-
     rfmHeader.header.macheader.f.mtype = typ;
     rfmHeader.header.fctrl.i = 0;
     rfmHeader.header.fcnt = fCnt;
@@ -2581,11 +2639,15 @@ std::string SemtechUDPPacket::mkPacket(
 
     std::string msg = sMsg.str();
     // calc mic
-    uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);
+    uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction,
+                                rfmHeader.header.devaddr, networkIdentity.nwkSKey);
     sMsg << std::string((char *) &mic, 4);
-    return toTxJsonString(sMsg.str(), receivedTime, power);
-}
 
+    if (direction)  // downlink from server to end-device
+        return toTxJsonString(sMsg.str(), receivedTime, power);
+    else
+        return toRxJsonString(sMsg.str(), receivedTime); // uplink from end-device to server
+}
 
 /**
 	 * Make Semtech UDP protocol packet Join Accept response
