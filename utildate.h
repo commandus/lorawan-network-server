@@ -11,7 +11,7 @@
 #endif
 
 /**
- * Format time
+ * Format time local time
  * @param value Unix epoch time, seconds
  * @param usec -1: do not add to the tail of formatted date
  */
@@ -19,6 +19,17 @@ std::string ltimeString(
 	time_t value,
 	int usec,
 	const std::string &format
+);
+
+/**
+ * Format time GMT time
+ * @param value Unix epoch time, seconds
+ * @param usec -1: do not add to the tail of formatted date
+ */
+std::string gtimeString(
+        time_t value,
+        int usec,
+        const std::string &format
 );
 
 /**
