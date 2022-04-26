@@ -304,7 +304,22 @@
 #define MSG_PREPARE                     "Prepare INSERT to database "
 #define MSG_WS_START					"Start web service "
 #define MSG_WS_START_SUCCESS			"web service started successfully "
-
+#define MSG_IDENTITY_START				"Start identity service.."
+#define MSG_IDENTITY_INIT               "Initialize identity service NetId: "
+#define MSG_GW_STAT_FILE_START          "Start gateway statistics service file.."
+#define MSG_GW_STAT_POST_START          "Start gateway statistics service post.."
+#define MSG_GW_STAT_INIT                "Initialize gateway statistics service.."
+#define MSG_DEV_STAT_START              "Start device statistics service.."
+#define MSG_DEV_STAT_INIT               "Initialize device statistics service.."
+#define MSG_REGIONAL_SET_START          "Start regional settings .."
+#define MSG_REGIONAL_SET_INIT           "Initialize regional settings "
+#define MSG_DEV_HISTORY_START           "Start device history service.."
+#define MSG_DEV_HISTORY_INIT            "Initialize device history service.."
+#define MSG_RECEIVER_QUEUE_START        "Start received message queue service .."
+#define MSG_RECEIVER_QUEUE_INIT         "Initialize receiver message queue service .."
+#define MSG_PKT2_START                  "Start LoRaWAN packet processor.."
+#define MSG_LISTENER_DAEMON_RUN         "Listener daemon run .."
+#define MSG_LISTENER_RUN                "Listener run .."
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

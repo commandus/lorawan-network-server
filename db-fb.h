@@ -39,7 +39,7 @@ public:
 		const std::string &statement
 	);
 
-		//
+    //
 	// cursor
 	//
 	virtual int cursorOpen(
