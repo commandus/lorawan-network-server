@@ -19,6 +19,11 @@ DatabaseFirebird::~DatabaseFirebird()
 	}
 }
 
+// @see http://docwiki.embarcadero.com/InterBase/2020/en/Isc_interprete()
+// isc_interprete() deprecated
+
+#define isc_interprete(buf, status) fb_interpret(buf, sizeof(buf), status)
+
 std::string DatabaseFirebird::errstr() 
 {
 	std::stringstream ss;
@@ -27,10 +32,8 @@ std::string DatabaseFirebird::errstr()
 		long SQLCODE = isc_sqlcode(status);
 		isc_sql_interprete(SQLCODE, err_buf, sizeof(err_buf));
 		ss << SQLCODE << ", " << err_buf;
-		
-		// @see http://docwiki.embarcadero.com/InterBase/2020/en/Isc_interprete()
-		// deprecated
-		long *pvector = status;
+
+        const ISC_STATUS *pvector = status;
 		isc_interprete(err_buf, &pvector);
 		ss << err_buf << std::endl;
 		while (isc_interprete(err_buf, &pvector))

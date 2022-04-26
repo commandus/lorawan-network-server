@@ -618,7 +618,7 @@ public:
      * @param fCnt fCnt
      * @param power transmission power
      */
-    std::string mkPacket(
+    std::string mkPushDataPacket(
         MTYPE typ,
         const std::string &payload,
         const NetworkIdentity &networkIdentity,

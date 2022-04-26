@@ -98,6 +98,8 @@ static DeviceHistoryService *deviceHistoryService = nullptr;
 static RegionalParameterChannelPlans *regionalParameterChannelPlans = nullptr;
 static DeviceChannelPlan *deviceChannelPlan = nullptr;
 
+static char *TAB = TAB;
+
 // pkt2 environment
 #ifdef ENABLE_PKT2
 static void* parserEnv = nullptr;
@@ -355,17 +357,17 @@ void onLog(
 	}
 	struct timeval t;
 	gettimeofday(&t, nullptr);
-	// "\033[1;31mbold red text\033[0m\n";
-	std::cerr << timeval2string(t) << " " 
+    std::cerr << timeval2string(t) << " ";
 #ifdef ENABLE_TERM_COLOR
-		<< "\033[" << logLevelColor(level)  << "m"
-#endif		
-		<< std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left
-		<< logLevelString(level) 
+    if (isatty(2))  // if stderr is piped to the file, do not put ANSI color to the file
+        std::cerr << "\033[" << logLevelColor(level)  << "m";
+#endif
+    std::cerr<< std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
 #ifdef ENABLE_TERM_COLOR
-		<< "\033[0m"
-#endif		
-		<< message << std::endl;
+    if (isatty(2))
+        std::cerr << "\033[0m";
+#endif
+    std::cerr << message << std::endl;
 }
 
 void onGatewayStatDump(
@@ -395,9 +397,7 @@ int main(
 {
 	config = new Configuration("");
 	if (parseCmd(config, argc, argv) != 0)
-	{
 		exit(ERR_CODE_COMMAND_LINE);
-	}
 	// reload config if required
 	bool hasConfig = false;
 	if (!config->configFileName.empty()) {
@@ -441,7 +441,7 @@ int main(
 	if (config->serverConfig.verbosity > 2)
 		std::cerr << MSG_GATEWAY_LIST << gatewayList->toDescriptionTableString() << std::endl;
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start identity service..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_IDENTITY_START);
 	// Start identity service
 	switch (config->serverConfig.storageType) {
 		case IDENTITY_STORAGE_LMDB:
@@ -459,7 +459,7 @@ int main(
     identityService->setNetworkId(config->serverConfig.netid);
 
     std::stringstream ss;
-    ss << "Initialize identity service NetId: " << identityService->getNetworkId()->toString() << "..";
+    ss << MSG_IDENTITY_INIT  << identityService->getNetworkId()->toString() << "..";
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
     int rs = identityService->init(config->serverConfig.identityStorageName, nullptr);
     if (rs) {
@@ -471,18 +471,18 @@ int main(
     // Start gateway statistics service
     switch (config->serverConfig.gwStatStorageType) {
         case GW_STAT_FILE_JSON:
-            onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start gateway statistics service file..");
+            onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_FILE_START);
             gatewayStatService = new GatewayStatServiceFile();
             break;
         case GW_STAT_POST:
-            onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start gateway statistics service post..");
+            onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_POST_START);
             gatewayStatService = new GatewayStatServicePost();
             break;
         default:
             gatewayStatService = nullptr;
     }
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize gateway statistics service..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_INIT);
     if (gatewayStatService) {
         rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, nullptr);
         if (rs) {
@@ -492,7 +492,7 @@ int main(
         }
     }
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start device statistics service..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_START);
     // Start device statistics service
     switch (config->serverConfig.deviceStatStorageType) {
         case DEVICE_STAT_FILE_JSON:
@@ -505,7 +505,7 @@ int main(
             deviceStatService = nullptr;
     }
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize device statistics service..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_INIT);
     if (deviceStatService) {
         rs = deviceStatService->init(config->serverConfig.logDeviceStatisticsFileName, nullptr);
         if (rs) {
@@ -522,20 +522,20 @@ int main(
         size_t c = 0;
 		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
 			std::cerr
-                << "\t" << activation2string(it->activation)
-                << "\t" << DEVADDR2string(it->devaddr)
-                << "\t" << DEVEUI2string(it->devEUI)
-                << "\t" << DEVICENAME2string(it->name);
+                << TAB << activation2string(it->activation)
+                << TAB << DEVADDR2string(it->devaddr)
+                << TAB << DEVEUI2string(it->devEUI)
+                << TAB << DEVICENAME2string(it->name);
             if (identityService->canControlService(it->devaddr))
-				std::cerr << "\tmaster";
+				std::cerr << TAB << "master";
 			std::cerr << std::endl;
             if (c > MAX_DEVICE_LIST_COUNT) {
-                std::cerr << "\t..." << std::endl;
+                std::cerr << TAB << ".." << std::endl;
                 break;
             }
             c++;
 		}
-        std::cerr << "\t" << identityService->size() << " " << MSG_DEVICE_COUNT << std::endl;
+        std::cerr << TAB << identityService->size() << " " << MSG_DEVICE_COUNT << std::endl;
 	}
 
     switch (config->serverConfig.deviceStatStorageType) {
@@ -547,10 +547,10 @@ int main(
             break;
     }
 
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start device history service..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_START);
     // std::cerr << "Device history name: " << config->serverConfig.deviceHistoryStorageName << std::endl;
     deviceHistoryService = new JsonFileDeviceHistoryService();
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize device history service..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_INIT);
     rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, nullptr);
     if (rs) {
         std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
@@ -560,9 +560,9 @@ int main(
     }
 
     // load regional settings
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start regional settings ..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_START);
     regionalParameterChannelPlans = new RegionalParameterChannelPlanFileJson();
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize regional settings "
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_INIT
         + config->serverConfig.regionalSettingsStorageName + "..");
 
     // initialize regional settings
@@ -595,7 +595,7 @@ int main(
     }
 
 	// Start received message queue service
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start received message queue service ..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_START);
 	void *options = nullptr;
 	DirTxtReceiverQueueServiceOptions dirOptions;
 	switch (config->serverConfig.messageQueueType) {
@@ -614,7 +614,7 @@ int main(
 			
 		break;
 	}
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize receiver message queue service ..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_INIT);
 	rs = receiverQueueService->init(config->serverConfig.queueStorageName, options);
 	if (rs) {
 		std::cerr << ERR_INIT_QUEUE << rs << ": " << strerror_lorawan_ns(rs)
@@ -656,7 +656,7 @@ int main(
             hasConn = hasConn && (r == 0);
         }
 		if (config->serverConfig.verbosity > 2) {
-			std::cerr << "\t" << it->name  << "\t " << MSG_CONNECTION
+			std::cerr << TAB << it->name  << TAB << MSG_CONNECTION
                 << (hasConn ? MSG_CONN_ESTABLISHED : MSG_CONN_FAILED);
             if (r)
                 std::cerr <<  ": " << strerror_lorawan_ns(r);
@@ -734,7 +734,7 @@ int main(
 				std::string n = it->first;
 				if (n.empty())
 					n = MSG_DEFAULT_DATABASE;
-				std::cerr << "\t" << n << std::endl;
+				std::cerr << TAB << n << std::endl;
 			}
 			std::cerr << std::endl;
 		}
@@ -772,7 +772,7 @@ int main(
 #endif
 
 	// Set up processor
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start LoRaWAN packet processor..");
+    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_PKT2_START);
 	processor = new LoraPacketProcessor();
 	processor->setLogger(onLog);
 	processor->setIdentityService(identityService);
@@ -824,7 +824,7 @@ int main(
 
 	if (config->serverConfig.daemonize)
 	{
-        onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Listener daemon run ..");
+        onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
 		char wd[PATH_MAX];
 		std::string progpath = getcwd(wd, PATH_MAX);
 		if (config->serverConfig.verbosity > 1)
@@ -839,7 +839,7 @@ int main(
 #else
 		setSignalHandler();
 #endif
-        onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Listener run ..");
+        onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
 		run();
 		done();
 	}

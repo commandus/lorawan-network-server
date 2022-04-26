@@ -2434,7 +2434,7 @@ std::string SemtechUDPPacket::toTxJsonString
 	int metadataIdx = 0;
 	SEMTECH_PREFIX pullPrefix;
 	memmove(&pullPrefix, &prefix, sizeof(SEMTECH_PREFIX));
-	pullPrefix.tag = 3; // PULL_RESP, after receiving PULL_DATA
+	pullPrefix.tag = SEMTECH_GW_PULL_RESP; // PULL_RESP, after receiving PULL_DATA
 
 	std::stringstream ss;
 	ss << std::string((const char *) &pullPrefix, sizeof(SEMTECH_PREFIX))
@@ -2479,7 +2479,7 @@ std::string SemtechUDPPacket::toRxJsonString
     int metadataIdx = 0;
     SEMTECH_PREFIX_GW gwPrefix;
     memmove(&gwPrefix, &prefix, sizeof(SEMTECH_PREFIX_GW));
-    gwPrefix.tag = 0; // PUSH_DATA 0x00
+    gwPrefix.tag = SEMTECH_GW_PUSH_DATA; // PUSH_DATA 0x00
 
     std::stringstream ss;
     ss << std::string((const char *) &gwPrefix, sizeof(SEMTECH_PREFIX_GW))
@@ -2579,18 +2579,19 @@ std::string SemtechUDPPacket::mkPullResponse(
 
 /**
  * Make Semtech UDP protocol packet request or response
+ * @param typ MTYPE_UNCONFIRMED_DATA_DOWN NS->end device, MTYPE_UNCONFIRMED_DATA_UP end-device->NS
  * @param data payload
  * @param networkIdentity device address, keys
- * @param receivedTime time
+ * @param time time
  * @param fCnt fCnt
  * @param gwIdentifier gateway identifier
  * @param power transmission power
  */
-std::string SemtechUDPPacket::mkPacket(
+std::string SemtechUDPPacket::mkPushDataPacket(
         MTYPE typ,
         const std::string &payload,
         const NetworkIdentity &networkIdentity,
-        uint32_t receivedTime,
+        uint32_t time,
         const int fCnt,
         const DEVEUI &gwIdentifier,
         const int power
@@ -2606,13 +2607,15 @@ std::string SemtechUDPPacket::mkPacket(
     rfmMD.setDatr("SF7BW125");
     metadata.push_back(rfmMD);
 
-    int direction = typ & 1;    // MTYPE_UNCONFIRMED_DATA_UP -> 0, MTYPE_CONFIRMED_DATA_UP -> 0, MTYPE_UNCONFIRMED_DATA_DOWN -> 1, MTYPE_CONFIRMED_DATA_DOWN -> 1,..
-    // copy macheader, addr, fCnt form received packet
     RFMHeader rfmHeader(*getRfmHeader());
+    rfmHeader.header.macheader.f.mtype = typ;
+    rfmHeader.header.fctrl.i = 0;
+    rfmHeader.header.fcnt = fCnt;
 
     // encrypt frame payload
     std::string frmPayload(payload);
     size_t payloadSize = frmPayload.size();
+    int direction = rfmHeader.header.macheader.f.mtype & 1;    // MTYPE_UNCONFIRMED_DATA_UP -> 0, MTYPE_CONFIRMED_DATA_UP -> 0, MTYPE_UNCONFIRMED_DATA_DOWN -> 1, MTYPE_CONFIRMED_DATA_DOWN -> 1,..\    // copy macheader, addr, fCnt form received packet
     if (networkIdentity.version.minor == 1) {
         encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, networkIdentity.nwkSKey);	// network key
     } else {
@@ -2620,11 +2623,10 @@ std::string SemtechUDPPacket::mkPacket(
     }
 
     std::stringstream sMsg;
-    rfmHeader.header.macheader.f.mtype = typ;
-    rfmHeader.header.fctrl.i = 0;
-    rfmHeader.header.fcnt = fCnt;
 
-    if (payloadSize <= 15) {
+    bool forcePayload = true;
+
+    if (forcePayload || payloadSize > 15) {
         // use FOpts
         rfmHeader.header.fctrl.f.foptslen = payloadSize;
         // device controlled by service
@@ -2644,9 +2646,9 @@ std::string SemtechUDPPacket::mkPacket(
     sMsg << std::string((char *) &mic, 4);
 
     if (direction)  // downlink from server to end-device
-        return toTxJsonString(sMsg.str(), receivedTime, power);
+        return toTxJsonString(sMsg.str(), time, power);
     else
-        return toRxJsonString(sMsg.str(), receivedTime); // uplink from end-device to server
+        return toRxJsonString(sMsg.str(), time); // uplink from end-device to server
 }
 
 /**
