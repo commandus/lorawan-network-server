@@ -8,22 +8,18 @@
 #include <cstring>
 #include <fstream>
 
-#include <sys/time.h>
 #include <csignal>
 #include <unistd.h>
 #include <sys/types.h>
-#include <climits>
 #include <cerrno>
 #include <sys/select.h>
 
 #include "argtable3/argtable3.h"
 
-#include "platform.h"
 #include "utilstring.h"
 
 #include "errlist.h"
 #include "utillora.h"
-#include "utilstring.h"
 #include "udp-socket.h"
 
 #include "identity-service-file-json.h"
@@ -90,7 +86,7 @@ int parseCmd
     std::string &gatewayFileName,
 	std::string &eui,
 	std::string &deviceName,
-    DEVEUI &gwIdentifier,
+    uint64_t &gwIdentifier,
     std::string &payload,
     std::string &network_server_address,
     bool &jsonOnly,
@@ -154,7 +150,7 @@ int parseCmd
 			deviceName = *a_device_name->sval;
 		}
         if (a_gw_id->count) {
-            string2DEVEUI(gwIdentifier, *a_gw_id->sval);
+            gwIdentifier = str2gatewayId(*a_gw_id->sval);
         }
 
 		if (a_payload_hex->count) {
@@ -286,7 +282,7 @@ int main(
     std::string gatewayFileName;
     std::string eui;
     std::string deviceName;
-    DEVEUI gwIdentifier;
+    uint64_t gwIdentifier;
     std::string payload;
     std::string network_server_address;
     bool jsonOnly;

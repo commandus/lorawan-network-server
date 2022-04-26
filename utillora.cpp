@@ -2174,6 +2174,13 @@ void SemtechUDPPacket::setGatewayId(
 	setMAC(prefix.mac, value);
 }
 
+void SemtechUDPPacket::setGatewayId(
+    uint64_t value
+) {
+    uint64_t val = HTON8(value);
+    memmove(prefix.mac, &val, sizeof(DEVEUI));
+}
+
 std::string SemtechUDPPacket::getDeviceEUI() const
 {
 	return DEVEUI2string(devId.devEUI);
@@ -2483,7 +2490,7 @@ std::string SemtechUDPPacket::toRxJsonString
 
     std::stringstream ss;
     ss << std::string((const char *) &gwPrefix, sizeof(SEMTECH_PREFIX_GW))
-       << "{\"" << METADATA_RX_NAMES[0] << "\": {"; // rxpk
+       << "{\"" << METADATA_RX_NAMES[0] << "\": [{"; // rxpk
     std::string dt = gtimeString(receivedTime, -1, "%FT%T");
     ss << "\"" << METADATA_RX_NAMES[1] << "\": \"" << dt;   // time UTC time of pkt RX, us precision, ISO 8601 'compact' format
     // skip tmms GPS time of pkt RX, number of milliseconds since 06.Jan.1980
@@ -2500,7 +2507,7 @@ std::string SemtechUDPPacket::toRxJsonString
     ss << ", \"" << METADATA_RX_NAMES[12] << "\": " << metadata[metadataIdx].lsnr;	// lsnr Lora SNR ratio in dB (signed float, 0.1 dB precision)
     ss << ", \"" << METADATA_RX_NAMES[13] << "\": " << payloadString.size();	// size RF packet payload size in bytes (unsigned integer
     ss << ", \"" << METADATA_RX_NAMES[14] << "\": \"" << base64_encode(payloadString);	// data Base64 encoded RF packet payload, padded
-    ss << "\"}}";
+    ss << "\"}]}";
     return ss.str();
 }
 
@@ -2593,7 +2600,7 @@ std::string SemtechUDPPacket::mkPushDataPacket(
         const NetworkIdentity &networkIdentity,
         uint32_t time,
         const int fCnt,
-        const DEVEUI &gwIdentifier,
+        const  uint64_t gwIdentifier,
         const int power
 )
 {
@@ -2601,7 +2608,7 @@ std::string SemtechUDPPacket::mkPushDataPacket(
     devId = networkIdentity;
     memmove(header.header.devaddr, networkIdentity.devaddr, sizeof(DEVADDR));
     // set gateway
-    memmove(prefix.mac, &gwIdentifier, sizeof(DEVEUI));
+    setGatewayId(gwIdentifier);
 
     rfmMetaData rfmMD;
     rfmMD.setDatr("SF7BW125");

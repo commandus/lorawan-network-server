@@ -572,6 +572,7 @@ public:
 	void getDeviceAddr(DEVADDR &retval) const;
 	void setDeviceAddr(const std::string &value);
 	void setGatewayId(const std::string &value);
+    void setGatewayId(uint64_t value);
 	void setNetworkSessionKey(const std::string &value);
 	void setApplicationSessionKey(const std::string &value);
 	void setFrameCounter(uint16_t value);
@@ -624,7 +625,7 @@ public:
         const NetworkIdentity &networkIdentity,
         uint32_t time,
         const int fCnt,
-        const DEVEUI &gwIdentifier,
+        const uint64_t gwIdentifier,
         const int power = 14
     );
 
