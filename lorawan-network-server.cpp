@@ -98,7 +98,7 @@ static DeviceHistoryService *deviceHistoryService = nullptr;
 static RegionalParameterChannelPlans *regionalParameterChannelPlans = nullptr;
 static DeviceChannelPlan *deviceChannelPlan = nullptr;
 
-static char *TAB = TAB;
+static const char *TAB = "\t";
 
 // pkt2 environment
 #ifdef ENABLE_PKT2

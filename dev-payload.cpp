@@ -369,7 +369,7 @@ int main(
 
     int fCnt = 0;
     int power = 14;
-    std::string semtechPacket = packet.mkPushDataPacket(MTYPE_UNCONFIRMED_DATA_DOWN, payload,
+    std::string semtechPacket = packet.mkPushDataPacket(MTYPE_UNCONFIRMED_DATA_UP, payload,
         deviceNetId, time(NULL), fCnt, gwIdentifier, power);
     if (verbosity > 0) {
         std::cerr
