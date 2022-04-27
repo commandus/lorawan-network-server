@@ -26,6 +26,31 @@ make
 
 You cam use CMake with care, it may be inconsistent. You need check missed sources in the CMake script.
 
+Main goal of this project is to parse arbitrary binary data using PKT2 library. Unfortunately PKT2 library
+request manual description of data structure.
+
+Meanwhile if data use one of
+
+- [Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc7049.txt)
+- [CAYEENE](https://github.com/myDevicesIoT/cayenne-docs/blob/master/docs/LORA.md#cayenne-low-power-payload)
+
+serialization intended for send small data over LPWAN networks.
+
+You need install libraries:
+
+-
+
+```
+sudo apt install
+```
+
+and configure using 
+
+- --enable-cbor
+- --enable-cayeene
+
+options.
+
 ## Components
 
 ```
@@ -80,8 +105,10 @@ Gateways
 
 ## Run
 
+Before first run create configuration file then run 
+
 ```
-./lorawan-network-server 84.237.104.128:2000
+./lorawan-network-server -c lorawan-network-server.json
 ```
 
 ## Build
@@ -93,9 +120,9 @@ You can use
 
 build system.
 
-Make sure you have automake installed:
+Make sure you have automake and protoc (Protobuf compiler) installed:
 ```
-apt install autoconf build-essential libtool libprotobuf-dev
+apt install autoconf libtool build-essential libprotobuf-dev 
 ```
 
 Before you start, first you need download  [pkt2 library](https://github.com/commandus/pkt2.git)
@@ -106,6 +133,7 @@ libprotoc-dev libunwind-dev dependencies:
 ```
 apt install libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-dev libnanomsg-dev libprotoc-dev
 ```
+
 
 Finally, make all
 ```
@@ -122,7 +150,7 @@ pkt2.pb.h target is required to generate protobuf c++ files.
 
 Automake, autoconf, libtool, gcc or cmake must be installed first.
 
-Also, must install at least one backend database library, ot install all of them:
+Also, must install at least one backend relation database library, ot install all of them:
 
 ```
 sudo apt install liblmdb-dev sqlite3 libsqlite3-dev libmysqlclient-dev firebird-dev
@@ -135,6 +163,11 @@ firebird-dev libcurl4-openssl-dev protobuf-compiler libgoogle-glog-dev libsnmp-d
 ```
 
 If 'libmysqlclient-dev' package is not available in repository, replace with package 'libmariadb-dev'.
+
+If MQTT backend enabled (./configure --enable-mqtt), install [Eclipse Paho MQTT C++ library](https://github.com/eclipse/paho.mqtt.cpp):
+```
+sudo apt install libpaho-mqtt-dev
+```
 
 To do cmake installed first run:
 
