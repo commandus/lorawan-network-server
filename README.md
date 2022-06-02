@@ -24,12 +24,12 @@ cd lorawan-network-server
 make
 ```
 
-You cam use CMake with care, it may be inconsistent. You need check missed sources in the CMake script.
+You can use CMake with care, it may be inconsistent. You need check missed sources in the CMake script.
 
 Main goal of this project is to parse arbitrary binary data using PKT2 library. Unfortunately PKT2 library
 request manual description of data structure.
 
-Meanwhile if data use one of
+Meanwhile, if data use one of
 
 - [Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc7049.txt)
 - [CAYEENE](https://github.com/myDevicesIoT/cayenne-docs/blob/master/docs/LORA.md#cayenne-low-power-payload)
@@ -675,7 +675,7 @@ A- NwkAddr
 
 ## lora-print
 
-lora-print utility parseRX packet received from the Semtech gateway and try to decode payload.
+lora-print utility parse packet received from the Semtech gateway and try to decode payload.
 
 Mandatory option is one of
 
