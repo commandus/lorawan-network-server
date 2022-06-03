@@ -137,7 +137,7 @@ int parseCmd(
 		a_sort_asc = arg_strn("s", "asc", "<field-name>", 0, 100, "list command, sort by field ascending."),
 		a_sort_desc = arg_strn("S", "desc", "<field-name>", 0, 100, "list command, sort by field descending."),
 		
-		a_addr = arg_str0("a", "addr", "<addr>", "insert, device network address"),
+		a_addr = arg_str0("a", "addr", "<hex>", "insert, device network address"),
 		a_fport = arg_int0("f", "fport", "<0.233>", "port field. 0- MAC. Default 1.."),
 		a_identityStorageName = arg_str0("i", "id-name", "<name>", "default " DEF_IDENTITY_STORAGE_NAME),
 		a_identityStorageType = arg_str0("y", "id-type", "json|txt|lmdb", "default " DEF_IDENTITY_STORAGE_TYPE),
@@ -422,7 +422,11 @@ void doInsert
 	int verbosity
 )
 {
-    dbAny->prepare(env, hex2string(hexData));
+    uint32_t addr;
+    DEVADDR a;
+    string2DEVADDR(a, config->addr);
+    DEVADDRINT ai(a);
+    dbAny->prepare(env, ai.a, hex2string(hexData));
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
 		
 		DatabaseNConfig *db = dbAny->find(*it);

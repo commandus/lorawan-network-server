@@ -175,7 +175,7 @@ void ReceiverQueueProcessor::put2databases() {
             entry.setProperties(properties, db->config->properties);
 
             if (!prepared) {
-                databaseByConfig->prepare(parserEnv, entry.value.payload);
+                databaseByConfig->prepare(parserEnv, entry.value);
                 if (onLog) {
                     std::stringstream ss;
                     ss << MSG_PREPARE << r

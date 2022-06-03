@@ -51,6 +51,7 @@ public:
 	std::string identityStorageName;
 	IDENTITY_STORAGE identityStorageType;
     DEVEUI devEUI;                      // used for getting key to decipher Join Accept frame
+    uint32_t devAddr;                   // default 42
 	int outputFormat;					// 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
 	int verbosity;						// verbosity level
 };
@@ -67,7 +68,7 @@ int parseCmd(
 	char *argv[])
 {
 	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, *a_payload_hex,
-            *a_payload_base64, *a_dev_eui, *a_identityStorageName, *a_identityStorageType;
+            *a_payload_base64, *a_dev_eui, *a_dev_addr, *a_identityStorageName, *a_identityStorageType;
 	struct arg_int *a_output_format;
 	struct arg_lit *a_payload_json, *a_verbosity, *a_help;
 	struct arg_end *a_end;
@@ -80,6 +81,7 @@ int parseCmd(
         a_payload_json = arg_lit0("j", "json", "Read JSON from stdin"),
 
         a_dev_eui = arg_str0("e", "eui", "<hex>", "Device EUI, used to decipher Join Accept frame"),
+        a_dev_addr = arg_str0("a", "addr", "<hex>", "Device address. Default 2a (decimal 42"),
 
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
 		a_message_type = arg_str0("m", "message", "<pkt.msg>", "force nessage type packet and name"),
@@ -131,6 +133,14 @@ int parseCmd(
             string2DEVEUI(config->devEUI, *a_dev_eui->sval);
         } else {
             memset(&config->devEUI, '\0', sizeof(DEVEUI));
+        }
+        if (a_dev_addr->count) {
+            DEVADDR a;
+            string2DEVADDR(a, *a_dev_addr->sval);
+            DEVADDRINT ai(a);
+            config->devAddr = ai.a;
+        } else {
+            config->devAddr = 42;
         }
 		for (int i = 0; i < a_dbname->count; i++) {
 			config->dbname.push_back(a_dbname->sval[i]);
@@ -217,7 +227,7 @@ void doInsert
 	const std::map<std::string, std::string> *properties
 )
 {
-    databaseByConfig->prepare(env, binData);
+    databaseByConfig->prepare(env, config->devAddr, binData);
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
 		
 		DatabaseNConfig *db = databaseByConfig->find(*it);

@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <cstring>
 
+#define ENABLE_LOGGER_HUFFMAN   1
+
 #include <sys/time.h>
 #include <signal.h>
 #include <unistd.h>
@@ -44,6 +46,7 @@
 
 #ifdef ENABLE_LOGGER_HUFFMAN
 #include "logger-huffman/logger-parse.h"
+#include "logger-loader.h"
 #endif
 
 #include "receiver-queue-processor.h"
@@ -763,8 +766,9 @@ int main(
 	}
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
+    DbLoggerKosaPacketsLoader loggerKosaPacketsLoader;
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser logger-huffman..");
-	loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames, onLog);
+	loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames, onLog, &loggerKosaPacketsLoader);
 	if (!loggerParserEnv) {
 		std::cerr << ERR_INIT_LOGGER_HUFFMAN_PARSER << std::endl;
 		exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);

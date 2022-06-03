@@ -78,7 +78,7 @@ DatabaseNConfig::~DatabaseNConfig()
 }
 
 std::string DatabaseNConfig::tableName(
-    __attribute__((unused)) void *env,
+    void *env,
 	const std::string &message
 ) const
 {
@@ -212,11 +212,23 @@ int DatabaseNConfig::close() const
 
 void DatabaseByConfig::prepare(
     void *env,
-    const std::string &data
+    const ReceiverQueueValue &value
 )
 {
 #ifdef ENABLE_LOGGER_HUFFMAN
-    parsePacket(env, data);
+    DEVADDRINT a(value.addr);
+    parsePacket(env, a.a, value.payload);
+#endif
+}
+
+void DatabaseByConfig::prepare(
+    void *env,
+    uint32_t addr,
+    const std::string &payload
+)
+{
+#ifdef ENABLE_LOGGER_HUFFMAN
+    parsePacket(env, addr, payload);
 #endif
 }
 

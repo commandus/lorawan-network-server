@@ -164,7 +164,8 @@ nobase_dist_include_HEADERS = \
 	third_party/base64/base64.h \
 	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
 	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
-	third_party/logger-huffman/logger-parse.h \
+	third_party/logger-huffman/logger-parse.h third_party/logger-huffman/logger-collection.h \
+	third_party/logger-huffman/logger-huffman.h \
 	third_party/lorawan-ws/lorawan-ws.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h db-json.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
@@ -185,8 +186,8 @@ lorawan_network_server_SOURCES = \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp  \
 	regional-parameter-channel-plan-file-json.cpp \
+	logger-loader.cpp \
 	third_party/argtable3/argtable3.c
-	
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
@@ -201,7 +202,6 @@ mac_gw_SOURCES = \
 	db-any.cpp  $(BACKEND_DB_SRC) \
 	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
 	third_party/argtable3/argtable3.c
-	
 
 mac_gw_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
