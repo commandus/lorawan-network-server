@@ -98,6 +98,7 @@ class Configuration {
 		std::string databaseConfigFileName;
         std::vector<std::string> databaseExtraConfigFileNames;
 		std::string protoPath;
+        std::string loggerDatabaseName;
 		int gatewayPort;
 		ServerConfig serverConfig;
 		WebServiceConfig wsConfig;

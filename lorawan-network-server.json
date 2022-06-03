@@ -4,6 +4,7 @@
 	"databaseExtraConfigFileNames": [
 		"/home/andrei/src/logger-passport/tests/passport"
 	],
+	"loggerDatabaseName": "sqlite-logger",
 	"server": {
 		"identityStorageName": "identity.json",
 		"storageType": "json",
