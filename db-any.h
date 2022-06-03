@@ -3,6 +3,8 @@
 
 #include "db-intf.h"
 #include "pkt2/database-config.h"
+#include "receiver-queue-service.h"
+
 #ifdef ENABLE_PKT2
 #include "pkt2/str-pkt2.h"
 #endif
@@ -42,7 +44,22 @@ public:
 	DatabaseByConfig(const ConfigDatabases *config);
 	~DatabaseByConfig();
 
-    void prepare(void *env, const std::string &data);
+    /**
+     * Prepare received packet. Device can send two or more packets.
+     * Preparation means collect packets. After all packets received, collector returns value to be inserted into the database.
+     * @param env logger packet collector descriptor.  Receives and logger passport descriptor returned by initLoggerParser()
+     * @param value received value payload and address
+     */
+    void prepare(void *env, const ReceiverQueueValue &value);
+
+    /**
+     * Prepare received packet. Device can send two or more packets.
+     * Preparation means collect packets. After all packets received, collector returns value to be inserted into the database.
+     * @param env logger packet collector descriptor.  Receives and logger passport descriptor returned by initLoggerParser()
+     * @param addr LoRaWAN address
+     * @param payload received value payload
+     */
+    void prepare(void *env, uint32_t addr, const std::string &payload);
 
     size_t count() const;
 	/**

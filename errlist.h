@@ -1,3 +1,5 @@
+#ifndef ERRLIST_H_
+#define ERRLIST_H_	1
 
 // syslog
 #ifdef _MSC_VER
@@ -325,3 +327,5 @@ const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);
 
 const char *strerror_lorawan_ns(int errcode);
+
+#endif

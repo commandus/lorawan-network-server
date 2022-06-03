@@ -7,14 +7,14 @@
 #include <functional>
 
 typedef std::function<void(
-		void *env,
-		int level,
-		int modulecode,
-		int errorcode,
-		const std::string &message)>
+    void *env,
+    int level,
+    int modulecode,
+    int errorcode,
+    const std::string &message)>
 LOG_CALLBACK;
 
-class LoggerKosaCollection;
+class LoggerKosaCollector;
 
 /**
  * Return CREATE table SQL clause in 
@@ -26,8 +26,7 @@ class LoggerKosaCollection;
 int sqlCreateTable(
     std::vector <std::string> &retClauses,
     int sqlDialect,
-    const std::map<std::string, std::string> *extraValues = NULL
-    
+    const std::map<std::string, std::string> *extraValues = nullptr
 );
 
 /**
@@ -39,18 +38,34 @@ int sqlCreateTable(
  */
 std::string sqlCreateTable1(
     int sqlDialect,
-    const std::map<std::string, std::string> *extraValues = NULL,
+    const std::map<std::string, std::string> *extraValues = nullptr,
     const std::string &separator = " "
 );
 
+/**
+ * Initialize one passport directory or file
+ * @param passportDir passport root directory
+ * @param onLog callback function to report an errors
+ * @param loggerKosaPacketsLoader packet loader LoggerKosaPacketsLoader class object pointer
+ * @return "passport" descriptor
+ */
 void *initLoggerParser(
-    const std::string &passportDir,     ///< passport files root
-    LOG_CALLBACK onLog                  ///< log callback
+    const std::string &passportDir,     ///< passport files root, can be empty
+    LOG_CALLBACK onLog = nullptr,                 ///< log callback
+    void *loggerKosaPacketsLoader = nullptr
 );
 
+/**
+ * Initialize more than one passport directory(or files)
+ * @param passportDirs list of passport files or directories
+ * @param onLog callbac function to report an errors
+ * @param loggerKosaPacketsLoader packet loader LoggerKosaPacketsLoader class object pointer
+ * @return "passport" descriptor
+ */
 void *initLoggerParser(
-    const std::vector<std::string> &passportDirs,     ///< passport files root
-    LOG_CALLBACK onLog                  ///< log callback
+    const std::vector<std::string> &passportDirs,     ///< passport files roots list or passport files
+    LOG_CALLBACK onLog = nullptr,                               ///< log callback
+    void *loggerKosaPacketsLoader = nullptr
 );
 
 void flushLoggerParser(void *env);
@@ -66,11 +81,11 @@ void *getLoggerKosaCollection(void *env);
  */
 std::string loggerParserState(void *env, int format);
 
-int parsePacket(void *env, const std::string &packet);
+int parsePacket(void *env, uint32_t addr, const std::string &packet);
 
 /**
  * Return INSERT clause(s) in retClauses
- * @param env desciptor
+ * @param env "passport" descriptor
  * @param retClauses vector of INSERT statements
  * @param sqlDialect 0..3
  * @param extraValues  <optional field name>=value
@@ -92,8 +107,8 @@ void rmCompletedOrExpired(
 );
 
 /**
- * Return INSERT clause(s) as one string
- * @param env desciptor
+ * sqlInsertPackets wrapper returns INSERT clause(s) as one string
+ * @param env descriptor
  * @param sqlDialect 0..3
  * @param extraValues  <optional field name>=value
  * @param separator  separator string default space
@@ -107,8 +122,10 @@ std::string sqlInsertPackets1(
 );
 
 /**
+ * Received packet can be saved in the "raw" table for reference
  * Return INSERT raw data (as hex)
  * @param sqlDialect 0..3
+ * @param value data
  * @param extraValues  <optional field name>=value
  * @return empty string if fails
  */
@@ -116,6 +133,32 @@ std::string sqlInsertRaw(
     int sqlDialect,
     const std::string &value,
     const std::map<std::string, std::string> *extraValues = NULL
+);
+
+/**
+ * Return SQL SELECT statement returning packets as hex strings separated by space.
+ * Execute generated SQL query an get first field string value from the first row.
+ * This value pass to the parseSQLBaseMeasurement().
+ * Get parsed values and construct plume measurements.
+ * @param sqlDialect SQL dialect number
+ * @param addr LoRaWAN device address 4 bytes long integer
+ * @return SQL SELECT statement returning packets as hex strings separated by space9
+ */
+std::string buildSQLBaseMeasurementSelect(
+    int sqlDialect,
+    uint32_t addr
+);
+
+/**
+ * Read hex strings, return binary strings.
+ * Before parseSQLBaseMeasurement() call buildSQLBaseMeasurementSelect() and get hex strings.
+ * @param retClauses return binary packet(s)
+ * @param value
+ * @return SQL SELECT statement returning packets as hex strings separated by space9
+ */
+bool parseSQLBaseMeasurement(
+    std::vector <std::string> &retClauses,
+    const std::string &value
 );
 
 #endif

@@ -31,7 +31,7 @@
 class ReceiverQueueKey {
 	public:
 		timeval time;	// key 1
-		int id;			// key 2 just in case of of two simultaneous events
+		int id;			// key 2 just in case of two simultaneous events
 		ReceiverQueueKey();
 		ReceiverQueueKey(const ReceiverQueueKey &value);
 		void clear();

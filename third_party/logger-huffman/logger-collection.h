@@ -317,7 +317,16 @@ public:
     void updateKosaAfterCopy();
 };
 
-#include "logger-kosa-loader.h"
+class LoggerKosaPacketsLoader {
+public:
+    /**
+     * Load last kosa record with "base" values by address
+     * @param retVal set kosa packets if found
+     * @param addr kosa address
+     * @return true- kosa with "base" record found
+     */
+    virtual bool load(LoggerKosaPackets &retVal, uint32_t addr) = 0;
+};
 
 /** 
  * Make an collection of kosa
