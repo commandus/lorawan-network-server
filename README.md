@@ -266,6 +266,7 @@ cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scr
 - gatewaysFileName Gateways list. Default ~/gateway.json
 - databaseConfigFileName databases list default "dbs.js"
 - databaseExtraConfigFileNames list of extra configuration files and subdirectories, e.g. device passport files folder path
+- loggerDatabaseName database name used by logger. Database name assigned in file (see databaseConfigFileName option).
 - protoPath protobuf message description files directory path. Default "proto"
 - server Network server properties, including end-device list served by the server
 - configFileName (optional) Redirect config file to another one
@@ -347,6 +348,12 @@ post example:
         "gwStatStorageType": "post",
         "logGWStatisticsFileName": "http://localhost:50002/post.php"
 ```
+
+Option "loggerDatabaseName" is used to assign database where logger-huffman write measurement.
+
+Option "loggerDatabaseName" is valid in case of logger-huffman library linked (./configure --enable-logger-huffman). 
+
+These measurements read from the database to restore "delta" packets from "base" packets.  
 
 #### Message queue
 

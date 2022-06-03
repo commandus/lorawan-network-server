@@ -129,6 +129,7 @@
 #define ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER -606
 #define ERR_CODE_WS_START_FAILED			-607
 #define ERR_CODE_NO_DEFAULT_WS_DATABASE		-608
+#define ERR_CODE_INIT_LOGGER_HUFFMAN_DB     -609
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -247,6 +248,7 @@
 #define ERR_INIT_LOGGER_HUFFMAN_PARSER  "Error initialize logger-huffman parser"
 #define ERR_WS_START_FAILED				"Start web service failed "
 #define ERR_NO_DEFAULT_WS_DATABASE		"No default web service database name "
+#define ERR_INIT_LOGGER_HUFFMAN_DB      "No huffman-logger database assigned"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -322,6 +324,7 @@
 #define MSG_PKT2_START                  "Start LoRaWAN packet processor.."
 #define MSG_LISTENER_DAEMON_RUN         "Listener daemon run .."
 #define MSG_LISTENER_RUN                "Listener run .."
+#define MSG_INIT_LOGGER_HUFFMAN         "Initialize payload parser logger-huffman, database "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

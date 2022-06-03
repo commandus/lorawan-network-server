@@ -356,6 +356,11 @@ int Configuration::parse(
 			if (gwp.IsInt())
 				gatewayPort = gwp.GetInt();
 		}
+		if (doc.HasMember("loggerDatabaseName")) {
+			rapidjson::Value &ldn =  doc["loggerDatabaseName"];
+			if (ldn.IsString())
+				loggerDatabaseName = ldn.GetString();
+		}
 	} else
 		return ERR_CODE_INVALID_JSON;
 	return r;
@@ -363,14 +368,15 @@ int Configuration::parse(
 
 Configuration::Configuration() 
 	: configFileName(""), gatewaysFileName(""), 
-	databaseConfigFileName(""), protoPath(""), gatewayPort(4242)
+	databaseConfigFileName(""), protoPath(""), gatewayPort(4242),
+	loggerDatabaseName("")
 {
 }
 
 Configuration::Configuration(
 	const char* value
 )
-	: configFileName(""), gatewaysFileName("")
+	: configFileName(""), gatewaysFileName(""), loggerDatabaseName("")
 {
 	parse(value);
 }

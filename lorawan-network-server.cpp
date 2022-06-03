@@ -8,8 +8,6 @@
 #include <iomanip>
 #include <cstring>
 
-#define ENABLE_LOGGER_HUFFMAN   1
-
 #include <sys/time.h>
 #include <signal.h>
 #include <unistd.h>
@@ -640,7 +638,7 @@ int main(
 	if (config->serverConfig.verbosity > 2)
 		std::cerr << MSG_DATABASE_LIST << std::endl;
 
-	// helper class to find out database by name or sequnce number (id)
+	// helper class to find out database by name or sequence number (id)
 	dbByConfig = new DatabaseByConfig(&configDatabases);
 	// check out database connectivity
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Check database availability ..");
@@ -767,7 +765,22 @@ int main(
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
     DbLoggerKosaPacketsLoader loggerKosaPacketsLoader;
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser logger-huffman..");
+    bool hasLoggerKosaPacketsLoader = false;
+    // set database to load from
+    if (!config->loggerDatabaseName.empty()) {
+        DatabaseNConfig *kldb = dbByConfig->find(config->loggerDatabaseName);
+        if (kldb) {
+            loggerKosaPacketsLoader.setDatabase(kldb->db);
+            hasLoggerKosaPacketsLoader = true;
+        }
+    }
+    std::stringstream sskldb;
+    if (hasLoggerKosaPacketsLoader) {
+        sskldb << MSG_INIT_LOGGER_HUFFMAN << config->loggerDatabaseName;
+        onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
+    } else {
+        onLog(nullptr, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
+    }
 	loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames, onLog, &loggerKosaPacketsLoader);
 	if (!loggerParserEnv) {
 		std::cerr << ERR_INIT_LOGGER_HUFFMAN_PARSER << std::endl;

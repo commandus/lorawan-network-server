@@ -89,7 +89,7 @@ std::string DatabaseNConfig::tableName(
 		return it->second;
 }
 
-static int sqlDialectByName(const std::string &name)
+int sqlDialectByName(const std::string &name)
 {
     if (name == "postgresql")
         return 0;

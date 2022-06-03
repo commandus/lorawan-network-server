@@ -9,6 +9,13 @@
 #include "pkt2/str-pkt2.h"
 #endif
 
+/**
+ * Return SQL dialect number by the name
+ * @param name SQL dialect name
+ * @return SQL dialect number
+ */
+int sqlDialectByName(const std::string &name);
+
 class DatabaseNConfig
 {
 public:
