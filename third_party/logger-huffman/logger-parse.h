@@ -23,7 +23,7 @@ class LoggerKosaCollector;
  * @param extraValues  <optional field name>=<SQL type name>
  * @return count of statements, <0- error
  */
-int sqlCreateTable(
+int loggerSQLCreateTable(
     std::vector <std::string> &retClauses,
     int sqlDialect,
     const std::map<std::string, std::string> *extraValues = nullptr
@@ -36,7 +36,7 @@ int sqlCreateTable(
  * @param separator  separator string default space
  * @return empty string if fails
  */
-std::string sqlCreateTable1(
+std::string loggerSQLCreateTable1(
     int sqlDialect,
     const std::map<std::string, std::string> *extraValues = nullptr,
     const std::string &separator = " "
@@ -81,7 +81,7 @@ void *getLoggerKosaCollection(void *env);
  */
 std::string loggerParserState(void *env, int format);
 
-int parsePacket(void *env, uint32_t addr, const std::string &packet);
+int loggerParsePacket(void *env, uint32_t addr, const std::string &packet);
 
 /**
  * Return INSERT clause(s) in retClauses
@@ -91,7 +91,7 @@ int parsePacket(void *env, uint32_t addr, const std::string &packet);
  * @param extraValues  <optional field name>=value
  * @return 0- success
  */
-int sqlInsertPackets(
+int loggerSQLInsertPackets(
     void *env,
     std::vector <std::string> &retClauses,
     int sqlDialect,
@@ -102,19 +102,19 @@ int sqlInsertPackets(
  * Remove completed or expired items
  * @param env descriptor
  */
-void rmCompletedOrExpired(
+void loggerRemoveCompletedOrExpired(
     void *env
 );
 
 /**
- * sqlInsertPackets wrapper returns INSERT clause(s) as one string
+ * loggerSQLInsertPackets wrapper returns INSERT clause(s) as one string
  * @param env descriptor
  * @param sqlDialect 0..3
  * @param extraValues  <optional field name>=value
  * @param separator  separator string default space
  * @return empty string if fails
  */
-std::string sqlInsertPackets1(
+std::string loggerSQLInsertPackets1(
     void *env,
     int sqlDialect,
     const std::map<std::string, std::string> *extraValues = NULL,
@@ -129,7 +129,7 @@ std::string sqlInsertPackets1(
  * @param extraValues  <optional field name>=value
  * @return empty string if fails
  */
-std::string sqlInsertRaw(
+std::string loggerSQLInsertRaw(
     int sqlDialect,
     const std::string &value,
     const std::map<std::string, std::string> *extraValues = NULL
@@ -138,25 +138,25 @@ std::string sqlInsertRaw(
 /**
  * Return SQL SELECT statement returning packets as hex strings separated by space.
  * Execute generated SQL query an get first field string value from the first row.
- * This value pass to the parseSQLBaseMeasurement().
+ * This value pass to the loggerParseSQLBaseMeasurement().
  * Get parsed values and construct plume measurements.
  * @param sqlDialect SQL dialect number
  * @param addr LoRaWAN device address 4 bytes long integer
  * @return SQL SELECT statement returning packets as hex strings separated by space9
  */
-std::string buildSQLBaseMeasurementSelect(
+std::string loggerBuildSQLBaseMeasurementSelect(
     int sqlDialect,
     uint32_t addr
 );
 
 /**
  * Read hex strings, return binary strings.
- * Before parseSQLBaseMeasurement() call buildSQLBaseMeasurementSelect() and get hex strings.
+ * Before loggerParseSQLBaseMeasurement() call loggerBuildSQLBaseMeasurementSelect() and get hex strings.
  * @param retClauses return binary packet(s)
  * @param value
  * @return SQL SELECT statement returning packets as hex strings separated by space9
  */
-bool parseSQLBaseMeasurement(
+bool loggerParseSQLBaseMeasurement(
     std::vector <std::string> &retClauses,
     const std::string &value
 );

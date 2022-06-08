@@ -96,7 +96,7 @@ class Configuration {
 		std::string configFileName;
 		std::string gatewaysFileName;
 		std::string databaseConfigFileName;
-        std::vector<std::string> databaseExtraConfigFileNames;
+        std::vector<std::string> databaseExtraConfigFileNames;  ///< logger passport directories
 		std::string protoPath;
         std::string loggerDatabaseName;
 		int gatewayPort;
