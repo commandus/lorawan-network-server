@@ -2633,7 +2633,7 @@ std::string SemtechUDPPacket::mkPushDataPacket(
 
     bool forcePayload = true;
 
-    if (forcePayload || payloadSize > 15) {
+    if ((!forcePayload) && (payloadSize <= 15)) {
         // use FOpts
         rfmHeader.header.fctrl.f.foptslen = payloadSize;
         // device controlled by service
@@ -2642,7 +2642,7 @@ std::string SemtechUDPPacket::mkPushDataPacket(
     } else {
         // use FrmPayload
         sMsg << rfmHeader.toBinary();
-        sMsg << (uint8_t) 0;	// fport 0- MAC payload
+        sMsg << (uint8_t) 1;	// fport >0- payload (no MAC)
     }
     sMsg << frmPayload;
 

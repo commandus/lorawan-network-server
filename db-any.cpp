@@ -116,7 +116,7 @@ std::string DatabaseNConfig::createClause
     int dialect = 0;
     if (db)
         dialect = sqlDialectByName(db->type);
-    return sqlCreateTable1(dialect);
+    return loggerSQLCreateTable1(dialect);
 #endif
 }
 
@@ -129,21 +129,22 @@ int DatabaseNConfig::insertClauses(
     const std::map<std::string, std::string> *properties
 )
 {
+    int r = 0;
 #ifdef ENABLE_PKT2
 	std::string s = parsePacket(env, inputFormat,
        config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
        config->getDialect(), data, message,
 		&config->tableAliases, &config->fieldAliases, properties);
     retClauses.push_back(s);
-    return 0;
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
     int dialect = 0;
     if (db)
         dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
-    retClauses.push_back(sqlInsertRaw(dialect, data, properties));
-    return sqlInsertPackets(env, retClauses, dialect, properties);
+    retClauses.push_back(loggerSQLInsertRaw(dialect, data, properties));
+    r = loggerSQLInsertPackets(env, retClauses, dialect, properties);
 #endif
+    return r;
 }
 
 int DatabaseNConfig::createTable(void *env, const std::string &message)
@@ -165,11 +166,11 @@ int DatabaseNConfig::insert(
 	const std::map<std::string, std::string> *properties
 )
 {
+    int r = 0;
 	std::vector<std::string> clauses;
     insertClauses(clauses, env, message, inputFormat, data, properties);
 	if (clauses.empty())
 		return ERR_CODE_INVALID_PACKET;
-    int r = 0;
     for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
         r = db->exec(*it);
         if (r) {
@@ -215,9 +216,13 @@ void DatabaseByConfig::prepare(
     const ReceiverQueueValue &value
 )
 {
+#ifdef ENABLE_PKT2
+    // nothing to do
+#endif
+
 #ifdef ENABLE_LOGGER_HUFFMAN
     DEVADDRINT a(value.addr);
-    parsePacket(env, a.a, value.payload);
+    loggerParsePacket(env, a.a, value.payload);
 #endif
 }
 
@@ -228,7 +233,7 @@ void DatabaseByConfig::prepare(
 )
 {
 #ifdef ENABLE_LOGGER_HUFFMAN
-    parsePacket(env, addr, payload);
+    loggerParsePacket(env, addr, payload);
 #endif
 }
 

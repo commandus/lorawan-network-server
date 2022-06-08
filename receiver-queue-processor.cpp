@@ -178,10 +178,13 @@ void ReceiverQueueProcessor::put2databases() {
                 databaseByConfig->prepare(parserEnv, entry.value);
                 if (onLog) {
                     std::stringstream ss;
-                    ss << MSG_PREPARE << r
-                       << " database id " << db->config->id << " " << db->config->name
-                       << ": " << db->db->errmsg
-                       << ", payload: " << hexString(entry.value.payload);
+                    ss << MSG_PREPARE << db->config->id << " (" << db->config->name
+                       << ") ";
+                    if (!db->db->errmsg.empty()) {
+                        ss << ERR_MESSAGE << db->db->errmsg;
+                    }
+                    ss
+                       << ": " << hexString(entry.value.payload);
                     onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, r, ss.str());
                 }
                 prepared = true;
@@ -196,22 +199,19 @@ void ReceiverQueueProcessor::put2databases() {
                        << ": " << db->db->errmsg
                        << ", SQL statement: " << db->lastErroneousStatement
                        << ", payload: " << hexString(entry.value.payload);
-#if ENABLE_LOGGER_HUFFMAN
-                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0)
-                        << " loggerParserState json: " << loggerParserState(parserEnv, 4);
+#ifdef ENABLE_LOGGER_HUFFMAN
+                    ss <<  " loggerParserState: " << loggerParserState(parserEnv, 4);
 #endif
                     onLog(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
                 } else {
                     ss << MSG_DB_INSERT
                        << " database id " << db->config->id << " " << db->config->name;
-#if ENABLE_LOGGER_HUFFMAN                       
-                    ss << " loggerParserState pg: " << loggerParserState(parserEnv, 0)
-                        << " loggerParserState json: " << loggerParserState(parserEnv, 4);
+#ifdef ENABLE_LOGGER_HUFFMAN
+                    ss << " loggerParserState: " << loggerParserState(parserEnv, 4);
 #endif
                     onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
                 }
             }
-
             db->close();
         }
         // remove database from queue if database connection is ok
@@ -225,8 +225,8 @@ void ReceiverQueueProcessor::put2databases() {
             }
         }
     }
-#if ENABLE_LOGGER_HUFFMAN    
-    rmCompletedOrExpired(parserEnv);
+#ifdef ENABLE_LOGGER_HUFFMAN
+    loggerRemoveCompletedOrExpired(parserEnv);
 #endif
 }
 

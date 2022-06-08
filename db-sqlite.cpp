@@ -69,10 +69,14 @@ int DatabaseSQLite::exec(
 	const std::string &statement
 )
 {
-	char *zErrMsg = 0;
+	char *zErrMsg = nullptr;
 	int r = sqlite3_exec(db, statement.c_str(), sqlite3Callback, NULL, &zErrMsg);
-  	if (r)
-		errmsg = std::string(zErrMsg);
+  	if (r != SQLITE_OK) {
+          if (zErrMsg) {
+              errmsg = std::string(zErrMsg);
+              sqlite3_free(zErrMsg);
+          }
+    }
 	return r;
 }
 
@@ -82,10 +86,14 @@ int DatabaseSQLite::select
 	const std::string &statement
 )
 {
-	char *zErrMsg = 0;
+	char *zErrMsg = nullptr;
 	int r = sqlite3_exec(db, statement.c_str(), sqlite3Callback, &retval, &zErrMsg);
-  	if (r)
-		errmsg = std::string(zErrMsg);
+    if (r != SQLITE_OK) {
+        if (zErrMsg) {
+            errmsg = std::string(zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+    }
 	return r;
 }
 

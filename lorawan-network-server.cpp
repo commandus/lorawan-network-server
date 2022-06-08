@@ -774,8 +774,8 @@ int main(
             hasLoggerKosaPacketsLoader = true;
         }
     }
-    std::stringstream sskldb;
     if (hasLoggerKosaPacketsLoader) {
+        std::stringstream sskldb;
         sskldb << MSG_INIT_LOGGER_HUFFMAN << config->loggerDatabaseName;
         onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
     } else {

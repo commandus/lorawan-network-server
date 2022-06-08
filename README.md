@@ -620,7 +620,7 @@ Id  | Channel Plan | Common Name
 - proto-db
 - mac-gw
 - mac-ns
-- dev-payload
+- dev-payload simulate sending Semtech gateway protocol packet from the end device to the network server.
 
 ### print-netid
 
@@ -929,15 +929,25 @@ Identity JSON file specified in the -i option.
 
 If -i omitted, dev-payload try ./identity.json file by default.
 
+```
 All options are:
-- -i, --identity=<file>     identity JSON file
-- -e, --eui=<id>            end-device identifier
-- -E, --devicename=<name>   end-device name.
-- -x, --payload=<hex>       payload bytes, in hex
-- -a, --address=IP:port     Send packet to network server. Default port 5000
-- -j --json-only            Suppress header (JSON only)
-- -v, --verbose             Set verbosity level
-- -?, --help                Show this help
+-i, --identity=<file>     identity JSON file. Default ./identity.json
+-e, --eui=<id>            end-device identifier
+-E, --name=<name>         end-device name.
+-g, --gw-id=<id>          gateway identifier
+<hex>                     payload bytes
+-c, --fcnt=<number>       FCnt value, default 0
+-a, --address=<IP:port>   Send packet to network server. Default port 5000
+-j, --json-only           Suppress header (JSON only)
+-v, --verbose             Set verbosity level
+-?, --help                Show this help
+```
+
+Send 3 packets to the network server 127.0.0.1:5000 example:
+```
+./dev-payload -i identity.json -e 3231323549304c0a  -g 6cc3743eed46 -a "127.0.0.1:5000" -c 123 486226000203261301001900000000010000000000000000 49260202000000ff00000000000000000000000000000000 492602030000
+```
+It simulates sending 3 packets via gateway 6cc3743eed46 with FCnt 123, 124 and 125 values.
 
 It prints Semtech gateway protocol packet to be sent to the network server if no -a option is provided.
 

@@ -264,7 +264,7 @@ bool ReceiverQueueService::isDuplicated
 		fcnts[v] = ft;
 	} else {
 		// address exists
-		// TODO if addresses changed, neead to restart servuce
+		// TODO if addresses changed, need to restart service
 		if (packet.getRfmHeader()->fcnt == fcnts[v].fcnt) {
 			// duplicated, ignore time
 			return true;
