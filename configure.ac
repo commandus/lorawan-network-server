@@ -71,48 +71,48 @@ AM_CONDITIONAL([ENABLE_MDBX], [test x$enable_mdbx = xtrue])
 # backend databases
 
 # by default SQLite is on
-AC_ARG_ENABLE([db-sqlite],
-[  --enable-db-sqlite    Turn on SQLite backend],
+AC_ARG_ENABLE([dbSqlite3-sqlite],
+[  --enable-dbSqlite3-sqlite    Turn on SQLite backend],
 [case "${enableval}" in
   yes) db_sqlite=true ;;
   no)  db_sqlite=false ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-sqlite]) ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbSqlite3-sqlite]) ;;
 esac],[db_sqlite=true])
 AM_CONDITIONAL([ENABLE_DB_SQLITE], [test x$db_sqlite = xtrue])
 
-AC_ARG_ENABLE([db-postgres],
-[  --enable-db-postgres    Turn on PostgreSQL backend],
+AC_ARG_ENABLE([dbSqlite3-postgres],
+[  --enable-dbSqlite3-postgres    Turn on PostgreSQL backend],
 [case "${enableval}" in
   yes) db_postgres=true ;;
   no)  db_postgres=false ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-postgres]) ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbSqlite3-postgres]) ;;
 esac],[db_postgres=true])
 AM_CONDITIONAL([ENABLE_DB_POSTGRES], [test x$db_postgres = xtrue])
 
-AC_ARG_ENABLE([db-mysql],
-[  --enable-db-mysql    Turn on MySQL backend],
+AC_ARG_ENABLE([dbSqlite3-mysql],
+[  --enable-dbSqlite3-mysql    Turn on MySQL backend],
 [case "${enableval}" in
   yes) db_mysql=true ;;
   no)  db_mysql=false ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-mysql]) ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbSqlite3-mysql]) ;;
 esac],[db_mysql=false])
 AM_CONDITIONAL([ENABLE_DB_MYSQL], [test x$db_mysql = xtrue])
 
-AC_ARG_ENABLE([db-firebird],
-[  --enable-db-firebird    Turn on logger-huffmanFirebirdSQL backend],
+AC_ARG_ENABLE([dbSqlite3-firebird],
+[  --enable-dbSqlite3-firebird    Turn on logger-huffmanFirebirdSQL backend],
 [case "${enableval}" in
   yes) db_firebird=true ;;
   no)  db_firebird=false ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-firebird]) ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbSqlite3-firebird]) ;;
 esac],[db_firebird=false])
 AM_CONDITIONAL([ENABLE_DB_FIREBIRD], [test x$db_firebird = xtrue])
 
-AC_ARG_ENABLE([db-json],
-[  --enable-db-json    Turn on JSON POST web service backend],
+AC_ARG_ENABLE([dbSqlite3-json],
+[  --enable-dbSqlite3-json    Turn on JSON POST web service backend],
 [case "${enableval}" in
   yes) db_json=true ;;
   no)  db_json=false ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-json]) ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbSqlite3-json]) ;;
 esac],[db_json=true])
 AM_CONDITIONAL([ENABLE_DB_JSON], [test x$db_json = xtrue])
 

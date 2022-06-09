@@ -9,8 +9,11 @@
  */
 class DatabaseSQLite : public DatabaseIntf
 {
+private:
+    // for re-open
+    std::string connection;
 public:
-	sqlite3 *db;
+	sqlite3 *dbSqlite3;
 
 	DatabaseSQLite();
 	DatabaseSQLite(const DatabaseSQLite &value);
@@ -75,6 +78,7 @@ public:
 		void *stmt
 	) override;
 
+    int reopen();
 };
 
 #endif
