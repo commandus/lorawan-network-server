@@ -1,6 +1,6 @@
 /**
  * @brief Database helper utility
- * @file proto-db.cpp
+ * @file proto-dbSqlite3.cpp
  * Copyright (c) 2021 andrey.ivanov@ikfia.ysn.ru Yu.G. Shafer Institute of Cosmophysical Research and Aeronomy of Siberian Branch of the Russian Academy of Sciences
  * MIT license
  */
@@ -33,8 +33,8 @@
 
 #include "config-filename.h"
 
-const std::string programName = "proto-db";
-#define DEF_CONFIG_FILE_NAME ".proto-db.json"
+const std::string programName = "proto-dbSqlite3";
+#define DEF_CONFIG_FILE_NAME ".proto-dbSqlite3.json"
 #define DEF_IDENTITY_STORAGE_NAME	"identity.json"
 #define DEF_IDENTITY_STORAGE_TYPE	"json"
 

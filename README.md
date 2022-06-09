@@ -189,15 +189,15 @@ sudo make install
 ./configure has several options to enable backend database support:
 - --enable-logger-huffman (on by default)
 - --enable-pkt2 (off by default)
-- --enable-db-sqlite=true (on by default)
-- --enable-db-postgres
-- --enable-db-mysql
-- --enable-db-firebird
+- --enable-dbSqlite3-sqlite=true (on by default)
+- --enable-dbSqlite3-postgres
+- --enable-dbSqlite3-mysql
+- --enable-dbSqlite3-firebird
 
 Configure all supported databases and logger huffman:
 
 ```
-./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres --enable-db-mysql --enable-db-firebird
+./configure --enable-logger-huffman --enable-dbSqlite3-sqlite --enable-dbSqlite3-postgres --enable-dbSqlite3-mysql --enable-dbSqlite3-firebird
 ```
 
 You must have database client and developer's tools (include files and libraries at least) installed on the computer.
@@ -617,7 +617,7 @@ Id  | Channel Plan | Common Name
 
 - print-netid Print NetId details
 - lora-print
-- proto-db
+- proto-dbSqlite3
 - mac-gw
 - mac-ns
 - dev-payload simulate sending Semtech gateway protocol packet from the end device to the network server.
@@ -726,12 +726,12 @@ Example:
 
 Please note Semtech packet can contain 1, 2 or more payloads with different download channels.
 
-### proto-db utility
+### proto-dbSqlite3 utility
 
 ```
-Usage: proto-db
+Usage: proto-dbSqlite3
  [-v?] [<command>] [-p <path>] [-c <file>] [-d <database-name>]... [-m <packet.message>] [-x <hex-string>] [-6 <base64-string>] [-o <number>] [-l <number>] [-s <field-name>]... [-S <field-name>]...
-proto-db helper utility
+proto-dbSqlite3 helper utility
   <command>                 print|list|create|insert. Default print
   -p, --proto=<path>        proto files directory. Default 'proto'
   -c, --dbconfig=<file>     database config file name. Default 'dbs.js'
@@ -750,7 +750,7 @@ proto-db helper utility
 Create table for iridium.IEPacket packet in the "mysql_1" database:
 
 ```
-./proto-db -d mysql_1 -m iridium.IEPacket create
+./proto-dbSqlite3 -d mysql_1 -m iridium.IEPacket create
 ```
 Message type name passed in the -m option.
 
@@ -761,20 +761,20 @@ Tin this case you must provide payload using -x <hex string> or -6 <base64 strin
 Determine message type by the payload using -x <payload-hex>:
 
 ```
-./proto-db create -d mysql -x 0100213887c1601c000000004a0000000000000000000000
-./proto-db -d sqlite -x 010021b8b06b581f000000004a0000000000000000000000 create
+./proto-dbSqlite3 create -d mysql -x 0100213887c1601c000000004a0000000000000000000000
+./proto-dbSqlite3 -d sqlite -x 010021b8b06b581f000000004a0000000000000000000000 create
 ```
 
 Print "iridium.IEPacket" messages stored in the "mysql_1" database:
 
 ```
-./proto-db -d mysql_1 -m iridium.IEPacket list
+./proto-dbSqlite3 -d mysql_1 -m iridium.IEPacket list
 ```
 
 Print "vega.SI13p1" messages stored in the "mysql_1" database:
 
 ```
-./proto-db -d sqlite -m vega.SI13p1 list
+./proto-dbSqlite3 -d sqlite -m vega.SI13p1 list
 
 28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635389922|
 28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635390222|
@@ -784,7 +784,7 @@ Print "vega.SI13p1" messages stored in the "mysql_1" database:
 Print "vega.SI13p1" messages stored in the "mysql_1" database:
 
 ```
-./proto-db -d sqlite -m vega.SI13p1 list
+./proto-dbSqlite3 -d sqlite -m vega.SI13p1 list
 
 28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635389922|
 28|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1635390222|
@@ -794,7 +794,7 @@ Print "vega.SI13p1" messages stored in the "mysql_1" database:
 Print "vega.SI13p1" two messages stored in the "mysql_1" database skipping last 1000 records:
 
 ```
-./proto-db -d sqlite -m vega.SI13p1 list -o 1000 -l 2
+./proto-dbSqlite3 -d sqlite -m vega.SI13p1 list -o 1000 -l 2
 29|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1636457951|
 29|0|74|1|0|0|0|1|01450330|3434383566378112|SI-13-23|1636458251|
 ```
@@ -802,7 +802,7 @@ Print "vega.SI13p1" two messages stored in the "mysql_1" database skipping last 
 Insert data from payload to mysql database, force type to iridium.IEPacket 
 
 ```
-./proto-db -d mysql -m iridium.IEPacket insert -x 014c00011c00e8444601333030323334303639323030383530001a070000e199205e030b00003eea3781fbcc05000000021c00c068b50328f1bd078999205e07050000009f1be60ca313f432000000
+./proto-dbSqlite3 -d mysql -m iridium.IEPacket insert -x 014c00011c00e8444601333030323334303639323030383530001a070000e199205e030b00003eea3781fbcc05000000021c00c068b50328f1bd078999205e07050000009f1be60ca313f432000000
 ```
 
 ### mac-gw, mac-ns utilities
@@ -1069,7 +1069,7 @@ databases = [
           id: 1,
 		name: "sqlite",
 		type: "sqlite3",
-		connection: "lns.data.sqlite.db",
+		connection: "lns.data.sqlite.dbSqlite3",
 		table_aliases: sqlite_table_aliases,
 		field_aliases: sqlite_field_aliases
 	},
@@ -1086,7 +1086,7 @@ databases = [
 		name: "mysql",
 		type: "mysql",
 		connection: "localhost",
-		db: "irthermometer",
+		dbSqlite3: "irthermometer",
 		login: 'irthermometer',
 		password: "*******",
 		table_aliases: db_table_aliases,
@@ -1109,14 +1109,14 @@ Most important class method is open():
 		const std::string &connection,
 		const std::string &login,
 		const std::string &password,
-		const std::string &db,
+		const std::string &dbSqlite3,
 		int port
 ```
 
 In case of web service, connection parameter is POST URL to post JSON data,
-and connection db is URL to authorize using GET request. 
+and connection dbSqlite3 is URL to authorize using GET request. 
 
-If 'db' parameter empty, no authorization is required.
+If 'dbSqlite3' parameter empty, no authorization is required.
 
 ### MySQL
 
@@ -1125,7 +1125,7 @@ In the Protobuf there are no date or time types, but it can return formatted dat
 This field may have integer type not text.
 
 
-If proto defines some fields as timestamp, proto-db utility return MySQL error
+If proto defines some fields as timestamp, proto-dbSqlite3 utility return MySQL error
 
 ```
 Error insert record into SQL table 1 database mysql: Data truncated for column 'recvtime' at row 1
@@ -1361,7 +1361,7 @@ in the dbs.js configuration file.
 ### Check sqlite3 records
 
 ```
-echo ".q" | sqlite3 -cmd "attach \"lns.data.sqlite.db\" as lns;select devname, temperature, datetime(received, 'unixepoch', 'localtime') received, rowid from vega_SI13 order by received desc limit 50;"
+echo ".q" | sqlite3 -cmd "attach \"lns.data.sqlite.dbSqlite3\" as lns;select devname, temperature, datetime(received, 'unixepoch', 'localtime') received, rowid from vega_SI13 order by received desc limit 50;"
 ```
 
 ### Send packet to the network server

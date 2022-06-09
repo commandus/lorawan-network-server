@@ -1,4 +1,3 @@
-#include <iostream>
 #include "logger-loader.h"
 #include "logger-huffman/logger-parse.h"
 #include "db-any.h"
@@ -18,13 +17,11 @@ bool DbLoggerKosaPacketsLoader::load(
     uint32_t addr
 )
 {
-    std::cerr << "=== DbLoggerKosaPacketsLoader::load() === :" << addr << std::endl;
     if (db) {
         std::vector<std::vector<std::string> > rowsNcols;
         std::string sqlStatement = loggerBuildSQLBaseMeasurementSelect(dbDialect, addr);
-std::cerr << "=== DbLoggerKosaPacketsLoader SQL: " << sqlStatement << std::endl;
         int r = db->select(rowsNcols, sqlStatement);
-std::cerr << "=== DbLoggerKosaPacketsLoader === db->select r = " << r << std::endl;
+
         if (r)
             return false;
         if (rowsNcols.empty())
@@ -35,7 +32,6 @@ std::cerr << "=== DbLoggerKosaPacketsLoader === db->select r = " << r << std::en
         loggerParseSQLBaseMeasurement(packets, rowsNcols[0][0]);
         if (packets.empty())
             return false;
-std::cerr << "=== DbLoggerKosaPacketsLoader === 111 " << std::endl;
         LoggerKosaCollector collector;
         collector.put(addr, packets);
         if (collector.koses.empty())

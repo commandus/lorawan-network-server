@@ -89,7 +89,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 				case 1:	// id
 					entry.key.id = value;
 					break;
-				case 3:	// db id
+				case 3:	// dbSqlite3 id
 					entry.value.dbids.push_back(value);
 					break;
 			};

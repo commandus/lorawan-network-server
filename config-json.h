@@ -74,7 +74,7 @@ class WebServiceConfig {
 		int port;							///< default port is 5002
 		std::string html;					///< web root directory. If not set, only JSON API available
 		std::string defaultDatabase;		///< default (no-name) database
-		std::vector<std::string> databases;	///< named databases (db=<database name> parameter is required in JSON API)
+		std::vector<std::string> databases;	///< named databases (dbSqlite3=<database name> parameter is required in JSON API)
 
 		int threadCount;					///< If <=0, default 2
 		int connectionLimit;				///< If <=0, default 1024

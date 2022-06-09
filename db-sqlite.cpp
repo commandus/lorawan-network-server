@@ -1,7 +1,7 @@
 #include "db-sqlite.h"
 
 DatabaseSQLite::DatabaseSQLite()
-	: db(NULL)
+	: dbSqlite3(nullptr)
 {
 	errmsg = "";
 	type = "sqlite3";
@@ -9,15 +9,15 @@ DatabaseSQLite::DatabaseSQLite()
 
 DatabaseSQLite::DatabaseSQLite(
 	const DatabaseSQLite &value
-) : db(value.db)
+) : dbSqlite3(value.dbSqlite3)
 {
-	errmsg = value.errmsg;
+    errmsg = value.errmsg;
 	type = value.type;
 }
 
 DatabaseSQLite::~DatabaseSQLite()
 {
-	if (db) {
+	if (dbSqlite3) {
 		close();
 	}
 }
@@ -30,17 +30,29 @@ int DatabaseSQLite::open(
 	int port
 )
 {
-	int r = sqlite3_open(connection.c_str(), &db);
+    // remember
+    this->connection = connection;
+
+    int r = sqlite3_open(connection.c_str(), &dbSqlite3);
 	if (r)
-		db = NULL;
+        dbSqlite3 = nullptr;
 	return r;
+}
+
+int DatabaseSQLite::reopen()
+{
+    if (dbSqlite3)
+        close();
+    int r = sqlite3_open(this->connection.c_str(), &dbSqlite3);
+    if (r)
+        dbSqlite3 = nullptr;
 }
 
 int DatabaseSQLite::close()
 {
-	int r = sqlite3_close(db);
+	int r = sqlite3_close(dbSqlite3);
 	if (!r)
-		db = NULL;
+        dbSqlite3 = nullptr;
 	return r;
 }
 
@@ -69,15 +81,16 @@ int DatabaseSQLite::exec(
 	const std::string &statement
 )
 {
-	char *zErrMsg = nullptr;
-	int r = sqlite3_exec(db, statement.c_str(), sqlite3Callback, NULL, &zErrMsg);
-  	if (r != SQLITE_OK) {
-          if (zErrMsg) {
-              errmsg = std::string(zErrMsg);
-              sqlite3_free(zErrMsg);
-          }
+    char *zErrMsg = nullptr;
+    int r = sqlite3_exec(dbSqlite3, statement.c_str(), sqlite3Callback, nullptr, &zErrMsg);
+    if (r != SQLITE_OK) {
+        if (zErrMsg) {
+            reopen();
+            errmsg = std::string(zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
     }
-	return r;
+    return r;
 }
 
 int DatabaseSQLite::select
@@ -86,15 +99,23 @@ int DatabaseSQLite::select
 	const std::string &statement
 )
 {
-	char *zErrMsg = nullptr;
-	int r = sqlite3_exec(db, statement.c_str(), sqlite3Callback, &retval, &zErrMsg);
-    if (r != SQLITE_OK) {
-        if (zErrMsg) {
-            errmsg = std::string(zErrMsg);
-            sqlite3_free(zErrMsg);
-        }
+    sqlite3_stmt *stmt;
+    int r = sqlite3_prepare_v2(dbSqlite3, statement.c_str(), -1, &stmt, nullptr);
+    if (r) {
+        errmsg = sqlite3_errstr(r);
+        reopen();
+        return r;
     }
-	return r;
+    int columns = sqlite3_column_count(stmt);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        std::vector<std::string> line;
+        for (int i = 0; i < columns; i++)
+        {
+            line.push_back(std::string((const char *) sqlite3_column_text(stmt, i)));
+        }
+        retval.push_back(line);
+    }
+	return 0;
 }
 
 //
@@ -105,10 +126,18 @@ int DatabaseSQLite::cursorOpen(
 	std::string &statement
 )
 {
-	int r = sqlite3_prepare_v2(db, statement.c_str(), -1, (sqlite3_stmt **) retStmt, NULL);
-	if (r)
-		errmsg = sqlite3_errstr(r);
-	return r;
+    sqlite3_stmt *result;
+	int r = sqlite3_prepare_v2(dbSqlite3, statement.c_str(), -1, &result, NULL);
+	if (r) {
+        errmsg = sqlite3_errstr(r);
+        reopen();
+        return r;
+    }
+    while (sqlite3_step(result) == SQLITE_ROW) {
+        fprintf(stderr, "El Id y nombre de la empresa son:  %i - %s.\n", sqlite3_column_int(result, 0)
+                , sqlite3_column_text(result, 1));
+    }
+    return r;
 }
 
 int DatabaseSQLite::cursorBindText(

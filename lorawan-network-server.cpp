@@ -705,9 +705,9 @@ int main(
 				}
 			}
 		}
-		
+
 		if (!defDbExists)
-			std::cerr << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase << std::endl;
+			std::cerr << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase << std::endl;   // just warning
 
 		// named databases
 		for (std::vector<std::string>::const_iterator it(config->wsConfig.databases.begin()); it != config->wsConfig.databases.end(); it++) {
@@ -771,7 +771,12 @@ int main(
         DatabaseNConfig *kldb = dbByConfig->find(config->loggerDatabaseName);
         if (kldb) {
             loggerKosaPacketsLoader.setDatabase(kldb->db);
-            hasLoggerKosaPacketsLoader = true;
+            int r = kldb->open();
+            if (r == ERR_CODE_NO_DATABASE) {
+                hasLoggerKosaPacketsLoader = false;
+            } else {
+                hasLoggerKosaPacketsLoader = true;
+            }
         }
     }
     if (hasLoggerKosaPacketsLoader) {

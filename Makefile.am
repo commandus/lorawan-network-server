@@ -53,7 +53,7 @@ BACKEND_DB_C =
 BACKEND_DB_DEF = 
 
 if ENABLE_DB_SQLITE
-BACKEND_DB_SRC += db-sqlite.cpp 
+BACKEND_DB_SRC += db-sqlite.cpp
 BACKEND_DB_LIB += -lsqlite3 
 BACKEND_DB_DEF += -DENABLE_DB_SQLITE 
 
@@ -66,21 +66,21 @@ endif
 endif
 
 if ENABLE_DB_POSTGRES
-BACKEND_DB_SRC += db-pg.cpp 
+BACKEND_DB_SRC += db-pg.cpp
 BACKEND_DB_LIB += -lpq 
 BACKEND_DB_C += 
 BACKEND_DB_DEF += -DENABLE_DB_POSTGRES 
 endif
 
 if ENABLE_DB_MYSQL
-BACKEND_DB_SRC += db-mysql.cpp 
+BACKEND_DB_SRC += db-mysql.cpp
 BACKEND_DB_LIB += -lmysqlclient 
 BACKEND_DB_C += 
 BACKEND_DB_DEF += -DENABLE_DB_MYSQL 
 endif
 
 if ENABLE_DB_FIREBIRD
-BACKEND_DB_SRC += db-fb.cpp 
+BACKEND_DB_SRC += db-fb.cpp
 BACKEND_DB_LIB += -lfbclient 
 BACKEND_DB_C += 
 BACKEND_DB_DEF += -DENABLE_DB_FIREBIRD 
