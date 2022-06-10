@@ -133,10 +133,7 @@ int DatabaseSQLite::cursorOpen(
         reopen();
         return r;
     }
-    while (sqlite3_step(result) == SQLITE_ROW) {
-        fprintf(stderr, "El Id y nombre de la empresa son:  %i - %s.\n", sqlite3_column_int(result, 0)
-                , sqlite3_column_text(result, 1));
-    }
+    *retStmt = result;
     return r;
 }
 

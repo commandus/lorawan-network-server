@@ -6,10 +6,10 @@
 #include "db-pg.h"
 #endif
 #ifdef ENABLE_DB_MYSQL
-#include "dbSqlite3-mysql.h"
+#include "db-mysql.h"
 #endif
 #ifdef ENABLE_DB_FIREBIRD
-#include "dbSqlite3-fb.h"
+#include "db-fb.h"
 #endif
 #ifdef ENABLE_DB_JSON
 #include "db-json.h"
@@ -47,14 +47,14 @@ DatabaseNConfig::DatabaseNConfig
 		else
 			if (config->type == "mysql")
 #ifdef ENABLE_DB_MYSQL				
-				dbSqlite3 = new DatabaseMySQL();
+				db = new DatabaseMySQL();
 #else
 	;		
 #endif
 			else
 				if (config->type == "firebird")
 #ifdef ENABLE_DB_FIREBIRD					
-					dbSqlite3 = new DatabaseFirebird();
+					db = new DatabaseFirebird();
 #else
 	;		
 #endif

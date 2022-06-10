@@ -327,12 +327,14 @@ test_join_accept_decrypt_SOURCES = \
 test_join_accept_decrypt_LDADD = $(L_LORAWAN) -lpthread
 test_join_accept_decrypt_CPPFLAGS = $(commoncppflags)
 
+if ENABLE_PKT2
 test_pkt2_parse_SOURCES = \
 	tests/test-pkt2-parse.cpp
 test_pkt2_parse_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lprotobuf -lpthread
 test_pkt2_parse_CPPFLAGS = $(commoncppflags)
+endif
 
 test_sqlite_SOURCES = \
 	tests/test-sqlite.cpp db-any.cpp  $(BACKEND_DB_SRC)

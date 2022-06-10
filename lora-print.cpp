@@ -22,6 +22,7 @@
 #include "utildate.h"
 
 #include "db-any.h"
+
 #include "pkt2/str-pkt2.h"
 
 #include "identity-service-file-json.h"
@@ -271,17 +272,21 @@ int main(
 	if (parseCmd(&config, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
-
-	void* env = initPkt2(config.proto_path, 0);
+    void* env = nullptr;
+#ifdef ENABLE_PKT2
+	env = initPkt2(config.proto_path, 0);
 	if (!env) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
 		exit(ERR_CODE_LOAD_PROTO);
 	}
+#endif
 
-	ConfigDatabases configDatabases(config.dbconfig);
+    ConfigDatabases configDatabases(config.dbconfig);
 	if (configDatabases.dbs.size() == 0) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
+#ifdef ENABLE_PKT2
 		donePkt2(env);
+#endif
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 
