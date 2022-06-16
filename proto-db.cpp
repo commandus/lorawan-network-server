@@ -440,7 +440,7 @@ void doInsert
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
 		std::map<std::string, std::string> properties;
-		db->config->setProperties(properties, props);
+		db->setProperties(properties, props);
 
 		if (verbosity) {
             std::vector<std::string> clauses;
@@ -479,7 +479,12 @@ void doPrint
 	const std::string &hexData
 )
 {
+#ifdef ENABLE_PKT2
 	std::cout << parsePacket(env, 1, 0, 0, hexData, forceMessageType, NULL, NULL, NULL) << std::endl;
+#else
+    std::cerr << ERR_MESSAGE << ERR_CODE_NO_PACKET_PARSER << ": " << ERR_NO_PACKET_PARSER << std::endl;
+#endif
+
 }
 
 int main(
@@ -496,28 +501,33 @@ int main(
 	if (parseCmd(&config, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
-
-	void* env = initPkt2(config.proto_path, 0);
+    void* env = nullptr;
+#ifdef ENABLE_PKT2
+	env = initPkt2(config.proto_path, 0);
+#endif
 	if (!env) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
 		exit(ERR_CODE_LOAD_PROTO);
 	}
 
-	ConfigDatabases configDatabases(config.dbConfigFileName);
-	if (configDatabases.dbs.size() == 0) {
+	ConfigDatabasesIntf *configDatabases = new ConfigDatabases(config.dbConfigFileName);
+	if (configDatabases->dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
+#ifdef ENABLE_PKT2
 		donePkt2(env);
+#endif
+        delete configDatabases;
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 
 	if (config.dbname.size() == 0) {
 		// if not database is specified, use all of them
-		for (std::vector<ConfigDatabase>::const_iterator it(configDatabases.dbs.begin()); it != configDatabases.dbs.end(); it++) {
+		for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
 			config.dbname.push_back(it->name);
 		}
 	}
 
-	DatabaseByConfig dbAny(&configDatabases);
+	DatabaseByConfig dbAny(configDatabases);
 
 	if (config.command == "print")
 		doPrint(env, &config, &dbAny, config.message_type, config.payload);
@@ -554,6 +564,7 @@ int main(
 		int r = identityService->get(deviceId, devaddr);
 		if (r) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_ADDRESS << ": " << ERR_INVALID_ADDRESS << std::endl;
+            delete configDatabases;
 			exit(ERR_CODE_INVALID_ADDRESS);
 		}
 		// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
@@ -576,7 +587,10 @@ int main(
 		if (identityService)
 			delete identityService;
 	}
-
-	donePkt2(env);
+#ifdef ENABLE_PKT2
+    donePkt2(env);
+#endif
+    if (configDatabases)
+        delete configDatabases;
 	return 0;
 }

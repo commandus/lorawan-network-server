@@ -29,6 +29,7 @@
 #include "identity-service-dir-txt.h"
 #include "utilidentity.h"
 #include "lora-encrypt.h"
+#include "database-config-json.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
@@ -260,7 +261,33 @@ void doPrint
 	const std::string &binData
 )
 {
+#ifdef ENABLE_PKT2
 	std::cout << parsePacket(env, INPUT_FORMAT_BINARY, outputFormat, 0, binData, forceMessageType, NULL, NULL, NULL) << std::endl;
+#else
+    std::cerr << ERR_MESSAGE << ERR_CODE_NO_PACKET_PARSER << ": " << ERR_NO_PACKET_PARSER << std::endl;
+#endif
+}
+
+static ConfigDatabasesIntf *configDatabases = nullptr;
+static IdentityService *identityService = nullptr;
+static void* env = nullptr;
+
+void done() {
+
+    if (identityService) {
+        delete identityService;
+        identityService = nullptr;
+    }
+    if (configDatabases) {
+        delete configDatabases;
+        configDatabases = nullptr;
+    }
+#ifdef ENABLE_PKT2
+    if (env) {
+        donePkt2(env);
+        env = nullptr;
+    }
+#endif
 }
 
 int main(
@@ -272,34 +299,35 @@ int main(
 	if (parseCmd(&config, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
-    void* env = nullptr;
 #ifdef ENABLE_PKT2
 	env = initPkt2(config.proto_path, 0);
 	if (!env) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
 		exit(ERR_CODE_LOAD_PROTO);
 	}
+    configDatabases = new ConfigDatabases(config.dbconfig);
+#else
+    configDatabases = new ConfigDatabasesJson(config.dbconfig);
 #endif
 
-    ConfigDatabases configDatabases(config.dbconfig);
-	if (configDatabases.dbs.size() == 0) {
+
+	if (configDatabases->dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 #ifdef ENABLE_PKT2
 		donePkt2(env);
 #endif
-		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
+        done();
+        exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 
 	if (config.dbname.size() == 0) {
 		// if not database is specified, use all of them
-		for (std::vector<ConfigDatabase>::const_iterator it(configDatabases.dbs.begin()); it != configDatabases.dbs.end(); it++) {
+		for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
 			config.dbname.push_back(it->name);
 		}
 	}
 
-	DatabaseByConfig databaseByConfig(&configDatabases);
-
-	IdentityService *identityService = NULL;
+	DatabaseByConfig databaseByConfig(configDatabases);
 	// Start identity service
 	switch (config.identityStorageType) {
 		case IDENTITY_STORAGE_LMDB:
@@ -341,6 +369,7 @@ int main(
                             JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
                             if (isDEVEUIEmpty(config.devEUI)) {
                                 std::cerr << "Device EUI missed. Provide -e <EUI> option." << std::endl;
+                                done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
 
@@ -348,6 +377,7 @@ int main(
                             int ir = identityService->getNetworkIdentity(ni, config.devEUI);
                             if (ir) {
                                 std::cerr << "Device EUI " << DEVEUI2string(config.devEUI) << " not found." << std::endl;
+                                done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
 
@@ -386,8 +416,10 @@ int main(
 		std::cerr << gatewayStat.toJsonString() << std::endl;
 	}
 
-    if (r)
+    if (r) {
+        done();
         exit(r);
+    }
 
     if (config.verbosity > 2) {
         std::cerr << packets.size() << " packets" << std::endl;
@@ -428,8 +460,6 @@ int main(
 
 	}
 
-	if (identityService)
-		delete identityService;
-	donePkt2(env);
+    done();
 	return 0;
 }

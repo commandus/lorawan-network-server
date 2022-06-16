@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 118
+#define ERR_COUNT 119
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -47,7 +47,8 @@ static const char *errList[ERR_COUNT] = {
 	ERR_PARAM_NO_INTERFACE,
 	ERR_MAC_TOO_SHORT,
 	ERR_MAC_INVALID,
-	ERR_MAC_UNKNOWN_EXTENSION,ERR_WS_START_FAILED
+	ERR_MAC_UNKNOWN_EXTENSION,
+    ERR_PARAM_INVALID,
 	ERR_INSUFFICIENT_PARAMS,
 	ERR_NO_MAC_NO_PAYLOAD,
 	ERR_INVALID_REGEX,
@@ -113,7 +114,8 @@ static const char *errList[ERR_COUNT] = {
     ERR_INIT_LOGGER_HUFFMAN_PARSER,
 	ERR_WS_START_FAILED,
 	ERR_NO_DEFAULT_WS_DATABASE,
-	ERR_INIT_LOGGER_HUFFMAN_DB
+	ERR_INIT_LOGGER_HUFFMAN_DB,
+    ERR_NO_PACKET_PARSER
 };
 
 const char *strerror_lorawan_ns

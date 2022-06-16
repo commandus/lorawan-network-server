@@ -63,6 +63,7 @@
 #include "device-stat-service-file.h"
 #include "device-stat-service-post.h"
 #include "device-channel-plan-file-json.h"
+#include "database-config-json.h"
 
 const std::string programName = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
@@ -98,6 +99,8 @@ static DeviceHistoryService *deviceHistoryService = nullptr;
 // Regional settings
 static RegionalParameterChannelPlans *regionalParameterChannelPlans = nullptr;
 static DeviceChannelPlan *deviceChannelPlan = nullptr;
+// Database collection
+static ConfigDatabasesIntf *configDatabases = nullptr;
 
 static const char *TAB = "\t";
 
@@ -131,6 +134,8 @@ static void flushFiles()
     //    deviceChannelPlan->flush();
     // if (deviceChannelPlan)
     //    deviceChannelPlan->flush();
+    // if (configDatabases)
+    //    configDatabases->flush();
 }
 
 static void done()
@@ -193,7 +198,10 @@ static void done()
         delete deviceChannelPlan;
         deviceChannelPlan = nullptr;
     }
-
+    if (configDatabases) {
+        delete configDatabases;
+        configDatabases = nullptr;
+    }
 #ifdef ENABLE_PKT2
 	if (parserEnv)
 		donePkt2(parserEnv);
@@ -629,8 +637,12 @@ int main(
 	}
 
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start output database service ..");
-	ConfigDatabases configDatabases(config->databaseConfigFileName);
-	if (configDatabases.dbs.empty()) {
+#ifdef ENABLE_PKT2
+	configDatabases = new ConfigDatabases(config->databaseConfigFileName);
+#else
+    configDatabases = new ConfigDatabasesJson(config->databaseConfigFileName);
+#endif
+	if (configDatabases->dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		// exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
@@ -639,11 +651,11 @@ int main(
 		std::cerr << MSG_DATABASE_LIST << std::endl;
 
 	// helper class to find out database by name or sequence number (id)
-	dbByConfig = new DatabaseByConfig(&configDatabases);
+	dbByConfig = new DatabaseByConfig(configDatabases);
 	// check out database connectivity
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Check database availability ..");
 	bool dbOk = true;
-	for (std::vector<ConfigDatabase>::const_iterator it(configDatabases.dbs.begin()); it != configDatabases.dbs.end(); it++) {
+	for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
         if (!it->active)
             continue;
 		DatabaseNConfig *dc = dbByConfig->find(it->name);

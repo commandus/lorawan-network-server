@@ -34,11 +34,11 @@ C_STORAGE += identity-service-lmdb.cpp db-identity.cpp
 endif
 
 # Parsers
-PACKET_PARSER_LIB = -L/home/andrei/src/pkt2 -lpkt2
+PACKET_PARSER_LIB =
 PACKET_PARSER_DEF = 
 
 if ENABLE_PKT2
-PACKET_PARSER_LIB +=
+PACKET_PARSER_LIB += -L/home/andrei/src/pkt2 -lpkt2
 PACKET_PARSER_DEF += -DENABLE_PKT2
 endif
 
@@ -121,7 +121,7 @@ LIBLORAWANSRC = \
 	strptime.cpp lora-encrypt.cpp identity-service.cpp receiver-queue-processor.cpp regional-parameter-channel-plan.cpp \
 	device-stat-service-abstract.cpp device-channel-plan.cpp packet-queue.cpp gateway-list.cpp \
 	gateway-stat-service-abstract.cpp semtech-pull-resp-packet.cpp receiver-queue-service.cpp \
-	semtech-metadata-tx.cpp \
+	semtech-metadata-tx.cpp database-config-json.cpp \
 	$(SRC_AES) third_party/base64/base64.cpp
 
 #
@@ -154,11 +154,11 @@ nobase_dist_include_HEADERS = \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	errlist.h daemonize.h device-history-item.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
-	identity-service.h identity-service-file-json.h \
+	identity-service.h identity-service-file-json.h logger-loader.h \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
-	lora-rejoin.h utilidentity.h control-packet.h \
+	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \

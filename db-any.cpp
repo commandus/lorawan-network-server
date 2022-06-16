@@ -189,6 +189,24 @@ int DatabaseNConfig::select(
 	return db->select(retval, statement);
 }
 
+void DatabaseNConfig::setProperties(
+    std::map<std::string, std::string> &retval,
+    const std::map<std::string, std::string> &values
+) const
+{
+    // copy only values listed in aliases, and replace key to the alias name
+    for (std::map<std::string, std::string>::const_iterator it(config->properties.begin()); it != config->properties.end(); it++) {
+        std::map<std::string, std::string>::const_iterator f = values.find(it->first);
+        if (f != values.end()) {
+            if (!it->second.empty()) {
+                retval[it->second] = f->second;
+            }
+        }
+    }
+
+}
+
+
 int DatabaseNConfig::exec(
 	const std::string &statement
 ) const
@@ -241,7 +259,7 @@ void DatabaseByConfig::prepare(
 
 DatabaseByConfig::DatabaseByConfig
 (
-	const ConfigDatabases *aconfig
+	const ConfigDatabasesIntf *aconfig
 )
 	: config(aconfig)
 {
