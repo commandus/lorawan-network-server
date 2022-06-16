@@ -72,7 +72,7 @@ void flushLoggerParser(void *env);
 void doneLoggerParser(void *env);
 
 void *getPassportDescriptor(void *env);
-void *getLoggerKosaCollection(void *env);
+void *getLoggerKosaCollector(void *env);
 
 /**
  * Return state of the desctiptor
@@ -82,6 +82,7 @@ void *getLoggerKosaCollection(void *env);
 std::string loggerParserState(void *env, int format);
 
 int loggerParsePacket(void *env, uint32_t addr, const std::string &packet);
+int loggerParsePackets(void *env, uint32_t addr, const std::vector<std::string> &packets);
 
 /**
  * Return INSERT clause(s) in retClauses

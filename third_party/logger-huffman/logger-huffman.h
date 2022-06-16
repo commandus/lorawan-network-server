@@ -93,12 +93,11 @@ typedef ALIGN struct {
  */
 typedef ALIGN struct {
 	uint8_t typ;						    // 	LOGGER_PACKET_RAW, LOGGER_PACKET_PKT_1, LOGGER_PACKET_DELTA_1, LOGGER_PACKET_HUFF_1
-	union {
-		uint8_t data_bytes: 3;
-		uint8_t rfu: 4;
+	struct {
+		uint8_t data_bits: 4;
+		uint8_t rfu: 3;
 		uint8_t command_change: 1;
-		uint8_t b;							// статус замера, биты 0-3 битовая длина тела данных замера, бит 7 – получена команда на смену 0 замера.
-	} status;
+	} status;                               // статус замера, биты 0-3 битовая длина тела данных замера, бит 7 – получена команда на смену 0 замера.
 	uint16_t size;							// (compressed) общая длина данных, bytes
 	uint8_t measure;						// мл. Байт номера замера, lsb used (или addr_used?)
 	uint8_t packets;						// количество пакетов в замере! (лора по 24 байта с шапками пакетов)

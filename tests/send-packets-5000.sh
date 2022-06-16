@@ -18,7 +18,7 @@
 # 4b26020614dcff0015dcff0016eaff0017e5ff0018dfff00
 # 4b26020719dfff001adaff001be6ff00
 #
-fcnt=100
+fcnt=1
 while read -r line
 do
   echo $fcnt

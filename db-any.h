@@ -37,6 +37,10 @@ public:
 	int close() const;
 	int exec(const std::string &statement) const;
 	int select(std::vector<std::vector<std::string>> &retval, const std::string &statement);
+    void setProperties(
+        std::map<std::string, std::string> &retval,
+        const std::map<std::string, std::string> &values
+    ) const;
 };
 
 /**
@@ -44,11 +48,11 @@ public:
 class DatabaseByConfig
 {
 private:
-	const ConfigDatabases *config;
+	const ConfigDatabasesIntf *config;
 protected:
 	DatabaseIntf* open(const ConfigDatabase *dbc) const;
 public:
-	DatabaseByConfig(const ConfigDatabases *config);
+	DatabaseByConfig(const ConfigDatabasesIntf *config);
 	~DatabaseByConfig();
 
     /**
