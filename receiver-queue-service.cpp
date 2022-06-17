@@ -200,7 +200,7 @@ void ReceiverQueueEntry::setProperties
 
 )
 {
-	// copy only bands lsted in aliases, and replace key to the alias name
+	// copy only bands listed in aliases, and replace key to the alias name
 	std::map<std::string, std::string> sessionProperties;
 	this->key.setProperties(sessionProperties);
 	this->value.setProperties(sessionProperties);

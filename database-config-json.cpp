@@ -110,17 +110,17 @@ int ConfigDatabasesJson::load(
             rapidjson::Value &v = db[JSON_FLD_NAME[7]];
             if (v.IsArray()) {
                 for (int c = 0; c < v.Size(); c++) {
-                    rapidjson::Value &e = v[i];
+                    rapidjson::Value &e = v[c];
                     if (!e.IsArray())
                         continue;
-                    if (!e.Size() < 1)
+                    if (e.Size() < 1)
                         continue;
                     rapidjson::Value &ek = e[0];
                     if (!ek.IsString())
                         continue;
                     std::string k = ek.GetString();
                     std::string kv;
-                    if (!e.Size() >= 2) {
+                    if (e.Size() >= 2) {
                         rapidjson::Value &e2 = e[1];
                         if (ek.IsString())
                             kv = e2.GetString();
@@ -134,17 +134,17 @@ int ConfigDatabasesJson::load(
             rapidjson::Value &v = db[JSON_FLD_NAME[8]];
             if (v.IsArray()) {
                 for (int c = 0; c < v.Size(); c++) {
-                    rapidjson::Value &e = v[i];
+                    rapidjson::Value &e = v[c];
                     if (!e.IsArray())
                         continue;
-                    if (!e.Size() < 1)
+                    if (e.Size() < 1)
                         continue;
                     rapidjson::Value &ek = e[0];
                     if (!ek.IsString())
                         continue;
                     std::string k = ek.GetString();
                     std::string kv;
-                    if (!e.Size() >= 2) {
+                    if (e.Size() >= 2) {
                         rapidjson::Value &e2 = e[1];
                         if (ek.IsString())
                             kv = e2.GetString();
@@ -158,17 +158,17 @@ int ConfigDatabasesJson::load(
             rapidjson::Value &v = db[JSON_FLD_NAME[9]];
             if (v.IsArray()) {
                 for (int c = 0; c < v.Size(); c++) {
-                    rapidjson::Value &e = v[i];
+                    rapidjson::Value &e = v[c];
                     if (!e.IsArray())
                         continue;
-                    if (!e.Size() < 1)
+                    if (e.Size() < 1)
                         continue;
                     rapidjson::Value &ek = e[0];
                     if (!ek.IsString())
                         continue;
                     std::string k = ek.GetString();
                     std::string kv;
-                    if (!e.Size() >= 2) {
+                    if (e.Size() >= 2) {
                         rapidjson::Value &e2 = e[1];
                         if (ek.IsString())
                             kv = e2.GetString();

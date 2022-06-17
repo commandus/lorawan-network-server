@@ -132,9 +132,9 @@ int DatabaseNConfig::insertClauses(
     int r = 0;
 #ifdef ENABLE_PKT2
 	std::string s = parsePacket(env, inputFormat,
-       config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
-       config->getDialect(), data, message,
-		&config->tableAliases, &config->fieldAliases, properties);
+        config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
+        config->getDialect(), data, message,
+	    &config->tableAliases, &config->fieldAliases, properties);
     retClauses.push_back(s);
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN

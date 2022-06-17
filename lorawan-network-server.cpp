@@ -71,7 +71,7 @@ const std::string programName = "lorawan-network-server";
 #define DEF_QUEUE_STORAGE_NAME "queue.json"
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_DEVICE_HISTORY_STORAGE_NAME "device-history.json"
-#define DEF_DATABASE_CONFIG_FILE_NAME "dbs.js"
+#define DEF_DATABASE_CONFIG_FILE_NAME "dbs.json"
 #define DEF_PROTO_PATH "proto"
 
 static int lastSysSignal = 0;

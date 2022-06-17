@@ -172,8 +172,11 @@ std::string DatabaseSQLite::cursorColumnText(
 	int column0
 )
 {
-	std::string r((const char *) sqlite3_column_text((sqlite3_stmt *) stmt, column0));
-	return r;
+    const char *c = (const char *) sqlite3_column_text((sqlite3_stmt *) stmt, column0);
+    if (c)
+        return std::string(c);
+    else
+        return "";
 }
 
 DB_FIELD_TYPE DatabaseSQLite::cursorColumnType(
