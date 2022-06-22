@@ -12,6 +12,23 @@ GatewayStatServiceFile::GatewayStatServiceFile()
 
 }
 
+bool GatewayStatServiceFile::get(
+    GatewayStat &retval,
+    size_t position
+)
+{
+    if (position < list.size()) {
+        retval = list.at(position);
+        return true;
+    }
+    return false;
+}
+
+size_t GatewayStatServiceFile::size()
+{
+    return list.size();
+}
+
 void GatewayStatServiceFile::put(GatewayStat *stat)
 {
     if (list.size() > MAX_GW_STAT_BUFFER_SIZE) {

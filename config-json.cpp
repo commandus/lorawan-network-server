@@ -411,7 +411,7 @@ std::string Configuration::toString() {
 	doc.AddMember("server", server, allocator);
 
 	rapidjson::Value ws;
-	wsConfig.toJson(ws, allocator);
+	// wsConfig.toJson(ws, allocator);
 	doc.AddMember("ws", ws, allocator);
 
 	rapidjson::Value dbcfn;

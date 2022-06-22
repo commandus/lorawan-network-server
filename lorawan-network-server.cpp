@@ -65,6 +65,8 @@
 #include "device-channel-plan-file-json.h"
 #include "database-config-json.h"
 
+#include "ws-handler.h"
+
 const std::string programName = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
@@ -78,7 +80,7 @@ static int lastSysSignal = 0;
 #define MAX_DEVICE_LIST_COUNT   20
 
 // sev service config
-WSConfig wsConfig;
+static WSConfig wsConfig;
 static Configuration *config = nullptr;
 static GatewayList *gatewayList = nullptr;
 static GatewayStatService *gatewayStatService = nullptr;
@@ -136,6 +138,8 @@ static void flushFiles()
     //    deviceChannelPlan->flush();
     // if (configDatabases)
     //    configDatabases->flush();
+    if (deviceStatService)
+        deviceStatService->flush();
 }
 
 static void done()
@@ -400,11 +404,14 @@ static void run()
 	listener->listen();
 }
 
+// web service special path
+WsSpecialPathHandler wsSpecialPathHandler;
+
 int main(
 	int argc,
 	char *argv[])
 {
-	config = new Configuration("");
+    config = new Configuration("");
 	if (parseCmd(config, argc, argv) != 0)
 		exit(ERR_CODE_COMMAND_LINE);
 	// reload config if required
@@ -504,8 +511,11 @@ int main(
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_START);
     // Start device statistics service
     switch (config->serverConfig.deviceStatStorageType) {
+        case DEVICE_STAT_FILE_CSV:
+            deviceStatService = new DeviceStatServiceFileCsv();
+            break;
         case DEVICE_STAT_FILE_JSON:
-            deviceStatService = new DeviceStatServiceFile();
+            deviceStatService = new DeviceStatServiceFileJson();
             break;
         case DEVICE_STAT_POST:
             deviceStatService = new DeviceStatServicePost();
@@ -549,6 +559,7 @@ int main(
 
     switch (config->serverConfig.deviceStatStorageType) {
         case DEVICE_STAT_FILE_JSON:
+        case DEVICE_STAT_FILE_CSV:
         case DEVICE_STAT_POST:
             listener->setDeviceStatDumper(config, onDeviceStatDump);
             break;
@@ -694,14 +705,24 @@ int main(
 		wsConfig.connectionLimit = config->wsConfig.connectionLimit;
 		wsConfig.flags = config->wsConfig.flags;
 
+
 		// listener port
 		wsConfig.port = config->wsConfig.port;
 		// html root
 		wsConfig.dirRoot = config->wsConfig.html.c_str();
 		// log verbosity
 		wsConfig.verbosity = config->serverConfig.verbosity;
-		// log callback
+		// web service log
 		wsConfig.onLog = onLog;
+
+        wsSpecialPathHandler.configDatabases = configDatabases;
+        wsSpecialPathHandler.regionalParameterChannelPlans = regionalParameterChannelPlans;
+        wsSpecialPathHandler.identityService = identityService;
+        wsSpecialPathHandler.gatewayList = gatewayList;
+        wsSpecialPathHandler.config = config;
+        wsSpecialPathHandler.gatewayStatService = gatewayStatService;
+        wsSpecialPathHandler.deviceStatService = deviceStatService;
+        wsConfig.onSpecialPathHandler = &wsSpecialPathHandler;
 
 		// databases
 		// default database

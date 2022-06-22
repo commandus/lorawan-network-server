@@ -243,6 +243,11 @@ int UDPListener::parseBuffer
 	}
 
 	// std::cerr << "===" << pr << ": " << strerror_lorawan_ns(pr) << std::endl;
+    if (onDeviceStatDump) {
+        for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
+            onDeviceStatDump(deviceStatEnv, *itp);
+        }
+    }
 	switch (pr) {
         case ERR_CODE_IS_JOIN:
             break;
@@ -299,8 +304,6 @@ int UDPListener::parseBuffer
 					}
 
 				}
-				if (onDeviceStatDump)
-					onDeviceStatDump(deviceStatEnv, *itp);
 			}
 			// reflect stat
 			if (gatewayStat.errcode == 0) {

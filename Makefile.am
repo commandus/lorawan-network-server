@@ -129,7 +129,7 @@ LIBLORAWANSRC = \
 #
 lib_LIBRARIES = liblorawan.a
 liblorawan_a_SOURCES = $(LIBLORAWANSRC)
-liblorawan_a_CXXFLAGS = $(commoncppflags) $(PACKET_PARSER_DEF) -fPIC
+liblorawan_a_CXXFLAGS = $(commoncppflags) $(PACKET_PARSER_DEF) -fPIC -DLNS_VERSION=$VERSION
 
 L_LORAWAN = -L. -llorawan
 
@@ -158,7 +158,7 @@ nobase_dist_include_HEADERS = \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
-	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h \
+	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -186,13 +186,13 @@ lorawan_network_server_SOURCES = \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp  \
 	regional-parameter-channel-plan-file-json.cpp \
-	logger-loader.cpp \
+	ws-handler.cpp logger-loader.cpp \
 	third_party/argtable3/argtable3.c
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
     -lprotobuf $(BACKEND_DB_LIB) -lcurl
-lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
+lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION)
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp \

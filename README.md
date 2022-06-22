@@ -277,7 +277,7 @@ Server config:
 - storageType e.g. "json"
 - queueStorageName e.g. "queue.json",
 - messageQueueStorageType e.g. "json"
-- deviceStatStorageType device statistics storage type, "file" or "post". Default none
+- deviceStatStorageType device statistics storage type, "json", "csv" or "post". Default "none"
 - logDeviceStatisticsFileName e.g. log device statistics file name "device-stat.json"
 - deviceHistoryStorageName e.g. "device-history.json"
 - regionalSettingsStorageName file name of regional settings, e.g. "regional-parameters.json". Default none
@@ -328,15 +328,17 @@ Option "txt" is slow and useful for debug only.
 
 Options "gwStatStorageType", "deviceStatStorageType" bands are
 
-- file
-- post 
+- json lines of JSON terminated by "\n"
+- csv comma separated values
+- post send JSON array to the web service
+- none do not log statistics
 
-File example:
+CSV file example:
 ```
-		"deviceStatStorageType": "file",
+		"deviceStatStorageType": "csv",
 		"logDeviceStatisticsFileName": "device-stat.txt",
 
-        "gwStatStorageType": "file",
+        "gwStatStorageType": "csv",
         "logGWStatisticsFileName": "gw-stat.json"
 ```
 

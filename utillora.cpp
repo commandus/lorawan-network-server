@@ -668,8 +668,28 @@ std::string NetworkIdentity::toString() const
         << " " << KEY2string(nwkKey)
         << " " << DEVNONCE2string(devNonce)
         << " " << JOINNONCE2string(joinNonce)
-		<< " " << std::string(name, sizeof(DEVICENAME));
+		<< " " << DEVICENAME2string(name);
 	return ss.str();
+}
+
+std::string NetworkIdentity::toJsonString() const
+{
+    std::stringstream ss;
+    ss << "{\"addr\": \"" << DEVADDR2string(devaddr)
+       << "\", \"activation\": \"" << activation2string(activation)
+       << "\", \"deviceClass\": \"" << deviceclass2string(deviceclass)
+       << "\", \"devEUI\": \"" << DEVEUI2string(devEUI)
+       << "\", \"nwkSKey\": \"" << KEY2string(nwkSKey)
+       << "\", \"appSKey\": \"" << KEY2string(appSKey)
+       << "\", \"version\": \"" << LORAWAN_VERSION2string(version)
+       << "\", \"appEUI\": \"" << DEVEUI2string(appEUI)
+       << "\", \"appKey\": \"" << KEY2string(appKey)
+       << "\", \"nwkKey\": \"" << KEY2string(nwkKey)
+       << "\", \"nonce\": \"" << DEVNONCE2string(devNonce)
+       << "\", \"joinNonce\": \"" << JOINNONCE2string(joinNonce)
+       << "\", \"name\": \"" << DEVICENAME2string(name)
+       << "\"}";
+    return ss.str();
 }
 
 DeviceId::DeviceId() {
@@ -2290,6 +2310,36 @@ std::string SemtechUDPPacket::toJsonString() const
 		ss << ", \"payload\": \"" << hexString(payload) << "\"";
 	ss << "}";
 	return ss.str();
+}
+
+/**
+ * addr time name frequency channel datr codr rssi lsnr payloadSize payload
+ * @return
+ */
+std::string SemtechUDPPacket::toCsvString() const
+{
+    if (metadata.empty())
+        return "";
+    std::stringstream ss;
+    int ms = -1;
+    time_t t = metadata[0].t;
+    std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
+    // time_t tg = gps2utc(metadata[0].tmms());
+    // std::string dtg = ltimeString(tg, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
+    ss
+        << getDeviceAddrStr()
+        << "," << dt
+        << ",\"" << DEVICENAME2string(devId.name) << "\""
+        << "," << metadata[0].frequency()
+        << "," << (int) metadata[0].chan
+        << ",\"" << metadata[0].datr()
+        << "\",\"" << metadata[0].codr()
+        << "\"," << (int) metadata[0].rssi
+        << "," << std::fixed << std::setprecision(2) << metadata[0].lsnr
+        << "," << payload.size()
+        << ",\"" << base64_encode(payload)
+        << "\"";
+    return ss.str();
 }
 
 void SemtechUDPPacket::setPayload(

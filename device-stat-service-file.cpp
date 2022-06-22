@@ -4,7 +4,7 @@
 #include "errlist.h"
 
 /**
- * Dewice statistics service append statistics to the file
+ * Device statistics service append statistics to the file
  * specified in the option parameter of init() method
  */
 DeviceStatServiceFile::DeviceStatServiceFile()
@@ -13,7 +13,26 @@ DeviceStatServiceFile::DeviceStatServiceFile()
 
 }
 
-void DeviceStatServiceFile::put(const SemtechUDPPacket *packet)
+bool DeviceStatServiceFile::get(
+    SemtechUDPPacket &retval,
+    size_t position
+)
+{
+    if (position < list.size()) {
+        retval = list.at(position);
+        return true;
+    }
+    return false;
+}
+
+size_t DeviceStatServiceFile::size()
+{
+    return list.size();
+}
+
+void DeviceStatServiceFile::put(
+    const SemtechUDPPacket *packet
+)
 {
     if (list.size() > MAX_DEVICE_STAT_BUFFER_SIZE) {
         // TODO
@@ -95,7 +114,7 @@ void DeviceStatServiceFile::tuneDelay()
     }
 }
 
-int DeviceStatServiceFile::save()
+int DeviceStatServiceFileJson::save()
 {
     if (list.empty())
         return ERR_CODE_PARAM_INVALID;
@@ -107,6 +126,24 @@ int DeviceStatServiceFile::save()
     std::stringstream ss;
     for (std::vector<SemtechUDPPacket>::iterator it (copyList.begin()); it != copyList.end(); it++) {
         ss << it->toJsonString() << std::endl;
+    }
+    if (append2file(storageName, ss.str()))
+        return LORA_OK;
+    return ERR_CODE_SOCKET_WRITE;
+}
+
+int DeviceStatServiceFileCsv::save()
+{
+    if (list.empty())
+        return ERR_CODE_PARAM_INVALID;
+    std::vector<SemtechUDPPacket> copyList;
+    listMutex.lock();
+    copyList = list;
+    list.clear();
+    listMutex.unlock();
+    std::stringstream ss;
+    for (std::vector<SemtechUDPPacket>::iterator it (copyList.begin()); it != copyList.end(); it++) {
+        ss << it->toCsvString() << std::endl;
     }
     if (append2file(storageName, ss.str()))
         return LORA_OK;

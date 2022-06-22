@@ -3,8 +3,10 @@
 DEVICE_STAT_STORAGE string2deviceStatStorageType(
         const std::string &value
 ) {
-    if (value == "file")
+    if (value == "json")
         return DEVICE_STAT_FILE_JSON;
+    if (value == "csv")
+        return DEVICE_STAT_FILE_CSV;
     if (value == "post")
         return DEVICE_STAT_POST;
     return DEVICE_STAT_NONE;
@@ -15,10 +17,12 @@ std::string deviceStatStorageType2String(
 ) {
     switch(value) {
         case DEVICE_STAT_FILE_JSON:
-            return "file";
+            return "json";
+        case DEVICE_STAT_FILE_CSV:
+            return "csv";
         case DEVICE_STAT_POST:
             return "post";
         default:
-            return "";
+            return "none";
     }
 }
