@@ -13,18 +13,58 @@
 
 #include "db-intf.h"
 
-#define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
-
 typedef std::map<std::string, DatabaseIntf*> MAP_NAME_DATABASE;
 
+#define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
+
+/**
+ * Log callback function prototype
+ * @param env WSConfig
+ * @param level 0- error, 1- warning,..
+ * @param modulecode always 200
+ * @param errorcode 0- no error (warning, info)
+ * @param message optional error description
+ */
 typedef std::function<void(
-		void *env,
-		int level,
-		int modulecode,
-		int errorcode,
-		const std::string &message)> LOG_CALLBACK;
+    void *env,
+    int level,
+    int modulecode,
+    int errorcode,
+    const std::string &message
+)> LOG_CALLBACK;
 
+/**
+ * Special path handler provided by host
+ * @param content return value
+ * @param contentType, return content type. By default "text/javascript;charset=UTF-8"
+ * @param env config
+ * @param modulecode always 200
+ * @param url HTTP request URL
+ * @param method HTTP request method e.g. "GET"
+ * @param version HTTP request version e.g. "1.0"
+ * @param upload_data HTTP request uploaded data
+ * @param upload_data_size HTTP request uploaded data size, bytes
+ * @return true- OK
+  */
+class WebServiceRequestHandler {
+public:
+    virtual bool handle(
+        std::string &content,
+        std::string &contentType,
+        void *env,
+        int modulecode,
+        // copy following parameters from the web request
+        const char *url,
+        const char *method,
+        const char *version,
+        const char *upload_data,
+        size_t *upload_data_size
+    ) = 0;
+};
 
+/**
+ * Configuration to start up web service
+ */
 typedef struct {
 	unsigned int threadCount;
 	unsigned int connectionLimit;
@@ -44,6 +84,7 @@ typedef struct {
 	MAP_NAME_DATABASE databases;
 
 	LOG_CALLBACK onLog;
+    WebServiceRequestHandler *onSpecialPathHandler;
 } WSConfig;
 
 void setLogCallback(LOG_CALLBACK value);

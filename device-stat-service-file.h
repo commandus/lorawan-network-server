@@ -11,9 +11,10 @@
 #define MAX_DEVICE_STAT_TIMEOUT_SECONDS 5 * 60
 #define DEF_DEVICE_STAT_TIMEOUT_SECONDS 60
 #define DEVICE_SIZE_PER_STEP 256
+
 /**
  * Gateway statistics service append statistics to the file
- * specified in the option paramater of init() method
+ * specified in the option parameter of init() method
  */
 class DeviceStatServiceFile : public DeviceStatService {
 private:
@@ -26,7 +27,9 @@ private:
         std::mutex listMutex;
 	public:
         DeviceStatServiceFile();
-		void put(const SemtechUDPPacket *packet) override;
+        bool get(SemtechUDPPacket &retval, size_t id) override;
+        size_t size() override;
+        void put(const SemtechUDPPacket *packet) override;
 		// force save
 		void flush() override;
 		// reload
@@ -34,11 +37,27 @@ private:
 		// close resources
 		void done() override;
 
-    void runner();
+        void runner();
+        virtual int save() = 0;
+        void tuneDelay();
+};
 
-    virtual int save();
+/**
+ * Gateway statistics service append statistics to the JSON file
+ * specified in the option parameter of init() method
+ */
+class DeviceStatServiceFileJson : public DeviceStatServiceFile {
+public:
+    int save() override;
+};
 
-    void tuneDelay();
+/**
+ * Gateway statistics service append statistics to the CSV file
+ * specified in the option parameter of init() method
+ */
+class DeviceStatServiceFileCsv : public DeviceStatServiceFile {
+public:
+    int save() override;
 };
 
 #endif

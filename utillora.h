@@ -372,6 +372,7 @@ public:
 		const DEVICEID &value
 	);
 	std::string toString() const;
+    std::string toJsonString() const;
 };
 
 class DeviceId {
@@ -558,6 +559,7 @@ public:
 	std::string toDebugString() const;
 	std::string metadataToJsonString() const;
 	std::string toJsonString() const;
+    std::string toCsvString() const;
 
 	const RFM_HEADER *getRfmHeader() const;
 	RFMHeader *getHeader();

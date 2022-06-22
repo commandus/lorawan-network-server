@@ -13,10 +13,10 @@
 #define GW_SIZE_PER_STEP 128
 /**
  * Gateway statistics service append statistics to the file
- * specified in the option paramater of init() method
+ * specified in the option parameter of init() method
  */
 class GatewayStatServiceFile : public GatewayStatService {
-private:
+    private:
         int state;  // 0- stopped, 1- run, 2- stop request
         int timeoutSeconds;
         std::thread *threadRun;
@@ -26,19 +26,18 @@ private:
         std::mutex listMutex;
 	public:
         GatewayStatServiceFile();
-		void put(GatewayStat *stat) override;
+        bool get(GatewayStat &retval, size_t id) override;
+        size_t size() override;
+        void put(GatewayStat *stat) override;
 		// force save
-		virtual void flush() override;
+		void flush() override;
 		// reload
 		int init(const std::string &filename, void *data) override;
 		// close resources
 		void done() override;
-
-    void runner();
-
-    virtual void save();
-
-    void tuneDelay();
+        void runner();
+        virtual void save();
+        void tuneDelay();
 };
 
 #endif

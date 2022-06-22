@@ -16,9 +16,9 @@
 		],
 		"deviceHistoryStorageName": "device-history.json",
 		"regionalSettingsStorageName": "regional-parameters.json",
-		
-		"deviceStatStorageType": "post",
-		"logDeviceStatisticsFileName": "http://localhost:50002/post.php",
+
+		"deviceStatStorageType": "csv",
+		"logDeviceStatisticsFileName": "device-stat.csv",
 
 		"gwStatStorageType": "post",
 		"logGWStatisticsFileName": "http://localhost:50002/post.php",

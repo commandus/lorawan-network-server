@@ -7,7 +7,7 @@
  * Device statistics service append statistics to the web service
  * specified in the option parameter of init() method
  */
-class DeviceStatServicePost : public DeviceStatServiceFile {
+class DeviceStatServicePost : public DeviceStatServiceFileJson {
 	public:
         int save() override;
 };

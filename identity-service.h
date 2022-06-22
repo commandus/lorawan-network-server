@@ -35,7 +35,13 @@ public:
     // Remove entry
     virtual void rm(DEVADDR &addr) = 0;
 
-    // List entries
+    /**
+     * List entries
+     * @param retval return values
+     * @param offset 0..
+     * @param size 0- all
+     */
+
     virtual void list(std::vector<NetworkIdentity> &retval, size_t offset, size_t size) = 0;
 
     // Entries count
