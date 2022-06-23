@@ -276,10 +276,18 @@ void ServerConfig::toJson(
     vgwStatStorageType.SetString(s0.c_str(), s0.size(), allocator);
     value.AddMember("gwStatStorageType", vgwStatStorageType, allocator);
 
+    rapidjson::Value vlogGWStatisticsFileName;
+    vlogGWStatisticsFileName.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size());
+    value.AddMember("logGWStatisticsFileName", vlogGWStatisticsFileName, allocator);
+
 	rapidjson::Value vdeviceStatStorageType;
 	std::string s1(deviceStatStorageType2String(deviceStatStorageType));
 	vdeviceStatStorageType.SetString(s1.c_str(), s1.size(), allocator);
 	value.AddMember("deviceStatStorageType", vdeviceStatStorageType, allocator);
+
+    rapidjson::Value vlogDeviceStatisticsFileName;
+    vlogDeviceStatisticsFileName.SetString(logDeviceStatisticsFileName.c_str(), logDeviceStatisticsFileName.size());
+    value.AddMember("logDeviceStatisticsFileName", vlogDeviceStatisticsFileName, allocator);
 
 	rapidjson::Value vMessageQueuestorageType;
 	std::string s2(messageQueueStorageType2String(messageQueueType));
@@ -289,10 +297,6 @@ void ServerConfig::toJson(
 	rapidjson::Value lgwsfn;
 	lgwsfn.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size(), allocator);
 	value.AddMember("logGWStatisticsFileName", lgwsfn, allocator);
-
-	rapidjson::Value ldsfn;
-	ldsfn.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size(), allocator);
-	value.AddMember("logDeviceStatisticsFileName", ldsfn, allocator);
 
 	rapidjson::Value vnetid;
 	std::string sni = netid.toString();
@@ -411,7 +415,7 @@ std::string Configuration::toString() {
 	doc.AddMember("server", server, allocator);
 
 	rapidjson::Value ws;
-	// wsConfig.toJson(ws, allocator);
+	wsConfig.toJson(ws, allocator);
 	doc.AddMember("ws", ws, allocator);
 
 	rapidjson::Value dbcfn;
@@ -565,11 +569,11 @@ void WebServiceConfig::toJson(
 
 	rapidjson::Value vEnabled;
 	vEnabled.SetBool(enabled);
-	vEnabled.AddMember("enabled", vEnabled, allocator);
+	value.AddMember("enabled", vEnabled, allocator);
 
 	rapidjson::Value vPort;
 	vPort.SetInt(port);
-	vPort.AddMember("port", vPort, allocator);
+	value.AddMember("port", vPort, allocator);
 
 	rapidjson::Value vHtml;
 	vHtml.SetString(html.c_str(), html.size(), allocator);
@@ -590,13 +594,13 @@ void WebServiceConfig::toJson(
 
 	rapidjson::Value vThreadCount;
 	vThreadCount.SetInt(threadCount);
-	vThreadCount.AddMember("threadCount", vThreadCount, allocator);
+	value.AddMember("threadCount", vThreadCount, allocator);
 
 	rapidjson::Value vConnectionLimit;
 	vConnectionLimit.SetInt(connectionLimit);
-	vConnectionLimit.AddMember("connectionLimit", vConnectionLimit, allocator);
+    value.AddMember("connectionLimit", vConnectionLimit, allocator);
 
 	rapidjson::Value vFlags;
 	vFlags.SetInt(flags);
-	vFlags.AddMember("flags", vFlags, allocator);
+    value.AddMember("flags", vFlags, allocator);
 }

@@ -101,7 +101,7 @@ void GatewayStat::toJSON(
 	vname.SetString(name.c_str(), name.length(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[2])), vname, allocator);
 
-	std::string dt = ltimeString(t, -1, "%F %T %Z");
+	std::string dt = ltimeString(t, -1, "%FT%T%Z");
 	rapidjson::Value v1(rapidjson::kStringType);
 	v1.SetString(dt.c_str(), dt.length(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[3])), v1, allocator);
