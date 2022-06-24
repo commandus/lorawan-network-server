@@ -1,6 +1,9 @@
 #include <string>
 #include "ws-handler.h"
 #include "utillora.h"
+#ifdef ENABLE_LOGGER_HUFFMAN
+#include "logger-huffman/logger-parse.h"
+#endif
 
 #ifndef LNS_VERSION
 #define LNS_VERSION 0.0
@@ -15,7 +18,8 @@ WsSpecialPathHandler::WsSpecialPathHandler()
     : versionString(LNS_VERSION_STR), config(nullptr),
         configDatabases(nullptr), regionalParameterChannelPlans(nullptr),
         identityService(nullptr), gatewayList(nullptr),
-        gatewayStatService(nullptr), deviceStatService(nullptr)
+        gatewayStatService(nullptr), deviceStatService(nullptr),
+        loggerParser(nullptr)
 {
 
 }
@@ -56,6 +60,30 @@ bool WsSpecialPathHandler::handle(
         }
         return true;
     }
+    if (p.find("/loggers") == 0 || p.find("/passports") == 0) {
+#ifdef ENABLE_LOGGER_HUFFMAN
+        std::vector<std::string> js;
+        // 1- text, 2- JSON
+        size_t cnt = lsPassports(loggerParser, 0, nullptr, 0, 0);
+        lsPassports(loggerParser, 2, &js, 0, cnt);
+        std::stringstream ss;
+        ss << "[";
+        bool isFirst = true;
+        for (size_t i = 0; i < js.size(); i++) {
+            if (isFirst)
+                isFirst = false;
+            else
+                ss << ", ";
+            ss << js[i];
+        }
+        ss << "]";
+        content = ss.str();
+#else
+        content = "{\"error\": \"Feature disabled\"}";
+#endif
+        return true;
+    }
+
     if (p.find("/devices") == 0 || p.find("/identities") == 0) {
         if (identityService) {
             std::stringstream ss;

@@ -1,7 +1,8 @@
 /**
  * Simple LoRaWAN network server.
- * Copyright (c) 2021 {@link mailto:andrey.ivanov@ikfia.ysn.ru} Yu.G. Shafer Institute of Cosmophysical Research
- * and Aeronomy of Siberian Branch of the Russian Academy of Sciences
+ * Copyright (c) 2021 {@link mailto:andrey.ivanov@ikfia.ysn.ru} Yu.G. Shafer Institute
+ * of Cosmophysical Research * and Aeronomy of Siberian Branch of the Russian Academy
+ * of Sciences
  * MIT license {@link file://LICENSE}
  */
 #include <iostream>
@@ -824,6 +825,7 @@ int main(
 		std::cerr << ERR_INIT_LOGGER_HUFFMAN_PARSER << std::endl;
 		exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
 	}
+    wsSpecialPathHandler.loggerParser = loggerParserEnv;
 #endif
 
 	// Set up processor

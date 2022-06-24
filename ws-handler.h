@@ -22,6 +22,7 @@ public:
     GatewayList *gatewayList;
     GatewayStatService *gatewayStatService;
     DeviceStatService *deviceStatService;
+    void *loggerParser;
 
     WsSpecialPathHandler();
     bool handle(
@@ -36,6 +37,7 @@ public:
         const char *upload_data,
         size_t *upload_data_size
     ) override;
+
 };
 
 #endif
