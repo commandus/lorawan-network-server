@@ -75,6 +75,17 @@ void *getPassportDescriptor(void *env);
 void *getLoggerKosaCollector(void *env);
 
 /**
+ * Return passports as text or json
+ * @param env passport descriptor
+ * @param format 1- text, 2- JSON, 3- table, 0-nothing
+ * @param retVal if n=NULL, nothiong return
+ * @param offset 0..
+ * @oparam size limit
+ * @return passports as text or json
+ */
+size_t lsPassports(void *env, int format, std::vector<std::string> *retVal, size_t offset, size_t count);
+
+/**
  * Return state of the desctiptor
  * @param env descriptor
  * @param format 0- Postgres, 1- MySQL, 2- Firebird, 3- SQLite 4- JSON, 5- text, 6- table
