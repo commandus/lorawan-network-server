@@ -37,4 +37,18 @@ time_t fileModificationTime(
 	const std::string &fileName
 );
 
+class URL {
+private:
+    void parse(const std::string &url);
+    void clear();
+public:
+    std::string protocol;
+    std::string host;
+    std::string path;
+    std::string query;
+    URL(const std::string &url);
+    std::string get(const std::string &name);
+    int getInt(const std::string &name);
+};
+
 #endif
