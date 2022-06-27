@@ -333,6 +333,79 @@ int gettimeofday(struct timeval* tp, struct timezone* tzp)
 }
 #endif
 
+URL::URL(const std::string &url)
+{
+    parse(url);
+}
 
+void URL::clear() {
+    protocol = "";
+    host = "";
+    path = "";
+    query = "";
+}
 
+void URL::parse(const std::string &url) {
+    clear();
+    size_t pHost;
+    size_t pProto = url.find("://");
+    if (pProto != std::string::npos) {
+        protocol = url.substr(0, pProto);
+        pProto += 3;
+    } else
+        pProto = 0;
 
+    pHost = url.find('/', pProto);
+    if (pHost != std::string::npos) {
+        host = url.substr(pProto, pHost - pProto);
+    } else
+        pHost = pProto;
+
+    size_t pPath = url.find('?', pHost);
+    if (pPath == std::string::npos) {
+        pPath = url.size();
+    }
+    path = url.substr(pHost, pPath - pHost);
+    pPath++;
+
+    if (pPath >= url.size())
+        return;
+    query = url.substr(pPath);
+}
+
+std::string URL::get(
+    const std::string &name
+)
+{
+    size_t p = 0;
+    while(true) {
+        p = query.find(name, p);
+        if (p == std::string::npos)
+            return "";
+        size_t pEq = p + name.size();
+        if (pEq >= query.size())
+            return "";
+        pEq++;
+        if (query[pEq] != '=') {
+            p = pEq;
+            continue;
+        }
+        pEq++;
+        if (pEq >= query.size())
+            return "";
+        size_t pEnd = query.find('&', pEq);
+        if (pEnd == std::string::npos)
+            pEnd = query.size() + 1;
+        return query.substr(pEq, pEnd - pEq);
+    }
+}
+
+int URL::getInt(
+    const std::string &name
+)
+{
+    std::string s = get(name);
+    if (s.empty())
+        return 0;
+    return strtoll(s.c_str(), nullptr, 10);
+}

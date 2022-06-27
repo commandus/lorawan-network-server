@@ -30,14 +30,17 @@ bool WsSpecialPathHandler::handle(
     void *env,
     int modulecode,
     // copy following parameters from the web request
-    const char *url,
+    const char *path,
     const char *method,
     const char *version,
+    std::map<std::string, std::string> &params,
     const char *upload_data,
     size_t *upload_data_size
 )
 {
-    std::string p(url);
+    if (strcmp(method, "OPTIONS") == 0)
+        return true;
+    std::string p(path);
     if (p.find("/about") == 0) {
         content = "{\"version\": \"" + versionString + "\"}";
         return true;
@@ -60,23 +63,46 @@ bool WsSpecialPathHandler::handle(
         }
         return true;
     }
-    if (p.find("/loggers") == 0 || p.find("/passports") == 0) {
+    if (p.find("/passport") == 0) {
 #ifdef ENABLE_LOGGER_HUFFMAN
+        int year = 0;
+        int plume = 0;
+
         std::vector<std::string> js;
         // 1- text, 2- JSON
-        size_t cnt = lsPassports(loggerParser, 0, nullptr, 0, 0);
-        lsPassports(loggerParser, 2, &js, 0, cnt);
+        size_t ofs = 0;
+        size_t sz = 0;
+        std::string s;
+        s = params["year"];
+        if (!s.empty())
+            year = std::strtol(s.c_str(), nullptr, 10);
+        s = params["plume"];
+        if (!s.empty())
+            plume = std::strtol(s.c_str(), nullptr, 10);
+
         std::stringstream ss;
-        ss << "[";
-        bool isFirst = true;
-        for (size_t i = 0; i < js.size(); i++) {
-            if (isFirst)
-                isFirst = false;
-            else
-                ss << ", ";
-            ss << js[i];
+        if (p.find("/passport-count") == 0) {
+            size_t cnt = lsPassports(loggerParser, 0, nullptr, year, plume, 0, 0);
+            ss << cnt;
+        } else {
+            s = params["o"];
+            if (!s.empty())
+                ofs = std::strtol(s.c_str(), nullptr, 10);
+            s = params["s"];
+            if (!s.empty())
+                sz = std::strtol(s.c_str(), nullptr, 10);
+            lsPassports(loggerParser, 2, &js, year, plume, ofs, sz);
+            ss << "[";
+            bool isFirst = true;
+            for (size_t i = 0; i < js.size(); i++) {
+                if (isFirst)
+                    isFirst = false;
+                else
+                    ss << ", ";
+                ss << js[i];
+            }
+            ss << "]";
         }
-        ss << "]";
         content = ss.str();
 #else
         content = "{\"error\": \"Feature disabled\"}";

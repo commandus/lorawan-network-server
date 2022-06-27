@@ -76,14 +76,24 @@ void *getLoggerKosaCollector(void *env);
 
 /**
  * Return passports as text or json
- * @param env passport descriptor
+ * @param env logger descriptor
  * @param format 1- text, 2- JSON, 3- table, 0-nothing
- * @param retVal if n=NULL, nothiong return
+ * @param retVal if NULL, nothing return
+ * @param year 0- any, >1- filter by year
+ * @param plume 0- any, >1- filter by plume
  * @param offset 0..
- * @oparam size limit
+ * @param size limit
  * @return passports as text or json
  */
-size_t lsPassports(void *env, int format, std::vector<std::string> *retVal, size_t offset, size_t count);
+size_t lsPassports(
+    void *env,
+    int format,
+    std::vector<std::string> *retVal,
+    int year,
+    int plume,
+    size_t offset,
+    size_t count
+);
 
 /**
  * Return state of the desctiptor
