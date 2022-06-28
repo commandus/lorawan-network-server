@@ -63,6 +63,42 @@ bool WsSpecialPathHandler::handle(
         }
         return true;
     }
+    if (p.find("/passport-file") == 0) {
+        contentType = "text/plain";
+#ifdef ENABLE_LOGGER_HUFFMAN
+        int year = 0;
+        int plume = 0;
+
+        std::vector<std::string> fileContent;
+        // 1- text, 2- JSON
+        size_t ofs = 0;
+        size_t sz = 0;
+        std::string s;
+        s = params["year"];
+        if (!s.empty())
+            year = std::strtol(s.c_str(), nullptr, 10);
+        s = params["plume"];
+        if (!s.empty())
+            plume = std::strtol(s.c_str(), nullptr, 10);
+
+        std::stringstream ss;
+        s = params["o"];
+        if (!s.empty())
+            ofs = std::strtol(s.c_str(), nullptr, 10);
+        s = params["s"];
+        if (!s.empty())
+            sz = std::strtol(s.c_str(), nullptr, 10);
+        lsPassports(loggerParser, 1, &fileContent, year, plume, ofs, sz);
+        for (size_t i = 0; i < fileContent.size(); i++) {
+            ss << fileContent[i];
+        }
+        ss << "NEND" << std::endl;
+        content = ss.str();
+#else
+        content = "Feature disabled";
+#endif
+        return true;
+    }
     if (p.find("/passport") == 0) {
 #ifdef ENABLE_LOGGER_HUFFMAN
         int year = 0;
