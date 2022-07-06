@@ -70,7 +70,7 @@ class ServerConfig {
  */
 class WebServiceConfig {
 	public:
-		bool enabled;						///< enable or disable wev servic on start. Default- enabled
+		bool enabled;						///< enable or disable wev service on start. Default- enabled
 		int port;							///< default port is 5002
 		std::string html;					///< web root directory. If not set, only JSON API available
 		std::string defaultDatabase;		///< default (no-name) database
@@ -79,6 +79,10 @@ class WebServiceConfig {
 		int threadCount;					///< If <=0, default 2
 		int connectionLimit;				///< If <=0, default 1024
 		uint32_t flags;						///< Default 0
+
+        // JWT
+        std::string jwtIssuer;
+        std::string jwtSecret;
 		
 		void clear();
 		WebServiceConfig();

@@ -44,6 +44,7 @@ typedef std::function<void(
  * @param version HTTP request version e.g. "1.0"
  * @param upload_data HTTP request uploaded data
  * @param upload_data_size HTTP request uploaded data size, bytes
+ * @param authorized true- user authorized successfully
  * @return true- OK
   */
 class WebServiceRequestHandler {
@@ -53,13 +54,13 @@ public:
         std::string &contentType,
         void *env,
         int modulecode,
-        // copy following parameters from the web request
         const char *path,
         const char *method,
         const char *version,
         std::map<std::string, std::string> &params,
         const char *upload_data,
-        size_t *upload_data_size
+        size_t *upload_data_size,
+        bool authorized
     ) = 0;
 };
 
@@ -86,6 +87,11 @@ typedef struct {
 
 	LOG_CALLBACK onLog;
     WebServiceRequestHandler *onSpecialPathHandler;
+
+    // Authorization
+    void *jwt;
+    std::string issuer;
+    std::string secret;
 } WSConfig;
 
 void setLogCallback(LOG_CALLBACK value);

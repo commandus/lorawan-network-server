@@ -36,7 +36,8 @@ public:
         const char *version,
         std::map<std::string, std::string> &params,
         const char *upload_data,
-        size_t *upload_data_size
+        size_t *upload_data_size,
+        bool authorized
     ) override;
 
 };
