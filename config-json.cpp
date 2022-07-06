@@ -226,7 +226,6 @@ void ServerConfig::toJson(
 		rapidjson::Value address;
 		address.SetString(it->c_str(), it->size(), allocator);
 		addressesIPv6.PushBack(address, allocator);
-
 	}
 	value.AddMember("listenAddressIPv6", addressesIPv6, allocator);
 
@@ -468,7 +467,7 @@ std::string Configuration::toDescriptionTableString() const {
  */
 WebServiceConfig::WebServiceConfig()
 	: enabled(true), port(DEF_WS_PORT), html(""), defaultDatabase(""),
-	threadCount(2),	connectionLimit(1024), flags(0)
+	threadCount(2),	connectionLimit(1024), flags(0), jwtIssuer(""), jwtSecret("")
 {
 
 }
@@ -483,6 +482,8 @@ void WebServiceConfig::clear()
 	threadCount = 2;
 	connectionLimit = 1024;
 	flags = 0;
+    jwtIssuer = "";
+    jwtSecret = "";
 }
 
 int WebServiceConfig::parse(
@@ -557,7 +558,23 @@ int WebServiceConfig::parse(
 		}
 	}
 
-	return LORA_OK;
+    jwtIssuer = "";
+    if (value.HasMember("issuer")) {
+        rapidjson::Value &vissuer = value["issuer"];
+        if (vissuer.IsString()) {
+            jwtIssuer = vissuer.GetString();
+        }
+    }
+
+    jwtSecret = "";
+    if (value.HasMember("secret")) {
+        rapidjson::Value &vsecret = value["secret"];
+        if (vsecret.IsString()) {
+            jwtSecret = vsecret.GetString();
+        }
+    }
+
+    return LORA_OK;
 }
 
 void WebServiceConfig::toJson(
@@ -603,4 +620,13 @@ void WebServiceConfig::toJson(
 	rapidjson::Value vFlags;
 	vFlags.SetInt(flags);
     value.AddMember("flags", vFlags, allocator);
+
+    rapidjson::Value vIssuer;
+    vIssuer.SetString(jwtIssuer.c_str(), jwtIssuer.size(), allocator);
+    value.AddMember("issuer", vIssuer, allocator);
+
+    rapidjson::Value vSecret;
+    vSecret.SetString(jwtSecret.c_str(), jwtSecret.size(), allocator);
+    value.AddMember("secret", vSecret, allocator);
+
 }

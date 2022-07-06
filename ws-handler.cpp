@@ -35,9 +35,11 @@ bool WsSpecialPathHandler::handle(
     const char *version,
     std::map<std::string, std::string> &params,
     const char *upload_data,
-    size_t *upload_data_size
+    size_t *upload_data_size,
+    bool authorized
 )
 {
+    // Paths with no authorization required
     if (strcmp(method, "OPTIONS") == 0)
         return true;
     std::string p(path);
@@ -45,6 +47,11 @@ bool WsSpecialPathHandler::handle(
         content = "{\"version\": \"" + versionString + "\"}";
         return true;
     }
+
+    if (!authorized)
+        return false;
+
+    // Paths with authorization required
     if (p.find("/config") == 0) {
         if (config) {
             content = config->toString();
@@ -213,7 +220,6 @@ bool WsSpecialPathHandler::handle(
         }
         return true;
     }
-
     return false;
 }
 

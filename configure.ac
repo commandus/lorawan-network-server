@@ -41,6 +41,15 @@ AC_ARG_ENABLE([logger-huffman],
 esac],[logger_huffman=true])
 AM_CONDITIONAL([ENABLE_LOGGER_HUFFMAN], [test x$logger_huffman = xtrue])
 
+AC_ARG_ENABLE([jwt],
+[  --enable-jwt    Turn on JWT web service authorization],
+[case "${enableval}" in
+  yes) enable_jwt=true ;;
+  no)  enable_jwt=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-jwt]) ;;
+esac],[enable_jwt=true])
+AM_CONDITIONAL([ENABLE_JWT], [test x$enable_jwt = xtrue])
+
 AC_ARG_ENABLE([json],
 [  --enable-json    Turn on JSON file storage],
 [case "${enableval}" in

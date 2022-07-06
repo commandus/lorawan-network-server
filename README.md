@@ -357,6 +357,31 @@ Option "loggerDatabaseName" is valid in case of logger-huffman library linked (.
 
 These measurements read from the database to restore "delta" packets from "base" packets.  
 
+Embedded web server options example (in the "lorawan-network-server.json" file):
+
+```json
+{
+  "ws": {
+    "enabled": true,
+    "port": 5002,
+    "html": "/home/andrei/src/lorawan-ws-angular/lorawan-ws-angular/dist/lorawan-ws-angular",
+    "defaultDatabase": "sqlite-logger",
+    "issuer": "local",
+    "secret": "1-2-3"
+  }
+}
+```
+
+If no "ws" in the lorawan-network-server.json found, web service disabled.
+
+If no port is set, default port is 5002.
+
+If "issuer" is set and not empty, authorization by JWT token is on.
+
+By default, authorization disabled.
+
+Option "secret" is a JWT password for HS256 algorithm.  
+
 #### Message queue
 
 Received messages are sent to the database(s) as soon as possible. In case the database system is not available

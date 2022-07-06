@@ -358,7 +358,7 @@ int UDPListener::listen() {
 		}
 		if (rs == 0) {
 			// timeout, nothing to do
-			// std::stringstream ss;ss << MSG_TIMEOUT;onLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+			// std::stringstream ss;ss << MSG_TIMEOUT;listenerOnLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 			continue;
 		}
 

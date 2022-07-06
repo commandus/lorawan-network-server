@@ -47,6 +47,13 @@ PACKET_PARSER_LIB += -L/home/andrei/src/logger-passport -L/home/andrei/src/logge
 PACKET_PARSER_DEF += -DENABLE_LOGGER_HUFFMAN
 endif
 
+WS_AUTH_LIB = 
+WS_AUTH_DEF = 
+if ENABLE_JWT
+WS_AUTH_LIB += -lssl -lcrypto
+WS_AUTH_DEF += -DENABLE_JWT
+endif
+
 BACKEND_DB_SRC = 
 BACKEND_DB_LIB =
 BACKEND_DB_C =
@@ -191,8 +198,8 @@ lorawan_network_server_SOURCES = \
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
-    -lprotobuf $(BACKEND_DB_LIB) -lcurl
-lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION)
+    -lprotobuf $(BACKEND_DB_LIB) -lcurl $(WS_AUTH_LIB)
+lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF)
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp \
