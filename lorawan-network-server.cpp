@@ -56,6 +56,8 @@
 #include "db-any.h"
 
 #include "lorawan-ws/lorawan-ws.h"
+// Authorize web service users
+#include "auth-file.h"
 
 #include "device-history-service-json.h"
 
@@ -83,6 +85,8 @@ static int lastSysSignal = 0;
 // sev service config
 static WSConfig wsConfig;
 static Configuration *config = nullptr;
+static 	AuthUserService *authUserService = nullptr;
+
 static GatewayList *gatewayList = nullptr;
 static GatewayStatService *gatewayStatService = nullptr;
 static DeviceStatService *deviceStatService = nullptr;
@@ -215,6 +219,10 @@ static void done()
     if (loggerParserEnv)
 		doneLoggerParser(loggerParserEnv);
 #endif
+    if (authUserService) {
+        delete authUserService;
+        authUserService = nullptr;
+    }
 	exit(0);
 }
 
@@ -733,7 +741,6 @@ int main(
 		wsConfig.connectionLimit = config->wsConfig.connectionLimit;
 		wsConfig.flags = config->wsConfig.flags;
 
-
 		// listener port
 		wsConfig.port = config->wsConfig.port;
 		// html root
@@ -753,6 +760,11 @@ int main(
         wsSpecialPathHandler.config = config;
         wsSpecialPathHandler.gatewayStatService = gatewayStatService;
         wsSpecialPathHandler.deviceStatService = deviceStatService;
+
+        authUserService = new AuthUserFile(config->wsConfig.jwtIssuer,
+            config->wsConfig.jwtSecret, file2string(config->wsConfig.jwtUserListFileName.c_str()));
+        wsSpecialPathHandler.jwtAuthService = authUserService;
+
         wsConfig.onSpecialPathHandler = &wsSpecialPathHandler;
 
 		// databases
@@ -807,12 +819,7 @@ int main(
 
 		if (startWS(wsConfig)) {
 			if (config->serverConfig.verbosity > 2)
-				std::cerr << MSG_WS_START_SUCCESS
-                    << ", JWT issuer: " << wsConfig.issuer
-                    << ", JWT secret: " << wsConfig.secret
-                    << ", JWT descriptor: " << wsConfig.jwt
-                    << std::endl;
-
+				std::cerr << MSG_WS_START_SUCCESS << std::endl;
 		} else {
 			std::cerr << ERR_WS_START_FAILED << std::endl;
 			exit(ERR_CODE_WS_START_FAILED);

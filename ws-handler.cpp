@@ -19,7 +19,7 @@ WsSpecialPathHandler::WsSpecialPathHandler()
         configDatabases(nullptr), regionalParameterChannelPlans(nullptr),
         identityService(nullptr), gatewayList(nullptr),
         gatewayStatService(nullptr), deviceStatService(nullptr),
-        loggerParser(nullptr)
+        loggerParser(nullptr), jwtAuthService(nullptr)
 {
 
 }
@@ -219,6 +219,12 @@ bool WsSpecialPathHandler::handle(
             content = ss.str();
         }
         return true;
+    }
+    if (jwtAuthService) {
+        if (p.find("/token") == 0) {
+            content = jwtAuthService->getJWT(params["user"], params["password"]);
+            return true;
+        }
     }
     return false;
 }

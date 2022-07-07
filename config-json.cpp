@@ -467,7 +467,8 @@ std::string Configuration::toDescriptionTableString() const {
  */
 WebServiceConfig::WebServiceConfig()
 	: enabled(true), port(DEF_WS_PORT), html(""), defaultDatabase(""),
-	threadCount(2),	connectionLimit(1024), flags(0), jwtIssuer(""), jwtSecret("")
+	threadCount(2),	connectionLimit(1024), flags(0), jwtIssuer(""), jwtSecret(""),
+    jwtUserListFileName("")
 {
 
 }
@@ -484,6 +485,7 @@ void WebServiceConfig::clear()
 	flags = 0;
     jwtIssuer = "";
     jwtSecret = "";
+    jwtUserListFileName = "";
 }
 
 int WebServiceConfig::parse(
@@ -574,6 +576,14 @@ int WebServiceConfig::parse(
         }
     }
 
+    jwtUserListFileName = "";
+    if (value.HasMember("userListFileName")) {
+        rapidjson::Value &vjwtUserListFileName = value["userListFileName"];
+        if (vjwtUserListFileName.IsString()) {
+            jwtUserListFileName = vjwtUserListFileName.GetString();
+        }
+    }
+
     return LORA_OK;
 }
 
@@ -629,4 +639,7 @@ void WebServiceConfig::toJson(
     vSecret.SetString(jwtSecret.c_str(), jwtSecret.size(), allocator);
     value.AddMember("secret", vSecret, allocator);
 
+    rapidjson::Value vUserListFileName;
+    vUserListFileName.SetString(jwtUserListFileName.c_str(), jwtUserListFileName.size(), allocator);
+    value.AddMember("userListFileName", vSecret, allocator);
 }
