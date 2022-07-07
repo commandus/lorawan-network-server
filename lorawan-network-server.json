@@ -32,6 +32,7 @@
 		"html": "/home/andrei/src/lorawan-ws-angular/lorawan-ws-angular/dist/lorawan-ws-angular",
 		"defaultDatabase": "sqlite-logger",
 		"issuer": "local",
-		"secret": "1-2-3"
+		"secret": "1-2-3",
+		"userListFileName": "passwd.json"
 	}
 }

@@ -23,6 +23,7 @@ public:
     GatewayStatService *gatewayStatService;
     DeviceStatService *deviceStatService;
     void *loggerParser;
+    AuthUserService *jwtAuthService;
 
     WsSpecialPathHandler();
     bool handle(
@@ -39,7 +40,6 @@ public:
         size_t *upload_data_size,
         bool authorized
     ) override;
-
 };
 
 #endif

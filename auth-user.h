@@ -1,20 +1,22 @@
 #ifndef AUTH_USER_H
-#define AUTH_USER 1
+#define AUTH_USER_H 1
 
 #include <string>
+#include <map>
 
 class AuthUserService {
 private:
     std::string issuer;
     std::string secret;
+protected:
+    std::string jwtClaims(const std::map<std::string, std::string> &claims);
 public:
-    // return true if user authorized
-    AuthUserService(const std::string &issuer, const std::string &secret) {
-        
-    }
-    bool verify(const std::string &user, const std::string &password) = 0;
+    AuthUserService(const std::string &issuer, const std::string &secret);
 
+    // return true if user authorized
+    virtual bool verify(const std::string &user, const std::string &password) = 0;
     // return empty string if not authorized
-    std::string getJWT(const std::string &user, const std::string &password) = 0;
+    virtual std::string getJWT(const std::string &user, const std::string &password) = 0;
 };
+
 #endif

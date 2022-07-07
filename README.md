@@ -367,7 +367,8 @@ Embedded web server options example (in the "lorawan-network-server.json" file):
     "html": "/home/andrei/src/lorawan-ws-angular/lorawan-ws-angular/dist/lorawan-ws-angular",
     "defaultDatabase": "sqlite-logger",
     "issuer": "local",
-    "secret": "1-2-3"
+    "secret": "1-2-3",
+    "userListFileName" : "passwd.json"
   }
 }
 ```
@@ -381,6 +382,22 @@ If "issuer" is set and not empty, authorization by JWT token is on.
 By default, authorization disabled.
 
 Option "secret" is a JWT password for HS256 algorithm.  
+
+Option userListFileName is a JSON file name with user passwords used by embedded web service to authorize users
+(if required).
+
+```json
+[
+  {
+    "user": "john_doe",
+    "password": "password"
+  }
+  
+]
+```
+
+When web browser request "/token?user=<user-name>&password=<password>", embedded web service return
+JWT token if user successfully authorized. 
 
 #### Message queue
 

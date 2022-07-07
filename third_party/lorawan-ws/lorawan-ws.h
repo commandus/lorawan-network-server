@@ -10,6 +10,7 @@
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <auth-user.h>
 
 #include "db-intf.h"
 
@@ -89,7 +90,7 @@ typedef struct {
     WebServiceRequestHandler *onSpecialPathHandler;
 
     // Authorization
-    void *jwt;
+    void *jwt;	// JWT verifier descriptor
     std::string issuer;
     std::string secret;
 } WSConfig;

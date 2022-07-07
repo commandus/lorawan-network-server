@@ -128,7 +128,7 @@ LIBLORAWANSRC = \
 	strptime.cpp lora-encrypt.cpp identity-service.cpp receiver-queue-processor.cpp regional-parameter-channel-plan.cpp \
 	device-stat-service-abstract.cpp device-channel-plan.cpp packet-queue.cpp gateway-list.cpp \
 	gateway-stat-service-abstract.cpp semtech-pull-resp-packet.cpp receiver-queue-service.cpp \
-	semtech-metadata-tx.cpp database-config-json.cpp \
+	semtech-metadata-tx.cpp database-config-json.cpp auth-user.cpp \
 	$(SRC_AES) third_party/base64/base64.cpp
 
 #
@@ -166,6 +166,7 @@ nobase_dist_include_HEADERS = \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
 	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h \
+	auth-user.h auth-file.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
 	third_party/base64/base64.h \
@@ -193,7 +194,7 @@ lorawan_network_server_SOURCES = \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp  \
 	regional-parameter-channel-plan-file-json.cpp \
-	ws-handler.cpp logger-loader.cpp \
+	ws-handler.cpp logger-loader.cpp auth-file.cpp \
 	third_party/argtable3/argtable3.c
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
