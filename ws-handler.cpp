@@ -48,6 +48,14 @@ bool WsSpecialPathHandler::handle(
         return true;
     }
 
+    if (jwtAuthService) {
+        if (p.find("/token") == 0) {
+            content = jwtAuthService->getJWT(params["user"], params["password"]);
+            contentType = "text/plain";
+            return true;
+        }
+    }
+
     if (!authorized)
         return false;
 
@@ -219,12 +227,6 @@ bool WsSpecialPathHandler::handle(
             content = ss.str();
         }
         return true;
-    }
-    if (jwtAuthService) {
-        if (p.find("/token") == 0) {
-            content = jwtAuthService->getJWT(params["user"], params["password"]);
-            return true;
-        }
     }
     return false;
 }
