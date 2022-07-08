@@ -136,7 +136,7 @@ LIBLORAWANSRC = \
 #
 lib_LIBRARIES = liblorawan.a
 liblorawan_a_SOURCES = $(LIBLORAWANSRC)
-liblorawan_a_CXXFLAGS = $(commoncppflags) $(PACKET_PARSER_DEF) -fPIC -DLNS_VERSION=$VERSION
+liblorawan_a_CXXFLAGS = $(commoncppflags) $(PACKET_PARSER_DEF) -fPIC -DLNS_VERSION=$VERSION $(WS_AUTH_DEF)
 
 L_LORAWAN = -L. -llorawan
 
