@@ -4,6 +4,7 @@
 #include "lorawan-ws/lorawan-ws.h"
 #include "config-json.h"
 #include "database-config-json.h"
+#include "auth-user.h"
 #include "regional-parameter-channel-plans.h"
 #include "identity-service.h"
 #include "gateway-list.h"
@@ -26,7 +27,7 @@ public:
     AuthUserService *jwtAuthService;
 
     WsSpecialPathHandler();
-    bool handle(
+    int handle(
         std::string &content,
         std::string &contentType,
         void *env,
