@@ -56,29 +56,35 @@ int WsSpecialPathHandler::handle(
         }
     }
 
-    if (!authorized)
-        return 401;
 
     // Paths with authorization required
     if (p.find("/config") == 0) {
+        if (!authorized)
+            return 401;
         if (config) {
             content = config->toString();
         }
         return 200;
     }
     if (p.find("/databases") == 0) {
+        if (!authorized)
+            return 401;
         if (configDatabases) {
             content = configDatabases->toString();
         }
         return 200;
     }
     if (p.find("/plans") == 0 || p.find("/regional") == 0) {
+        if (!authorized)
+            return 401;
         if (regionalParameterChannelPlans) {
             content = regionalParameterChannelPlans->toJsonString();
         }
         return 200;
     }
     if (p.find("/passport-file") == 0) {
+        if (!authorized)
+            return 401;
         contentType = "text/plain";
 #ifdef ENABLE_LOGGER_HUFFMAN
         int year = 0;
@@ -115,6 +121,9 @@ int WsSpecialPathHandler::handle(
         return 200;
     }
     if (p.find("/passport") == 0) {
+        if (!authorized)
+            return 401;
+
 #ifdef ENABLE_LOGGER_HUFFMAN
         int year = 0;
         int plume = 0;
@@ -162,6 +171,8 @@ int WsSpecialPathHandler::handle(
     }
 
     if (p.find("/devices") == 0 || p.find("/identities") == 0) {
+        if (!authorized)
+            return 401;
         if (identityService) {
             std::stringstream ss;
             std::vector<NetworkIdentity> identities;
@@ -183,12 +194,16 @@ int WsSpecialPathHandler::handle(
         return 200;
     }
     if (p.find("/gateways") == 0) {
+        if (!authorized)
+            return 401;
         if (gatewayList) {
             content = gatewayList->toJsonString();
         }
         return 200;
     }
     if (p.find("/gateway-stat") == 0) {
+        if (!authorized)
+            return 401;
         if (gatewayStatService) {
             std::stringstream ss;
             GatewayStat stat;
@@ -209,6 +224,8 @@ int WsSpecialPathHandler::handle(
         return 200;
     }
     if (p.find("/device-stat") == 0) {
+        if (!authorized)
+            return 401;
         if (deviceStatService) {
             std::stringstream ss;
             SemtechUDPPacket lastPacket;
@@ -230,4 +247,3 @@ int WsSpecialPathHandler::handle(
     }
     return 404;
 }
-
