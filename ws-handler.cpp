@@ -228,6 +228,6 @@ int WsSpecialPathHandler::handle(
         }
         return 200;
     }
-    return 400;
+    return 404;
 }
 
