@@ -24,7 +24,7 @@ WsSpecialPathHandler::WsSpecialPathHandler()
 
 }
 
-bool WsSpecialPathHandler::handle(
+int WsSpecialPathHandler::handle(
     std::string &content,
     std::string &contentType,
     void *env,
@@ -41,42 +41,42 @@ bool WsSpecialPathHandler::handle(
 {
     // Paths with no authorization required
     if (strcmp(method, "OPTIONS") == 0)
-        return true;
+        return 200;
     std::string p(path);
     if (p.find("/about") == 0) {
         content = "{\"version\": \"" + versionString + "\"}";
-        return true;
+        return 200;
     }
 
     if (jwtAuthService) {
         if (p.find("/token") == 0) {
             content = jwtAuthService->getJWT(params["user"], params["password"]);
             contentType = "text/plain";
-            return true;
+            return 200;
         }
     }
 
     if (!authorized)
-        return false;
+        return 401;
 
     // Paths with authorization required
     if (p.find("/config") == 0) {
         if (config) {
             content = config->toString();
         }
-        return true;
+        return 200;
     }
     if (p.find("/databases") == 0) {
         if (configDatabases) {
             content = configDatabases->toString();
         }
-        return true;
+        return 200;
     }
     if (p.find("/plans") == 0 || p.find("/regional") == 0) {
         if (regionalParameterChannelPlans) {
             content = regionalParameterChannelPlans->toJsonString();
         }
-        return true;
+        return 200;
     }
     if (p.find("/passport-file") == 0) {
         contentType = "text/plain";
@@ -112,7 +112,7 @@ bool WsSpecialPathHandler::handle(
 #else
         content = "Feature disabled";
 #endif
-        return true;
+        return 200;
     }
     if (p.find("/passport") == 0) {
 #ifdef ENABLE_LOGGER_HUFFMAN
@@ -158,7 +158,7 @@ bool WsSpecialPathHandler::handle(
 #else
         content = "{\"error\": \"Feature disabled\"}";
 #endif
-        return true;
+        return 200;
     }
 
     if (p.find("/devices") == 0 || p.find("/identities") == 0) {
@@ -180,13 +180,13 @@ bool WsSpecialPathHandler::handle(
             ss << "]";
             content = ss.str();
         }
-        return true;
+        return 200;
     }
     if (p.find("/gateways") == 0) {
         if (gatewayList) {
             content = gatewayList->toJsonString();
         }
-        return true;
+        return 200;
     }
     if (p.find("/gateway-stat") == 0) {
         if (gatewayStatService) {
@@ -206,7 +206,7 @@ bool WsSpecialPathHandler::handle(
             ss << "]";
             content = ss.str();
         }
-        return true;
+        return 200;
     }
     if (p.find("/device-stat") == 0) {
         if (deviceStatService) {
@@ -226,8 +226,8 @@ bool WsSpecialPathHandler::handle(
             ss << "]";
             content = ss.str();
         }
-        return true;
+        return 200;
     }
-    return false;
+    return 400;
 }
 
