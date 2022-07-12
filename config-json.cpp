@@ -293,11 +293,22 @@ void ServerConfig::toJson(
 	vMessageQueuestorageType.SetString(s2.c_str(), s2.size(), allocator);
 	value.AddMember("messageQueueStorageType", vMessageQueuestorageType, allocator);
 
-	rapidjson::Value lgwsfn;
-	lgwsfn.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size(), allocator);
-	value.AddMember("logGWStatisticsFileName", lgwsfn, allocator);
+    rapidjson::Value vmessageQueueDirFormat;
+    std::string s4;
+    switch (messageQueueDirFormat) {
+        case 1:
+            s = "hex";
+            break;
+        case 2:
+            s = "base64";
+            break;
+        default:
+            s = "bin";
+    }
+    vmessageQueueDirFormat.SetString(s.c_str(), s.size(), allocator);
+    value.AddMember("messageQueueDirFormat", vmessageQueueDirFormat, allocator);
 
-	rapidjson::Value vnetid;
+    rapidjson::Value vnetid;
 	std::string sni = netid.toString();
 	vnetid.SetString(sni.c_str(), sni.size(), allocator);
 	value.AddMember("netId", vnetid, allocator);

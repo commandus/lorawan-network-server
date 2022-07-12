@@ -44,7 +44,40 @@ int WsSpecialPathHandler::handle(
         return 200;
     std::string p(path);
     if (p.find("/about") == 0) {
-        content = "{\"version\": \"" + versionString + "\"}";
+        // 	version, enableJWT, enableLogger, enableSQLite, enablePostgres, enableMySQL, enableFirebird
+        bool enableJWT = false;
+        bool enableLogger = false;
+        bool enableSQLite = false;
+        bool enablePostgres = false;
+        bool enableMySQL = false;
+        bool enableFirebird = false;
+#ifdef ENABLE_JWT
+        enableJWT = true;
+#endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+        enableLogger = true;
+#endif
+#ifdef ENABLE_DB_SQLITE
+        enableSQLite = true;
+#endif
+#ifdef ENABLE_DB_POSTGRES
+        enablePostgres = true;
+#endif
+#ifdef ENABLE_DB_MYSQL
+        enableMySQL = true;
+#endif
+#ifdef ENABLE_DB_FIREBIRD
+        enableFirebird = true;
+#endif
+        std::stringstream ss;
+        ss << "{\"version\": \"" << versionString << "\", "
+            << "\"enableJWT\": " << enableJWT << ","
+            << "\"enableLogger\": " << enableLogger << ","
+            << "\"enableSQLite\": " << enableSQLite << ","
+            << "\"enablePostgres\": " << enablePostgres << ","
+            << "\"enableMySQL\": " << enableMySQL << ","
+            << "\"enableFirebird\": " << enableFirebird << "}";
+        content = ss.str();
         return 200;
     }
 
