@@ -18,6 +18,63 @@
 				"JoinAcceptDelay1": 5,
 				"JoinAcceptDelay2": 6
 			},
+			"dataRates": [{
+				"uplink": true,
+				"downlink": true,
+				"modulation": "LORA",
+				"bandwidth": 125,
+				"spreadingFactor": 12,
+				"bps": 250
+			}, {
+				"uplink": true,
+				"downlink": true,
+				"modulation": "LORA",
+				"bandwidth": 125,
+				"spreadingFactor": 11,
+				"bps": 440
+			}, {
+				"uplink": true,
+				"downlink": true,
+				"modulation": "LORA",
+				"bandwidth": 125,
+				"spreadingFactor": 10,
+				"bps": 980
+			}, {
+				"uplink": true,
+				"downlink": true,
+				"modulation": "LORA",
+				"bandwidth": 125,
+				"spreadingFactor": 9,
+				"bps": 1760
+			}, {
+				"uplink": true,
+				"downlink": true,
+				"modulation": "LORA",
+				"bandwidth": 125,
+				"spreadingFactor": 8,
+				"bps": 3125
+			}, {
+				"uplink": true,
+				"downlink": true,
+				"modulation": "LORA",
+				"bandwidth": 125,
+				"spreadingFactor": 7,
+				"bps": 5470
+			}, {
+				"uplink": true,
+				"downlink": true,
+				"modulation": "LORA",
+				"bandwidth": 250,
+				"spreadingFactor": 7,
+				"bps": 11000
+			}, {
+				"uplink": true,
+				"downlink": true,
+				"modulation": "FSK",
+				"bandwidth": 0,
+				"spreadingFactor": 0,
+				"bps": 50000
+			}],			
 			"uplinkChannels": [{
 				"frequency": 868900000,
 				"minDR": 0,
@@ -124,6 +181,63 @@
 			"JoinAcceptDelay1": 5,
 			"JoinAcceptDelay2": 6
 		},
+		"dataRates": [{
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 12,
+			"bps": 250
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 11,
+			"bps": 440
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 10,
+			"bps": 980
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 9,
+			"bps": 1760
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 8,
+			"bps": 3125
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 7,
+			"bps": 5470
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 250,
+			"spreadingFactor": 7,
+			"bps": 11000
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "FSK",
+			"bandwidth": 0,
+			"spreadingFactor": 0,
+			"bps": 50000
+		}],			
 		"uplinkChannels": [{
 			"frequency": 868900000,
 			"minDR": 0,
@@ -230,6 +344,63 @@
 			"JoinAcceptDelay1": 5,
 			"JoinAcceptDelay2": 6
 		},
+		"dataRates": [{
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 12,
+			"bps": 250
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 11,
+			"bps": 440
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 10,
+			"bps": 980
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 9,
+			"bps": 1760
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 8,
+			"bps": 3125
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 125,
+			"spreadingFactor": 7,
+			"bps": 5470
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "LORA",
+			"bandwidth": 250,
+			"spreadingFactor": 7,
+			"bps": 11000
+		}, {
+			"uplink": true,
+			"downlink": true,
+			"modulation": "FSK",
+			"bandwidth": 0,
+			"spreadingFactor": 0,
+			"bps": 50000
+		}],			
 		"uplinkChannels": [{
 			"frequency": 433175000,
 			"minDR": 0,
