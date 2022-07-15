@@ -260,10 +260,18 @@ make
 strip lorawan-network-server
 
 vi lorawan-network-server.json
-scp -r . andrei@10.2.104.61:~/src/html
+scp -r * andrei@10.2.104.61:~/src/html
 scp -r * andrei@10.2.104.61:~/dist/passports
 scp dbs.json  andrei@10.2.104.61:~/dist/
 ```
+
+Please note you must
+
+
+config.ts:
+```
+const host = 'http://' + window.location.host + ':5002/';
+``
 
 ### cmake
 
