@@ -187,10 +187,11 @@ sudo make install
 ```
 
 ./configure has several options to enable backend database support:
+
 - --enable-logger-huffman (on by default)
 - --enable-pkt2 (off by default)
-- --enable-db-sqlite=true (on by default)
-- --enable-db-postgres
+- --enable-db-sqlite
+- --enable-db-postgres=yes (on by default, turn off by set --enable-db-postgres=no )
 - --enable-db-mysql
 - --enable-db-firebird
 
@@ -198,6 +199,11 @@ Configure all supported databases and logger huffman:
 
 ```
 ./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres --enable-db-mysql --enable-db-firebird
+```
+
+Configure SQLite database support only and enable JWT authorization of embedded web app users (supress default PostgreSQL support):
+```
+./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-jwt
 ```
 
 You must have database client and developer's tools (include files and libraries at least) installed on the computer.
@@ -219,6 +225,44 @@ For clang:
 
 ```
 ./configure CC=clang CXX=clang++
+```
+
+#### Building with logger-huffman and lorawan-ws libraries with SQLite support only
+
+```
+cd src
+git config --global http.sslverify false
+
+git clone https://github.com/commandus/logger-passport.git
+cd logger-passport
+./autogen.sh 
+./configure
+make
+
+git clone https://github.com/commandus/logger-huffman.git
+cd logger-huffman
+./autogen.sh 
+./configure --enable-logger-passport
+make
+
+sudo apt install libmicrohttpd-dev libsqlite3-dev
+git clone https://github.com/commandus/lorawan-ws.git
+cd lorawan-ws
+./autogen.sh 
+./configure --enable-jwt
+make
+
+git clone https://github.com/commandus/lorawan-network-server.git
+cd lorawan-network-server/
+./autogen.sh 
+./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=off --enable-jwt
+make
+strip lorawan-network-server
+
+vi lorawan-network-server.json
+scp -r . andrei@10.2.104.61:~/src/html
+scp -r * andrei@10.2.104.61:~/dist/passports
+scp dbs.json  andrei@10.2.104.61:~/dist/
 ```
 
 ### cmake
