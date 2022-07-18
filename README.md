@@ -265,12 +265,14 @@ scp -r * andrei@10.2.104.61:~/dist/passports
 scp dbs.json  andrei@10.2.104.61:~/dist/
 ```
 
-Please note you must
-
-
-config.ts:
+Please note you must manually set html, for instance, use 
 ```
-const host = 'http://' + window.location.host + ':5002/';
+git clone https://github.com/commandus/lorawan-ws-angular.git
+```
+
+If you are use anoter web server, check web service location in the config.ts:
+```
+const host = window.location.origin + '/';
 ``
 
 ### cmake

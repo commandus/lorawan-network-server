@@ -49,7 +49,7 @@ int DirTxtIdentityService::load()
 {
 	clear();
 	std::vector<std::string> files;
-	config::filesInPath(path, ".txt", 0, &files);
+	util::filesInPath(path, ".txt", 0, &files);
 	int r = 0;
 	for (int f = 0; f < files.size(); f++) {
         int rr = loadTxtFile(files[f]);

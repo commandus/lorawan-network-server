@@ -52,6 +52,7 @@
 
 #include "gateway-list.h"
 #include "config-filename.h"
+#include "utilfile.h"
 
 #include "db-any.h"
 
@@ -761,8 +762,13 @@ int main(
         wsSpecialPathHandler.gatewayStatService = gatewayStatService;
         wsSpecialPathHandler.deviceStatService = deviceStatService;
 
+        std::string userListFileName = getDefaultConfigFileName(config->wsConfig.jwtUserListFileName);
+        if (!util::fileExists(userListFileName)) {
+            std::cerr << ERR_LOAD_WS_PASSWD_NOT_FOUND << std::endl;
+            exit(ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND);
+        }
         authUserService = new AuthUserFile(config->wsConfig.jwtIssuer,
-            config->wsConfig.jwtSecret, file2string(config->wsConfig.jwtUserListFileName.c_str()));
+            config->wsConfig.jwtSecret, file2string(userListFileName.c_str()));
         wsSpecialPathHandler.jwtAuthService = authUserService;
 
         wsConfig.onSpecialPathHandler = &wsSpecialPathHandler;

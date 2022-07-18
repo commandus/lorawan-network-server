@@ -37,7 +37,7 @@ std::string getDefaultConfigFileName(
 )
 {
     // try to get in the current directory
-    if (access(filename.c_str(), F_OK ) == 0) {
+    if (access(filename.c_str(), F_OK) == 0) {
         return filename;
     }
 

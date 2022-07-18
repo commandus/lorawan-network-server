@@ -45,7 +45,7 @@
 #endif
 
 #ifdef _MSC_VER
-bool config::rmAllDir(const char *path)
+bool util::rmAllDir(const char *path)
 {
 	if (&path == NULL)
 		return false;
@@ -69,7 +69,7 @@ bool config::rmAllDir(const char *path)
 	SHFileOperationA(&shfo);
 }
 
-bool config::rmDir(const std::string &path)
+bool util::rmDir(const std::string &path)
 {
 	if (&path == NULL)
 		return false;
@@ -99,12 +99,12 @@ bool config::rmDir(const std::string &path)
 }
 
 /**
- * Return list of files in specified path
+ * Return list of files in specified paths
  * @param path
  * @param retval can be NULL
  * @return count files
  */
-size_t config::filesInPath
+size_t util::filesInPath
 (
 	const std::string &path,
 	const std::string &suffix,
@@ -138,7 +138,14 @@ size_t config::filesInPath
 	return r;
 }
 
+bool util::fileExists(const std::string &fileName)
+{
+    struct stat r;
+    return _access(fileName.c_str(), F_OK) != -1;
+}
+
 #else
+
 /**
 * FTW_D	directory
 * FTW_DNR	directory that cannot be read
@@ -170,7 +177,7 @@ static int rmnode
 	return 0;
 }
 
-bool config::rmDir(const std::string &path)
+bool util::rmDir(const std::string &path)
 {
 	if (path.size() <= 1)
 		return false;	// prevent "rm -r /"
@@ -194,7 +201,7 @@ static int compareFile
  * @return count files
  * FreeBSD fts.h fts_*()
  */
-size_t config::filesInPath
+size_t util::filesInPath
 (
 	const std::string &path,
 	const std::string &suffix,
@@ -264,9 +271,15 @@ size_t config::filesInPath
 	return count;
 }
 
+bool util::fileExists(const std::string &fileName)
+{
+    struct stat r;
+    return stat(fileName.c_str(), &r) == 0;
+}
+
 #endif
 
-bool config::rmFile(const std::string &fn)
+bool util::rmFile(const std::string &fn)
 {
 	return std::remove((const char*) fn.c_str()) == 0;
 }

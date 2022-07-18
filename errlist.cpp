@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 119
+#define ERR_COUNT 120
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -115,7 +115,8 @@ static const char *errList[ERR_COUNT] = {
 	ERR_WS_START_FAILED,
 	ERR_NO_DEFAULT_WS_DATABASE,
 	ERR_INIT_LOGGER_HUFFMAN_DB,
-    ERR_NO_PACKET_PARSER
+    ERR_NO_PACKET_PARSER,
+    ERR_LOAD_WS_PASSWD_NOT_FOUND
 };
 
 const char *strerror_lorawan_ns

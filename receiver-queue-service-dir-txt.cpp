@@ -107,7 +107,7 @@ int DirTxtReceiverQueueService::count()
 	std::vector<std::string> files;
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 		r += files.size();
 		files.clear();
 	}
@@ -127,7 +127,7 @@ int DirTxtReceiverQueueService::get(
 	std::vector<std::string> files;
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 		r += files.size();
 		if (r > onum)
 		{
@@ -154,11 +154,11 @@ void DirTxtReceiverQueueService::remove(
 	std::vector<std::string> files;
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 		r += files.size();
 		if (r > onum)
 		{
-			if (!config::rmFile(files[onum])) {
+			if (!util::rmFile(files[onum])) {
 				// TODO
 			}
 			break;
@@ -173,12 +173,12 @@ void DirTxtReceiverQueueService::clear(
 {
 	std::vector<std::string> files;
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 	for (std::vector<std::string>::const_iterator it(files.begin()); it != files.end(); it++)
 	{
 		if (fileModificationTime(*it) < olderthan)
 		{
-			if (!config::rmFile(*it)) {
+			if (!util::rmFile(*it)) {
 				// TODO
 			}
 		}
@@ -190,10 +190,10 @@ void DirTxtReceiverQueueService::clear()
 {
 	std::vector<std::string> files;
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &files);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &files);
 	for (std::vector<std::string>::const_iterator it(files.begin()); it != files.end(); it++)
 	{
-		if (!config::rmFile(*it)) {
+		if (!util::rmFile(*it)) {
 			// TODO
 		}
 	}
@@ -228,7 +228,7 @@ int DirTxtReceiverQueueService::pop(
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++)
 	{
 		std::vector<std::string> f;
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &f);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &f);
 		std::vector<std::string>::const_iterator it(f.begin());
 		if (it != f.end())
 		{
@@ -240,7 +240,7 @@ int DirTxtReceiverQueueService::pop(
 				retval.key.id = 0;
 				retval.key.time.tv_sec = fileModificationTime(*it);
 				retval.key.time.tv_usec = 0;
-				if (!config::rmFile(*it))
+				if (!util::rmFile(*it))
 					return ERR_CODE_RM_FILE;
 				return 0;
 			}
@@ -261,7 +261,7 @@ int DirTxtReceiverQueueService::peek(
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++)
 	{
 		std::vector<std::string> f;
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &f);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &f);
 		std::vector<std::string>::const_iterator it(f.begin());
 		if (it != f.end())
 		{
@@ -293,7 +293,7 @@ void DirTxtReceiverQueueService::list(
 	{
 		ReceiverQueueEntry e;
 		std::vector<std::string> f;
-		config::filesInPath(path, dataFileExtensions[fmt], 0, &f);
+		util::filesInPath(path, dataFileExtensions[fmt], 0, &f);
 		for (std::vector<std::string>::const_iterator it(f.begin()); it != f.end(); it++)
 		{
 			if (loadFile(e.value.payload, e.key.time.tv_sec, (DIRTXT_FORMAT) fmt, *it)) {

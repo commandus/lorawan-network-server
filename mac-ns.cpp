@@ -341,7 +341,7 @@ int main(
 	// master device identifier, only one
 	std::vector<TDEVEUI> masterDevEUIs;
 
-	if (parseCmd(networkServiceAaddress, fport, 
+	if (parseCmd(networkServiceAaddress, fport,
 		master_eui, master_devicename,
 		config, macGwConfig, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
