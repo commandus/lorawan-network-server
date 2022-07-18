@@ -131,6 +131,7 @@
 #define ERR_CODE_NO_DEFAULT_WS_DATABASE		-608
 #define ERR_CODE_INIT_LOGGER_HUFFMAN_DB     -609
 #define ERR_CODE_NO_PACKET_PARSER           -610
+#define ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND   -611
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -251,6 +252,7 @@
 #define ERR_NO_DEFAULT_WS_DATABASE		"No default web service database name "
 #define ERR_INIT_LOGGER_HUFFMAN_DB      "No huffman-logger database assigned"
 #define ERR_NO_PACKET_PARSER            "No packet parser"
+#define ERR_LOAD_WS_PASSWD_NOT_FOUND    "User password file not found"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

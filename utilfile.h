@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace config {
+namespace util {
 	bool rmDir(const std::string &path);
 	bool rmFile(const std::string &fn);
 #ifdef _MSC_VER
@@ -28,6 +28,8 @@ namespace config {
 		int flags,
 		std::vector<std::string> *retval
 	);
+
+    bool fileExists(const std::string &fileName);
 }
 
 /**
