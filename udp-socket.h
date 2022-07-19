@@ -36,6 +36,10 @@ class UDPSocket {
     UDPSocket(const UDPSocket &value);
     UDPSocket(const std::string &address, MODE_OPEN_SOCKET mode, MODE_FAMILY familyHint);
     ~UDPSocket();
+    int reOpenSocket(const std::string &address,
+        MODE_OPEN_SOCKET mode,
+        MODE_FAMILY familyHint
+    );
     std::string toString() const;
     static std::string addrString(const struct sockaddr *addr);
     /**

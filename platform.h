@@ -8,8 +8,8 @@
 #else
 #include <syslog.h>
 #include <sstream>
-#define	SYSLOG(msg) { syslog (LOG_ALERT, "%s", msg); }
-#define OPEN_SYSLOG() { setlogmask (LOG_UPTO(LOG_NOTICE)); openlog("semtech_udp_packet_emitter", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1); }
+#define	SYSLOG(level, msg) { syslog (level, "%s", msg); }
+#define OPEN_SYSLOG(NAME) { setlogmask (LOG_UPTO(LOG_NOTICE)); openlog(NAME, LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1); }
 #define CLOSE_SYSLOG() closelog();
 #endif
 

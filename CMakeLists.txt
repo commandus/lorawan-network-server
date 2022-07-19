@@ -50,7 +50,7 @@ set(LIBLORAWANSRC
 )
 
 set(SRC_LORAWAN_NETWORK_SERVER
-	lorawan-network-server.cpp daemonize.cpp udp-listener.cpp
+	lorawan-network-server.cpp run-listener.cpp daemonize.cpp udp-listener.cpp
 	config-json.cpp lora-packet-handler-impl.cpp config-filename.cpp
 	identity-service-dir-txt.cpp ${C_STORAGE} ${C_QUEUE_STORAGE}
 	gateway-stat-service-file.cpp gateway-stat-service-post.cpp

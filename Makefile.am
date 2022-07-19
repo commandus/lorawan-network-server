@@ -155,7 +155,7 @@ rapid_headers = \
 	third_party/rapidjson/msinttypes/inttypes.h third_party/rapidjson/msinttypes/stdint.h
 
 nobase_dist_include_HEADERS = \
-	platform.h utilstring.h utildate.h utilfile.h strptime.h lora-radio.h \
+	run-listener.h platform.h utilstring.h utildate.h utilfile.h strptime.h lora-radio.h \
 	utillora.h net-id.h dev-addr.h udp-socket.h udp-emitter.h udp-listener.h lora-encrypt.h \
 	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
@@ -185,7 +185,7 @@ nobase_dist_include_HEADERS = \
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 
 lorawan_network_server_SOURCES = \
-	lorawan-network-server.cpp daemonize.cpp udp-listener.cpp \
+	lorawan-network-server.cpp run-listener.cpp daemonize.cpp udp-listener.cpp \
 	config-json.cpp lora-packet-handler-impl.cpp \
 	config-filename.cpp third_party/get_rss/get_rss.c \
 	identity-service-dir-txt.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
