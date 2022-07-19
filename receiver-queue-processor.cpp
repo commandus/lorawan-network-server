@@ -54,7 +54,7 @@ int ReceiverQueueProcessor::onPacket(
 }
 
 ReceiverQueueProcessor::ReceiverQueueProcessor()
-	: isStarted(false), isDone(false), threadDb(NULL), onLog(NULL),
+	: isStarted(false), isDone(true), threadDb(NULL), onLog(NULL),
       parserEnv(NULL), databaseByConfig(NULL)
 {
 }
@@ -96,7 +96,6 @@ void ReceiverQueueProcessor::start(
 	if (isStarted)
 		return;
 	isStarted = true;
-	isDone = false;
 	receiverQueueService = rQueueService;
 	std::vector<int> ids;
 	this->databaseByConfig->getIds(ids);
@@ -117,11 +116,12 @@ void ReceiverQueueProcessor::stop()
 
 void ReceiverQueueProcessor::runner()
 {
+    isDone = false;
 	while (isStarted) {
 		struct timeval timeout;
 		timeout.tv_sec = 0;
 		timeout.tv_usec = DB_DEF_TIMEOUT_MS * 1000;
-		int r = select(0, NULL, NULL, NULL, &timeout);
+		int r = select(0, nullptr, nullptr, nullptr, &timeout);
 		switch (r) {
 			case -1:
 				break;

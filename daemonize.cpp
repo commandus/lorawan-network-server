@@ -37,13 +37,13 @@ static TDaemonRunner daemonDone;
 #endif
 
 Daemonize::Daemonize(
-		const std::string &daemonName,
-		const std::string &aworking_directory,
-		TDaemonRunner runner,
-		TDaemonRunner stopRequest,
-		TDaemonRunner done,
-		const int maxfile_descriptors,
-		const std::string pid_file_name
+    const std::string &daemonName,
+    const std::string &aworking_directory,
+    TDaemonRunner runner,
+    TDaemonRunner stopRequest,
+    TDaemonRunner done,
+    const int maxfile_descriptors,
+    const std::string pid_file_name
 )
 	: working_directory(aworking_directory), maxFileDescriptors(maxfile_descriptors)
 {
@@ -57,9 +57,7 @@ Daemonize::Daemonize(
 	daemonDone = done;
 	int r = init();
 	if (r)
-	{
 		std::cerr << "Error daemonize " << r << std::endl;
-	}
 }
 
 Daemonize::~Daemonize()
@@ -189,49 +187,48 @@ bool Daemonize::setPidFile()
 int Daemonize::init()
 {
 	pid_t pid;
-	/* Fork off the parent process */
+	// Fork off the parent process
 	pid = fork();
 
-	/* An error occurred */
+	// An error occurred
 	if (pid < 0)
 		exit(EXIT_FAILURE);
 
-	/* Success: Let the parent terminate */
+	// Success: Let the parent terminate
 	if (pid > 0)
 		exit(EXIT_SUCCESS);
 
-	/* On success: The child process becomes session leader */
+	// On success: The child process becomes session leader
 	if (setsid() < 0)
 		exit(EXIT_FAILURE);
 
-	/* Catch, ignore and handle signals */
+	// Catch, ignore and handle signals
 	//TODO: Implement a working signal handler */
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGHUP, SIG_IGN);
 
-	/* Fork off for the second time*/
+	// Fork off for the second time
 	pid = fork();
 
-	/* An error occurred */
+	// An error occurred
 	if (pid < 0)
 		exit(EXIT_FAILURE);
 
-	/* Success: Let the parent terminate */
+	// Success: Let the parent terminate
 	if (pid > 0)
 		exit(EXIT_SUCCESS);
 
-	/* Set new file permissions */
+	// Set new file permissions
 	umask(0);
 
 	int x;
 
-	/* Change the working directory to the root directory */
-	/* or another appropriated directory */
+	// Change the working directory to the root directory
+	// or another appropriated directory
 	x = chdir(working_directory.c_str());
 
-	/* Close all open file descriptors */
-	for (x = sysconf(_SC_OPEN_MAX); x>0; x--)
-	{
+	// Close all open file descriptors
+	for (x = sysconf(_SC_OPEN_MAX); x>0; x--)	{
 		close(x);
 	}
 
@@ -239,9 +236,7 @@ int Daemonize::init()
 		setFdLimit(maxFileDescriptors);
 
 	setPidFile();
-
 	daemonRun();
-
 	daemonDone();
 	return 0;
 }
@@ -266,14 +261,12 @@ int Daemonize::setFdLimit(int value)
 bool Daemonize::setPidFile()
 {
 	FILE* f = fopen(pidFileName.c_str(), "w+");
-	if (f)
-	{
+	if (f) {
 		fprintf(f, "%u", getpid());
 		fclose(f);
 		return true;
 	}
 	return false;
 }
-
 
 #endif

@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <limits.h>
 
+#include "run-listener.h"
+
 #ifdef WIN32
 #else
 #include <execinfo.h>
@@ -25,32 +27,17 @@
 #include "daemonize.h"
 
 #include "errlist.h"
-#include "utillora.h"
-#include "utilstring.h"
 #include "utildate.h"
 
-#include "udp-listener.h"
 #include "config-json.h"
-#include "lora-packet-handler-impl.h"
-#include "identity-service-file-json.h"
 #include "identity-service-dir-txt.h"
-#include "receiver-queue-service-file-json.h"
-#include "receiver-queue-service-dir-txt.h"
-#include "regional-parameter-channel-plan-file-json.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
 #include "receiver-queue-service-lmdb.h"
 #endif
 
-#ifdef ENABLE_LOGGER_HUFFMAN
-#include "logger-huffman/logger-parse.h"
-#include "logger-loader.h"
-#endif
 
-#include "receiver-queue-processor.h"
-
-#include "gateway-list.h"
 #include "config-filename.h"
 #include "utilfile.h"
 
@@ -59,15 +46,6 @@
 #include "lorawan-ws/lorawan-ws.h"
 // Authorize web service users
 #include "auth-file.h"
-
-#include "device-history-service-json.h"
-
-#include "gateway-stat-service-file.h"
-#include "gateway-stat-service-post.h"
-#include "device-stat-service-file.h"
-#include "device-stat-service-post.h"
-#include "device-channel-plan-file-json.h"
-#include "database-config-json.h"
 
 #include "ws-handler.h"
 
@@ -80,47 +58,14 @@ const std::string programName = "lorawan-network-server";
 #define DEF_DATABASE_CONFIG_FILE_NAME "dbs.json"
 #define DEF_PROTO_PATH "proto"
 
+static RunListener *runListener = nullptr;
 static int lastSysSignal = 0;
-#define MAX_DEVICE_LIST_COUNT   20
 
-// sev service config
+// web service config
 static WSConfig wsConfig;
-static Configuration *config = nullptr;
-static 	AuthUserService *authUserService = nullptr;
-
-static GatewayList *gatewayList = nullptr;
-static GatewayStatService *gatewayStatService = nullptr;
-static DeviceStatService *deviceStatService = nullptr;
-
-// Listen UDP port(s) for packets sent by Semtech's gateway
-static UDPListener *listener = nullptr;
-// Device identity service
-static IdentityService *identityService = nullptr;
-// ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
-static ReceiverQueueProcessor *receiverQueueProcessor = nullptr;
-// LoraPacketProcessor handles uplink messages
-static LoraPacketProcessor *processor = nullptr;
-// Database list
-static DatabaseByConfig *dbByConfig = nullptr;
-// Device counters and last received
-static DeviceHistoryService *deviceHistoryService = nullptr;
-// Regional settings
-static RegionalParameterChannelPlans *regionalParameterChannelPlans = nullptr;
-static DeviceChannelPlan *deviceChannelPlan = nullptr;
-// Database collection
-static ConfigDatabasesIntf *configDatabases = nullptr;
-
-static const char *TAB = "\t";
-
-// pkt2 environment
-#ifdef ENABLE_PKT2
-static void* parserEnv = nullptr;
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-static void* loggerParserEnv = nullptr;
-#endif
-
-ReceiverQueueService *receiverQueueService = nullptr;
+// web service special path
+static WsSpecialPathHandler *wsSpecialPathHandler = nullptr;
+static AuthUserService *authUserService = nullptr;
 
 #ifdef _MSC_VER
 #undef ENABLE_TERM_COLOR
@@ -128,110 +73,6 @@ ReceiverQueueService *receiverQueueService = nullptr;
 #define ENABLE_TERM_COLOR	1
 #endif
 
-static void flushFiles()
-{
-    // save
-    // identityService->flush();
-    if (receiverQueueService)
-		receiverQueueService->flush();
-	if (gatewayList)
-		gatewayList->save();
-	if (deviceHistoryService)
-		deviceHistoryService->flush();
-    // if (deviceChannelPlan)
-    //    deviceChannelPlan->flush();
-    // if (deviceChannelPlan)
-    //    deviceChannelPlan->flush();
-    // if (configDatabases)
-    //    configDatabases->flush();
-    if (deviceStatService)
-        deviceStatService->flush();
-}
-
-static void done()
-{
-	// destroy and free all
-	delete listener;
-	listener = nullptr;
-
-	if (config) {
-		if(config->serverConfig.verbosity > 1)
-			std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
-		delete config;
-		config = nullptr;
-	}
-	if (processor) {
-		delete processor;
-		processor = nullptr;
-	}
-	if (receiverQueueProcessor) {
-		delete receiverQueueProcessor;
-        receiverQueueProcessor = nullptr;
-	}
-
-    // save changes
-    flushFiles();
-
-    if (receiverQueueService) {
-		delete receiverQueueService;
-		receiverQueueService = nullptr;
-	}
-	if (identityService) {
-		delete identityService;
-		identityService = nullptr;
-	}
-    if (gatewayStatService) {
-        delete gatewayStatService;
-        gatewayStatService = nullptr;
-    }
-    if (deviceStatService) {
-        delete deviceStatService;
-        deviceStatService = nullptr;
-    }
-    if (dbByConfig) {
-		delete dbByConfig;
-		dbByConfig = nullptr;
-	}
-	if (gatewayList) {
-		delete gatewayList;
-		gatewayList = nullptr;
-	}
-	if (deviceHistoryService) {
-		delete deviceHistoryService;
-        deviceHistoryService = nullptr;
-	}
-    if (regionalParameterChannelPlans) {
-        delete regionalParameterChannelPlans;
-        regionalParameterChannelPlans = nullptr;
-    }
-    if (deviceChannelPlan) {
-        delete deviceChannelPlan;
-        deviceChannelPlan = nullptr;
-    }
-    if (configDatabases) {
-        delete configDatabases;
-        configDatabases = nullptr;
-    }
-#ifdef ENABLE_PKT2
-	if (parserEnv)
-		donePkt2(parserEnv);
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    if (loggerParserEnv)
-		doneLoggerParser(loggerParserEnv);
-#endif
-    if (authUserService) {
-        delete authUserService;
-        authUserService = nullptr;
-    }
-	exit(0);
-}
-
-static void stop()
-{
-	if (listener)
-		listener->stopped = true;
-}
 
 #define TRACE_BUFFER_SIZE   256
 
@@ -239,6 +80,26 @@ static void printTrace() {
     void *t[TRACE_BUFFER_SIZE];
     size_t size = backtrace(t, TRACE_BUFFER_SIZE);
     backtrace_symbols_fd(t, size, STDERR_FILENO);
+}
+
+void stop()
+{
+    if (runListener)
+        runListener->stop();
+}
+
+void done()
+{
+    if (runListener)
+        runListener->done();
+    if (wsSpecialPathHandler) {
+        delete wsSpecialPathHandler;
+        wsSpecialPathHandler = nullptr;
+    }
+    if (authUserService) {
+        delete authUserService;
+        authUserService = nullptr;
+    }
 }
 
 void signalHandler(int signal)
@@ -339,12 +200,10 @@ int parseCmd(
 
 	if (!nErrors)
 	{
-		for (int i = 0; i < a_address4->count; i++)
-		{
+		for (int i = 0; i < a_address4->count; i++) {
 			config->serverConfig.listenAddressIPv4.push_back(a_address4->sval[i]);
 		}
-		for (int i = 0; i < a_address6->count; i++)
-		{
+		for (int i = 0; i < a_address6->count; i++) {
 			config->serverConfig.listenAddressIPv6.push_back(a_address6->sval[i]);
 		}
 	}
@@ -363,34 +222,28 @@ int parseCmd(
 	}
 
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-	return LORA_OK;
-}
 
-static void listenerOnLog(
-	void *env,
-	int level,
-	int moduleCode,
-	int errorCode,
-	const std::string &message
-)
-{
-	if (env) {
-		if (((UDPListener *) env)->verbosity < level)
-			return;
-	}
-	struct timeval t;
-	gettimeofday(&t, nullptr);
-    std::cerr << timeval2string(t) << " ";
-#ifdef ENABLE_TERM_COLOR
-    if (isatty(2))  // if stderr is piped to the file, do not put ANSI color to the file
-        std::cerr << "\033[" << logLevelColor(level)  << "m";
-#endif
-    std::cerr<< std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
-#ifdef ENABLE_TERM_COLOR
-    if (isatty(2))
-        std::cerr << "\033[0m";
-#endif
-    std::cerr << message << std::endl;
+    // validate paths
+    if (config->serverConfig.identityStorageName.empty()) {
+        config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
+    }
+    if (config->serverConfig.queueStorageName.empty()) {
+        config->serverConfig.queueStorageName = getDefaultConfigFileName(DEF_QUEUE_STORAGE_NAME);
+    }
+    if (config->gatewaysFileName.empty()) {
+        config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
+    }
+    if (config->serverConfig.deviceHistoryStorageName.empty()) {
+        config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(DEF_DEVICE_HISTORY_STORAGE_NAME);
+    }
+    if (config->databaseConfigFileName.empty()) {
+        config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
+    }
+    if (config->protoPath.empty()) {
+        // if proto path is not specified, try use default ./proto/ path
+        config->protoPath = DEF_PROTO_PATH;
+    }
+    return LORA_OK;
 }
 
 static void wsOnLog(
@@ -401,6 +254,10 @@ static void wsOnLog(
     const std::string &message
 )
 {
+    if (runListener && runListener->config && runListener->config->serverConfig.daemonize) {
+        SYSLOG(level, message.c_str());
+        return;
+    }
     if (env) {
         if (((WSConfig *) env)->verbosity < level)
             return;
@@ -420,35 +277,114 @@ static void wsOnLog(
     std::cerr << message << std::endl;
 }
 
-void onGatewayStatDump(
-	void *env,
-	GatewayStat *stat
-) {
-    if (gatewayStatService)
-        gatewayStatService->put(stat);
-}
+static void wsRun(Configuration* config) {
+    wsSpecialPathHandler = new WsSpecialPathHandler();
+    wsSpecialPathHandler->configDatabases = runListener->configDatabases;
+    wsSpecialPathHandler->regionalParameterChannelPlans = runListener->regionalParameterChannelPlans;
+    wsSpecialPathHandler->identityService = runListener->identityService;
+    wsSpecialPathHandler->gatewayList = runListener->gatewayList;
+    wsSpecialPathHandler->config = config;
+    wsSpecialPathHandler->gatewayStatService = runListener->gatewayStatService;
+    wsSpecialPathHandler->deviceStatService = runListener->deviceStatService;
 
-void onDeviceStatDump(
-	void *env,
-	const SemtechUDPPacket &value
-) {
-    if (deviceStatService)
-        deviceStatService->put(&value);
+    std::string userListFileName = getDefaultConfigFileName(config->wsConfig.jwtUserListFileName);
+    if (!util::fileExists(userListFileName)) {
+        runListener->listenerOnLog(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND, ERR_LOAD_WS_PASSWD_NOT_FOUND);
+        exit(ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND);
+    }
+    authUserService = new AuthUserFile(config->wsConfig.jwtIssuer,
+        config->wsConfig.jwtSecret, file2string(userListFileName.c_str()));
+    wsSpecialPathHandler->jwtAuthService = authUserService;
+
+    wsConfig.onSpecialPathHandler = wsSpecialPathHandler;
+
+    // databases
+    // default database
+    bool defDbExists = false;
+    if (!config->wsConfig.defaultDatabase.empty()) {
+        DatabaseNConfig *dc = runListener->dbByConfig->find(config->wsConfig.defaultDatabase);
+        bool hasConn = dc != nullptr;
+        if (hasConn) {
+            int r = dc->open();
+            if (!r) {
+                wsConfig.databases[""] = dc->db;
+                defDbExists = true;
+            }
+        }
+    }
+
+    if (!defDbExists) {
+        std::stringstream ss;
+        ss << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase << std::endl;   // just warning
+        runListener->listenerOnLog(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_NO_DEFAULT_WS_DATABASE, ss.str());
+    }
+
+    // named databases
+    for (std::vector<std::string>::const_iterator it(config->wsConfig.databases.begin()); it != config->wsConfig.databases.end(); it++) {
+        DatabaseNConfig *dc = runListener->dbByConfig->find(*it);
+        bool hasConn = dc != nullptr;
+        if (hasConn) {
+            int r = dc->open();
+            if (!r) {
+                wsConfig.databases[*it] = dc->db;
+            }
+        }
+    }
+#ifdef ENABLE_LOGGER_HUFFMAN
+    if (wsSpecialPathHandler)
+        wsSpecialPathHandler->loggerParser = runListener->loggerParserEnv;
+#endif
+
+    if (config->serverConfig.verbosity > 5) {
+        std::stringstream ss;
+        ss << MSG_WS_START
+           << "threads: " << config->wsConfig.threadCount
+           << ", connections limit: " <<  config->wsConfig.connectionLimit
+           << ", flags: " << config->wsConfig.flags
+           << ", port: " << wsConfig.port
+           << ", html root: " << wsConfig.dirRoot
+           << ", log verbosity: " << wsConfig.verbosity
+           << ", JWT issuer: " << wsConfig.issuer
+           << std::endl;
+        runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
+
+        std::stringstream ss2;
+        ss2 << MSG_DATABASE_LIST << std::endl;
+        for (std::map<std::string, DatabaseIntf *>::const_iterator it(wsConfig.databases.begin()); it != wsConfig.databases.end(); it++) {
+            std::string n = it->first;
+            if (n.empty())
+                n = MSG_DEFAULT_DATABASE;
+            ss2 << "\t" << n << std::endl;
+        }
+        ss2 << std::endl;
+        runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss2.str());
+    }
+
+    if (startWS(wsConfig)) {
+        if (config->serverConfig.verbosity > 5)
+            runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
+    } else {
+        runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED, ERR_WS_START_FAILED);
+        exit(ERR_CODE_WS_START_FAILED);
+    }
 }
 
 static void run()
 {
-	listener->listen();
+    if (runListener->config->wsConfig.enabled)
+        wsRun(runListener->config);
+    if (runListener && runListener->listener) {
+        runListener->start();
+        runListener->listener->listen();
+    }
 }
-
-// web service special path
-WsSpecialPathHandler wsSpecialPathHandler;
 
 int main(
 	int argc,
 	char *argv[])
 {
-    config = new Configuration("");
+
+    Configuration *config = new Configuration("");
 	if (parseCmd(config, argc, argv) != 0)
 		exit(ERR_CODE_COMMAND_LINE);
 	// reload config if required
@@ -464,277 +400,7 @@ int main(
 		std::cerr << ERR_NO_CONFIG << std::endl;
 		exit(ERR_CODE_NO_CONFIG);
 	}
-
-    listenerOnLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_UDP_LISTENER);
-    listener = new UDPListener();
-	// check signal number when select() has been interrupted
-	listener->setSysSignalPtr(&lastSysSignal);
-    listener->setLogger(config->serverConfig.verbosity, listenerOnLog);
-	listener->setGatewayStatDumper(config, onGatewayStatDump);
-
-	if (config->serverConfig.identityStorageName.empty()) {
-		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
-	}
-	if (config->serverConfig.queueStorageName.empty()) {
-		config->serverConfig.queueStorageName = getDefaultConfigFileName(DEF_QUEUE_STORAGE_NAME);
-	}
-	if (config->gatewaysFileName.empty()) {
-		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
-	}
-	if (config->serverConfig.deviceHistoryStorageName.empty()) {
-		config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(DEF_DEVICE_HISTORY_STORAGE_NAME);
-	}
-    if (config->serverConfig.verbosity > 2) {
-        std::cerr << MSG_LISTEN_IP_ADDRESSES << std::endl;
-        std::cerr << config->toDescriptionTableString() << std::endl;
-    }
-
-	gatewayList = new GatewayList(config->gatewaysFileName);
-	
-	if (config->serverConfig.verbosity > 2)
-		std::cerr << MSG_GATEWAY_LIST << gatewayList->toDescriptionTableString() << std::endl;
-
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_IDENTITY_START);
-	// Start identity service
-	switch (config->serverConfig.storageType) {
-		case IDENTITY_STORAGE_LMDB:
-#ifdef ENABLE_LMDB
-			identityService = new LmdbIdentityService();
-#endif
-			break;
-		case IDENTITY_STORAGE_DIR_TEXT:
-			identityService = new DirTxtIdentityService();
-			break;
-		default:
-			identityService = new JsonFileIdentityService();
-	}
-    // set network identifier
-    identityService->setNetworkId(config->serverConfig.netid);
-
-    std::stringstream ss;
-    ss << MSG_IDENTITY_INIT  << identityService->getNetworkId()->toString() << "..";
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
-    int rs = identityService->init(config->serverConfig.identityStorageName, nullptr);
-    if (rs) {
-        std::cerr << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs)
-                  << " " << config->serverConfig.identityStorageName << std::endl;
-        exit(ERR_CODE_INIT_IDENTITY);
-    }
-
-    // Start gateway statistics service
-    switch (config->serverConfig.gwStatStorageType) {
-        case GW_STAT_FILE_JSON:
-            listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_FILE_START);
-            gatewayStatService = new GatewayStatServiceFile();
-            break;
-        case GW_STAT_POST:
-            listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_POST_START);
-            gatewayStatService = new GatewayStatServicePost();
-            break;
-        default:
-            gatewayStatService = nullptr;
-    }
-
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_INIT);
-    if (gatewayStatService) {
-        rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, nullptr);
-        if (rs) {
-            std::cerr << ERR_INIT_GW_STAT << rs << ": " << strerror_lorawan_ns(rs)
-                      << " " << config->serverConfig.logGWStatisticsFileName << std::endl;
-            exit(ERR_CODE_INIT_GW_STAT);
-        }
-    }
-
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_START);
-    // Start device statistics service
-    switch (config->serverConfig.deviceStatStorageType) {
-        case DEVICE_STAT_FILE_CSV:
-            deviceStatService = new DeviceStatServiceFileCsv();
-            break;
-        case DEVICE_STAT_FILE_JSON:
-            deviceStatService = new DeviceStatServiceFileJson();
-            break;
-        case DEVICE_STAT_POST:
-            deviceStatService = new DeviceStatServicePost();
-            break;
-        default:
-            deviceStatService = nullptr;
-    }
-
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_INIT);
-    if (deviceStatService) {
-        rs = deviceStatService->init(config->serverConfig.logDeviceStatisticsFileName, nullptr);
-        if (rs) {
-            std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
-                      << " " << config->serverConfig.logDeviceStatisticsFileName << std::endl;
-            exit(ERR_CODE_INIT_DEVICE_STAT);
-        }
-    }
-
-    if (config->serverConfig.verbosity > 3) {
-		std::vector<NetworkIdentity> identities;
-		std::cerr << MSG_DEVICES << std::endl;
-		identityService->list(identities, 0, MAX_DEVICE_LIST_COUNT + 1);
-        size_t c = 0;
-		for (std::vector<NetworkIdentity>::const_iterator it(identities.begin()); it != identities.end(); it++) {
-			std::cerr
-                << TAB << activation2string(it->activation)
-                << TAB << DEVADDR2string(it->devaddr)
-                << TAB << DEVEUI2string(it->devEUI)
-                << TAB << DEVICENAME2string(it->name);
-            if (identityService->canControlService(it->devaddr))
-				std::cerr << TAB << "master";
-			std::cerr << std::endl;
-            if (c > MAX_DEVICE_LIST_COUNT) {
-                std::cerr << TAB << ".." << std::endl;
-                break;
-            }
-            c++;
-		}
-        std::cerr << TAB << identityService->size() << " " << MSG_DEVICE_COUNT << std::endl;
-	}
-
-    switch (config->serverConfig.deviceStatStorageType) {
-        case DEVICE_STAT_FILE_JSON:
-        case DEVICE_STAT_FILE_CSV:
-        case DEVICE_STAT_POST:
-            listener->setDeviceStatDumper(config, onDeviceStatDump);
-            break;
-        default:
-            break;
-    }
-
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_START);
-    // std::cerr << "Device history name: " << config->serverConfig.deviceHistoryStorageName << std::endl;
-    deviceHistoryService = new JsonFileDeviceHistoryService();
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_INIT);
-    rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, nullptr);
-    if (rs) {
-        std::cerr << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
-                  << " " << config->serverConfig.deviceHistoryStorageName << std::endl;
-        // That's ok, no problem at all
-        // exit(ERR_CODE_INIT_DEVICE_STAT);
-    }
-
-    // load regional settings
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_START);
-    regionalParameterChannelPlans = new RegionalParameterChannelPlanFileJson();
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_INIT
-        + config->serverConfig.regionalSettingsStorageName + "..");
-
-    // initialize regional settings
-    rs = regionalParameterChannelPlans->init(config->serverConfig.regionalSettingsStorageName, nullptr);
-    if (rs) {
-        int parseCode;
-        std::string parseDescription = regionalParameterChannelPlans->getErrorDescription(parseCode);
-        std::cerr << ERR_MESSAGE << ERR_CODE_INIT_REGION_BANDS << ": " << ERR_INIT_REGION_BANDS
-            << ", code " << rs << ": " << strerror_lorawan_ns(rs)
-                  << ", file: " << config->serverConfig.regionalSettingsStorageName
-                  << ", parseRX error " << parseCode << ": " << parseDescription
-                  << std::endl;
-        exit(ERR_CODE_INIT_REGION_BANDS);
-    }
-    // initialize regional settings device mapping
-    deviceChannelPlan = new DeviceChannelPlanFileJson(regionalParameterChannelPlans);
-    if (!config->serverConfig.regionalSettingsChannelPlanName.empty()) {
-        // override default regional settings if region name specified
-        deviceChannelPlan->setDefaultPlanName(config->serverConfig.regionalSettingsChannelPlanName);
-    }
-
-    const RegionalParameterChannelPlan *regionalParameterChannelPlan = deviceChannelPlan->get();
-    if (!regionalParameterChannelPlan) {
-        std::cerr << ERR_MESSAGE << ERR_CODE_REGION_BAND_NO_DEFAULT << ": " << ERR_REGION_BAND_NO_DEFAULT << std::endl;
-        exit(ERR_CODE_REGION_BAND_NO_DEFAULT);
-    }
-
-    if (config->serverConfig.verbosity > 3) {
-        std::cerr << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlan->toDescriptionTableString() << std::endl;
-    }
-
-	// Start received message queue service
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_START);
-	void *options = nullptr;
-	DirTxtReceiverQueueServiceOptions dirOptions;
-	switch (config->serverConfig.messageQueueType) {
-		case MESSAGE_QUEUE_STORAGE_LMDB:
-#ifdef ENABLE_LMDB
-			//receiverQueueService = new LmdbReceiverQueueService();
-#endif			
-			break;
-		case MESSAGE_QUEUE_STORAGE_DIR_TEXT:
-			receiverQueueService = new DirTxtReceiverQueueService();
-			dirOptions.format = (DIRTXT_FORMAT) config->serverConfig.messageQueueDirFormat;
-			options = (void *) &dirOptions;
-			break;
-		default:
-			receiverQueueService = new JsonFileReceiverQueueService();
-			
-		break;
-	}
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_INIT);
-	rs = receiverQueueService->init(config->serverConfig.queueStorageName, options);
-	if (rs) {
-		std::cerr << ERR_INIT_QUEUE << rs << ": " << strerror_lorawan_ns(rs)
-			<< " " << config->serverConfig.queueStorageName << std::endl;
-		// that's ok
-		// exit(ERR_CODE_INIT_QUEUE);
-	}
-
-	if (config->databaseConfigFileName.empty()) {
-		config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
-	}
-
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Start output database service ..");
-#ifdef ENABLE_PKT2
-	configDatabases = new ConfigDatabases(config->databaseConfigFileName);
-#else
-    configDatabases = new ConfigDatabasesJson(config->databaseConfigFileName);
-#endif
-	if (configDatabases->dbs.empty()) {
-		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
-		// exit(ERR_CODE_LOAD_DATABASE_CONFIG);
-	}
-
-	if (config->serverConfig.verbosity > 2)
-		std::cerr << MSG_DATABASE_LIST << std::endl;
-
-	// helper class to find out database by name or sequence number (id)
-	dbByConfig = new DatabaseByConfig(configDatabases);
-	// check out database connectivity
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Check database availability ..");
-	bool dbOk = true;
-	for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
-        if (!it->active)
-            continue;
-		DatabaseNConfig *dc = dbByConfig->find(it->name);
-		bool hasConn = dc != nullptr;
-        int r = 0;
-		if (hasConn) {
-            r = dc->open();
-            if (r == ERR_CODE_NO_DATABASE) {
-                hasConn = false;
-            }
-            hasConn = hasConn && (r == 0);
-        }
-		if (config->serverConfig.verbosity > 2) {
-			std::cerr << TAB << it->name  << TAB << MSG_CONNECTION
-                << (hasConn ? MSG_CONN_ESTABLISHED : MSG_CONN_FAILED);
-            if (r)
-                std::cerr <<  ": " << strerror_lorawan_ns(r);
-            if (dc->db)
-                std::cerr << " " << dc->db->errmsg;
-            std::cerr << std::endl;
-		}
-        if (hasConn)
-		    dc->close();
-		else
-			dbOk = false;
-	}
-	// exit, if it can not connect to the database
-	if (!dbOk) {
-		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
-		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
-	}
+    runListener = new RunListener(config, &lastSysSignal);
 
 	// web service
 	if (config->wsConfig.enabled) {
@@ -753,198 +419,27 @@ int main(
         // JWT
         wsConfig.issuer = config->wsConfig.jwtIssuer;
         wsConfig.secret = config->wsConfig.jwtSecret;
-
-        wsSpecialPathHandler.configDatabases = configDatabases;
-        wsSpecialPathHandler.regionalParameterChannelPlans = regionalParameterChannelPlans;
-        wsSpecialPathHandler.identityService = identityService;
-        wsSpecialPathHandler.gatewayList = gatewayList;
-        wsSpecialPathHandler.config = config;
-        wsSpecialPathHandler.gatewayStatService = gatewayStatService;
-        wsSpecialPathHandler.deviceStatService = deviceStatService;
-
-        std::string userListFileName = getDefaultConfigFileName(config->wsConfig.jwtUserListFileName);
-        if (!util::fileExists(userListFileName)) {
-            std::cerr << ERR_LOAD_WS_PASSWD_NOT_FOUND << std::endl;
-            exit(ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND);
-        }
-        authUserService = new AuthUserFile(config->wsConfig.jwtIssuer,
-            config->wsConfig.jwtSecret, file2string(userListFileName.c_str()));
-        wsSpecialPathHandler.jwtAuthService = authUserService;
-
-        wsConfig.onSpecialPathHandler = &wsSpecialPathHandler;
-
-		// databases
-		// default database
-		bool defDbExists = false;
-		if (!config->wsConfig.defaultDatabase.empty()) {
-			DatabaseNConfig *dc = dbByConfig->find(config->wsConfig.defaultDatabase);
-			bool hasConn = dc != nullptr;
-			if (hasConn) {
-				int r = dc->open();
-				if (!r) {
-					wsConfig.databases[""] = dc->db;
-					defDbExists = true;
-				}
-			}
-		}
-
-		if (!defDbExists)
-			std::cerr << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase << std::endl;   // just warning
-
-		// named databases
-		for (std::vector<std::string>::const_iterator it(config->wsConfig.databases.begin()); it != config->wsConfig.databases.end(); it++) {
-			DatabaseNConfig *dc = dbByConfig->find(*it);
-			bool hasConn = dc != nullptr;
-			if (hasConn) {
-				int r = dc->open();
-				if (!r) {
-					wsConfig.databases[*it] = dc->db;
-				}
-			}
-		}
-
-		if (config->serverConfig.verbosity > 2) {
-			std::cerr << MSG_WS_START
-				<< " threads: " << config->wsConfig.threadCount
-				<< ", connections limit: " <<  config->wsConfig.connectionLimit
-				<< ", flags: " << config->wsConfig.flags
-				<< ", port: " << wsConfig.port
-				<< ", html root: " << wsConfig.dirRoot
-				<< ", log verbosity: " << wsConfig.verbosity
-                << ", JWT issuer: " << wsConfig.issuer
-				<< std::endl;
-			std::cerr << MSG_DATABASE_LIST << std::endl;
-			for (std::map<std::string, DatabaseIntf *>::const_iterator it(wsConfig.databases.begin()); it != wsConfig.databases.end(); it++) {
-				std::string n = it->first;
-				if (n.empty())
-					n = MSG_DEFAULT_DATABASE;
-				std::cerr << TAB << n << std::endl;
-			}
-			std::cerr << std::endl;
-		}
-
-		if (startWS(wsConfig)) {
-			if (config->serverConfig.verbosity > 2)
-				std::cerr << MSG_WS_START_SUCCESS << std::endl;
-		} else {
-			std::cerr << ERR_WS_START_FAILED << std::endl;
-			exit(ERR_CODE_WS_START_FAILED);
-		}
 	}
 
-	if (config->protoPath.empty()) {
-		// if proto path is not specified, try use default ./proto/ path
-		config->protoPath = DEF_PROTO_PATH;
-	}
-
-#ifdef ENABLE_PKT2
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser PKT2 ..");
-	parserEnv = initPkt2(config->protoPath, 0);
-	if (!parserEnv) {
-		std::cerr << ERR_LOAD_PROTO << std::endl;
-		exit(ERR_CODE_LOAD_PROTO);
-	}
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    DbLoggerKosaPacketsLoader loggerKosaPacketsLoader;
-    bool hasLoggerKosaPacketsLoader = false;
-    // set database to load from
-    if (!config->loggerDatabaseName.empty()) {
-        DatabaseNConfig *kldb = dbByConfig->find(config->loggerDatabaseName);
-        if (kldb) {
-            loggerKosaPacketsLoader.setDatabase(kldb->db);
-            int r = kldb->open();
-            if (r == ERR_CODE_NO_DATABASE) {
-                hasLoggerKosaPacketsLoader = false;
-            } else {
-                hasLoggerKosaPacketsLoader = true;
-            }
-        }
-    }
-    if (hasLoggerKosaPacketsLoader) {
-        std::stringstream sskldb;
-        sskldb << MSG_INIT_LOGGER_HUFFMAN << config->loggerDatabaseName;
-        listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
-    } else {
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
-    }
-	loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames, listenerOnLog, &loggerKosaPacketsLoader);
-	if (!loggerParserEnv) {
-		std::cerr << ERR_INIT_LOGGER_HUFFMAN_PARSER << std::endl;
-		exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
-	}
-    wsSpecialPathHandler.loggerParser = loggerParserEnv;
-#endif
-
-	// Set up processor
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_PKT2_START);
-	processor = new LoraPacketProcessor();
-    processor->setLogger(listenerOnLog);
-	processor->setIdentityService(identityService);
-	processor->setGatewayList(gatewayList);
-	processor->setReceiverQueueService(receiverQueueService);
-    processor->setDeviceHistoryService(deviceHistoryService);
-	// FPort number reserved for messages controls network service. 0- no remote control allowed
-	processor->reserveFPort(config->serverConfig.controlFPort);
-    processor->setDeviceChannelPlan(deviceChannelPlan);
-
-	// Set pkt2 environment
-	receiverQueueProcessor = new ReceiverQueueProcessor();
-#ifdef ENABLE_PKT2
-    receiverQueueProcessor->setParserEnv(parserEnv);
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    receiverQueueProcessor->setParserEnv(loggerParserEnv);
-#endif
-    receiverQueueProcessor->setLogger(listenerOnLog);
-
-	// Set databases
-	receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
-
-    // start processing queue
-    processor->setReceiverQueueProcessor(receiverQueueProcessor);
-	
-	// Set up listener
-	listener->setHandler(processor);
-	listener->setGatewayList(gatewayList);
-	listener->setIdentityService(identityService);
-    listener->setDeviceHistoryService(deviceHistoryService);
-
-	if (config->serverConfig.listenAddressIPv4.empty() && config->serverConfig.listenAddressIPv6.empty()) {
-			std::cerr << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;
-			exit(ERR_CODE_PARAM_NO_INTERFACE);
-	}
-	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv4.begin()); it != config->serverConfig.listenAddressIPv4.end(); it++) {
-		if (!listener->add(*it, MODE_FAMILY_HINT_IPV4)) {
-			std::cerr << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
-			exit(ERR_CODE_SOCKET_BIND);
-		}
-	}
-	for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv6.begin()); it != config->serverConfig.listenAddressIPv6.end(); it++) {
-		if (!listener->add(*it, MODE_FAMILY_HINT_IPV6)) {
-			std::cerr << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
-			exit(ERR_CODE_SOCKET_BIND);
-		}
-	}
-
-	if (config->serverConfig.daemonize)
-	{
-        listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
+	if (config->serverConfig.daemonize)	{
+        // negative verbosity forces syslog
+        runListener->listener->verbosity = - runListener->listener->verbosity;
+        runListener->listenerOnLog(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
 		char wd[PATH_MAX];
 		std::string progpath = getcwd(wd, PATH_MAX);
-		if (config->serverConfig.verbosity > 1)
-			std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
-		OPEN_SYSLOG()
+		if (config->serverConfig.verbosity > 1) {
+            std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
+        }
+		OPEN_SYSLOG(programName.c_str())
 		Daemonize daemonize(programName, progpath, run, stop, done);
-		// CLOSE_SYSLOG()
-	}
-	else
-	{
+        std::cerr << MSG_DAEMON_STOPPED << std::endl;
+		CLOSE_SYSLOG()
+	} else {
 #ifdef _MSC_VER
 #else
 		setSignalHandler();
 #endif
-        listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
+        runListener->listenerOnLog(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
 		run();
 		done();
 	}

@@ -263,6 +263,8 @@
 #define MSG_PG_CONNECTED        		"Connected"
 #define MSG_PG_CONNECTING       		"Connecting..."
 #define MSG_DAEMON_STARTED      		"Start daemon "
+#define MSG_DAEMON_STOPPED      		"Daemon has been stopped"
+
 #define MSG_DAEMON_STARTED_1    		". Check syslog."
 #define MSG_WS_TIMEOUT					"Web service time out"
 #define MSG_TIMEOUT						"Timeout"
@@ -329,6 +331,11 @@
 #define MSG_LISTENER_DAEMON_RUN         "Listener daemon run .."
 #define MSG_LISTENER_RUN                "Listener run .."
 #define MSG_INIT_LOGGER_HUFFMAN         "Initialize payload parser logger-huffman, database "
+#define MSG_START_OUTPUT_DB_SVC         "Start output database service .."
+#define MSG_CHECKING_DB_AVAILABILITY    "Checking database availability.."
+#define MSG_LISTEN_SOCKETS              "Listen sockets "
+#define MSG_LISTEN_SOCKET_COUNT         " socket(s)"
+#define MSG_LISTEN_LARGEST_SOCKET       "Largest socket "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

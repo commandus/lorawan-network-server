@@ -336,7 +336,6 @@ bool GatewayList::copyId
 
 std::string GatewayList::toDescriptionTableString() const {
     std::stringstream ss;
-    ss << std::endl;
     for (std::map<uint64_t, GatewayStat>::const_iterator it(gateways.begin()); it != gateways.end(); it++) {
         ss << "\t" << it->second.name
             << "\t" << gatewayId2str(it->second.gatewayId)

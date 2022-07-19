@@ -108,7 +108,12 @@ Gateways
 Before first run create configuration file then run 
 
 ```
-./lorawan-network-server -c lorawan-network-server.json
+./lorawan-network-server -c lorawan-network-server.json -vvvvvvv
+```
+
+Run as daemon 
+```
+./lorawan-network-server -c lorawan-network-server.json -vvvvvvv -d
 ```
 
 ## Build

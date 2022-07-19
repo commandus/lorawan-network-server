@@ -322,11 +322,22 @@ int UDPListener::parseBuffer
 }
 
 int UDPListener::listen() {
-	int sz = sockets.size();
+    int sz = sockets.size();
 	if (!sz)
 		return ERR_CODE_SOCKET_NO_ONE;
-	
-	while (!stopped) {
+
+    std::stringstream ss;
+    ss << MSG_LISTEN_SOCKETS;
+    ss << ", verbosity: " << this->verbosity << std::endl;
+    for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
+        ss << it->toString() << " ";
+    }
+    ss << std::endl << MSG_LISTEN_LARGEST_SOCKET << largestSocket() << std::endl;
+
+    ss << sz << MSG_LISTEN_SOCKET_COUNT;
+    onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, ss.str());
+
+    while (!stopped) {
 		fd_set readHandles;
 	    FD_ZERO(&readHandles);
 		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
@@ -337,18 +348,16 @@ int UDPListener::listen() {
         timeoutInterval.tv_sec = 1;
         timeoutInterval.tv_usec = 0;
 
-        int rs = select(largestSocket() + 1, &readHandles, NULL, NULL, &timeoutInterval);
+        int rs = select(largestSocket() + 1, &readHandles, nullptr, nullptr, &timeoutInterval);
         if (rs == -1) {
 			int serrno = errno;
 			if (onLog) {
 				std::stringstream ss;
-
-				ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT 
+				ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT
 					<< ", errno " << serrno << ": " << strerror(errno);
 				onLog(this, LOG_WARNING, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
 			}
-			if (serrno == EINTR)	// Interrupted system call
-			{
+			if (serrno == EINTR){ // Interrupted system call
 				if (sysSignalPtr) {
 					if (*sysSignalPtr == 0 || *sysSignalPtr == SIGUSR2)
 						continue;

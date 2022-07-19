@@ -224,23 +224,34 @@ UDPSocket::UDPSocket(
 	MODE_OPEN_SOCKET mode,
 	MODE_FAMILY familyHint
 ) 
-	: sock(0), errcode(0), lasterrno(0)
 {
+	reOpenSocket(address, mode, familyHint);
+}
+
+int UDPSocket::reOpenSocket(
+	const std::string &address,
+	MODE_OPEN_SOCKET mode,
+	MODE_FAMILY familyHint
+)
+{
+	sock = 0;
+	errcode = 0;
+	lasterrno = 0;
 	std::string a;
 	int p;
 	if (!splitAddress(a, p, address)) {
 		errcode = ERR_CODE_INVALID_ADDRESS;
-		return;
+		return errcode;
 	}
 	int f = addressFamily(&addr, &addrStorage, a, p, familyHint);
 	if (f < 0) {
 		errcode = f;
-		return;
+		return errcode;
 	}
 
 	if (!((f == AF_INET) || (f == AF_INET6))) {
 		errcode = ERR_CODE_INVALID_FAMILY;
-		return;
+		return errcode;
 	}
 
 	if (f == AF_INET6) {
@@ -248,7 +259,7 @@ UDPSocket::UDPSocket(
 		if (sock < 0) {
 			errcode = ERR_CODE_SOCKET_CREATE;
 			lasterrno = errno;
-			return;
+			return errcode;
 		}
 	} else {
 		if (f == AF_INET) {
@@ -256,9 +267,9 @@ UDPSocket::UDPSocket(
 			if (sock < 0) {
 				errcode = ERR_CODE_SOCKET_CREATE;
 				lasterrno = errno;
-				return;
+				return errcode;
 			}
-		} 
+		}
 	}
 
 	if (mode == MODE_OPEN_SOCKET_LISTEN) {
@@ -266,9 +277,10 @@ UDPSocket::UDPSocket(
 		if (bind(sock, (struct sockaddr *) &addrStorage, addr.ai_addrlen) < 0) {
 			errcode = ERR_CODE_SOCKET_BIND;
 			lasterrno = errno;
-			return;
+			return errcode;
 		}
 	}
+	return 0;
 }
 
 int UDPSocket::recv(
