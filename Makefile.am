@@ -175,6 +175,8 @@ nobase_dist_include_HEADERS = \
 	third_party/logger-huffman/logger-parse.h third_party/logger-huffman/logger-collection.h \
 	third_party/logger-huffman/logger-huffman.h \
 	third_party/lorawan-ws/lorawan-ws.h \
+	third_party/jwt-cpp/jwt.h third_party/jwt-cpp/base.h third_party/jwt-cpp/traits/kazuho-picojson/traits.h \
+	third_party/jwt-cpp/traits/kazuho-picojson/defaults.h third_party/picojson/picojson.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h db-json.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
