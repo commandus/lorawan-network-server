@@ -72,6 +72,10 @@ public:
 	void clear();
 
 	int listen();
+    int listen(
+        const std::vector<std::string>&ipv4,
+        const std::vector<std::string>&ipv6
+    );
 	int parseBuffer(
 		const std::string &buffer,
 		size_t bytesReceived,

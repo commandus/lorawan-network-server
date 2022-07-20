@@ -19,12 +19,14 @@
 # 4b26020719dfff001adaff001be6ff00
 #
 fcnt=1
+ADR=84.237.104.128:5000
+# ADR=127.0.0.1:5000
 while read -r line
 do
   echo $fcnt
   echo "$line"
   ./dev-payload -i identity.json -e 3231323549304c0a  -g 6cc3743eed46 -j -c $fcnt "$line"
-  ./dev-payload -i identity.json -e 3231323549304c0a  -g 6cc3743eed46 -a "127.0.0.1:5000" -c $fcnt "$line"
+  ./dev-payload -i identity.json -e 3231323549304c0a  -g 6cc3743eed46 -a $ADR -c $fcnt "$line"
 # echo "$line" | xxd -r -p | nc -4u -q1 localhost 5000
   let "fcnt=fcnt+1"
 	sleep 1
