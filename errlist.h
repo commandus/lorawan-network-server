@@ -327,7 +327,7 @@
 #define MSG_DEV_HISTORY_INIT            "Initialize device history service.."
 #define MSG_RECEIVER_QUEUE_START        "Start received message queue service .."
 #define MSG_RECEIVER_QUEUE_INIT         "Initialize receiver message queue service .."
-#define MSG_PKT2_START                  "Start LoRaWAN packet processor.."
+#define MSG_START_PACKET_PROCESSOR                  "Start LoRaWAN packet processor.."
 #define MSG_LISTENER_DAEMON_RUN         "Listener daemon run .."
 #define MSG_LISTENER_RUN                "Listener run .."
 #define MSG_INIT_LOGGER_HUFFMAN         "Initialize payload parser logger-huffman, database "

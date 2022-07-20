@@ -137,7 +137,7 @@ bool UDPListener::add(
 		}
 		return false;
 	}
-	sockets.push_back(s);	// copy socket to the vector
+    sockets.push_back(s);	// copy socket to the vector
 	return true;
 }
 
@@ -242,7 +242,6 @@ int UDPListener::parseBuffer
 		}
 	}
 
-	// std::cerr << "===" << pr << ": " << strerror_lorawan_ns(pr) << std::endl;
     if (onDeviceStatDump) {
         for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
             onDeviceStatDump(deviceStatEnv, *itp);
@@ -274,7 +273,7 @@ int UDPListener::parseBuffer
 			break;
 		default: // including ERR_CODE_INVALID_PACKET, it will contain some valid packets in the JSON, continue
 			// process data packets if exists
-			for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
+            for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
 				if (itp->errcode) {
 					std::string v = std::string(buffer.c_str(), bytesReceived);
 					std::stringstream ss;
@@ -291,12 +290,13 @@ int UDPListener::parseBuffer
 							<< itp->toDebugString();
 						onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 					}
+
 					if (handler) {
 						handler->put(receivedTime, *itp);
 					} else {
 						if (onLog) {
 							std::stringstream ss;
-							ss << MSG_READ_BYTES 
+							ss << MSG_READ_BYTES
 								<< UDPSocket::addrString((const struct sockaddr *) &gwAddress) << ": "
 								<< itp->toString();
 							onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
@@ -321,6 +321,30 @@ int UDPListener::parseBuffer
 	return pr;
 }
 
+int UDPListener::listen(
+    const std::vector<std::string>& ipv4,
+    const std::vector<std::string>& ipv6
+)
+{
+    for (std::vector<std::string>::const_iterator it(ipv4.begin()); it != ipv4.end(); it++) {
+        if (!add(*it, MODE_FAMILY_HINT_IPV4)) {
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
+            onLog(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
+            exit(ERR_CODE_SOCKET_BIND);
+        }
+    }
+    for (std::vector<std::string>::const_iterator it(ipv6.begin()); it != ipv6.end(); it++) {
+        if (!add(*it, MODE_FAMILY_HINT_IPV6)) {
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
+            onLog(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
+            exit(ERR_CODE_SOCKET_BIND);
+        }
+    }
+    return listen();
+}
+
 int UDPListener::listen() {
     int sz = sockets.size();
 	if (!sz)
@@ -328,14 +352,13 @@ int UDPListener::listen() {
 
     std::stringstream ss;
     ss << MSG_LISTEN_SOCKETS;
-    ss << ", verbosity: " << this->verbosity << std::endl;
     for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
         ss << it->toString() << " ";
     }
-    ss << std::endl << MSG_LISTEN_LARGEST_SOCKET << largestSocket() << std::endl;
-
     ss << sz << MSG_LISTEN_SOCKET_COUNT;
     onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, ss.str());
+
+
 
     while (!stopped) {
 		fd_set readHandles;
@@ -367,13 +390,11 @@ int UDPListener::listen() {
 		}
 		if (rs == 0) {
 			// timeout, nothing to do
-			// std::stringstream ss;ss << MSG_TIMEOUT;listenerOnLog(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+			// std::stringstream ss;ss << MSG_TIMEOUT;logMessage(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 			continue;
 		}
-
 		struct timeval receivedTime;
 		gettimeofday(&receivedTime, NULL);
-		
 		// By default, there are two sockets: one for IPv4, second for IPv6
 		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
 			if (!FD_ISSET(it->sock, &readHandles))
@@ -390,7 +411,6 @@ int UDPListener::listen() {
 				}
 				continue;
 			}
-
 			// rapidjson operates with \0 terminated string, just in case add terminator. Extra space is reserved
 			buffer[bytesReceived] = '\0';
 			std::stringstream ss;
@@ -399,10 +419,9 @@ int UDPListener::listen() {
 				<< UDPSocket::addrString((const struct sockaddr *) &gwAddress)
 				<< " (" << bytesReceived
 				<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-			if (json) {
+			if (json)
 				ss << "; " << json;
-			}
-			onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+			onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 
 			// parseRX packet result code
 			int pr = parseBuffer(buffer, bytesReceived, it->sock, receivedTime, gwAddress);

@@ -21,27 +21,34 @@ int LoraPacketProcessor::enqueuePayload(
 {
 	std::stringstream ss;
 	std::string p = value.payload;
-	// ReceiverQueueService deduplicate repeated packets received from gateways and then store data to the database asynchronously
-	if (receiverQueueService)
-		if (receiverQueueService->push(value, time)) {
-            if (onLog) {
-                ss << MSG_ENQUEUE_DB
-                    << " (queue size: " << receiverQueueService->count()
-                    << ") " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
-                   << " " << value.devId.toJsonString() << ": " << hexString(p);
-                onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
-            }
-        } else {
-            if (onLog) {
-                std::stringstream ss2;
-                ss2 << ERR_DUPLICATED_PACKET
-                   << " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
-                   //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
-                   << " " << value.devId.toJsonString() << ": " << hexString(p);
-                onLog(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss2.str());
-            }
+	if (!receiverQueueService) {
+        if (onLog) {
+            ss << ERR_MESSAGE
+               << ERR_CODE_INIT_QUEUE << ": " << ERR_INIT_QUEUE;
+            onLog(this, LOG_ERR, LOG_PACKET_HANDLER, ERR_CODE_INIT_QUEUE, ss.str());
         }
+        return ERR_CODE_INIT_QUEUE;
+    }
+    // ReceiverQueueService deduplicate repeated packets received from gateways and then store data to the database asynchronously
+    if (receiverQueueService->push(value, time)) {
+        if (onLog) {
+            ss << MSG_ENQUEUE_DB
+               << " (queue size: " << receiverQueueService->count()
+               << ") " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+               //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
+               << " " << value.devId.toJsonString() << ": " << hexString(p);
+            onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+        }
+    } else {
+        if (onLog) {
+            std::stringstream ss2;
+            ss2 << ERR_DUPLICATED_PACKET
+                << " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
+                //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
+                << " " << value.devId.toJsonString() << ": " << hexString(p);
+            onLog(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss2.str());
+        }
+    }
 	return 0;
 }
 
@@ -170,8 +177,8 @@ int LoraPacketProcessor::enqueueJoinResponse(
 }
 
 LoraPacketProcessor::LoraPacketProcessor()
-	: reservedFPort(0), identityService(NULL), gatewayList(NULL), onLog(NULL), receiverQueueService(NULL),
-      receiverQueueProcessor(NULL)
+	: reservedFPort(0), identityService(nullptr), gatewayList(nullptr), onLog(nullptr), receiverQueueService(nullptr),
+      receiverQueueProcessor(nullptr)
 {
 	packetQueue.start(*this);
 }
@@ -206,10 +213,9 @@ int LoraPacketProcessor::ack
  * @param time received time
  * @param packet Semtech gateway packet
  */ 
-int LoraPacketProcessor::put
-(
-        const struct timeval &time,
-        SemtechUDPPacket &packet
+int LoraPacketProcessor::put(
+    const struct timeval &time,
+    SemtechUDPPacket &packet
 )
 {
 	DEVADDR addr;

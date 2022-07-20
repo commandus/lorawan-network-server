@@ -47,12 +47,12 @@ public:
     RunListener(Configuration *config, int *lastSysSignal);
 
     void flushFiles();
-    static void listenerOnLog(
-            void *env,
-            int level,
-            int moduleCode,
-            int errorCode,
-            const std::string &message
+    void logMessage(
+        void *env,
+        int level,
+        int moduleCode,
+        int errorCode,
+        const std::string &message
     );
     void init(Configuration *config, int *lastSysSignal);
     void start();

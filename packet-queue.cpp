@@ -510,8 +510,7 @@ int PacketQueue::replyMAC(
 	fcntdown++;
 
 	std::string response = item.packet.mkPullResponse(mrp, id, internalTime, fcntdown, power);
-std::cerr << "==MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl;
-std::cerr << "==MAC RESPONSE: " << hexString(response) << std::endl;
+    // std::cerr << "MAC RESPONSE: " << "device addr: " << DEVADDR2string(item.packet.header.header.devaddr) << std::endl << hexString(response) << std::endl;
 	size_t r = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
 		(const struct sockaddr*) &gwit->second.sockaddr,
 		((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
@@ -664,7 +663,7 @@ int PacketQueue::replyControl(
 	}
 	fCntDown++;
 
-std::cerr << "==SEND MAC command to device addr: " << DEVADDR2string(nid.devaddr) << std::endl;
+    // std::cerr << "SEND MAC command to device addr: " << DEVADDR2string(nid.devaddr) << std::endl;
 	
 	std::string response = item.packet.mkMACRequest((DEVEUI *) &gwit->second.gatewayId, macPayload, nid, fCntDown, power);
 
@@ -774,7 +773,7 @@ void PacketQueue::runner()
 				// control packet
 				if (onLog) {
 					std::stringstream ss;
-					ss << "== Control message processing, " << MSG_PAYLOAD << ": "
+					ss << "Control message processing, " << MSG_PAYLOAD << ": "
 						<< hexString(item.packet.payload)
 						<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
 					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());

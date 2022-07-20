@@ -117,10 +117,11 @@ void ReceiverQueueProcessor::stop()
 void ReceiverQueueProcessor::runner()
 {
     isDone = false;
-	while (isStarted) {
+    while (isStarted) {
 		struct timeval timeout;
 		timeout.tv_sec = 0;
 		timeout.tv_usec = DB_DEF_TIMEOUT_MS * 1000;
+
 		int r = select(0, nullptr, nullptr, nullptr, &timeout);
 		switch (r) {
 			case -1:
@@ -154,7 +155,7 @@ void ReceiverQueueProcessor::put2databases() {
             if (onLog) {
                 std::stringstream ss;
                 ss << ERR_DB_DATABASE_NOT_FOUND << " " << j;
-                onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+                onLog(nullptr, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
             }
             continue;
         }

@@ -289,7 +289,8 @@ static void wsRun(Configuration* config) {
 
     std::string userListFileName = getDefaultConfigFileName(config->wsConfig.jwtUserListFileName);
     if (!util::fileExists(userListFileName)) {
-        runListener->listenerOnLog(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND, ERR_LOAD_WS_PASSWD_NOT_FOUND);
+        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND,
+                                ERR_LOAD_WS_PASSWD_NOT_FOUND);
         exit(ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND);
     }
     authUserService = new AuthUserFile(config->wsConfig.jwtIssuer,
@@ -316,7 +317,8 @@ static void wsRun(Configuration* config) {
     if (!defDbExists) {
         std::stringstream ss;
         ss << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase << std::endl;   // just warning
-        runListener->listenerOnLog(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_NO_DEFAULT_WS_DATABASE, ss.str());
+        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_NO_DEFAULT_WS_DATABASE,
+                                ss.str());
     }
 
     // named databases
@@ -346,7 +348,7 @@ static void wsRun(Configuration* config) {
            << ", log verbosity: " << wsConfig.verbosity
            << ", JWT issuer: " << wsConfig.issuer
            << std::endl;
-        runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
+        runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
 
         std::stringstream ss2;
         ss2 << MSG_DATABASE_LIST << std::endl;
@@ -357,14 +359,15 @@ static void wsRun(Configuration* config) {
             ss2 << "\t" << n << std::endl;
         }
         ss2 << std::endl;
-        runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss2.str());
+        runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss2.str());
     }
 
     if (startWS(wsConfig)) {
         if (config->serverConfig.verbosity > 5)
-            runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
+            runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
     } else {
-        runListener->listenerOnLog(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED, ERR_WS_START_FAILED);
+        runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
+                                ERR_WS_START_FAILED);
         exit(ERR_CODE_WS_START_FAILED);
     }
 }
@@ -375,7 +378,13 @@ static void run()
         wsRun(runListener->config);
     if (runListener && runListener->listener) {
         runListener->start();
-        runListener->listener->listen();
+        int r = runListener->listener->listen(runListener->config->serverConfig.listenAddressIPv4,
+            runListener->config->serverConfig.listenAddressIPv6);
+        if (r) {
+            std::stringstream ss;
+            ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
+            runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
+        }
     }
 }
 
@@ -422,15 +431,17 @@ int main(
 	}
 
 	if (config->serverConfig.daemonize)	{
-        // negative verbosity forces syslog
-        runListener->listener->verbosity = - runListener->listener->verbosity;
-        runListener->listenerOnLog(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
+        runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
 		char wd[PATH_MAX];
 		std::string progpath = getcwd(wd, PATH_MAX);
 		if (config->serverConfig.verbosity > 1) {
             std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
         }
+
 		OPEN_SYSLOG(programName.c_str())
+        // negative verbosity forces syslog
+        runListener->config->serverConfig.verbosity = - config->serverConfig.verbosity;
+
 		Daemonize daemonize(programName, progpath, run, stop, done);
         std::cerr << MSG_DAEMON_STOPPED << std::endl;
 		CLOSE_SYSLOG()
@@ -439,7 +450,7 @@ int main(
 #else
 		setSignalHandler();
 #endif
-        runListener->listenerOnLog(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
+        runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
 		run();
 		done();
 	}

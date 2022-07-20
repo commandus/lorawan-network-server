@@ -80,7 +80,7 @@ void RunListener::flushFiles()
         deviceStatService->flush();
 }
 
-void RunListener::listenerOnLog(
+void RunListener::logMessage(
     void *env,
     int level,
     int moduleCode,
@@ -88,17 +88,13 @@ void RunListener::listenerOnLog(
     const std::string &message
 )
 {
-    if (env) {
-        UDPListener *l = (UDPListener *) env;
-        if (l) {
-            if (l->verbosity < 0) {
-                SYSLOG(level, message.c_str());
-                return;
-            }
-            if (l->verbosity < level)
-                return;
-        }
+    if (config && config->serverConfig.verbosity < 0) {
+        // set level to LOG_ERR if you want see all messages in the vat/log/syslog
+        SYSLOG(level, message.c_str());
+        return;
     }
+    if (config && config->serverConfig.verbosity < level)
+        return;
     struct timeval t;
     gettimeofday(&t, nullptr);
     std::cerr << timeval2string(t) << " ";
@@ -117,7 +113,7 @@ void RunListener::listenerOnLog(
 void RunListener::done()
 {
     if (config && config->serverConfig.verbosity > 5)
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, MSG_GRACEFULLY_STOPPED);
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, MSG_GRACEFULLY_STOPPED);
     // destroy and free all
     delete listener;
     listener = nullptr;
@@ -218,16 +214,19 @@ void RunListener::init(
 ) {
     config = aConfig;
     listener = new UDPListener();
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_UDP_LISTENER);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_UDP_LISTENER);
     // check signal number when select() has been interrupted
     listener->setSysSignalPtr(lastSysSignal);
-    listener->setLogger(config->serverConfig.verbosity, listenerOnLog);
+    listener->setLogger(config->serverConfig.verbosity,
+        [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
+            logMessage(env, level, moduleCode, errorCode, message);
+    });
     listener->setGatewayStatDumper(config, [this](void *env, GatewayStat *stat) { return onGatewayStatDump(env, stat); } );
 
     if (config->serverConfig.verbosity > 5) {
         std::stringstream ss;
         ss << MSG_LISTEN_IP_ADDRESSES << std::endl << config->toDescriptionTableString();
-        listenerOnLog(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
     }
 
     gatewayList = new GatewayList(config->gatewaysFileName);
@@ -235,10 +234,10 @@ void RunListener::init(
     if (config->serverConfig.verbosity > 5) {
         std::stringstream ss;
         ss << MSG_GATEWAY_LIST << std::endl << gatewayList->toDescriptionTableString();
-        listenerOnLog(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
     }
 
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_IDENTITY_START);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_IDENTITY_START);
     // Start identity service
     switch (config->serverConfig.storageType) {
         case IDENTITY_STORAGE_LMDB:
@@ -257,43 +256,43 @@ void RunListener::init(
 
     std::stringstream ss;
     ss << MSG_IDENTITY_INIT  << identityService->getNetworkId()->toString() << "..";
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
     int rs = identityService->init(config->serverConfig.identityStorageName, nullptr);
     if (rs) {
         std::stringstream ss;
         ss << ERR_INIT_IDENTITY << rs << ": " << strerror_lorawan_ns(rs)
            << " " << config->serverConfig.identityStorageName << std::endl;
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
         exit(ERR_CODE_INIT_IDENTITY);
     }
 
     // Start gateway statistics service
     switch (config->serverConfig.gwStatStorageType) {
         case GW_STAT_FILE_JSON:
-            listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_FILE_START);
+            logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_FILE_START);
             gatewayStatService = new GatewayStatServiceFile();
             break;
         case GW_STAT_POST:
-            listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_POST_START);
+            logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_POST_START);
             gatewayStatService = new GatewayStatServicePost();
             break;
         default:
             gatewayStatService = nullptr;
     }
 
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_INIT);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_GW_STAT_INIT);
     if (gatewayStatService) {
         rs = gatewayStatService->init(config->serverConfig.logGWStatisticsFileName, nullptr);
         if (rs) {
             std::stringstream ss;
             ss << ERR_INIT_GW_STAT << rs << ": " << strerror_lorawan_ns(rs)
                << " " << config->serverConfig.logGWStatisticsFileName << std::endl;
-            listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
+            logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
             exit(ERR_CODE_INIT_GW_STAT);
         }
     }
 
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_START);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_START);
     // Start device statistics service
     switch (config->serverConfig.deviceStatStorageType) {
         case DEVICE_STAT_FILE_CSV:
@@ -309,14 +308,14 @@ void RunListener::init(
             deviceStatService = nullptr;
     }
 
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_INIT);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_STAT_INIT);
     if (deviceStatService) {
         rs = deviceStatService->init(config->serverConfig.logDeviceStatisticsFileName, nullptr);
         if (rs) {
             std::stringstream ss;
             ss << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
                << " " << config->serverConfig.logDeviceStatisticsFileName << std::endl;
-            listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
+            logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
             exit(ERR_CODE_INIT_DEVICE_STAT);
         }
     }
@@ -343,7 +342,7 @@ void RunListener::init(
             c++;
         }
         ss << identityService->size() << " " << MSG_DEVICE_COUNT << std::endl;
-        listenerOnLog(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
     }
 
     switch (config->serverConfig.deviceStatStorageType) {
@@ -359,24 +358,24 @@ void RunListener::init(
             break;
     }
 
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_START);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_START);
     deviceHistoryService = new JsonFileDeviceHistoryService();
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_INIT);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_DEV_HISTORY_INIT);
     rs = deviceHistoryService->init(config->serverConfig.deviceHistoryStorageName, nullptr);
     if (rs) {
         std::stringstream ss;
         ss << ERR_INIT_DEVICE_STAT << rs << ": " << strerror_lorawan_ns(rs)
            << " " << config->serverConfig.deviceHistoryStorageName << std::endl;
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
 
         // That's ok, no problem at all
         // exit(ERR_CODE_INIT_DEVICE_STAT);
     }
 
     // load regional settings
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_START);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_START);
     regionalParameterChannelPlans = new RegionalParameterChannelPlanFileJson();
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_INIT);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_REGIONAL_SET_INIT);
 
     // initialize regional settings
     rs = regionalParameterChannelPlans->init(config->serverConfig.regionalSettingsStorageName, nullptr);
@@ -390,7 +389,7 @@ void RunListener::init(
            << ", file: " << config->serverConfig.regionalSettingsStorageName
            << ", parseRX error " << parseCode << ": " << parseDescription
            << std::endl;
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
         exit(ERR_CODE_INIT_REGION_BANDS);
     }
     // initialize regional settings device mapping
@@ -404,18 +403,18 @@ void RunListener::init(
     if (!regionalParameterChannelPlan) {
         std::stringstream ss;
         ss << ERR_MESSAGE << ERR_CODE_REGION_BAND_NO_DEFAULT << ": " << ERR_REGION_BAND_NO_DEFAULT << std::endl;
-        listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
         exit(ERR_CODE_REGION_BAND_NO_DEFAULT);
     }
 
     if (config->serverConfig.verbosity > 5) {
         std::stringstream ss;
         ss << MSG_REGIONAL_SETTINGS << regionalParameterChannelPlan->toDescriptionTableString();
-        listenerOnLog(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
     }
 
     // Start received message queue service
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_START);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_START);
     void *options = nullptr;
     DirTxtReceiverQueueServiceOptions dirOptions;
     switch (config->serverConfig.messageQueueType) {
@@ -434,35 +433,35 @@ void RunListener::init(
 
             break;
     }
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_INIT);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_RECEIVER_QUEUE_INIT);
     rs = receiverQueueService->init(config->serverConfig.queueStorageName, options);
     if (rs) {
         std::stringstream ss;
         ss << ERR_INIT_QUEUE << rs << ": " << strerror_lorawan_ns(rs)
            << " " << config->serverConfig.queueStorageName << std::endl;
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ss.str());
         // that's ok
         // exit(ERR_CODE_INIT_QUEUE);
     }
 
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_START_OUTPUT_DB_SVC);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_START_OUTPUT_DB_SVC);
 #ifdef ENABLE_PKT2
     configDatabases = new ConfigDatabases(config->databaseConfigFileName);
 #else
     configDatabases = new ConfigDatabasesJson(config->databaseConfigFileName);
 #endif
     if (configDatabases->dbs.empty()) {
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ERR_LOAD_DATABASE_CONFIG);
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ERR_LOAD_DATABASE_CONFIG);
         // exit(ERR_CODE_LOAD_DATABASE_CONFIG);
     }
 
     if (config->serverConfig.verbosity > 5)
-        listenerOnLog(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, MSG_DATABASE_LIST);
+        logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, MSG_DATABASE_LIST);
 
     // helper class to find out database by name or sequence number (id)
     dbByConfig = new DatabaseByConfig(configDatabases);
     // check out database connectivity
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_CHECKING_DB_AVAILABILITY);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_CHECKING_DB_AVAILABILITY);
     bool dbOk = true;
     for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
         if (!it->active)
@@ -486,7 +485,7 @@ void RunListener::init(
             if (dc->db)
                 ss << " " << dc->db->errmsg;
             ss << std::endl;
-            listenerOnLog(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
+            logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, ss.str());
         }
         if (hasConn)
             dc->close();
@@ -495,7 +494,7 @@ void RunListener::init(
     }
     // exit, if it can not connect to the database
     if (!dbOk) {
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_DATABASE_CONFIG, ERR_LOAD_DATABASE_CONFIG);
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_DATABASE_CONFIG, ERR_LOAD_DATABASE_CONFIG);
         exit(ERR_CODE_LOAD_DATABASE_CONFIG);
     }
 
@@ -527,21 +526,29 @@ void RunListener::init(
     if (hasLoggerKosaPacketsLoader) {
         std::stringstream sskldb;
         sskldb << MSG_INIT_LOGGER_HUFFMAN << config->loggerDatabaseName;
-        listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
+        logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
     } else {
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
     }
-    loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames, listenerOnLog, &loggerKosaPacketsLoader);
+    loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames,
+       [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
+            logMessage(env, level, moduleCode, errorCode, message);
+        },
+        &loggerKosaPacketsLoader);
     if (!loggerParserEnv) {
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER, ERR_INIT_LOGGER_HUFFMAN_PARSER);
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER,
+                   ERR_INIT_LOGGER_HUFFMAN_PARSER);
         exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
     }
 #endif
 
     // Set up processor
-    listenerOnLog(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_PKT2_START);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_START_PACKET_PROCESSOR);
     processor = new LoraPacketProcessor();
-    processor->setLogger(listenerOnLog);
+    processor->setLogger(
+    [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
+        logMessage(env, level, moduleCode, errorCode, message);
+    });
     processor->setIdentityService(identityService);
     processor->setGatewayList(gatewayList);
     processor->setReceiverQueueService(receiverQueueService);
@@ -558,13 +565,15 @@ void RunListener::init(
 #ifdef ENABLE_LOGGER_HUFFMAN
     receiverQueueProcessor->setParserEnv(loggerParserEnv);
 #endif
-    receiverQueueProcessor->setLogger(listenerOnLog);
+    receiverQueueProcessor->setLogger(
+        [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
+            logMessage(env, level, moduleCode, errorCode, message);
+        }
+    );
 
     // Set databases
     receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
 
-    // start processing queue
-    processor->setReceiverQueueProcessor(receiverQueueProcessor);
 
     // Set up listener
     listener->setHandler(processor);
@@ -575,26 +584,13 @@ void RunListener::init(
     if (config->serverConfig.listenAddressIPv4.empty() && config->serverConfig.listenAddressIPv6.empty()) {
         std::stringstream ss;
         ss << ERR_MESSAGE << ERR_CODE_PARAM_NO_INTERFACE << ": " <<  ERR_PARAM_NO_INTERFACE << std::endl;
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_PARAM_NO_INTERFACE, ss.str());
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_PARAM_NO_INTERFACE, ss.str());
         exit(ERR_CODE_PARAM_NO_INTERFACE);
     }
 }
 
 void RunListener::start() {
-    for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv4.begin()); it != config->serverConfig.listenAddressIPv4.end(); it++) {
-        if (!listener->add(*it, MODE_FAMILY_HINT_IPV4)) {
-            std::stringstream ss;
-            ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
-            listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_PARAM_NO_INTERFACE, ss.str());
-            exit(ERR_CODE_SOCKET_BIND);
-        }
-    }
-    for (std::vector<std::string>::const_iterator it(config->serverConfig.listenAddressIPv6.begin()); it != config->serverConfig.listenAddressIPv6.end(); it++) {
-        if (!listener->add(*it, MODE_FAMILY_HINT_IPV6)) {
-            std::stringstream ss;
-            ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
-            listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_PARAM_NO_INTERFACE, ss.str());
-            exit(ERR_CODE_SOCKET_BIND);
-        }
-    }
+    // start processing queue
+    if (processor && receiverQueueProcessor)
+        processor->setReceiverQueueProcessor(receiverQueueProcessor);
 }

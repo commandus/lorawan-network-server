@@ -544,7 +544,6 @@ int main(
 			packet.header.fport = fport;
 
 			packet.payload = mkControlPacket(macGwConfig->euis[d].eui, macGwConfig->gatewayIds[g], macdatabin);
-			std::cerr << "==Payload: " << hexString(packet.payload) << std::endl;
 
 			memmove(packet.prefix.mac, macGwConfig->euis[d].eui, sizeof(DEVEUI));
 			memmove(packet.header.header.devaddr, netId.devaddr, sizeof(DEVADDR));

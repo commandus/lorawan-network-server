@@ -78,9 +78,7 @@ const std::string& getMACCommandName(uint8_t command)
 	std::cerr << "set frequency: " << value << std::endl; \
 	arr[0] = value & 0xff; \
 	arr[1] = (value >> 8) & 0xff; \
-	arr[2] = (value >> 16) & 0xff; \
-	std::cerr << "== " << std::hex << std::setw(2) << std::setfill('0') \
-		<< (int) arr[0] << ":" << (int) arr[1] << ":" << (int) arr[2] << std::endl; \
+	arr[2] = (value >> 16) & 0xff;
 
 /**
  * @param cmd MAC command code
