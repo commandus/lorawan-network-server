@@ -598,6 +598,19 @@ int WebServiceConfig::parse(
     return LORA_OK;
 }
 
+std::string WebServiceConfig::toString()
+{
+    rapidjson::Document doc;
+    doc.SetObject();
+    rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
+    toJson(doc, allocator);
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    doc.Accept(writer);
+    return std::string(buffer.GetString());
+}
+
 void WebServiceConfig::toJson(
 	rapidjson::Value &value,
 	rapidjson::Document::AllocatorType& allocator
@@ -652,5 +665,5 @@ void WebServiceConfig::toJson(
 
     rapidjson::Value vUserListFileName;
     vUserListFileName.SetString(jwtUserListFileName.c_str(), jwtUserListFileName.size(), allocator);
-    value.AddMember("userListFileName", vSecret, allocator);
+    value.AddMember("userListFileName", vUserListFileName, allocator);
 }

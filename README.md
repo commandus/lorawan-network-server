@@ -36,7 +36,7 @@ Meanwhile, if data use one of
 
 serialization intended for send small data over LPWAN networks.
 
-You need install libraries:
+You need (later when it's done) install libraries:
 
 -
 
@@ -107,13 +107,54 @@ Gateways
 
 Before first run create configuration file then run 
 
-```
+```shell
 ./lorawan-network-server -c lorawan-network-server.json -vvvvvvv
 ```
 
-Run as daemon 
-```
+Run as daemon from the command line: 
+```shell
 ./lorawan-network-server -c lorawan-network-server.json -vvvvvvv -d
+```
+
+or using systemd:
+
+```shell
+sudo systemctl start lorawan-network-server.service
+```
+
+Check does systemd file exists:
+
+```shell
+sudo vi /etc/systemd/system/lorawan-network-server.service
+```
+
+Should look like:
+
+```shell
+[Unit]
+Description=LoraWAN network server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/home/andrei/src/lorawan-network-server/lorawan-network-server -c /home/andrei/src/lorawan-network-server/lorawan-network-server.json -vvvvvvv
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=lns.service
+```
+
+This example file given in the 'service/' directory so you can copy it to desired location:
+```shell
+sudo cp service/lorawan-network-server.service /etc/systemd/system/
+```
+
+Please note do not set -d option in this file.
+
+If you want to start service ot system reboot, enter:
+```shell
+sudo systemctl enable lorawan-network-server.service
 ```
 
 ## Build

@@ -5,9 +5,12 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <dlfcn.h>
+#include <climits>
+
 #endif
 
 #include "config-filename.h"
+#include "utilfile.h"
 
 #ifdef _MSC_VER
 std::string getDefaultConfigFileName(const std::string &filename)
@@ -33,18 +36,40 @@ std::string getDefaultConfigFileName(const std::string &filename)
 * https://stackoverflow.com/questions/2910377/get-home-directory-in-linux-c
 */
 std::string getDefaultConfigFileName(
+    char *programPath,
     const std::string &filename
 )
 {
     // try to get in the current directory
-    if (access(filename.c_str(), F_OK) == 0) {
+    if (util::fileExists(filename))
         return filename;
-    }
+
+    // try to get in the /etc directory
+    std::string r("/etc/" + filename);
+    if (util::fileExists(r))
+        return r;
 
     // try to get in the $HOME directory
     struct passwd *pw = getpwuid(getuid());
     const char *homedir = pw->pw_dir;
-    std::string r(homedir);
-    return r + "/" + filename;
+    r = std::string(homedir) + "/" + filename;
+    if (util::fileExists(r))
+        return r ;
+
+    // try executable file folder
+    if (programPath) {
+        std::string p = programPath;
+        size_t last_slash_idx = p.rfind('/');
+        if (last_slash_idx == std::string::npos)
+            last_slash_idx = p.rfind('\\');
+        if (last_slash_idx != std::string::npos) {
+            r = p.substr(0, last_slash_idx + 1) + filename;
+            if (util::fileExists(r)) {
+                return r;
+            }
+        }
+    }
+    return filename;
 }
+
 #endif

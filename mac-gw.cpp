@@ -123,9 +123,9 @@ int parseCmd(
 	nerrors = arg_parse(argc, argv, argtable);
 
 	if (a_config->count)
-        programConfig->configFileName = *a_config->sval;
+        programConfig->configFileName = getDefaultConfigFileName(argv[0], *a_config->sval);
 	else
-        programConfig->configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
+        programConfig->configFileName = getDefaultConfigFileName(argv[0], DEF_CONFIG_FILE_NAME);
 
     programConfig->serverConfig.daemonize = false;
     programConfig->serverConfig.verbosity = a_verbosity->count;
@@ -224,14 +224,17 @@ int main(
 	}
 
 	// get gateway and device list storage path from the config file
-	if (config->serverConfig.identityStorageName.empty()) {
-		config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
-	}
-	if (config->gatewaysFileName.empty()) {
-		config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
-	}
-	
-	// load gateway list
+	if (config->serverConfig.identityStorageName.empty())
+		config->serverConfig.identityStorageName = getDefaultConfigFileName(argv[0], DEF_IDENTITY_STORAGE_NAME);
+	else
+        config->serverConfig.identityStorageName = getDefaultConfigFileName(argv[0], config->serverConfig.identityStorageName);
+
+	if (config->gatewaysFileName.empty())
+		config->gatewaysFileName = getDefaultConfigFileName(argv[0], DEF_GATEWAYS_STORAGE_NAME);
+    else
+        config->gatewaysFileName = getDefaultConfigFileName(argv[0], config->gatewaysFileName);
+
+    // load gateway list
 	gatewayList = new GatewayList(config->gatewaysFileName);
 	
 	if (config->serverConfig.verbosity > 2)

@@ -129,9 +129,9 @@ int parseCmd
 
     if (!nerrors) {
         if (a_identity_fn->count)
-            identityFileName = *a_identity_fn->sval;
+            identityFileName = getDefaultConfigFileName(argv[0], *a_identity_fn->sval);
         else
-            identityFileName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
+            identityFileName = getDefaultConfigFileName(argv[0], DEF_IDENTITY_STORAGE_NAME);
 		if (a_eui->count) {
 			eui = *a_eui->sval;
 		}

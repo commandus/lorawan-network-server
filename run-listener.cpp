@@ -90,6 +90,7 @@ void RunListener::logMessage(
 {
     if (config && config->serverConfig.verbosity < 0) {
         // set level to LOG_ERR if you want see all messages in the vat/log/syslog
+        level = LOG_ERR;
         SYSLOG(level, message.c_str());
         return;
     }
@@ -255,7 +256,9 @@ void RunListener::init(
     identityService->setNetworkId(config->serverConfig.netid);
 
     std::stringstream ss;
-    ss << MSG_IDENTITY_INIT  << identityService->getNetworkId()->toString() << "..";
+    ss << MSG_IDENTITY_INIT  << identityService->getNetworkId()->toString()
+        << ": " << config->serverConfig.identityStorageName
+        << "..";
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
     int rs = identityService->init(config->serverConfig.identityStorageName, nullptr);
     if (rs) {

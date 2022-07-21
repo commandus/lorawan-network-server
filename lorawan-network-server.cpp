@@ -56,6 +56,9 @@ const std::string programName = "lorawan-network-server";
 #define DEF_GATEWAYS_STORAGE_NAME "gateway.json"
 #define DEF_DEVICE_HISTORY_STORAGE_NAME "device-history.json"
 #define DEF_DATABASE_CONFIG_FILE_NAME "dbs.json"
+#define DEF_REGIONAL_PARAMATERS_CONFIG_FILE_NAME "regional-parameters.json"
+#define DEF_WS_USER_LIST_FILE_NAME "passwd.json"
+#define DEF_WS_HTML_FOLDER "html"
 #define DEF_PROTO_PATH "proto"
 
 static RunListener *runListener = nullptr;
@@ -191,9 +194,9 @@ int parseCmd(
 	int nErrors = arg_parse(argc, argv, argtable);
 
 	if (a_config->count)
-		config->configFileName = *a_config->sval;
+		config->configFileName = getDefaultConfigFileName(argv[0], *a_config->sval);
 	else
-		config->configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
+		config->configFileName = getDefaultConfigFileName(argv[0], DEF_CONFIG_FILE_NAME);
 
 	config->serverConfig.daemonize = (a_daemonize->count > 0);
 	config->serverConfig.verbosity = a_verbosity->count;
@@ -222,27 +225,6 @@ int parseCmd(
 	}
 
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-
-    // validate paths
-    if (config->serverConfig.identityStorageName.empty()) {
-        config->serverConfig.identityStorageName = getDefaultConfigFileName(DEF_IDENTITY_STORAGE_NAME);
-    }
-    if (config->serverConfig.queueStorageName.empty()) {
-        config->serverConfig.queueStorageName = getDefaultConfigFileName(DEF_QUEUE_STORAGE_NAME);
-    }
-    if (config->gatewaysFileName.empty()) {
-        config->gatewaysFileName = getDefaultConfigFileName(DEF_GATEWAYS_STORAGE_NAME);
-    }
-    if (config->serverConfig.deviceHistoryStorageName.empty()) {
-        config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(DEF_DEVICE_HISTORY_STORAGE_NAME);
-    }
-    if (config->databaseConfigFileName.empty()) {
-        config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
-    }
-    if (config->protoPath.empty()) {
-        // if proto path is not specified, try use default ./proto/ path
-        config->protoPath = DEF_PROTO_PATH;
-    }
     return LORA_OK;
 }
 
@@ -277,7 +259,7 @@ static void wsOnLog(
     std::cerr << message << std::endl;
 }
 
-static void wsRun(Configuration* config) {
+static void wsRun(char *programPath, Configuration* config) {
     wsSpecialPathHandler = new WsSpecialPathHandler();
     wsSpecialPathHandler->configDatabases = runListener->configDatabases;
     wsSpecialPathHandler->regionalParameterChannelPlans = runListener->regionalParameterChannelPlans;
@@ -287,7 +269,7 @@ static void wsRun(Configuration* config) {
     wsSpecialPathHandler->gatewayStatService = runListener->gatewayStatService;
     wsSpecialPathHandler->deviceStatService = runListener->deviceStatService;
 
-    std::string userListFileName = getDefaultConfigFileName(config->wsConfig.jwtUserListFileName);
+    std::string userListFileName = getDefaultConfigFileName(programPath, config->wsConfig.jwtUserListFileName);
     if (!util::fileExists(userListFileName)) {
         runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND,
                                 ERR_LOAD_WS_PASSWD_NOT_FOUND);
@@ -375,7 +357,7 @@ static void wsRun(Configuration* config) {
 static void run()
 {
     if (runListener->config->wsConfig.enabled)
-        wsRun(runListener->config);
+        wsRun(nullptr, runListener->config);
     if (runListener && runListener->listener) {
         runListener->start();
         int r = runListener->listener->listen(runListener->config->serverConfig.listenAddressIPv4,
@@ -388,6 +370,58 @@ static void run()
     }
 }
 
+static void invalidatePaths(char *programPath, Configuration *config)
+{
+    // validate paths
+    if (!util::fileExists(config->serverConfig.identityStorageName)) {
+        if (config->serverConfig.identityStorageName.empty())
+            config->serverConfig.identityStorageName = DEF_IDENTITY_STORAGE_NAME;
+        config->serverConfig.identityStorageName = getDefaultConfigFileName(programPath, config->serverConfig.identityStorageName);
+    }
+    if (!util::fileExists(config->serverConfig.queueStorageName)) {
+        if (config->serverConfig.queueStorageName.empty())
+            config->serverConfig.queueStorageName = DEF_QUEUE_STORAGE_NAME;
+        config->serverConfig.queueStorageName = getDefaultConfigFileName(programPath, config->serverConfig.queueStorageName);
+    }
+    if (!util::fileExists(config->gatewaysFileName)) {
+        if (config->gatewaysFileName.empty())
+            config->gatewaysFileName = DEF_GATEWAYS_STORAGE_NAME;
+        config->gatewaysFileName = getDefaultConfigFileName(programPath, config->gatewaysFileName);
+    }
+    if (!util::fileExists(config->serverConfig.deviceHistoryStorageName)) {
+        if (config->serverConfig.deviceHistoryStorageName.empty())
+            config->serverConfig.deviceHistoryStorageName = DEF_DEVICE_HISTORY_STORAGE_NAME;
+        config->serverConfig.deviceHistoryStorageName = getDefaultConfigFileName(programPath, config->serverConfig.deviceHistoryStorageName);
+    }
+    if (!util::fileExists(config->databaseConfigFileName)) {
+        if (config->databaseConfigFileName.empty())
+            config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
+        config->databaseConfigFileName = getDefaultConfigFileName(programPath, config->databaseConfigFileName);
+    }
+    if (!util::fileExists(config->protoPath)) {
+        // if proto path is not specified, try use default ./proto/ path
+        if (config->protoPath.empty())
+            config->protoPath = DEF_PROTO_PATH;
+        config->protoPath = getDefaultConfigFileName(programPath, config->protoPath);;
+    }
+    if (!util::fileExists(config->serverConfig.regionalSettingsStorageName)) {
+        // if proto path is not specified, try use default ./proto/ path
+        if (config->serverConfig.regionalSettingsStorageName.empty())
+            config->serverConfig.regionalSettingsStorageName = DEF_REGIONAL_PARAMATERS_CONFIG_FILE_NAME;
+        config->serverConfig.regionalSettingsStorageName = getDefaultConfigFileName(programPath, config->serverConfig.regionalSettingsStorageName);;
+    }
+    if (!util::fileExists(config->wsConfig.jwtUserListFileName)) {
+        if (config->wsConfig.jwtUserListFileName.empty())
+            config->wsConfig.jwtUserListFileName = DEF_WS_USER_LIST_FILE_NAME;
+        config->wsConfig.jwtUserListFileName = getDefaultConfigFileName(programPath, config->wsConfig.jwtUserListFileName);;
+    }
+    if (!util::fileExists(config->wsConfig.html)) {
+        if (config->wsConfig.html.empty())
+            config->wsConfig.html = DEF_WS_HTML_FOLDER;
+        config->wsConfig.html = getDefaultConfigFileName(programPath, config->wsConfig.html);;
+    }
+}
+
 int main(
 	int argc,
 	char *argv[])
@@ -396,6 +430,7 @@ int main(
     Configuration *config = new Configuration("");
 	if (parseCmd(config, argc, argv) != 0)
 		exit(ERR_CODE_COMMAND_LINE);
+
 	// reload config if required
 	bool hasConfig = false;
 	if (!config->configFileName.empty()) {
@@ -409,6 +444,8 @@ int main(
 		std::cerr << ERR_NO_CONFIG << std::endl;
 		exit(ERR_CODE_NO_CONFIG);
 	}
+    invalidatePaths(argv[0], config);
+
     runListener = new RunListener(config, &lastSysSignal);
 
 	// web service
