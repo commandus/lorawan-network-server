@@ -1,0 +1,12 @@
+[Unit]
+Description=LoraWAN network server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/home/andrei/src/lorawan-network-server/lorawan-network-server -c /home/andrei/src/lorawan-network-server/lorawan-network-server.json -vvvvvvv
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=lns.service

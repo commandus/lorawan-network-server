@@ -94,6 +94,7 @@ class WebServiceConfig {
 			rapidjson::Value &value,
 			rapidjson::Document::AllocatorType& allocator
 		);
+        std::string toString();
 };
 
 class Configuration {
