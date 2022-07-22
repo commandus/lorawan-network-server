@@ -420,6 +420,16 @@ static void invalidatePaths(char *programPath, Configuration *config)
             config->wsConfig.html = DEF_WS_HTML_FOLDER;
         config->wsConfig.html = getDefaultConfigFileName(programPath, config->wsConfig.html);;
     }
+    for (std::vector<std::string>::iterator it(config->databaseExtraConfigFileNames.begin()); it != config->databaseExtraConfigFileNames.end(); ) {
+        if (!util::fileExists(*it)) {
+            if (it->empty()) {
+                it = config->databaseExtraConfigFileNames.erase(it);
+                continue;
+            }
+            *it = getDefaultConfigFileName(programPath, *it);;
+            it++;
+        }
+    }
 }
 
 int main(
