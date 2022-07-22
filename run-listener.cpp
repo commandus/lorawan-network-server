@@ -90,7 +90,7 @@ void RunListener::logMessage(
 {
     if (config && config->serverConfig.verbosity < 0) {
         // set level to LOG_ERR if you want see all messages in the vat/log/syslog
-        level = LOG_ERR;
+        // level = LOG_ERR;
         SYSLOG(level, message.c_str());
         return;
     }
