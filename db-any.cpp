@@ -118,6 +118,9 @@ std::string DatabaseNConfig::createClause
         dialect = sqlDialectByName(db->type);
     return loggerSQLCreateTable1(dialect);
 #endif
+#if (!defined ENABLE_PKT2) && (!defined ENABLE_LOGGER_HUFFMAN)
+    return "";
+#endif
 }
 
 int DatabaseNConfig::insertClauses(
