@@ -427,8 +427,8 @@ static void invalidatePaths(char *programPath, Configuration *config)
                 continue;
             }
             *it = getDefaultConfigFileName(programPath, *it);;
-            it++;
         }
+        it++;
     }
 }
 
