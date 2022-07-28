@@ -330,7 +330,7 @@ static COMMAND_DESCRIPTION gatewayCommands[] = {
 };
 
 static COMMAND_DESCRIPTION enDeviceCommands[] = {
-	{ Reset , 0, "r", "reset", "Reset end-device request", {}},	
+	{ Reset , 0, "r", "reset", "Reset end-device request"},
 	{ LinkCheck, 2, "l", "linkcheck", "Check link answer", LINK_CHECK_PARAMS },	 
 	{ DeviceTime, 0, "t", "devicetime", "Answer date/time" },
 	{ BeaconTiming, 2, "bt", "beacontiming", "Deprecated", BEACONTIMING_PARAMS },

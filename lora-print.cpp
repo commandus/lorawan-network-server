@@ -11,7 +11,9 @@
 #include <vector>
 #include <map>
 
+#ifdef ENABLE_PKT2
 #include <google/protobuf/message.h>
+#endif
 
 #include "argtable3/argtable3.h"
 #include "base64/base64.h"

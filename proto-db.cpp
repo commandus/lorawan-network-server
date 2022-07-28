@@ -12,7 +12,9 @@
 #include <vector>
 #include <map>
 
+#ifdef ENABLE_PKT2
 #include <google/protobuf/message.h>
+#endif
 
 #include "argtable3/argtable3.h"
 #include "base64/base64.h"
@@ -535,10 +537,12 @@ int main(
 		doList(env, &config, &dbAny, config.message_type);
 	if (config.command == "create") {
 		if (config.message_type.empty()) {
+#ifdef ENABLE_PKT2
 			google::protobuf::Message *m;
 			parsePacket2ProtobufMessage((void**) &m, env, 1, config.payload, "", NULL, NULL, NULL);
 			if (m)
 				config.message_type = m->GetTypeName();
+#endif
 		}
 		doCreate(env, &config, &dbAny, config.message_type, config.verbosity);
 	}
