@@ -46,6 +46,7 @@ int DatabaseSQLite::reopen()
     int r = sqlite3_open(this->connection.c_str(), &dbSqlite3);
     if (r)
         dbSqlite3 = nullptr;
+    return r;
 }
 
 int DatabaseSQLite::close()
