@@ -38,7 +38,7 @@ AC_ARG_ENABLE([logger-huffman],
   yes) logger_huffman=true ;;
   no)  logger_huffman=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-logger-huffman]) ;;
-esac],[logger_huffman=true])
+esac],[logger_huffman=false])
 AM_CONDITIONAL([ENABLE_LOGGER_HUFFMAN], [test x$logger_huffman = xtrue])
 
 AC_ARG_ENABLE([jwt],
@@ -47,7 +47,7 @@ AC_ARG_ENABLE([jwt],
   yes) enable_jwt=true ;;
   no)  enable_jwt=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-jwt]) ;;
-esac],[enable_jwt=true])
+esac],[enable_jwt=false])
 AM_CONDITIONAL([ENABLE_JWT], [test x$enable_jwt = xtrue])
 
 AC_ARG_ENABLE([json],
