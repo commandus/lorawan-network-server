@@ -8,7 +8,9 @@
  */
 
 #include <vector>
+#ifdef ENABLE_WATCHER
 #include "filewatch.hpp"
+#endif
 
 #include "identity-service-file-json.h"
 
@@ -17,13 +19,17 @@ class DirTxtIdentityService;
 typedef void (OnIdentitiesUpdate)
 (
 	DirTxtIdentityService *service,
-	const std::string &path,
-	const filewatch::Event &event
+#ifdef ENABLE_WATCHER
+    const filewatch::Event &event
+#endif
+    const std::string &path
 );
 
 class DirTxtIdentityService: public JsonFileIdentityService {
 	private:
-		filewatch::FileWatch<std::string> *fileWatcher;
+#ifdef ENABLE_WATCHER
+    filewatch::FileWatch<std::string> *fileWatcher;
+#endif
 		OnIdentitiesUpdate *onIdentitiesUpdate;
 		int loadTxtFile(const std::string &path);
 		int load();
