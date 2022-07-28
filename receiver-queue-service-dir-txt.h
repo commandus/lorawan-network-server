@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <mutex>
-#include "filewatch.hpp"
 
 #include "receiver-queue-service.h"
 
