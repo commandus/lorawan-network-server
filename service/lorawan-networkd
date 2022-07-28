@@ -1,0 +1,36 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          lorawan-networkd
+# Required-Start:    $network $local_fs
+# Required-Stop:     $network $local_fs
+# Should-Start:
+# Default-Start:     1 2 3 4 5
+# Default-Stop:
+# Short-Description: LoraWAN network server daemon
+# Description:       See github.com/commandus/lorawan-* repository
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/home/andrei/dist
+. /lib/init/vars.sh
+
+case "$1" in
+  start|"")
+        /home/andrei/dist/lorawan-network-server -c /home/andrei/dist/lorawan-network-server.json -d
+	;;
+  restart|reload|force-reload)
+	echo "Error: argument '$1' not supported" >&2
+	exit 3
+	;;
+  stop)
+	# No-op
+	;;
+  status)
+	exit $?
+	;;
+  *)
+	echo "Usage: lorawan-networkd [start|stop|status]" >&2
+	exit 3
+	;;
+esac
+
+:
