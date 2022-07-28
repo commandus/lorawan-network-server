@@ -18,7 +18,7 @@ const RegionalParameterChannelPlan *DeviceChannelPlanFileJson::get() const
 
 int DeviceChannelPlanFileJson::init(const std::string &option, void *data)
 {
-
+    return 0;
 }
 
 void DeviceChannelPlanFileJson::flush()
