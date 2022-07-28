@@ -1,6 +1,6 @@
 #include "db-sqlite.h"
 #if SQLITE_VERSION_NUMBER <= 3007013
-#define sqlite3_errstr(r) sqlite3_errmsg(db);
+#define sqlite3_errstr(r) sqlite3_errmsg(dbSqlite3);
 #endif
 
 DatabaseSQLite::DatabaseSQLite()
@@ -106,7 +106,7 @@ int DatabaseSQLite::select
     sqlite3_stmt *stmt;
     int r = sqlite3_prepare_v2(dbSqlite3, statement.c_str(), -1, &stmt, nullptr);
     if (r) {
-        errmsg = sqlite3_errstr(r);
+        errmsg =  sqlite3_errstr(r);
         reopen();
         return r;
     }
