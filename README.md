@@ -301,7 +301,7 @@ make
 git clone https://github.com/commandus/lorawan-network-server.git
 cd lorawan-network-server/
 ./autogen.sh 
-./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=off --enable-jwt
+./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-jwt
 make
 strip lorawan-network-server
 
