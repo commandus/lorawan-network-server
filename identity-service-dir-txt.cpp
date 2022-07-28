@@ -74,21 +74,25 @@ int DirTxtIdentityService::startListen(
 	OnIdentitiesUpdate value
 ) {
 	onIdentitiesUpdate = value;
+#ifdef ENABLE_WATCHER
 	fileWatcher = new filewatch::FileWatch<std::string>(path,
-		std::regex(".*\\.txt"), 
+		std::regex(".*\\.txt"),
 		[this](const std::string& path, const filewatch::Event event) {
 			// reload
 			load();
 			onIdentitiesUpdate(this, path, event);
 	});
-	return 0;
+#endif
+    return 0;
 }
 
 int DirTxtIdentityService::stopListen() {
-	// onIdentitiesUpdate = NULL;
+	// onIdentitiesUpdate = nullptr;
+#ifdef ENABLE_WATCHER
 	if (fileWatcher) {
 		delete fileWatcher;
 		fileWatcher = NULL;
 	}
+#endif
 	return 0;
 }
