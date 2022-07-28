@@ -1,4 +1,7 @@
 #include "db-sqlite.h"
+#if SQLITE_VERSION_NUMBER <= 3007013
+#define sqlite3_errstr(r) sqlite3_errmsg(db);
+#endif
 
 DatabaseSQLite::DatabaseSQLite()
 	: dbSqlite3(nullptr)
