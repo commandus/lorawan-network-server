@@ -97,7 +97,7 @@ private:
      * @return temperature by diff
      */
     bool getByDiff(std::map<uint8_t, TEMPERATURE_2_BYTES> *retVal, std::map<uint8_t, double> *retValT,
-        const std::string &aPacket, int packetNo) const;
+        const std::string &aPacket, int offset) const;
 protected:
     /**
      * Return approximated temperature
@@ -106,6 +106,14 @@ protected:
      * @return approximated temperature
      */
     double correctTemperatureByPassport(uint8_t sensor, double value) const;
+    /**
+     * Huffman packet size has variable size. Toi calc offset, we need calc all packets.
+     * Calc measurements size for N packets.
+     * Used to calc offset
+     * @param packetNum1 packet number 1..N
+     * @return bytes occupied by measurements
+     */
+    int getHuffmanPacketMeasurementOffset(int packetNum1) const;
 public:
     LoggerItemId id;
     std::string packet;

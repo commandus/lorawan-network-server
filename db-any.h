@@ -28,11 +28,23 @@ public:
 	std::string tableName(void *env, const std::string &message) const;
 	std::string selectClause(void *env, const std::string &message);
 	std::string createClause(void *env, const std::string &message) const;
-	int insertClauses(std::vector<std::string> &retClauses, void *env, const std::string &message,
-                      int inputFormat, const std::string &data,
-                      const std::map<std::string, std::string> *properties);
+	int insertClauses(std::vector<std::string> &retClauses,
+		void *env,
+		const std::string &message,
+		int inputFormat,
+		const std::string &data,
+        const std::map<std::string, std::string> *properties,
+		const std::string &nullValueString = "8888"
+	);
 	int createTable(void *env, const std::string &message);
-	int insert(void *env, const std::string &message, int inputFormat, const std::string &data, const std::map<std::string, std::string> *properties);
+	int insert(
+		void *env,
+		const std::string &message,
+		int inputFormat,
+		const std::string &data,
+		const std::map<std::string, std::string> *properties,
+		const std::string &nullValueString = "8888"
+	);
 	int open();
 	int close() const;
 	int exec(const std::string &statement) const;

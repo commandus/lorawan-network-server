@@ -129,7 +129,8 @@ int DatabaseNConfig::insertClauses(
     const std::string &message,
     int inputFormat,
     const std::string &data,
-    const std::map<std::string, std::string> *properties
+    const std::map<std::string, std::string> *properties,
+	const std::string &nullValueString
 )
 {
     int r = 0;
@@ -145,7 +146,7 @@ int DatabaseNConfig::insertClauses(
     if (db)
         dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
     retClauses.push_back(loggerSQLInsertRaw(dialect, data, properties));
-    r = loggerSQLInsertPackets(env, retClauses, dialect, properties);
+    r = loggerSQLInsertPackets(env, retClauses, dialect, properties, nullValueString);
 #endif
     return r;
 }
@@ -166,12 +167,13 @@ int DatabaseNConfig::insert(
 	const std::string &message,
 	int inputFormat,
 	const std::string &data,
-	const std::map<std::string, std::string> *properties
+	const std::map<std::string, std::string> *properties,
+	const std::string &nullValueString
 )
 {
     int r = 0;
 	std::vector<std::string> clauses;
-    insertClauses(clauses, env, message, inputFormat, data, properties);
+    insertClauses(clauses, env, message, inputFormat, data, properties, nullValueString);
 	if (clauses.empty())
 		return ERR_CODE_INVALID_PACKET;
     for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {

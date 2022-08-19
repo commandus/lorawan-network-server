@@ -111,13 +111,15 @@ int loggerParsePackets(void *env, uint32_t addr, const std::vector<std::string> 
  * @param retClauses vector of INSERT statements
  * @param sqlDialect 0..3
  * @param extraValues  <optional field name>=value
+ * @param nullValueString default "NULL"
  * @return 0- success
  */
 int loggerSQLInsertPackets(
     void *env,
     std::vector <std::string> &retClauses,
     int sqlDialect,
-    const std::map<std::string, std::string> *extraValues = NULL
+    const std::map<std::string, std::string> *extraValues = NULL,
+    const std::string &nullValueString = "NULL"
 );
 
 /**
@@ -133,6 +135,7 @@ void loggerRemoveCompletedOrExpired(
  * @param env descriptor
  * @param sqlDialect 0..3
  * @param extraValues  <optional field name>=value
+ * @param nullValueString default "NULL"
  * @param separator  separator string default space
  * @return empty string if fails
  */
@@ -140,6 +143,7 @@ std::string loggerSQLInsertPackets1(
     void *env,
     int sqlDialect,
     const std::map<std::string, std::string> *extraValues = NULL,
+    const std::string &nullValueString = "NULL",
     const std::string &separator = " "
 );
 
