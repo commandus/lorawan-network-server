@@ -18,7 +18,13 @@
 #include "logger-huffman/logger-parse.h"
 #include "logger-loader.h"
 #include "database-config-json.h"
+#endif
 
+#ifdef _MSC_VER
+#undef ENABLE_TERM_COLOR
+#else
+#include <unistd.h>
+#define ENABLE_TERM_COLOR	1
 #endif
 
 static const char *TAB = "\t";
@@ -114,7 +120,7 @@ void RunListener::logMessage(
 void RunListener::done()
 {
     if (config && config->serverConfig.verbosity > 5)
-        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, MSG_GRACEFULLY_STOPPED);
+        logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, MSG_GRACEFULLY_STOPPED);
     // destroy and free all
     delete listener;
     listener = nullptr;

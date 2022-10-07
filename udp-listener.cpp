@@ -356,9 +356,7 @@ int UDPListener::listen() {
         ss << it->toString() << " ";
     }
     ss << sz << MSG_LISTEN_SOCKET_COUNT;
-    onLog(this, LOG_ERR, LOG_UDP_LISTENER, 0, ss.str());
-
-
+    onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 
     while (!stopped) {
 		fd_set readHandles;

@@ -76,7 +76,6 @@ static AuthUserService *authUserService = nullptr;
 #define ENABLE_TERM_COLOR	1
 #endif
 
-
 #define TRACE_BUFFER_SIZE   256
 
 static void printTrace() {
