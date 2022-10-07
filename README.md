@@ -166,6 +166,8 @@ You can use
 
 build system.
 
+For old system see section Building on VIA chipset
+
 Make sure you have automake and protoc (Protobuf compiler) installed:
 ```
 apt install autoconf libtool build-essential libprotobuf-dev 
@@ -221,7 +223,124 @@ To do cmake installed first run:
 apt install cmake
 ```
 
-### autoconf
+### Building on VIA chipset
+
+Install Debian 7 386 architecture.
+
+Add to ~/.profile:
+```
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+```
+
+Install dependencies:
+```
+sudo apt-get install libcurl4-openssl-dev sqlite3 libsqlite3-dev libssl-dev libmicrohttpd-dev
+```
+
+Install not too old autoconf from the sources:
+```
+wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+tar xf autoconf*
+cd autoconf-2.69
+sh configure --prefix /usr/local
+sudo make install
+```
+
+[More](https://askubuntu.com/questions/430706/installing-autotools-autoconf-on-ubuntu_)
+
+Install newest libmicrohttpd (Debian 7 has too old one)
+
+```
+wget -c --no-check-certificate https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-latest.tar.gz
+tar xvfz libmicrohttpd-latest.tar.gz
+cd libmicrohttpd-0.9.75
+./configure
+make
+sudo make install
+```
+
+Build 
+
+- logger-passport,
+- logger-huffman,
+- lorawan-ws
+
+projects separately in ~/src/ directory (it is important to find out compiled *.a archives)
+
+```
+git clone git@github.com:commandus/logger-passport.git
+git clone https://github.com/commandus/logger-passport.git
+cd logger-passport
+./autogen.sh
+./configure --enable-logger-passport
+make
+
+git clone git@github.com:commandus/logger-huffman.git
+git clone https://github.com/commandus/logger-huffman.git
+cd logger-huffman
+./autogen.sh
+./configure --enable-logger-passport
+make
+
+git clone git@github.com:commandus/lorawan-ws.git
+git clone https://github.com/commandus/lorawan-ws.git
+cd /home/andrei/git/lorawan-ws/
+./autogen.sh
+./configure --enable-jwt
+make
+
+git clone git@github.com:commandus/lorawan-network-server.git
+git clone https://github.com/commandus/lorawan-network-server.git
+cd /home/andrei/git/lorawan-network-server
+git pull
+./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-jwt
+make
+```
+
+Create a new SQLite database file:
+```
+./ws-sqlite -d logger-huffman.db -c
+```
+
+Run SQLite3 client:
+```
+sqlite3 logger-huffman.db
+```
+
+Create a appropriate indexes:
+```
+CREATE INDEX logger_raw_received ON logger_raw (received);
+CREATE INDEX logger_raw_devname ON logger_raw (devname);
+CREATE INDEX logger_lora_devname ON logger_lora (devname);
+CREATE INDEX logger_lora_measured ON logger_lora (measured);
+```
+
+Exit SQLite3 client:
+```
+.q
+```
+
+Copy service/lorawand to /etc/init.d directory.
+
+Start up service:
+
+```
+sudo /etc/init.d/lorawand
+```
+
+Enable auto-run on restart system:
+```
+sudo update-rc enable lorawand
+```
+
+Check embedded web service, got to te from web browser: 
+```
+http://via:5002/
+```
+where via is a name of VIA chipset PC/ 
+
+### Autoconf
 
 Generate automake files, configure and make:
 
