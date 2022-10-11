@@ -15,8 +15,8 @@
 #define DEF_TIMEOUT_US	250 * 1000
 
 int LoraPacketProcessor::enqueuePayload(
-        const struct timeval &time,
-        SemtechUDPPacket &value
+    const struct timeval &time,
+    SemtechUDPPacket &value
 )
 {
 	std::stringstream ss;
@@ -45,7 +45,9 @@ int LoraPacketProcessor::enqueuePayload(
             ss2 << ERR_DUPLICATED_PACKET
                 << " " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
                 //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
-                << " " << value.devId.toJsonString() << ": " << hexString(p);
+                // << " FCnt: " << value.getRfmHeader()->fcnt
+                << " RFM: " << RFMHeader(*value.getRfmHeader()).toJson()
+                << ", device: " << value.devId.toJsonString() << ", data: " << hexString(p);
             onLog(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss2.str());
         }
     }

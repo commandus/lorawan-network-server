@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <sstream>
+#include <cstring>
 
 #include "receiver-queue-service.h"
 #include "base64/base64.h"
 #include "errlist.h"
 #include "utildate.h"
 #include "utillora.h"
+#include "third_party/base64/base64.h"
 
 #define CLEAR_COUNT	2048
 
@@ -30,6 +32,10 @@ void ReceiverQueueKey::clear()
 	id = 0;
 }
 
+/**
+ * Set time, timestamp and id properties
+ * @param retval Return time, timestamp and id properties
+ */
 void ReceiverQueueKey::setProperties
 (
 	std::map<std::string, std::string> &retval
@@ -110,6 +116,10 @@ bool ReceiverQueueValue::hasDbId
 	return (std::find(dbids.begin(), dbids.end(), dbid) != dbids.end());
 }	
 
+/**
+ * Set addr, fport properties
+ * @param retval Return  addr, fport properties
+ */
 void ReceiverQueueValue::setProperties
 (
 	std::map<std::string, std::string> &retval
@@ -180,11 +190,9 @@ std::string ReceiverQueueEntry::toJsonString() const
 		bool isFirst = true;
 		for (std::vector<int>::const_iterator itd(value.dbids.begin()); itd != value.dbids.end(); itd++) {
 			if (isFirst)
-			{
 				isFirst = false;
-			} else {
+			else
 				ss << ",";
-			}
 			ss << *itd;
 		}
 		ss << "]";
@@ -202,8 +210,11 @@ void ReceiverQueueEntry::setProperties
 {
 	// copy only bands listed in aliases, and replace key to the alias name
 	std::map<std::string, std::string> sessionProperties;
+    // Set time, timestamp, id
 	this->key.setProperties(sessionProperties);
+    // Set addr, fport
 	this->value.setProperties(sessionProperties);
+    // copy others
 	for (std::map<std::string, std::string>::const_iterator it(aliases.begin()); it != aliases.end(); it++) {
 		std::map<std::string, std::string>::const_iterator f = sessionProperties.find(it->first);
 		if (f != sessionProperties.end()) {
@@ -249,6 +260,9 @@ void ReceiverQueueService::setDbs
 
 /**
  * Check does it received already
+ * @param packet UDP packet
+ * @param received receive time
+ * @return true if packet has been duplicated
  */
 bool ReceiverQueueService::isDuplicated
 (

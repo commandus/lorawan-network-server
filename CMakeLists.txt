@@ -51,7 +51,7 @@ set(LIBLORAWANSRC
 
 set(SRC_LORAWAN_NETWORK_SERVER
 	lorawan-network-server.cpp run-listener.cpp daemonize.cpp udp-listener.cpp
-	config-json.cpp lora-packet-handler-impl.cpp config-filename.cpp
+	packet-listener.cpp config-json.cpp lora-packet-handler-impl.cpp config-filename.cpp
 	identity-service-dir-txt.cpp ${C_STORAGE} ${C_QUEUE_STORAGE}
 	gateway-stat-service-file.cpp gateway-stat-service-post.cpp
 	device-stat-service-file.cpp device-stat-service-post.cpp
@@ -78,7 +78,7 @@ add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
 )
-target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE)
+target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
 
 set(SRC_MAC_GW
 	mac-gw.cpp macgw-config-json.cpp config-json.cpp lora-packet-handler-impl.cpp

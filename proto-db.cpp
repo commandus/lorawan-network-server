@@ -466,7 +466,7 @@ void doInsert
                 s += *it;
                 s += " ";
             }
-			std::cerr << "SQL statement: " << s << std::endl; // 1- INPUT_FORMAT_HEX
+			std::cerr << "SQL statement: " << s << std::endl;
 		}
 		r = db->close();
 	}

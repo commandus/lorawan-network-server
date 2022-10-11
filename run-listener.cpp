@@ -220,7 +220,11 @@ void RunListener::init(
     int *lastSysSignal
 ) {
     config = aConfig;
+#ifdef ENABLE_LISTENER_UDP
     listener = new UDPListener();
+#endif
+    if (!listener)
+        return;
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_UDP_LISTENER);
     // check signal number when select() has been interrupted
     listener->setSysSignalPtr(lastSysSignal);
@@ -359,8 +363,9 @@ void RunListener::init(
         case DEVICE_STAT_FILE_CSV:
         case DEVICE_STAT_POST:
             listener->setDeviceStatDumper(config,
-                [this](void *env, const SemtechUDPPacket &packet)
-                                          { return onDeviceStatDump(env, packet); }
+                [this](void *env, const SemtechUDPPacket &packet) {
+                    return onDeviceStatDump(env, packet);
+                }
             );
             break;
         default:

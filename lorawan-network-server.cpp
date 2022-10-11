@@ -283,7 +283,7 @@ static void wsRun(char *programPath, Configuration* config) {
     // databases
     // default database
     bool defDbExists = false;
-    if (!config->wsConfig.defaultDatabase.empty()) {
+    if (runListener->dbByConfig && !config->wsConfig.defaultDatabase.empty()) {
         DatabaseNConfig *dc = runListener->dbByConfig->find(config->wsConfig.defaultDatabase);
         bool hasConn = dc != nullptr;
         if (hasConn) {
@@ -359,13 +359,17 @@ static void run()
         wsRun(nullptr, runListener->config);
     if (runListener && runListener->listener) {
         runListener->start();
-        int r = runListener->listener->listen(runListener->config->serverConfig.listenAddressIPv4,
-            runListener->config->serverConfig.listenAddressIPv6);
+        runListener->listener->add(runListener->config->serverConfig.listenAddressIPv4, MODE_FAMILY_HINT_IPV4);
+        runListener->listener->add(runListener->config->serverConfig.listenAddressIPv6, MODE_FAMILY_HINT_IPV6);
+        int r = runListener->listener->listen();
         if (r) {
             std::stringstream ss;
             ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
             runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
         }
+        // Here is stopped
+        // runListener->stop();
+        runListener->listener->clear();
     }
 }
 
