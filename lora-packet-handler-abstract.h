@@ -17,8 +17,8 @@ class LoraPacketHandler {
 		) = 0;
 		// Return 0, retval = EUI and keys
 		virtual int put(
-                const struct timeval &time,
-                SemtechUDPPacket &packet
+            const struct timeval &time,
+            SemtechUDPPacket &packet
 		) = 0;
 		// Reserve FPort number for network service purposes
 		virtual void reserveFPort(

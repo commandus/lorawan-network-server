@@ -125,6 +125,25 @@ AC_ARG_ENABLE([db-json],
 esac],[db_json=true])
 AM_CONDITIONAL([ENABLE_DB_JSON], [test x$db_json = xtrue])
 
+AC_ARG_ENABLE([listener-udp],
+[  --enable-listener-udp    Turn on UDP listener],
+[case "${enableval}" in
+  yes) listener_udp=true ;;
+  no)  listener_udp=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-listener-udp]) ;;
+esac],[listener_udp=true])
+AM_CONDITIONAL([ENABLE_LISTENER_UDP], [test x$listener_udp = xtrue])
+
+ENABLE_LISTENER_EMBEDDED
+AC_ARG_ENABLE([listener-embedded],
+[  --enable-listener-embedded    Turn on embedded listener],
+[case "${enableval}" in
+  yes) listener_embedded=true ;;
+  no)  listener_embedded=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-listener-embedded]) ;;
+esac],[listener_embedded=false])
+AM_CONDITIONAL([ENABLE_LISTENER_EMBEDDED], [test x$listener_embedded = xtrue])
+
 # Embedded web service
 
 AC_ARG_ENABLE([ws],

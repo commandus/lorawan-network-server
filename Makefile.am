@@ -105,6 +105,21 @@ if ENABLE_WS
 	BACKEND_DB_DEF += -DENABLE_WS
 endif
 
+# Listener
+
+if ENABLE_LISTENER_UDP
+LISTENER_SRC = udp-listener.cpp
+LISTENER_LIB =
+LISTENER_DEF = -DENABLE_LISTENER_UDP
+endif
+
+if ENABLE_LISTENER_EMBEDDED
+LISTENER_SRC = embedded-listener.cpp
+LISTENER_LIB =
+LISTENER_DEF = -DENABLE_LISTENER_EMBEDDED
+endif
+
+
 #
 # mysql_config --cflags
 # -I/usr/include/mysql
@@ -157,7 +172,7 @@ rapid_headers = \
 nobase_dist_include_HEADERS = \
 	run-listener.h platform.h utilstring.h utildate.h utilfile.h strptime.h lora-radio.h \
 	utillora.h net-id.h dev-addr.h udp-socket.h udp-emitter.h udp-listener.h lora-encrypt.h \
-	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
+	packet-listener.h config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	errlist.h daemonize.h device-history-item.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \
@@ -187,12 +202,13 @@ nobase_dist_include_HEADERS = \
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 
 lorawan_network_server_SOURCES = \
-	lorawan-network-server.cpp run-listener.cpp daemonize.cpp udp-listener.cpp \
+	lorawan-network-server.cpp run-listener.cpp daemonize.cpp \
 	config-json.cpp lora-packet-handler-impl.cpp \
 	config-filename.cpp third_party/get_rss/get_rss.c \
 	identity-service-dir-txt.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
 	gateway-stat-service-file.cpp gateway-stat-service-post.cpp  \
 	device-stat-service-file.cpp device-stat-service-post.cpp \
+	packet-listener.cpp $(LISTENER_SRC) \
 	db-any.cpp $(BACKEND_DB_SRC) \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp  \
 	regional-parameter-channel-plan-file-json.cpp \
@@ -200,9 +216,10 @@ lorawan_network_server_SOURCES = \
 	third_party/argtable3/argtable3.c
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
-    $(PACKET_PARSER_LIB) \
+    $(PACKET_PARSER_LIB) $(LISTENER_LIB) \
     $(BACKEND_DB_LIB) -lcurl $(WS_AUTH_LIB)
-lorawan_network_server_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF)
+lorawan_network_server_CPPFLAGS = $(commoncppflags) \
+    $(BACKEND_DB_DEF) $(LISTENER_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF)
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp \

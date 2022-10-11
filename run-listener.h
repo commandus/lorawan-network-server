@@ -4,6 +4,7 @@
 #include "config-json.h"
 #include "auth-user.h"
 #include "gateway-list.h"
+// #include "packet-listener.h"
 #include "udp-listener.h"
 #include "receiver-queue-processor.h"
 #include "lora-packet-handler-impl.h"
@@ -17,7 +18,7 @@ public:
     DeviceStatService *deviceStatService;
 
     // Listen UDP port(s) for packets sent by Semtech's gateway
-    UDPListener *listener;
+    PacketListener *listener;
     // Device identity service
     IdentityService *identityService;
     // ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
