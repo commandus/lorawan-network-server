@@ -171,8 +171,9 @@ rapid_headers = \
 
 nobase_dist_include_HEADERS = \
 	run-listener.h platform.h utilstring.h utildate.h utilfile.h strptime.h lora-radio.h \
-	utillora.h net-id.h dev-addr.h udp-socket.h udp-emitter.h udp-listener.h lora-encrypt.h \
-	packet-listener.h config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
+	utillora.h net-id.h dev-addr.h udp-socket.h udp-emitter.h lora-encrypt.h \
+	packet-listener.h udp-listener.h embedded-listener.h \
+	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	errlist.h daemonize.h device-history-item.h gateway-stat.h gateway-list.h lorawan-mac.h \
 	macgw-config-json.h config-filename.h semtech-pull-resp-packet.h \

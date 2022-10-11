@@ -4,8 +4,13 @@
 #include "config-json.h"
 #include "auth-user.h"
 #include "gateway-list.h"
-// #include "packet-listener.h"
+#include "packet-listener.h"
+#ifdef ENABLE_LISTENER_UDP
 #include "udp-listener.h"
+#endif
+#ifdef ENABLE_LISTENER_EMBEDDED
+#include "embedded-listener.h"
+#endif
 #include "receiver-queue-processor.h"
 #include "lora-packet-handler-impl.h"
 

@@ -298,6 +298,10 @@ git pull
 make
 ```
 
+```
+/configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-jwt --enable-listener-udp=no --enable-listener-embedded
+```
+
 Create a new SQLite database file:
 ```
 ./ws-sqlite -d logger-huffman.db -c

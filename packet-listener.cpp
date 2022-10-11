@@ -5,7 +5,6 @@
 #include <syslog.h>
 #include <csignal>
 #include <cerrno>
-#include <sys/select.h>
 
 #include "get_rss/get_rss.h"
 #include "utilstring.h"

@@ -223,6 +223,9 @@ void RunListener::init(
 #ifdef ENABLE_LISTENER_UDP
     listener = new UDPListener();
 #endif
+#ifdef ENABLE_LISTENER_EMBEDDED
+    listener = new EmbeddedListener();
+#endif
     if (!listener)
         return;
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_UDP_LISTENER);
