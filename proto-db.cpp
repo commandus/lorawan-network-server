@@ -14,7 +14,11 @@
 
 #ifdef ENABLE_PKT2
 #include <google/protobuf/message.h>
+#include "pkt2/database-config.h"
+#else
+#include "database-config-json.h"
 #endif
+
 
 #include "argtable3/argtable3.h"
 #include "base64/base64.h"
@@ -512,7 +516,13 @@ int main(
 		exit(ERR_CODE_LOAD_PROTO);
 	}
 
-	ConfigDatabasesIntf *configDatabases = new ConfigDatabases(config.dbConfigFileName);
+	ConfigDatabasesIntf *configDatabases;
+#ifdef ENABLE_PKT2
+    configDatabases = new ConfigDatabases(config.databaseConfigFileName);
+#else
+    configDatabases = new ConfigDatabasesJson(config.dbConfigFileName);
+#endif
+
 	if (configDatabases->dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
 #ifdef ENABLE_PKT2

@@ -72,7 +72,7 @@ int GatewayList::put(
 {
 	rapidjson::Document doc;
 	rapidjson::Document::AllocatorType &allocator(doc.GetAllocator());
-	doc.Parse(value.c_str());
+	doc.Parse<rapidjson::kParseCommentsFlag>(value.c_str());
 	return parse(gatewayId, doc);
 }
 
@@ -242,7 +242,7 @@ void GatewayList::parse(
 )
 {
 	rapidjson::Document doc;
-	doc.Parse(value.c_str());
+	doc.Parse<rapidjson::kParseCommentsFlag>(value.c_str());
 	parse(0, doc);
 }
 

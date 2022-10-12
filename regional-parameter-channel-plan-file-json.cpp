@@ -870,7 +870,7 @@ int RegionalParameterChannelPlanFileJson::loadFile(const std::string &fileName)
         return ERR_CODE_INVALID_JSON;
     char readBuffer[4096];
     rapidjson::FileReadStream istrm(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::ParseResult r = reader.Parse(istrm, handler);
+    rapidjson::ParseResult r = reader.Parse<rapidjson::kParseCommentsFlag>(istrm, handler);
     if (r.IsError()) {
         errCode = r.Code();
         std::stringstream ss;

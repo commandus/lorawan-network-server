@@ -1830,7 +1830,7 @@ int SemtechUDPPacket::parse
 
 	rapidjson::Document doc;
 	rapidjson::Document::AllocatorType &allocator(doc.GetAllocator());
-	doc.Parse(json);
+	doc.Parse<rapidjson::kParseCommentsFlag>(json);
 	if (!doc.IsObject())
 		return ERR_CODE_INVALID_JSON;
 

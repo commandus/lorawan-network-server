@@ -50,7 +50,7 @@ int ConfigDatabasesJson::load(
 ) {
     int r = 0;
     rapidjson::Document doc;
-    doc.Parse(value.c_str());
+    doc.Parse<rapidjson::kParseCommentsFlag>(value.c_str());
     if (!doc.IsArray())
         return ERR_CODE_INVALID_JSON;
     for (int i = 0; i < doc.Size(); i++) {

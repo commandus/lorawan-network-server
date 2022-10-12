@@ -321,7 +321,7 @@ int Configuration::parse(
 	if (!json)
 		return ERR_CODE_INVALID_JSON;
 	rapidjson::Document doc;
-	doc.Parse(json);
+	doc.Parse<rapidjson::kParseCommentsFlag>(json);
 	gatewayPort = 4242;
 	if (doc.IsObject()) {
 		if (doc.HasMember("server")) {

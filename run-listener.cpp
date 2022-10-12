@@ -14,6 +14,12 @@
 #include "receiver-queue-service-dir-txt.h"
 #include "receiver-queue-service-file-json.h"
 
+#ifdef ENABLE_PKT2
+#include "pkt2/database-config.h"
+#else
+#include "database-config-json.h"
+#endif
+
 #ifdef ENABLE_LOGGER_HUFFMAN
 #include "logger-huffman/logger-parse.h"
 #include "logger-loader.h"

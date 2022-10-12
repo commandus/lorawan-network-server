@@ -21,7 +21,7 @@ void AuthUserFile::load(
 )
 {
     rapidjson::Document doc;
-    doc.Parse(json.c_str());
+    doc.Parse<rapidjson::kParseCommentsFlag>(json.c_str());
     if (doc.IsArray()) {
         for (int i = 0; i < doc.Size(); i++) {
             std::string userName;
