@@ -4,21 +4,27 @@ project(${PROJECT_NAME} VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 11)
 
+option(ENABLE_PKT2 "Build with pkt2" OFF)
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-find_package(CURL REQUIRED) 
+find_package(CURL REQUIRED)
 # find_package(unofficial-sqlite3 REQUIRED)
 set(CURL_LIBRARIES curl)
 
-find_library(LIBPKT2
-	NAMES pkt2
-	HINTS "." ".." "../../pkt2" "~/src/pkt2"
-)
+set(OPENSSL_USE_STATIC_LIBS TRUE)
+find_package(OpenSSL REQUIRED)
+
+if(ENABLE_PKT2)
+	find_library(LIBPKT2
+			NAMES pkt2
+			HINTS "." ".." "../../pkt2" "~/src/pkt2"
+			)
+endif(ENABLE_PKT2)
 
 include_directories("third_party" ${CURL_INCLUDE_DIR} ".")
 link_directories(${CMAKE_SOURCE_DIR}/../lorawan-ws)
-
 
 set(SRC_AES
 	third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -44,7 +50,7 @@ set(LIBLORAWANSRC
 	strptime.cpp lora-encrypt.cpp identity-service.cpp receiver-queue-processor.cpp regional-parameter-channel-plan.cpp
 	device-stat-service-abstract.cpp device-channel-plan.cpp packet-queue.cpp gateway-list.cpp
 	gateway-stat-service-abstract.cpp semtech-pull-resp-packet.cpp receiver-queue-service.cpp
-	semtech-metadata-tx.cpp
+	semtech-metadata-tx.cpp auth-file.cpp auth-user.cpp
 	${SRC_AES}
 	third_party/base64/base64.cpp
 )
@@ -63,9 +69,9 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	third_party/argtable3/argtable3.c
 )
 
-set(DEV_PAYLOAD_SOURCES 
+set(DEV_PAYLOAD_SOURCES
 	dev-payload.cpp
-	config-json.cpp config-filename.cpp 
+	config-json.cpp config-filename.cpp
 	${C_STORAGE}
     third_party/argtable3/argtable3.c
 )
@@ -77,6 +83,7 @@ add_library(lorawan STATIC
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
+		OpenSSL::Crypto
 )
 target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
 
@@ -115,7 +122,8 @@ target_link_libraries(lora-print PRIVATE Threads::Threads
 
 set(PROTO_DB_SOURCES
 	proto-db.cpp identity-service-dir-txt.cpp
-	db-any.cpp  ${BACKEND_DB_SRC} ${C_STORAGE}
+	db-any.cpp database-config-json.cpp
+	${BACKEND_DB_SRC} ${C_STORAGE}
 	third_party/argtable3/argtable3.c
 )
 add_executable(proto-db ${PROTO_DB_SOURCES})
