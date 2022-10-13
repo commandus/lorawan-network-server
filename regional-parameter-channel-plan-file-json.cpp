@@ -16,9 +16,9 @@
 /**
  * 	JSON attribute names
  */
-#define ATTRS_REGION_BAND_COUNT	39
+#define ATTRS_GATEWAY_CONFIG_COUNT	39
 
-enum JSON_STATE_REGION_BAND {
+enum JSON_STATE_GATEWAY_CONFIG {
     JRB_NONE = 0,                  	        // Initial state
     JRB_ROOT = 1,                           //
     JRB_BANDS = 2,                 	        // Array of bands
@@ -39,9 +39,9 @@ enum JSON_STATE_REGION_BAND {
     JRB_BAND_CHANNEL = 16              	    //          Channel
 };
 
-#define JSON_STATE_REGION_BAND_COUNT 17
+#define JSON_STATE_GATEWAY_CONFIG_COUNT 17
 
-static const char *PARSE_STATE_NAMES[JSON_STATE_REGION_BAND_COUNT] = {
+static const char *PARSE_STATE_NAMES[JSON_STATE_GATEWAY_CONFIG_COUNT] = {
     "none",
     "root",
     "RegionBands",
@@ -61,7 +61,7 @@ static const char *PARSE_STATE_NAMES[JSON_STATE_REGION_BAND_COUNT] = {
     "up/downlinkChannels[]"
 };
 
-enum JSON_KEY_REGION_BAND {
+enum JSON_KEY_GATEWAY_CONFIG {
     JK_NONE = 0,
     JK_REGIONALPARAMETERSVERSION = 1,
     JK_REGIONBANDS = 2,
@@ -110,7 +110,7 @@ enum JSON_KEY_REGION_BAND {
 
 };
 
-static const char *ATTR_REGION_BAND_NAMES[ATTRS_REGION_BAND_COUNT] = {
+static const char *ATTR_REGION_BAND_NAMES[ATTRS_GATEWAY_CONFIG_COUNT] = {
         "",
         "regionalParametersVersion",         // 1
         "RegionBands",                       // 2
@@ -157,13 +157,13 @@ static const char *ATTR_REGION_BAND_NAMES[ATTRS_REGION_BAND_COUNT] = {
         "custom"                             // 38
 };
 
-static JSON_KEY_REGION_BAND getAttrByName(
+static JSON_KEY_GATEWAY_CONFIG getAttrByName(
         const char *name
 )
 {
-    for (int i = 1; i < ATTRS_REGION_BAND_COUNT; i++) {
+    for (int i = 1; i < ATTRS_GATEWAY_CONFIG_COUNT; i++) {
         if (strcmp(ATTR_REGION_BAND_NAMES[i], name) == 0)
-            return (JSON_KEY_REGION_BAND) i;
+            return (JSON_KEY_GATEWAY_CONFIG) i;
     }
     return JK_NONE;
 }
@@ -195,9 +195,9 @@ RegionalParameterChannelPlanFileJson::~RegionalParameterChannelPlanFileJson()
 class RegionBandsJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, RegionBandsJsonHandler> {
 private:
     RegionalParameterChannelPlanFileJson *value;
-    JSON_KEY_REGION_BAND keyIndex;
-    JSON_STATE_REGION_BAND state;
-    JSON_STATE_REGION_BAND prevState;
+    JSON_KEY_GATEWAY_CONFIG keyIndex;
+    JSON_STATE_GATEWAY_CONFIG state;
+    JSON_STATE_GATEWAY_CONFIG prevState;
 
     int bandCount, dataRateCount, maxPayloadSizePerDataRateCount,
             maxPayloadSizePerDataRateRepeaterCount,
