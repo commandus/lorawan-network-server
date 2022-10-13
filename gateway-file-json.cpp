@@ -309,16 +309,6 @@ void GatewayGatewayConfig::toJSON(
     rapidjson::Value jautoquitThreshold;
     jbeaconInfodesc.SetUint(autoquitThreshold);
     jsonValue.AddMember("autoquit_threshold", jautoquitThreshold, allocator);
-
-    uint32_t ;
-
-
-
-    // log file name
-    std::string lfn(value.log_file_name);
-    rapidjson::Value jlfn;
-    jlfn.SetString(lfn.c_str(), lfn.size(), allocator);
-    jsonValue.AddMember("log_file", jlfn, allocator);
 }
 
 std::string GatewayGatewayConfig::toString()
