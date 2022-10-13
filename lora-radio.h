@@ -7,23 +7,23 @@ typedef enum {
 } MODULATION;
 
 /**
- * TODO nor sure for BW_7KHZ..BW_125KHZ
+ * TODO nor sure for BANDWIDTH_INDEX_7KHZ..BANDWIDTH_INDEX_125KHZ
  * @see https://github.com/x893/SX1231/blob/master/SX12xxDrivers-2.0.0/src/radio/sx1276-LoRa.c
  * SignalBw
  * 0: 7.8kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
  * 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved
  */ 
 typedef enum {
-    BW_7KHZ  = 0,    // 7.8
-    BW_10KHZ  = 1,   // 10.4
-    BW_15KHZ  = 2,   // 15.6
-    BW_20KHZ  = 3,   // 20.8
-    BW_31KHZ  = 4,   // 31.2
-    BW_41KHZ  = 5,   // 41.6
-    BW_62KHZ  = 6,   // 62.5
-    BW_125KHZ  = 7,  // 125
-    BW_250KHZ  = 8,  // 250
-    BW_500KHZ  = 9  // 500
+    BANDWIDTH_INDEX_7KHZ  = 0,    // 7.8
+    BANDWIDTH_INDEX_10KHZ  = 1,   // 10.4
+    BANDWIDTH_INDEX_15KHZ  = 2,   // 15.6
+    BANDWIDTH_INDEX_20KHZ  = 3,   // 20.8
+    BANDWIDTH_INDEX_31KHZ  = 4,   // 31.2
+    BANDWIDTH_INDEX_41KHZ  = 5,   // 41.6
+    BANDWIDTH_INDEX_62KHZ  = 6,   // 62.5
+    BANDWIDTH_INDEX_125KHZ  = 7,  // 125
+    BANDWIDTH_INDEX_250KHZ  = 8,  // 250
+    BANDWIDTH_INDEX_500KHZ  = 9  // 500
 } BANDWIDTH;
 
 typedef enum {
@@ -64,10 +64,10 @@ typedef enum {
 } STATUS;
 
 typedef enum {
-    STAT_UNDEFINED  = 0x00,
-    STAT_NO_CRC     = 0x01,
-    STAT_CRC_BAD    = 0x11,
-    STAT_CRC_OK     = 0x10
+    CRC_STATUS_UNDEFINED  = 0x00,
+    CRC_STATUS_NO_CRC     = 0x01,
+    CRC_STATUS_CRC_BAD    = 0x11,
+    CRC_STATUS_CRC_OK     = 0x10
 } CRCSTATUS;
 
 typedef enum {

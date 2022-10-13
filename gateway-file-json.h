@@ -2,6 +2,7 @@
 #define GATEWAY_FILE_JSON_H_ 1
 
 #include <vector>
+#include "gateway-lora.h"
 #include "regional-parameter-channel-plan.h"
 #include "regional-parameter-channel-plans.h"
 

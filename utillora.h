@@ -833,7 +833,7 @@ std::string MODULATION2String(MODULATION value);
 MODULATION string2MODULATION(const char *value);
 
 /**
- * TODO nor sure for BW_7KHZ..BW_125KHZ
+ * TODO nor sure for BANDWIDTH_INDEX_7KHZ..BANDWIDTH_INDEX_125KHZ
  * @see https://github.com/x893/SX1231/blob/master/SX12xxDrivers-2.0.0/src/radio/sx1276-LoRa.c
  * SignalBw
  * 0: 7.8kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
