@@ -114,11 +114,10 @@ LISTENER_DEF = -DENABLE_LISTENER_UDP
 endif
 
 if ENABLE_LISTENER_EMBEDDED
-LISTENER_SRC = embedded-listener.cpp
+LISTENER_SRC = embedded-listener.cpp gateway-file-json.cpp
 LISTENER_LIB =
 LISTENER_DEF = -DENABLE_LISTENER_EMBEDDED
 endif
-
 
 #
 # mysql_config --cflags
@@ -198,6 +197,7 @@ nobase_dist_include_HEADERS = \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
 	device-channel-plan-file-json.h device-channel-plan.h regional-parameter-channel-plan.h regional-parameter-channel-plans.h regional-parameter-channel-plan-file-json.h \
 	third_party/get_rss/get_rss.h \
+	gateway-lora.h gateway-file-json.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c

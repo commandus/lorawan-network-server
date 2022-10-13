@@ -13,7 +13,7 @@ static std::string STR_FALSE("false");
 
 DataRate::DataRate()
     : uplink(true), downlink(true), modulation(LORA),
-    bandwidth(BW_125KHZ), spreadingFactor(DRLORA_SF11), bps(0)
+      bandwidth(BANDWIDTH_INDEX_125KHZ), spreadingFactor(DRLORA_SF11), bps(0)
 {
 
 }
@@ -34,7 +34,7 @@ DataRate::DataRate(BANDWIDTH aBandwidth, SPREADING_FACTOR aSpreadingFactor)
 
 DataRate::DataRate(uint32_t aBps)
     : uplink(true), downlink(true), modulation(FSK),
-    bandwidth(BW_7KHZ), spreadingFactor(DRLORA_SF5), bps(aBps)
+      bandwidth(BANDWIDTH_INDEX_7KHZ), spreadingFactor(DRLORA_SF5), bps(aBps)
 {
 
 }
@@ -54,7 +54,7 @@ void DataRate::setFSK(uint32_t aBps)
     uplink = true;
     downlink = true;
     modulation = FSK;
-    bandwidth = BW_7KHZ;
+    bandwidth = BANDWIDTH_INDEX_7KHZ;
     spreadingFactor = DRLORA_SF5;
     bps = aBps;
 }

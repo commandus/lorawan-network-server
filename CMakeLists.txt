@@ -64,7 +64,8 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	db-any.cpp ${BACKEND_DB_SRC}
 	device-channel-plan-file-json.cpp device-history-service-json.cpp
 	regional-parameter-channel-plan-file-json.cpp
-	ws-handler.cpp database-config-json.cpp
+	ws-handler.cpp database-config-json.cpp 
+	embedded-listener.cpp gateway-file-json.cpp
 	third_party/get_rss/get_rss.c
 	third_party/argtable3/argtable3.c
 )

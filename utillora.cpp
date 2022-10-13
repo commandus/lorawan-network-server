@@ -883,7 +883,7 @@ void NetworkIdentity::set(
 
 // const std::string DEF_DATA_RATE = "SF7BW125";
 // const std::string DEF_ECCCODE_RATE = "4/6";
-#define DEF_BANDWIDTH BW_250KHZ
+#define DEF_BANDWIDTH BANDWIDTH_INDEX_250KHZ
 #define DEF_SPREADING_FACTOR DRLORA_SF7
 #define DEF_CODING_RATE CRLORA_4_6
 
@@ -905,34 +905,34 @@ std::string rfmMetaData::datr() const
 {
 	int bandwithValue;
 	switch (bandwith) {
-		case BW_7KHZ:
+		case BANDWIDTH_INDEX_7KHZ:
 			bandwithValue = 7; // 7.8
 			break;
-		case BW_10KHZ:
+		case BANDWIDTH_INDEX_10KHZ:
 			bandwithValue = 10; // 10.4
 			break;
-		case BW_15KHZ:
+		case BANDWIDTH_INDEX_15KHZ:
 			bandwithValue = 15; // 15.6
 			break;
-		case BW_20KHZ:
+		case BANDWIDTH_INDEX_20KHZ:
 			bandwithValue = 20; // 20.8
 			break;
-		case BW_31KHZ:
+		case BANDWIDTH_INDEX_31KHZ:
 			bandwithValue = 31; // 31.2
 			break;
-		case BW_41KHZ:
+		case BANDWIDTH_INDEX_41KHZ:
 			bandwithValue = 41; // 41.6
 			break;
-		case BW_62KHZ:
+		case BANDWIDTH_INDEX_62KHZ:
 			bandwithValue = 62; // 62.5
 			break;
-		case BW_125KHZ:
+		case BANDWIDTH_INDEX_125KHZ:
 			bandwithValue = 125; // 125
 			break;
-		case BW_250KHZ:
+		case BANDWIDTH_INDEX_250KHZ:
 			bandwithValue = 250; // 250
 			break;
-		case BW_500KHZ:
+		case BANDWIDTH_INDEX_500KHZ:
 			bandwithValue = 500; // 500
 			break;
 		default:
@@ -965,37 +965,37 @@ void rfmMetaData::setDatr(
 	int bandwithValue = atoi(s.c_str());
 	switch (bandwithValue) {
 		case 7:
-			bandwith = BW_7KHZ; // 7.8
+			bandwith = BANDWIDTH_INDEX_7KHZ; // 7.8
 			break;
 		case 10:
-			bandwith = BW_10KHZ; // 10.4
+			bandwith = BANDWIDTH_INDEX_10KHZ; // 10.4
 			break;
 		case 15:
-			bandwith = BW_15KHZ; // 15.6
+			bandwith = BANDWIDTH_INDEX_15KHZ; // 15.6
 			break;
 		case 20:
-			bandwith = BW_20KHZ; // 20.8
+			bandwith = BANDWIDTH_INDEX_20KHZ; // 20.8
 			break;
 		case 31:
-			bandwith = BW_31KHZ; // 31.2
+			bandwith = BANDWIDTH_INDEX_31KHZ; // 31.2
 			break;
 		case 41:
-			bandwith = BW_41KHZ; // 41.6
+			bandwith = BANDWIDTH_INDEX_41KHZ; // 41.6
 			break;
 		case 62:
-			bandwith = BW_62KHZ; // 62.5
+			bandwith = BANDWIDTH_INDEX_62KHZ; // 62.5
 			break;
 		case 125:
-			bandwith = BW_125KHZ; // 125
+			bandwith = BANDWIDTH_INDEX_125KHZ; // 125
 			break;
 		case 250:
-			bandwith = BW_250KHZ;
+			bandwith = BANDWIDTH_INDEX_250KHZ;
 			break;
 		case 500:
-			bandwith = BW_500KHZ;
+			bandwith = BANDWIDTH_INDEX_500KHZ;
 			break;
 		default:
-			bandwith = BW_250KHZ;
+			bandwith = BANDWIDTH_INDEX_250KHZ;
 			break;
 	}
 }
@@ -3178,25 +3178,25 @@ std::string MODULATION2String(MODULATION value)
 
 std::string BANDWIDTH2String(BANDWIDTH value) {
     switch (value) {
-        case BW_7KHZ:
+        case BANDWIDTH_INDEX_7KHZ:
             return "7.8";
-        case BW_10KHZ:
+        case BANDWIDTH_INDEX_10KHZ:
             return "10.4";
-        case BW_15KHZ:
+        case BANDWIDTH_INDEX_15KHZ:
             return "15.6";
-        case BW_20KHZ:
+        case BANDWIDTH_INDEX_20KHZ:
             return "20.8";
-        case BW_31KHZ:
+        case BANDWIDTH_INDEX_31KHZ:
             return "31.2";
-        case BW_41KHZ:
+        case BANDWIDTH_INDEX_41KHZ:
             return "41.6";
-        case BW_62KHZ:
+        case BANDWIDTH_INDEX_62KHZ:
             return "62.5";
-        case BW_125KHZ:
+        case BANDWIDTH_INDEX_125KHZ:
             return "125";
-        case BW_250KHZ:
+        case BANDWIDTH_INDEX_250KHZ:
             return "250";
-        case BW_500KHZ:
+        case BANDWIDTH_INDEX_500KHZ:
             return "500";
     }
     return "7.8";
@@ -3205,51 +3205,51 @@ std::string BANDWIDTH2String(BANDWIDTH value) {
 BANDWIDTH string2BANDWIDTH(const char *value)
 {
     if (strcmp(value, "7.8") == 0)
-        return BW_7KHZ;
+        return BANDWIDTH_INDEX_7KHZ;
     if (strcmp(value, "10.4") == 0)
-        return BW_10KHZ;
+        return BANDWIDTH_INDEX_10KHZ;
     if (strcmp(value, "15.6") == 0)
-        return BW_15KHZ;
+        return BANDWIDTH_INDEX_15KHZ;
     if (strcmp(value, "20.8") == 0)
-        return BW_20KHZ;
+        return BANDWIDTH_INDEX_20KHZ;
     if (strcmp(value, "31.2") == 0)
-        return BW_31KHZ;
+        return BANDWIDTH_INDEX_31KHZ;
     if (strcmp(value, "41.6") == 0)
-        return BW_41KHZ;
+        return BANDWIDTH_INDEX_41KHZ;
     if (strcmp(value, "62.5") == 0)
-        return BW_62KHZ;
+        return BANDWIDTH_INDEX_62KHZ;
     if (strcmp(value, "125") == 0)
-        return BW_125KHZ;
+        return BANDWIDTH_INDEX_125KHZ;
     if (strcmp(value, "250") == 0)
-        return BW_250KHZ;
+        return BANDWIDTH_INDEX_250KHZ;
     if (strcmp(value, "500") == 0)
-        return BW_500KHZ;
-    return BW_7KHZ;
+        return BANDWIDTH_INDEX_500KHZ;
+    return BANDWIDTH_INDEX_7KHZ;
 }
 
 BANDWIDTH int2BANDWIDTH(int value)
 {
     if (value == 7)
-        return BW_7KHZ;
+        return BANDWIDTH_INDEX_7KHZ;
     if (value == 10)
-        return BW_10KHZ;
+        return BANDWIDTH_INDEX_10KHZ;
     if (value == 15)
-        return BW_15KHZ;
+        return BANDWIDTH_INDEX_15KHZ;
     if (value == 20)
-        return BW_20KHZ;
+        return BANDWIDTH_INDEX_20KHZ;
     if (value == 31)
-        return BW_31KHZ;
+        return BANDWIDTH_INDEX_31KHZ;
     if (value == 41)
-        return BW_41KHZ;
+        return BANDWIDTH_INDEX_41KHZ;
     if (value == 62)
-        return BW_62KHZ;
+        return BANDWIDTH_INDEX_62KHZ;
     if (value == 125)
-        return BW_125KHZ;
+        return BANDWIDTH_INDEX_125KHZ;
     if (value == 250)
-        return BW_250KHZ;
+        return BANDWIDTH_INDEX_250KHZ;
     if (value == 500)
-        return BW_500KHZ;
-    return BW_7KHZ;
+        return BANDWIDTH_INDEX_500KHZ;
+    return BANDWIDTH_INDEX_7KHZ;
 }
 
 /**
@@ -3261,26 +3261,26 @@ BANDWIDTH double2BANDWIDTH(double value)
         return int2BANDWIDTH((int) value);
     else {
         if (value >= 7000)
-            return BW_7KHZ;
+            return BANDWIDTH_INDEX_7KHZ;
         if (value >= 10000)
-            return BW_10KHZ;
+            return BANDWIDTH_INDEX_10KHZ;
         if (value >= 15000)
-            return BW_15KHZ;
+            return BANDWIDTH_INDEX_15KHZ;
         if (value >= 20000)
-            return BW_20KHZ;
+            return BANDWIDTH_INDEX_20KHZ;
         if (value >= 31000)
-            return BW_31KHZ;
+            return BANDWIDTH_INDEX_31KHZ;
         if (value >= 41000)
-            return BW_41KHZ;
+            return BANDWIDTH_INDEX_41KHZ;
         if (value >= 62000)
-            return BW_62KHZ;
+            return BANDWIDTH_INDEX_62KHZ;
         if (value >= 125000)
-            return BW_125KHZ;
+            return BANDWIDTH_INDEX_125KHZ;
         if (value >= 250000)
-            return BW_250KHZ;
+            return BANDWIDTH_INDEX_250KHZ;
         if (value >= 500000)
-            return BW_500KHZ;
-        return BW_7KHZ;
+            return BANDWIDTH_INDEX_500KHZ;
+        return BANDWIDTH_INDEX_7KHZ;
 
     }
 }
