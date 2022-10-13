@@ -103,19 +103,19 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
     }
     if (jsonValue.HasMember("forward_crc_valid")) {
         rapidjson::Value &jForwardCRCValid = jsonValue["forward_crc_valid"];
-        if (jForwardCRCValid.IsInt()) {
+        if (jForwardCRCValid.IsBool()) {
             forwardCRCValid = jForwardCRCValid.GetBool();
         }
     }
     if (jsonValue.HasMember("forward_crc_error")) {
         rapidjson::Value &jForwardCRCError = jsonValue["forward_crc_error"];
-        if (jForwardCRCError.IsInt()) {
+        if (jForwardCRCError.IsBool()) {
             forwardCRCError = jForwardCRCError.GetBool();
         }
     }
     if (jsonValue.HasMember("forward_crc_disabled")) {
         rapidjson::Value &jForwardCRCDisabled = jsonValue["forward_crc_disabled"];
-        if (jForwardCRCDisabled.IsInt()) {
+        if (jForwardCRCDisabled.IsBool()) {
             forwardCRCDisabled = jForwardCRCDisabled.GetBool();
         }
     }
@@ -149,56 +149,56 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
             fakeGPS = jForwardCRCDisabled.GetBool();
         }
     }
-    if (jsonValue.HasMember("beaconPeriod")) {
-        rapidjson::Value &jValue = jsonValue["beaconPeriod"];
+    if (jsonValue.HasMember("beacon_period")) {
+        rapidjson::Value &jValue = jsonValue["beacon_period"];
         if (jValue.IsInt()) {
             beaconPeriod = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("beaconFreqHz")) {
-        rapidjson::Value &jValue = jsonValue["beaconFreqHz"];
+    if (jsonValue.HasMember("beacon_freq_hz")) {
+        rapidjson::Value &jValue = jsonValue["beacon_freq_hz"];
         if (jValue.IsInt()) {
             beaconFreqHz = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("beaconFreqNb")) {
-        rapidjson::Value &jValue = jsonValue["beaconFreqNb"];
+    if (jsonValue.HasMember("beacon_freq_nb")) {
+        rapidjson::Value &jValue = jsonValue["beacon_freq_nb"];
         if (jValue.IsInt()) {
             beaconFreqNb = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("beaconFreqStep")) {
-        rapidjson::Value &jValue = jsonValue["beaconFreqStep"];
+    if (jsonValue.HasMember("beacon_freq_step")) {
+        rapidjson::Value &jValue = jsonValue["beacon_freq_step"];
         if (jValue.IsInt()) {
             beaconFreqStep = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("beaconDatarate")) {
-        rapidjson::Value &jValue = jsonValue["beaconDatarate"];
+    if (jsonValue.HasMember("beacon_datarate")) {
+        rapidjson::Value &jValue = jsonValue["beacon_datarate"];
         if (jValue.IsInt()) {
             beaconDatarate = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("beaconBandwidthHz")) {
-        rapidjson::Value &jValue = jsonValue["beaconBandwidthHz"];
+    if (jsonValue.HasMember("beacon_bw_hz")) {
+        rapidjson::Value &jValue = jsonValue["beacon_bw_hz"];
         if (jValue.IsInt()) {
             beaconBandwidthHz = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("beaconPower")) {
-        rapidjson::Value &jValue = jsonValue["beaconPower"];
+    if (jsonValue.HasMember("beacon_power")) {
+        rapidjson::Value &jValue = jsonValue["beacon_power"];
         if (jValue.IsInt()) {
             beaconPower = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("beaconInfodesc")) {
-        rapidjson::Value &jValue = jsonValue["beaconInfodesc"];
+    if (jsonValue.HasMember("beacon_infodesc")) {
+        rapidjson::Value &jValue = jsonValue["beacon_infodesc"];
         if (jValue.IsInt()) {
             beaconInfodesc = jValue.GetInt();
         }
     }
-    if (jsonValue.HasMember("autoquitThreshold")) {
-        rapidjson::Value &jValue = jsonValue["autoquitThreshold"];
+    if (jsonValue.HasMember("autoquit_threshold")) {
+        rapidjson::Value &jValue = jsonValue["autoquit_threshold"];
         if (jValue.IsInt()) {
             autoquitThreshold = jValue.GetInt();
         }
@@ -223,23 +223,23 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.AddMember("server_address", jserverAddress, allocator);
 
     rapidjson::Value jserverPortUp;
-    jserverPortUp.SetInt(serverPortUp);
+    jserverPortUp.SetUint(serverPortUp);
     jsonValue.AddMember("server_port_up", jserverPortUp, allocator);
 
     rapidjson::Value jserverPortDown;
-    jserverPortDown.SetInt(serverPortDown);
+    jserverPortDown.SetUint(serverPortDown);
     jsonValue.AddMember("server_port_down", jserverPortDown, allocator);
 
     rapidjson::Value jkeepaliveInterval;
-    jkeepaliveInterval.SetInt(keepaliveInterval);
+    jkeepaliveInterval.SetUint(keepaliveInterval);
     jsonValue.AddMember("keepalive_interval", jkeepaliveInterval, allocator);
 
     rapidjson::Value jstatInterval;
-    jstatInterval.SetInt(statInterval);
+    jstatInterval.SetUint(statInterval);
     jsonValue.AddMember("stat_interval", jstatInterval, allocator);
 
     rapidjson::Value jpushTimeoutMs;
-    jpushTimeoutMs.SetInt(pushTimeoutMs.tv_usec / 500);
+    jpushTimeoutMs.SetUint(pushTimeoutMs.tv_usec / 500);
     jsonValue.AddMember("push_timeout_ms", jpushTimeoutMs, allocator);
 
     rapidjson::Value jforwardCRCValid;
@@ -276,7 +276,7 @@ void GatewayGatewayConfig::toJSON(
 
     rapidjson::Value jbeaconPeriod;
     jbeaconPeriod.SetUint(beaconPeriod);
-    jsonValue.AddMember("ref_altitude", jbeaconPeriod, allocator);
+    jsonValue.AddMember("beacon_period", jbeaconPeriod, allocator);
 
     rapidjson::Value jbeaconFreqHz;
     jbeaconFreqHz.SetUint(beaconFreqHz);
@@ -287,7 +287,7 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.AddMember("beacon_freq_nb", jbeaconFreqNb, allocator);
 
     rapidjson::Value jbeaconFreqStep;
-    jbeaconFreqStep.SetUint(beaconFreqNb);
+    jbeaconFreqStep.SetUint(beaconFreqStep);
     jsonValue.AddMember("beacon_freq_step", jbeaconFreqStep, allocator);
 
     rapidjson::Value jbeaconDatarate;
@@ -295,11 +295,11 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.AddMember("beacon_datarate", jbeaconDatarate, allocator);
 
     rapidjson::Value jbeaconBandwidthHz;
-    jbeaconDatarate.SetUint(beaconBandwidthHz);
+    jbeaconBandwidthHz.SetUint(beaconBandwidthHz);
     jsonValue.AddMember("beacon_bw_hz", jbeaconBandwidthHz, allocator);
 
     rapidjson::Value jbeaconPower;
-    jbeaconDatarate.SetUint(beaconPower);
+    jbeaconPower.SetUint(beaconPower);
     jsonValue.AddMember("beacon_power", jbeaconPower, allocator);
 
     rapidjson::Value jbeaconInfodesc;
@@ -307,7 +307,7 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.AddMember("beacon_infodesc", jbeaconInfodesc, allocator);
 
     rapidjson::Value jautoquitThreshold;
-    jbeaconInfodesc.SetUint(autoquitThreshold);
+    jautoquitThreshold.SetUint(autoquitThreshold);
     jsonValue.AddMember("autoquit_threshold", jautoquitThreshold, allocator);
 }
 
