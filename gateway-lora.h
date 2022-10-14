@@ -40,6 +40,17 @@ extern "C" {
 #include "packet_forwarder/loragw_reg.h"
 #include "packet_forwarder/loragw_gps.h"
 
+/**
+ * spectral scan
+ */
+typedef struct spectral_scan_s {
+    bool enable;            ///< enable spectral scan thread
+    uint32_t freq_hz_start; ///< first channel frequency, in Hz
+    uint8_t nb_chan;        ///< number of channels to scan (200kHz between each channel)
+    uint16_t nb_scan;       ///< number of scan points for each frequency scan
+    uint32_t pace_s;        ///< number of seconds between 2 scans in the thread
+} spectral_scan_t;
+
 #ifdef __cplusplus
 }
 #endif

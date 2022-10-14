@@ -11,6 +11,13 @@
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
 
+class GatewayJsonConfig {
+public:
+    virtual int parse(rapidjson::Value &jsonValue) = 0;
+    virtual void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const = 0;
+    std::string toString();
+    virtual bool set() = 0;
+};
 
 /**
 {
@@ -24,23 +31,6 @@
         "fine_timestamp": {
             "enable": false,
             "mode": "all_sf"
-        },
-        "sx1261_conf": {
-            "rssi_offset": 0,
-            "spectral_scan": {
-                "enable": false,
-                "freq_start": 867100000,
-                "nb_chan": 8,
-                "nb_scan": 2000,
-                "pace_s": 10
-            },
-            "lbt": {
-                "enable": false,
-                "rssi_target": -70,
-                "channels":[
-                    {"freq_hz": 867100000, "bandwidth": 125000, "scan_time_us": 128,  "transmit_time_ms": 400}
-                ]
-            }
         },
         "radio_0": {
             "enable": true,
@@ -66,6 +56,48 @@
     },
 */
 
+class GatewaySX130xConfig : public GatewayJsonConfig {
+public:
+    struct lgw_conf_board_s boardConf ;
+    int8_t antennaGain;
+
+    GatewaySX130xConfig();
+    int parse(rapidjson::Value &jsonValue) override;
+    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
+    bool set() override;
+};
+
+/**
+    "sx1261_conf": {
+        "rssi_offset": 0,
+        "spectral_scan": {
+            "enable": false,
+            "freq_start": 867100000,
+            "nb_chan": 8,
+            "nb_scan": 2000,
+            "pace_s": 10
+        },
+        "lbt": {
+            "enable": false,
+            "rssi_target": -70,
+            "channels":[
+                {"freq_hz": 867100000, "bandwidth": 125000, "scan_time_us": 128,  "transmit_time_ms": 400}
+            ]
+        }
+    }
+ */
+class GatewaySX1261Config  : public GatewayJsonConfig {
+public:
+    struct lgw_conf_sx1261_s value;
+    spectral_scan_t spectralScan;
+    struct lgw_conf_lbt_s lbt;
+    GatewaySX1261Config();
+
+    int parse(rapidjson::Value &jsonValue) override;
+    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
+    bool set() override;
+};
+
 /*
     "gateway_conf": {
         "gateway_ID": "AA555A0000000000",
@@ -84,13 +116,13 @@
         "ref_altitude": 0,
         "beaconPeriod": 0,
         "beaconFreqHz": 869525000,
-        "beaconDatarate": 9,
+        "beaconDataRate": 9,
         "beaconBandwidthHz": 125000,
         "beaconPower": 14,
-        "beaconInfodesc": 0
+        "beaconInfoDesc": 0
     }
 */
-class GatewayGatewayConfig {
+class GatewayGatewayConfig  : public GatewayJsonConfig {
 public:
     uint32_t gatewayId;
     std::string serverAddress;
@@ -109,17 +141,17 @@ public:
     uint32_t beaconFreqHz;
     uint8_t beaconFreqNb;
     uint32_t beaconFreqStep;
-    uint8_t beaconDatarate;
+    uint8_t beaconDataRate;
     uint32_t beaconBandwidthHz;
     uint8_t beaconPower;
-    uint8_t beaconInfodesc;
-    uint32_t autoquitThreshold;
+    uint8_t beaconInfoDesc;
+    uint32_t autoQuitThreshold;
 
     GatewayGatewayConfig();
 
-    int parse(rapidjson::Value &jsonValue);
-    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const;
-    std::string toString();
+    int parse(rapidjson::Value &jsonValue) override;
+    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
+    bool set() override;
 };
 
 /**
@@ -131,13 +163,12 @@ public:
         "log_file": "loragw_hal.log"
     }
 */
-class GatewayDebugConfig {
+class GatewayDebugConfig  : public GatewayJsonConfig {
 public:
     struct lgw_conf_debug_s value;
     GatewayDebugConfig();
-    int parse(rapidjson::Value &jsonValue);
-    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const;
-    std::string toString();
+    int parse(rapidjson::Value &jsonValue) override;
+    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
 };
 
 class GatewayConfigFileJson : public RegionalParameterChannelPlans {
