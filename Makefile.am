@@ -421,9 +421,16 @@ test_encrypt_join_accept_response_SOURCES = \
 test_encrypt_join_accept_response_LDADD = $(L_LORAWAN)
 test_encrypt_join_accept_response_CPPFLAGS = $(commoncppflags)
 
+test_gateway_file_json_SOURCES = \
+    tests/test-gateway-file-json.cpp \
+    gateway-file-json.cpp utilstring.cpp
+test_gateway_file_json_LDADD = -Lthird_party/packet_forwarder -lloragw -ltinymt32
+test_gateway_file_json_CPPFLAGS = $(commoncppflags)
+
 check_PROGRAMS = \
-	test-encrypt-join-accept-response
-#   test-dev-addr
+test-gateway-file-json
+#	test-encrypt-join-accept-response \
+#   test-dev-addr \
 #   test-queue-processor \
 #	test-join-request \
 #	test-message-queue test-fb test-sqlite test-pkt2-parseRX test-join-accept-decrypt test-dir-txt test-identity-file-json \
