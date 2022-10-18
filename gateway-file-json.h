@@ -13,6 +13,7 @@
 
 class GatewayJsonConfig {
 public:
+    int parseString(const std::string &json);
     virtual int parse(rapidjson::Value &jsonValue) = 0;
     virtual void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const = 0;
     std::string toString();
@@ -50,22 +51,11 @@ public:
         "chan_multiSF_All": {"spreading_factor_enable": [ 5, 6, 7, 8, 9, 10, 11, 12 ]},
         "chan_multiSF_0": {"enable": true, "radio": 1, "if": -400000},
         "chan_multiSF_7": {"enable": true, "radio": 0, "if":  400000},
-        "chan_Lora_std":  {"enable": true, "radio": 1, "if": -200000, "bandwidth": 250000, "spread_factor": 7,
-        "implicit_hdr": false, "implicit_payload_length": 17, "implicit_crc_en": false, "implicit_coderate": 1},
+        "chan_Lora_std":  {"enable": true, "radio": 1, "if": -200000, "bandwidth": 250000, "spread_factor": 7, "implicit_hdr": false, "implicit_payload_length": 17, "implicit_crc_en": false, "implicit_coderate": 1},
         "chan_FSK":       {"enable": true, "radio": 1, "if":  300000, "bandwidth": 125000, "datarate": 50000}
     },
 */
 
-class GatewaySX130xConfig : public GatewayJsonConfig {
-public:
-    struct lgw_conf_board_s boardConf ;
-    int8_t antennaGain;
-
-    GatewaySX130xConfig();
-    int parse(rapidjson::Value &jsonValue) override;
-    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
-    bool set() override;
-};
 
 /**
     "sx1261_conf": {
@@ -86,13 +76,39 @@ public:
         }
     }
  */
-class GatewaySX1261Config  : public GatewayJsonConfig {
+class GatewaySX1261Config : public GatewayJsonConfig {
 public:
     struct lgw_conf_sx1261_s value;
     spectral_scan_t spectralScan;
     struct lgw_conf_lbt_s lbt;
     GatewaySX1261Config();
 
+    int parse(rapidjson::Value &jsonValue) override;
+    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
+    bool set() override;
+
+    void reset();
+};
+
+class GatewaySX130xConfig : public GatewayJsonConfig {
+public:
+    GatewaySX1261Config sx1261Config;
+    struct lgw_conf_board_s boardConf;
+    int8_t antennaGain;
+    struct lgw_conf_ftime_s tsConf;
+    struct lgw_conf_rxrf_s rfConfs[LGW_RF_CHAIN_NB];
+
+    uint32_t tx_freq_min[LGW_RF_CHAIN_NB];
+    uint32_t tx_freq_max[LGW_RF_CHAIN_NB];
+    struct lgw_tx_gain_lut_s txLut[LGW_RF_CHAIN_NB];
+    uint8_t ifCount;
+    struct lgw_conf_rxif_s ifConfs[LGW_MULTI_NB];
+    struct lgw_conf_rxif_s ifStdConf;
+    struct lgw_conf_rxif_s ifFSKConf;
+    struct lgw_conf_demod_s demodConf;
+
+    GatewaySX130xConfig();
+    void reset();
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     bool set() override;
@@ -148,7 +164,7 @@ public:
     uint32_t autoQuitThreshold;
 
     GatewayGatewayConfig();
-
+    void reset();
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     bool set() override;
@@ -167,45 +183,25 @@ class GatewayDebugConfig  : public GatewayJsonConfig {
 public:
     struct lgw_conf_debug_s value;
     GatewayDebugConfig();
+    void reset();
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
+    bool set() override;
 };
 
-class GatewayConfigFileJson : public RegionalParameterChannelPlans {
-	private:
-        // helper hash map to get() region by the name
-        std::map<std::string, const RegionalParameterChannelPlan *> nameIndex;
-        std::map<int, const RegionalParameterChannelPlan *> idIndex;
+class GatewayConfigFileJson : public GatewayJsonConfig {
+public:
+    GatewaySX130xConfig sx130xConf;
+    GatewayGatewayConfig gatewayConf;
+    GatewayDebugConfig debugConf;
 
-        // default RegionalParameterChannelPlan
-        // last region marked as default ("defaultRegion": true) is used
-        const RegionalParameterChannelPlan *defaultRegionBand;
-        int buildIndex();
-        int loadFile(const std::string &fileName);
-        int saveFile(const std::string &fileName) const;
-		int load();
-		int save();
-	protected:
-        std::string path;
-		void clear();		
+    GatewayConfigFileJson();
+    ~GatewayConfigFileJson();
 
-	public:
-        RegionBands storage;
-        GatewayConfigFileJson();
-		~GatewayConfigFileJson();
-        int errCode;
-        std::string errDescription;
-
-        virtual const RegionalParameterChannelPlan *get(const std::string &name) const override;
-        virtual const RegionalParameterChannelPlan *get(int id) const override;
-
-        virtual int init(const std::string &option, void *data) override;
-        virtual void flush() override;
-        virtual void done() override;
-
-        virtual std::string toJsonString() const override;
-
-        virtual std::string getErrorDescription(int &subCode) const override;
+    void reset();
+    int parse(rapidjson::Value &jsonValue) override;
+    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
+    bool set() override;
 };
 
 #endif
