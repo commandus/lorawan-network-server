@@ -140,7 +140,7 @@ public:
 */
 class GatewayGatewayConfig  : public GatewayJsonConfig {
 public:
-    uint32_t gatewayId;
+    uint64_t gatewayId;
     std::string serverAddress;
     uint16_t serverPortUp;
     uint16_t serverPortDown;

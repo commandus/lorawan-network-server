@@ -111,29 +111,29 @@ int GatewaySX1261Config::parse(rapidjson::Value &jsonValue)
                 }
                 if (spectralScan.enable) {
                     value.enable = true;
-                    if (jSpectralScan.HasMember("freq_start")) {
-                        rapidjson::Value &jFreqStart = jsonValue["freq_start"];
-                        if (jFreqStart.IsUint()) {
-                            spectralScan.freq_hz_start = jFreqStart.GetUint();
-                        }
+                }
+                if (jSpectralScan.HasMember("freq_start")) {
+                    rapidjson::Value &jFreqStart = jSpectralScan["freq_start"];
+                    if (jFreqStart.IsUint()) {
+                        spectralScan.freq_hz_start = jFreqStart.GetUint();
                     }
-                    if (jSpectralScan.HasMember("nb_chan")) {
-                        rapidjson::Value &jNbChan = jsonValue["nb_chan"];
-                        if (jNbChan.IsUint()) {
-                            spectralScan.nb_chan = jNbChan.GetUint();
-                        }
+                }
+                if (jSpectralScan.HasMember("nb_chan")) {
+                    rapidjson::Value &jNbChan = jSpectralScan["nb_chan"];
+                    if (jNbChan.IsUint()) {
+                        spectralScan.nb_chan = jNbChan.GetUint();
                     }
-                    if (jSpectralScan.HasMember("nb_scan")) {
-                        rapidjson::Value &jNbScan = jsonValue["nb_scan"];
-                        if (jNbScan.IsUint()) {
-                            spectralScan.nb_scan = jNbScan.GetUint();
-                        }
+                }
+                if (jSpectralScan.HasMember("nb_scan")) {
+                    rapidjson::Value &jNbScan = jSpectralScan["nb_scan"];
+                    if (jNbScan.IsUint()) {
+                        spectralScan.nb_scan = jNbScan.GetUint();
                     }
-                    if (jSpectralScan.HasMember("pace_s")) {
-                        rapidjson::Value &jPaceS = jsonValue["pace_s"];
-                        if (jPaceS.IsUint()) {
-                            spectralScan.pace_s = jPaceS.GetUint();
-                        }
+                }
+                if (jSpectralScan.HasMember("pace_s")) {
+                    rapidjson::Value &jPaceS = jSpectralScan["pace_s"];
+                    if (jPaceS.IsUint()) {
+                        spectralScan.pace_s = jPaceS.GetUint();
                     }
                 }
             }
@@ -148,18 +148,21 @@ int GatewaySX1261Config::parse(rapidjson::Value &jsonValue)
                 if (jLbtEnable.IsBool()) {
                     lbt.enable = jLbtEnable.GetBool();
                 }
-                if (lbt.enable) {
-                    // Enable the sx1261 radio hardware configuration to allow spectral scan
-                    value.enable = true;
-                    if (jLbt.HasMember("rssi_target")) {
-                        rapidjson::Value &RssiTarget = jsonValue["rssi_target"];
-                        if (RssiTarget.IsInt()) {
-                            lbt.rssi_target = RssiTarget.GetInt();
-                        }
-                    }
 
-                    // set LBT channels configuration
-                    rapidjson::Value &jChannels = jsonValue["channels"];
+                // Enable the sx1261 radio hardware configuration to allow spectral scan
+                if (lbt.enable)
+                    value.enable = true;
+
+                if (jLbt.HasMember("rssi_target")) {
+                    rapidjson::Value &RssiTarget = jLbt["rssi_target"];
+                    if (RssiTarget.IsInt()) {
+                        lbt.rssi_target = RssiTarget.GetInt();
+                    }
+                }
+
+                // set LBT channels configuration
+                if (jLbt.HasMember("channels")) {
+                    rapidjson::Value &jChannels = jLbt["channels"];
                     if (jChannels.IsArray()) {
                         lbt.nb_channel = jChannels.Size();
                         if (lbt.nb_channel > LGW_LBT_CHANNEL_NB_MAX)
@@ -167,19 +170,32 @@ int GatewaySX1261Config::parse(rapidjson::Value &jsonValue)
                         for (int i = 0; i < lbt.nb_channel; i++) {
                             rapidjson::Value &jChannel = jChannels[i];
                             if (jChannel.HasMember("freq_hz")) {
-                                rapidjson::Value &jValue = jsonValue["freq_hz"];
+                                rapidjson::Value &jValue = jChannel["freq_hz"];
                                 if (jValue.IsUint()) {
                                     lbt.channels[i].freq_hz = jValue.GetUint();
                                 }
                             }
                             if (jChannel.HasMember("bandwidth")) {
-                                rapidjson::Value &jValue = jsonValue["bandwidth"];
+                                rapidjson::Value &jValue = jChannel["bandwidth"];
                                 if (jValue.IsUint()) {
-                                    lbt.channels[i].bandwidth = jValue.GetUint();
+                                    uint32_t bw = jValue.GetUint();
+                                    switch(bw) {
+                                        case 500000:
+                                            lbt.channels[i].bandwidth = BW_500KHZ;
+                                            break;
+                                        case 250000:
+                                            lbt.channels[i].bandwidth = BW_250KHZ;
+                                            break;
+                                        case 125000:
+                                            lbt.channels[i].bandwidth = BW_125KHZ;
+                                            break;
+                                        default:
+                                            lbt.channels[i].bandwidth = BW_UNDEFINED;
+                                    }
                                 }
                             }
                             if (jChannel.HasMember("scan_time_us")) {
-                                rapidjson::Value &jValue = jsonValue["scan_time_us"];
+                                rapidjson::Value &jValue = jChannel["scan_time_us"];
                                 if (jValue.IsUint()) {
                                     switch (jValue.GetUint()) {
                                         case LGW_LBT_SCAN_TIME_128_US:
@@ -191,7 +207,7 @@ int GatewaySX1261Config::parse(rapidjson::Value &jsonValue)
                                 }
                             }
                             if (jChannel.HasMember("transmit_time_ms")) {
-                                rapidjson::Value &jValue = jsonValue["transmit_time_ms"];
+                                rapidjson::Value &jValue = jChannel["transmit_time_ms"];
                                 if (jValue.IsUint()) {
                                     lbt.channels[i].transmit_time_ms = jValue.GetUint();
                                 }
@@ -203,6 +219,30 @@ int GatewaySX1261Config::parse(rapidjson::Value &jsonValue)
         }
     }
     return 0;
+}
+
+static int bandwidthIndex2hz(
+        uint8_t bandwidthIndex
+) {
+    switch(bandwidthIndex) {
+        case BW_500KHZ:
+            return 500000;
+        case BW_250KHZ:
+            return 250000;
+        case BW_125KHZ:
+            return 125000;
+            // TODO ?!!
+        case 3:
+            return 62000;
+        case 2:
+            return 41000;
+        case 1:
+            return 31000;
+        case 0:
+            return 20000;
+        default:
+            return 15000;
+    }
 }
 
 void GatewaySX1261Config::toJSON(
@@ -225,23 +265,23 @@ void GatewaySX1261Config::toJSON(
     jSpectralScanEnable.SetBool(spectralScan.enable);
     jSpectralScan.AddMember("enable", jSpectralScanEnable, allocator);
 
-    if (spectralScan.enable) {
-        rapidjson::Value jFreqStart;
-        jFreqStart.SetUint(spectralScan.freq_hz_start);
-        jSpectralScan.AddMember("freq_start", jFreqStart, allocator);
+    rapidjson::Value jFreqStart;
 
-        rapidjson::Value jFreqNbChan;
-        jFreqNbChan.SetUint(spectralScan.nb_chan);
-        jSpectralScan.AddMember("nb_chan", jFreqNbChan, allocator);
+    jFreqStart.SetUint(spectralScan.freq_hz_start);
+    jSpectralScan.AddMember("freq_start", jFreqStart, allocator);
 
-        rapidjson::Value jFreqNbScan;
-        jFreqNbScan.SetUint(spectralScan.nb_scan);
-        jSpectralScan.AddMember("nb_scan", jFreqNbScan, allocator);
+    rapidjson::Value jFreqNbChan;
+    jFreqNbChan.SetUint(spectralScan.nb_chan);
+    jSpectralScan.AddMember("nb_chan", jFreqNbChan, allocator);
 
-        rapidjson::Value jPaceS;
-        jPaceS.SetUint(spectralScan.nb_scan);
-        jSpectralScan.AddMember("pace_s", jPaceS, allocator);
-    }
+    rapidjson::Value jFreqNbScan;
+    jFreqNbScan.SetUint(spectralScan.nb_scan);
+    jSpectralScan.AddMember("nb_scan", jFreqNbScan, allocator);
+
+    rapidjson::Value jPaceS;
+    jPaceS.SetUint(spectralScan.pace_s);
+    jSpectralScan.AddMember("pace_s", jPaceS, allocator);
+
     jsonValue.AddMember("spectral_scan", jSpectralScan, allocator);
 
     rapidjson::Value jLbt;
@@ -251,39 +291,39 @@ void GatewaySX1261Config::toJSON(
     jLbtEnable.SetBool(lbt.enable);
     jLbt.AddMember("enable", jLbtEnable, allocator);
 
-    if (lbt.enable) {
-        rapidjson::Value jRssiTarget;
-        jRssiTarget.SetInt(lbt.rssi_target);
-        jLbt.AddMember("rssi_target", jRssiTarget, allocator);
 
-        rapidjson::Value jChannels;
-        jChannels.SetArray();
+    rapidjson::Value jRssiTarget;
+    jRssiTarget.SetInt(lbt.rssi_target);
+    jLbt.AddMember("rssi_target", jRssiTarget, allocator);
 
-        for (int i = 0; i <  lbt.nb_channel; i++) {
-            rapidjson::Value jChannel;
-            jChannel.SetObject();
+    rapidjson::Value jChannels;
+    jChannels.SetArray();
 
-            rapidjson::Value jFreq;
-            jFreq.SetUint(lbt.channels[i].freq_hz);
-            jChannel.AddMember("freq_hz", jFreq, allocator);
+    for (int i = 0; i <  lbt.nb_channel; i++) {
+        rapidjson::Value jChannel;
+        jChannel.SetObject();
 
-            rapidjson::Value jBandwidth;
-            jBandwidth.SetUint(lbt.channels[i].bandwidth);
-            jChannel.AddMember("bandwidth", jBandwidth, allocator);
+        rapidjson::Value jFreq;
+        jFreq.SetUint(lbt.channels[i].freq_hz);
+        jChannel.AddMember("freq_hz", jFreq, allocator);
 
-            rapidjson::Value jScanTimeUs;
-            jScanTimeUs.SetUint(lbt.channels[i].scan_time_us);
-            jChannel.AddMember("scan_time_us", jScanTimeUs, allocator);
+        rapidjson::Value jBandwidth;
+        jBandwidth.SetUint(bandwidthIndex2hz(lbt.channels[i].bandwidth));
+        jChannel.AddMember("bandwidth", jBandwidth, allocator);
 
-            rapidjson::Value jTransmitTimeMs;
-            jTransmitTimeMs.SetUint(lbt.channels[i].transmit_time_ms);
-            jChannel.AddMember("transmit_time_ms", jTransmitTimeMs, allocator);
+        rapidjson::Value jScanTimeUs;
+        jScanTimeUs.SetUint(lbt.channels[i].scan_time_us);
+        jChannel.AddMember("scan_time_us", jScanTimeUs, allocator);
 
-            jChannels.PushBack(jChannel, allocator);
+        rapidjson::Value jTransmitTimeMs;
+        jTransmitTimeMs.SetUint(lbt.channels[i].transmit_time_ms);
+        jChannel.AddMember("transmit_time_ms", jTransmitTimeMs, allocator);
 
-        }
-        jLbt.AddMember("channeld", jChannels, allocator);
+        jChannels.PushBack(jChannel, allocator);
+
     }
+    jLbt.AddMember("channeld", jChannels, allocator);
+
     jsonValue.AddMember("lbt", jLbt, allocator);
 }
 
@@ -458,53 +498,62 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                         }
                         if (jRadio.HasMember("rssi_offset")) {
                             rapidjson::Value &jRssiOffset = jRadio["rssi_offset"];
-                            if (jRssiOffset.IsUint()) {
-                                rfConfs[radioIndex].rssi_offset = jRssiOffset.GetUint();
+                            if (jRssiOffset.IsInt()) {
+                                rfConfs[radioIndex].rssi_offset = jRssiOffset.GetInt();
+                            }
+                            if (jRssiOffset.IsDouble()) {
+                                rfConfs[radioIndex].rssi_offset = jRssiOffset.GetDouble();
                             }
                         }
-                        if (jRadio.HasMember("coeff_a")) {
-                            rapidjson::Value &jCoeff = jRadio["coeff_a"];
-                            if (jCoeff.IsInt()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_a = jCoeff.GetInt();
-                            }
-                            if (jCoeff.IsDouble()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_a = jCoeff.GetDouble();
-                            }
-                        }
-                        if (jRadio.HasMember("coeff_b")) {
-                            rapidjson::Value &jCoeff = jRadio["coeff_b"];
-                            if (jCoeff.IsInt()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_b = jCoeff.GetInt();
-                            }
-                            if (jCoeff.IsDouble()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_b = jCoeff.GetDouble();
-                            }
-                        }
-                        if (jRadio.HasMember("coeff_c")) {
-                            rapidjson::Value &jCoeff = jRadio["coeff_c"];
-                            if (jCoeff.IsInt()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_c = jCoeff.GetInt();
-                            }
-                            if (jCoeff.IsDouble()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_c = jCoeff.GetDouble();
-                            }
-                        }
-                        if (jRadio.HasMember("coeff_d")) {
-                            rapidjson::Value &jCoeff = jRadio["coeff_d"];
-                            if (jCoeff.IsInt()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_d = jCoeff.GetInt();
-                            }
-                            if (jCoeff.IsDouble()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_d = jCoeff.GetDouble();
-                            }
-                        }
-                        if (jRadio.HasMember("coeff_e")) {
-                            rapidjson::Value &jCoeff = jRadio["coeff_e"];
-                            if (jCoeff.IsInt()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_e = jCoeff.GetInt();
-                            }
-                            if (jCoeff.IsDouble()) {
-                                rfConfs[radioIndex].rssi_tcomp.coeff_e = jCoeff.GetDouble();
+
+                        if (jRadio.HasMember("rssi_tcomp")) {
+                            rapidjson::Value &jTComp = jRadio["rssi_tcomp"];
+                            if (jTComp.IsObject()) {
+                                if (jTComp.HasMember("coeff_a")) {
+                                    rapidjson::Value &jCoeff = jTComp["coeff_a"];
+                                    if (jCoeff.IsInt()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_a = jCoeff.GetInt();
+                                    }
+                                    if (jCoeff.IsDouble()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_a = jCoeff.GetDouble();
+                                    }
+                                }
+                                if (jTComp.HasMember("coeff_b")) {
+                                    rapidjson::Value &jCoeff = jTComp["coeff_b"];
+                                    if (jCoeff.IsInt()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_b = jCoeff.GetInt();
+                                    }
+                                    if (jCoeff.IsDouble()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_b = jCoeff.GetDouble();
+                                    }
+                                }
+                                if (jTComp.HasMember("coeff_c")) {
+                                    rapidjson::Value &jCoeff = jTComp["coeff_c"];
+                                    if (jCoeff.IsInt()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_c = jCoeff.GetInt();
+                                    }
+                                    if (jCoeff.IsDouble()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_c = jCoeff.GetDouble();
+                                    }
+                                }
+                                if (jTComp.HasMember("coeff_d")) {
+                                    rapidjson::Value &jCoeff = jTComp["coeff_d"];
+                                    if (jCoeff.IsInt()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_d = jCoeff.GetInt();
+                                    }
+                                    if (jCoeff.IsDouble()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_d = jCoeff.GetDouble();
+                                    }
+                                }
+                                if (jTComp.HasMember("coeff_e")) {
+                                    rapidjson::Value &jCoeff = jTComp["coeff_e"];
+                                    if (jCoeff.IsInt()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_e = jCoeff.GetInt();
+                                    }
+                                    if (jCoeff.IsDouble()) {
+                                        rfConfs[radioIndex].rssi_tcomp.coeff_e = jCoeff.GetDouble();
+                                    }
+                                }
                             }
                         }
                         if (jRadio.HasMember("single_input_mode")) {
@@ -552,38 +601,39 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                                         }
                                         if (sx1250_tx_lut) {
                                             txLut[radioIndex].lut[i].mix_gain = 5;
-                                        } else {
-                                            if (jGain.HasMember("rf_power")) {
-                                                rapidjson::Value &jPower = jGain["rf_power"];
-                                                if (jPower.IsInt()) {
-                                                    txLut[radioIndex].lut[i].rf_power = jPower.GetInt();
-                                                }
-                                            }
-                                            if (jGain.HasMember("pa_gain")) {
-                                                rapidjson::Value &jPaGain = jGain["pa_gain"];
-                                                if (jPaGain.IsUint()) {
-                                                    txLut[radioIndex].lut[i].pa_gain = jPaGain.GetUint();
-                                                }
-                                            }
-                                            if (jGain.HasMember("dig_gain")) {
-                                                rapidjson::Value &jDigGain = jGain["dig_gain"];
-                                                if (jDigGain.IsUint()) {
-                                                    txLut[radioIndex].lut[i].dig_gain = jDigGain.GetUint();
-                                                }
-                                            }
-                                            if (jGain.HasMember("dac_gain")) {
-                                                rapidjson::Value &jDacGain = jGain["dac_gain"];
-                                                if (jDacGain.IsUint()) {
-                                                    txLut[radioIndex].lut[i].dac_gain = jDacGain.GetUint();
-                                                }
-                                            }
-                                            if (jGain.HasMember("mix_gain")) {
-                                                rapidjson::Value &jMixGain = jGain["mix_gain"];
-                                                if (jMixGain.IsUint()) {
-                                                    txLut[radioIndex].lut[i].mix_gain = jMixGain.GetUint();
-                                                }
+                                        }
+                                        // else {
+                                        if (jGain.HasMember("rf_power")) {
+                                            rapidjson::Value &jPower = jGain["rf_power"];
+                                            if (jPower.IsInt()) {
+                                                txLut[radioIndex].lut[i].rf_power = jPower.GetInt();
                                             }
                                         }
+                                        if (jGain.HasMember("pa_gain")) {
+                                            rapidjson::Value &jPaGain = jGain["pa_gain"];
+                                            if (jPaGain.IsUint()) {
+                                                txLut[radioIndex].lut[i].pa_gain = jPaGain.GetUint();
+                                            }
+                                        }
+                                        if (jGain.HasMember("dig_gain")) {
+                                            rapidjson::Value &jDigGain = jGain["dig_gain"];
+                                            if (jDigGain.IsUint()) {
+                                                txLut[radioIndex].lut[i].dig_gain = jDigGain.GetUint();
+                                            }
+                                        }
+                                        if (jGain.HasMember("dac_gain")) {
+                                            rapidjson::Value &jDacGain = jGain["dac_gain"];
+                                            if (jDacGain.IsUint()) {
+                                                txLut[radioIndex].lut[i].dac_gain = jDacGain.GetUint();
+                                            }
+                                        }
+                                        if (jGain.HasMember("mix_gain")) {
+                                            rapidjson::Value &jMixGain = jGain["mix_gain"];
+                                            if (jMixGain.IsUint()) {
+                                                txLut[radioIndex].lut[i].mix_gain = jMixGain.GetUint();
+                                            }
+                                        }
+                                        // } // else
                                     }
                                 }
                             }
@@ -631,18 +681,17 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                 if (jChannelEnable.IsBool()) {
                     ifConfs[ch].enable = jChannelEnable.GetBool();
                 }
-                if (ifConfs[ch].enable) {
-                    if (jChannelSF.HasMember("radio")) {
-                        rapidjson::Value &jChannelRadio = jChannelSF["radio"];
-                        if (jChannelRadio.IsInt()) {
-                            ifConfs[ch].freq_hz = jChannelRadio.GetInt();
-                        }
+
+                if (jChannelSF.HasMember("radio")) {
+                    rapidjson::Value &jChannelRadio = jChannelSF["radio"];
+                    if (jChannelRadio.IsUint()) {
+                        ifConfs[ch].rf_chain = jChannelRadio.GetUint();
                     }
-                    if (jChannelSF.HasMember("if")) {
-                        rapidjson::Value &jChain = jChannelSF["if"];
-                        if (jChain.IsUint()) {
-                            ifConfs[ch].rf_chain = jChain.GetUint();
-                        }
+                }
+                if (jChannelSF.HasMember("if")) {
+                    rapidjson::Value &jChain = jChannelSF["if"];
+                    if (jChain.IsInt()) {
+                        ifConfs[ch].freq_hz = jChain.GetInt();
                     }
                 }
             }
@@ -661,14 +710,14 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                 if (ifStdConf.enable) {
                     if (jChannelStd.HasMember("radio")) {
                         rapidjson::Value &jChannelRadio = jChannelStd["radio"];
-                        if (jChannelRadio.IsInt()) {
-                            ifStdConf.freq_hz = jChannelRadio.GetInt();
+                        if (jChannelRadio.IsUint()) {
+                            ifStdConf.rf_chain = jChannelRadio.GetUint();
                         }
                     }
                     if (jChannelStd.HasMember("if")) {
-                        rapidjson::Value &jChain = jChannelStd["if"];
-                        if (jChain.IsUint()) {
-                            ifStdConf.rf_chain = jChain.GetUint();
+                        rapidjson::Value &jFrequency = jChannelStd["if"];
+                        if (jFrequency.IsInt()) {
+                            ifStdConf.freq_hz = jFrequency.GetInt();
                         }
                     }
                     if (jChannelStd.HasMember("bandwidth")) {
@@ -701,37 +750,23 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                         if (jImplicitHeader.IsBool()) {
                             ifStdConf.implicit_hdr = jImplicitHeader.GetBool();
                         }
-                        if (ifStdConf.implicit_hdr) {
-                            bool complete = false;
-                            if (jChannelStd.HasMember("implicit_payload_length")) {
-                                rapidjson::Value &jImplicitPayloadLength = jChannelStd["implicit_payload_length"];
-                                if (jImplicitPayloadLength.IsUint()) {
-                                    ifStdConf.implicit_payload_length = jImplicitPayloadLength.GetUint();
-                                    complete = true;
-                                }
+                        if (jChannelStd.HasMember("implicit_payload_length")) {
+                            rapidjson::Value &jImplicitPayloadLength = jChannelStd["implicit_payload_length"];
+                            if (jImplicitPayloadLength.IsUint()) {
+                                ifStdConf.implicit_payload_length = jImplicitPayloadLength.GetUint();
                             }
-                            if (!complete)
-                                return ERR_CODE_INVALID_JSON;
-                            complete = false;
-                            if (jChannelStd.HasMember("implicit_crc_en")) {
-                                rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_crc_en"];
-                                if (jImplicitCrcEn.IsBool()) {
-                                    ifStdConf.implicit_crc_en = jImplicitCrcEn.GetBool();
-                                    complete = true;
-                                }
+                        }
+                        if (jChannelStd.HasMember("implicit_crc_en")) {
+                            rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_crc_en"];
+                            if (jImplicitCrcEn.IsBool()) {
+                                ifStdConf.implicit_crc_en = jImplicitCrcEn.GetBool();
                             }
-                            if (!complete)
-                                return ERR_CODE_INVALID_JSON;
-                            complete = false;
-                            if (jChannelStd.HasMember("implicit_coderate")) {
-                                rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_coderate"];
-                                if (jImplicitCrcEn.IsUint()) {
-                                    ifStdConf.implicit_coderate = jImplicitCrcEn.GetUint();
-                                    complete = true;
-                                }
+                        }
+                        if (jChannelStd.HasMember("implicit_coderate")) {
+                            rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_coderate"];
+                            if (jImplicitCrcEn.IsUint()) {
+                                ifStdConf.implicit_coderate = jImplicitCrcEn.GetUint();
                             }
-                            if (!complete)
-                                return ERR_CODE_INVALID_JSON;
                         }
                     }
                 }
@@ -749,17 +784,17 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                 if (jChannelEnable.IsBool()) {
                     ifFSKConf.enable = jChannelEnable.GetBool();
                 }
-                if (ifStdConf.enable) {
+                if (ifFSKConf.enable) {
                     if (jChannelFSK.HasMember("radio")) {
                         rapidjson::Value &jChannelRadio = jChannelFSK["radio"];
                         if (jChannelRadio.IsInt()) {
-                            ifFSKConf.freq_hz = jChannelRadio.GetInt();
+                            ifFSKConf.rf_chain = jChannelRadio.GetInt();
                         }
                     }
                     if (jChannelFSK.HasMember("if")) {
                         rapidjson::Value &jChain = jChannelFSK["if"];
                         if (jChain.IsUint()) {
-                            ifFSKConf.rf_chain = jChain.GetUint();
+                            ifFSKConf.freq_hz = jChain.GetUint();
                         }
                     }
 
@@ -850,30 +885,6 @@ static const char *lgw_radio_type_t2string(
     }
 }
 
-static int bandwidthIndex2hz(
-    uint8_t bandwidthIndex
-) {
-    switch(bandwidthIndex) {
-        case BW_500KHZ:
-            return 500000;
-        case BW_250KHZ:
-            return 250000;
-        case BW_125KHZ:
-            return 125000;
-        // TODO ?!!
-        case 3:
-            return 62000;
-        case 2:
-            return 41000;
-        case 1:
-            return 31000;
-        case 0:
-            return 20000;
-        default:
-            return 15000;
-    }
-}
-
 void GatewaySX130xConfig::toJSON(
     rapidjson::Value &jsonValue,
     rapidjson::Document::AllocatorType& allocator
@@ -907,7 +918,7 @@ void GatewaySX130xConfig::toJSON(
 
     rapidjson::Value jFullDuplex;
     jFullDuplex.SetBool(boardConf.full_duplex);
-    jsonValue.AddMember("lorawan_public", jFullDuplex, allocator);
+    jsonValue.AddMember("full_duplex", jFullDuplex, allocator);
 
     rapidjson::Value jFineTimestamp;
     jFineTimestamp.SetObject();
@@ -952,7 +963,7 @@ void GatewaySX130xConfig::toJSON(
         jRadioRssiTcompCoeff_b.SetDouble(rfConfs[radioIndex].rssi_tcomp.coeff_b);
         jRadioRssiTcomp.AddMember("coeff_b", jRadioRssiTcompCoeff_b, allocator);
         rapidjson::Value jRadioRssiTcompCoeff_c;
-        jRadioRssiTcompCoeff_a.SetDouble(rfConfs[radioIndex].rssi_tcomp.coeff_c);
+        jRadioRssiTcompCoeff_c.SetDouble(rfConfs[radioIndex].rssi_tcomp.coeff_c);
         jRadioRssiTcomp.AddMember("coeff_c", jRadioRssiTcompCoeff_c, allocator);
         rapidjson::Value jRadioRssiTcompCoeff_d;
         jRadioRssiTcompCoeff_d.SetDouble(rfConfs[radioIndex].rssi_tcomp.coeff_d);
@@ -1085,19 +1096,17 @@ void GatewaySX130xConfig::toJSON(
     jImplicitHdr.SetBool(ifStdConf.implicit_hdr);
     jChanLoraStd.AddMember("implicit_hdr", jImplicitHdr, allocator);
 
-    if (ifStdConf.implicit_hdr) {
-        rapidjson::Value jImplicitPayloadLength;
-        jImplicitPayloadLength.SetUint(ifStdConf.implicit_payload_length);
-        jChanLoraStd.AddMember("implicit_payload_length", jImplicitPayloadLength, allocator);
+    rapidjson::Value jImplicitPayloadLength;
+    jImplicitPayloadLength.SetUint(ifStdConf.implicit_payload_length);
+    jChanLoraStd.AddMember("implicit_payload_length", jImplicitPayloadLength, allocator);
 
-        rapidjson::Value jImplicitCrcEn;
-        jImplicitCrcEn.SetBool(ifStdConf.implicit_crc_en);
-        jChanLoraStd.AddMember("implicit_crc_en", jImplicitCrcEn, allocator);
+    rapidjson::Value jImplicitCrcEn;
+    jImplicitCrcEn.SetBool(ifStdConf.implicit_crc_en);
+    jChanLoraStd.AddMember("implicit_crc_en", jImplicitCrcEn, allocator);
 
-        rapidjson::Value jImplicitCodeRate;
-        jImplicitCodeRate.SetUint(ifStdConf.implicit_coderate);
-        jChanLoraStd.AddMember("implicit_coderate", jImplicitCodeRate, allocator);
-    }
+    rapidjson::Value jImplicitCodeRate;
+    jImplicitCodeRate.SetUint(ifStdConf.implicit_coderate);
+    jChanLoraStd.AddMember("implicit_coderate", jImplicitCodeRate, allocator);
 
     jsonValue.AddMember("chan_Lora_std", jChanLoraStd, allocator);
 
@@ -1105,23 +1114,23 @@ void GatewaySX130xConfig::toJSON(
     jChannelFSK.SetObject();
 
     rapidjson::Value jChannelFSKEnable;
-    jChannelFSKEnable.SetBool(ifStdConf.enable);
+    jChannelFSKEnable.SetBool(ifFSKConf.enable);
     jChannelFSK.AddMember("enable", jChannelFSKEnable, allocator);
 
     rapidjson::Value jChannelFSKRadio;
-    jChannelFSKRadio.SetUint(ifStdConf.rf_chain);
+    jChannelFSKRadio.SetUint(ifFSKConf.rf_chain);
     jChannelFSK.AddMember("radio", jChannelFSKRadio, allocator);
 
     rapidjson::Value jChannelFSKIf;
-    jChannelFSKIf.SetInt(ifStdConf.freq_hz);
+    jChannelFSKIf.SetInt(ifFSKConf.freq_hz);
     jChannelFSK.AddMember("if", jChannelFSKIf, allocator);
 
     rapidjson::Value jChannelFSKBandwidth;
-    jChannelFSKBandwidth.SetInt(bandwidthIndex2hz(ifStdConf.bandwidth));
+    jChannelFSKBandwidth.SetInt(bandwidthIndex2hz(ifFSKConf.bandwidth));
     jChannelFSK.AddMember("bandwidth", jChannelFSKBandwidth, allocator);
 
     rapidjson::Value jChannelFSKDatarate;
-    jChannelFSKDatarate.SetUint(ifStdConf.datarate);
+    jChannelFSKDatarate.SetUint(ifFSKConf.datarate);
     jChannelFSK.AddMember("datarate", jChannelFSKDatarate, allocator);
 
     jsonValue.AddMember("chan_FSK", jChannelFSK, allocator);
@@ -1204,14 +1213,14 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
     }
     if (jsonValue.HasMember("serv_port_up")) {
         rapidjson::Value &jServerPortUp = jsonValue["serv_port_up"];
-        if (jServerPortUp.IsInt()) {
-            gatewayId = jServerPortUp.GetInt();
+        if (jServerPortUp.IsUint()) {
+            serverPortUp = jServerPortUp.GetUint();
         }
     }
     if (jsonValue.HasMember("serv_port_down")) {
         rapidjson::Value &jServerPortDown = jsonValue["serv_port_down"];
-        if (jServerPortDown.IsInt()) {
-            gatewayId = jServerPortDown.GetInt();
+        if (jServerPortDown.IsUint()) {
+            serverPortDown = jServerPortDown.GetUint();
         }
     }
     if (jsonValue.HasMember("keepalive_interval")) {
@@ -1357,11 +1366,11 @@ void GatewayGatewayConfig::toJSON(
 
     rapidjson::Value jserverPortUp;
     jserverPortUp.SetUint(serverPortUp);
-    jsonValue.AddMember("server_port_up", jserverPortUp, allocator);
+    jsonValue.AddMember("serv_port_up", jserverPortUp, allocator);
 
     rapidjson::Value jserverPortDown;
     jserverPortDown.SetUint(serverPortDown);
-    jsonValue.AddMember("server_port_down", jserverPortDown, allocator);
+    jsonValue.AddMember("serv_port_down", jserverPortDown, allocator);
 
     rapidjson::Value jkeepaliveInterval;
     jkeepaliveInterval.SetUint(keepaliveInterval);
