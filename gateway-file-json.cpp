@@ -75,6 +75,15 @@ void GatewaySX1261Config::reset()
     memset(&lbt, 0, sizeof(struct lgw_conf_lbt_s));
 }
 
+bool GatewaySX1261Config::operator==(
+    const GatewaySX1261Config &b
+) const
+{
+    return (memcmp(&value, &b.value, sizeof(struct lgw_conf_sx1261_s)) == 0)
+        && (memcmp(&spectralScan, &b.spectralScan, sizeof(spectral_scan_t)) == 0)
+        && (memcmp(&lbt, &b.lbt, sizeof(struct lgw_conf_lbt_s)) == 0);
+}
+
 bool GatewaySX1261Config::set()
 {
     bool r = lgw_sx1261_setconf(&value) == LGW_HAL_SUCCESS;
@@ -334,12 +343,14 @@ GatewaySX130xConfig::GatewaySX130xConfig()
 
 void GatewaySX130xConfig::reset()
 {
-    // sx1261Config.reset();
+    sx1261Config.reset();
     antennaGain = 0;
     ifCount = 0;
     memset(&boardConf, 0, sizeof(struct lgw_conf_board_s));
     memset(&tsConf, 0, sizeof(struct lgw_conf_ftime_s));
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
+        tx_freq_min[0] = 0;
+        tx_freq_max[0] = 0;
         memset(&rfConfs[i], 0, sizeof(struct lgw_conf_rxrf_s));
         memset(&txLut[i], 0, sizeof(struct lgw_tx_gain_lut_s));
     }
@@ -373,6 +384,34 @@ bool GatewaySX130xConfig::set()
         r = lgw_rxif_setconf(i, &ifConfs[i]) == LGW_HAL_SUCCESS;
     }
     return r;
+}
+
+bool GatewaySX130xConfig::operator==(
+    const GatewaySX130xConfig &b
+) const
+{
+    for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
+        if (memcmp(&rfConfs[i], &b.rfConfs[i], sizeof(struct lgw_conf_rxrf_s)))
+            return false;
+        if (memcmp(&txLut[i], &b.txLut[i], sizeof(struct lgw_tx_gain_lut_s)))
+            return false;
+        if (tx_freq_min != b.tx_freq_min)
+            return false;
+        if (tx_freq_max != b.tx_freq_max)
+            return false;
+    }
+    for (int i = 0; i < LGW_MULTI_NB; i++) {
+        if (memcmp(&ifConfs[i], &b.ifConfs[i], sizeof(struct lgw_conf_rxif_s)))
+            return false;
+    }
+    return (sx1261Config == b.sx1261Config)
+        && (antennaGain == b.antennaGain)
+        && (ifCount == b.ifCount)
+        && (memcmp(&boardConf, &b.boardConf, sizeof(struct lgw_conf_board_s)) == 0)
+        && (memcmp(&ifStdConf, &b.ifStdConf, sizeof(struct lgw_conf_rxif_s)) == 0)
+        && (memcmp(&ifFSKConf, &b.ifFSKConf, sizeof(struct lgw_conf_rxif_s)) == 0)
+        && (memcmp(&demodConf, &b.demodConf, sizeof(struct lgw_conf_demod_s)) == 0)
+        && (memcmp(&tsConf, &b.tsConf, sizeof(struct lgw_conf_ftime_s)) == 0);
 }
 
 int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
@@ -1458,6 +1497,32 @@ bool GatewayGatewayConfig::set()
     return true;
 }
 
+bool GatewayGatewayConfig::operator==(const GatewayGatewayConfig &b) const
+{
+    return gatewayId == b.gatewayId
+        && serverAddress == b.serverAddress
+        && serverPortUp == b.serverPortUp
+        && serverPortDown == b.serverPortDown
+        && keepaliveInterval == b.keepaliveInterval
+        && statInterval == b.statInterval
+        && (memcmp(&pushTimeoutMs, &b.pushTimeoutMs, sizeof(timeval)))
+        && forwardCRCValid == b.forwardCRCValid
+        && forwardCRCError == b.forwardCRCError
+        && forwardCRCDisabled == b.forwardCRCDisabled
+        && gpsTTYPath == b.gpsTTYPath
+        && (memcmp(& refGeoCoordinates, &b. refGeoCoordinates, sizeof(struct coord_s)))
+        && fakeGPS == b.fakeGPS
+        && beaconPeriod == b.beaconPeriod
+        && beaconFreqHz == b.beaconFreqHz
+        && beaconFreqNb == b.beaconFreqNb
+        && beaconFreqStep == b.beaconFreqStep
+        && beaconDataRate == b.beaconDataRate
+        && beaconBandwidthHz == b.beaconBandwidthHz
+        && beaconPower == b.beaconPower
+        && beaconInfoDesc == b.beaconInfoDesc
+        && autoQuitThreshold == b.autoQuitThreshold;
+}
+
 /**
    "ref_payload":[
         {"id": "0xCAFE1234"},
@@ -1548,6 +1613,11 @@ bool GatewayDebugConfig::set()
     return true;
 }
 
+bool GatewayDebugConfig::operator==(const GatewayDebugConfig &b) const
+{
+    return memcmp(&value, &b.value, sizeof(struct lgw_conf_debug_s)) == 0;
+}
+
 GatewayConfigFileJson::GatewayConfigFileJson()
 {
 
@@ -1613,4 +1683,14 @@ bool GatewayConfigFileJson::set()
     if (r)
         r = debugConf.set();
     return r;
+}
+
+bool GatewayConfigFileJson::operator==(
+    const GatewayConfigFileJson &b
+) const
+{
+    return gatewayConf == b.gatewayConf;
+    return (sx130xConf == b.sx130xConf)
+        && (gatewayConf == b.gatewayConf)
+        && (debugConf == b.debugConf);
 }

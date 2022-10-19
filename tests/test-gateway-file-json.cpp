@@ -21,10 +21,17 @@ void testLoadFile(const std::string &fn)
     std::string v = file2string(fn.c_str());
     GatewayConfigFileJson c;
     int r = c.parseString(v);
-    if (r)
+    if (r) {
         std::cerr << "Error " << r << std::endl;
-    else
-        std::cout << c.toString() << std::endl;
+        return;
+    }
+
+    std::cout << c.toString() << std::endl;
+    std::string check = c.toString();
+    GatewayConfigFileJson c2;
+    c2.parseString(check);
+    std::cout << c2.toString() << std::endl;
+    assert(c == c2);
 }
 
 #define TRACE_BUFFER_SIZE   256

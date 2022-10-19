@@ -88,6 +88,8 @@ public:
     bool set() override;
 
     void reset();
+
+    bool operator==(const GatewaySX1261Config &value) const;
 };
 
 class GatewaySX130xConfig : public GatewayJsonConfig {
@@ -112,6 +114,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     bool set() override;
+    bool operator==(const GatewaySX130xConfig &value) const;
 };
 
 /*
@@ -168,6 +171,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     bool set() override;
+    bool operator==(const GatewayGatewayConfig &value) const;
 };
 
 /**
@@ -187,6 +191,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     bool set() override;
+    bool operator==(const GatewayDebugConfig &value) const;
 };
 
 class GatewayConfigFileJson : public GatewayJsonConfig {
@@ -202,6 +207,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     bool set() override;
+    bool operator==(const GatewayConfigFileJson &value) const;
 };
 
 #endif
