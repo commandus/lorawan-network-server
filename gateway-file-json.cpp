@@ -79,9 +79,11 @@ bool GatewaySX1261Config::operator==(
     const GatewaySX1261Config &b
 ) const
 {
+    if (lbt.nb_channel != b.lbt.nb_channel)
+        return false;
     return (memcmp(&value, &b.value, sizeof(struct lgw_conf_sx1261_s)) == 0)
         && (memcmp(&spectralScan, &b.spectralScan, sizeof(spectral_scan_t)) == 0)
-        && (memcmp(&lbt, &b.lbt, sizeof(struct lgw_conf_lbt_s)) == 0);
+        && (memcmp(&lbt.channels, &b.lbt.channels, lbt.nb_channel * sizeof(struct lgw_conf_chan_lbt_s)) == 0);
 }
 
 bool GatewaySX1261Config::set()
@@ -331,7 +333,7 @@ void GatewaySX1261Config::toJSON(
         jChannels.PushBack(jChannel, allocator);
 
     }
-    jLbt.AddMember("channeld", jChannels, allocator);
+    jLbt.AddMember("channels", jChannels, allocator);
 
     jsonValue.AddMember("lbt", jLbt, allocator);
 }
@@ -391,23 +393,35 @@ bool GatewaySX130xConfig::operator==(
 ) const
 {
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
+
         if (memcmp(&rfConfs[i], &b.rfConfs[i], sizeof(struct lgw_conf_rxrf_s)))
             return false;
+
         if (memcmp(&txLut[i], &b.txLut[i], sizeof(struct lgw_tx_gain_lut_s)))
             return false;
-        if (tx_freq_min != b.tx_freq_min)
+        if (tx_freq_min[i] != b.tx_freq_min[i])
             return false;
-        if (tx_freq_max != b.tx_freq_max)
+        if (tx_freq_max[i] != b.tx_freq_max[i])
             return false;
     }
+
     for (int i = 0; i < LGW_MULTI_NB; i++) {
         if (memcmp(&ifConfs[i], &b.ifConfs[i], sizeof(struct lgw_conf_rxif_s)))
             return false;
     }
-    return (sx1261Config == b.sx1261Config)
+
+    return
+        (sx1261Config == b.sx1261Config)
         && (antennaGain == b.antennaGain)
         && (ifCount == b.ifCount)
-        && (memcmp(&boardConf, &b.boardConf, sizeof(struct lgw_conf_board_s)) == 0)
+
+        // && (memcmp(&boardConf, &b.boardConf, sizeof(struct lgw_conf_board_s)) == 0)
+        && boardConf.lorawan_public == b.boardConf.lorawan_public
+        && boardConf.clksrc == b.boardConf.clksrc
+        && boardConf.full_duplex == b.boardConf.full_duplex
+        && boardConf.com_type == b.boardConf.com_type
+        && strncmp(boardConf.com_path, b.boardConf.com_path, 64) == 0
+
         && (memcmp(&ifStdConf, &b.ifStdConf, sizeof(struct lgw_conf_rxif_s)) == 0)
         && (memcmp(&ifFSKConf, &b.ifFSKConf, sizeof(struct lgw_conf_rxif_s)) == 0)
         && (memcmp(&demodConf, &b.demodConf, sizeof(struct lgw_conf_demod_s)) == 0)
@@ -941,7 +955,7 @@ void GatewaySX130xConfig::toJSON(
 
     rapidjson::Value jComPath;
     jComPath.SetString(boardConf.com_path, allocator);
-    jsonValue.AddMember("com_oath", jComPath, allocator);
+    jsonValue.AddMember("com_path", jComPath, allocator);
 
     rapidjson::Value jLorawanPublic;
     jLorawanPublic.SetBool(boardConf.lorawan_public);
@@ -1045,7 +1059,7 @@ void GatewaySX130xConfig::toJSON(
 
             rapidjson::Value jRadioTxGainLutPwrIdx;
             jRadioTxGainLutPwrIdx.SetUint(txLut[radioIndex].lut[i].pwr_idx);
-            jRadioTxGainLut.AddMember("pwd_idx", jRadioTxGainLutPwrIdx, allocator);
+            jRadioTxGainLut.AddMember("pwr_idx", jRadioTxGainLutPwrIdx, allocator);
 
             rapidjson::Value jRadioTxGainLutDigGain;
             jRadioTxGainLutDigGain.SetUint(txLut[radioIndex].lut[i].dig_gain);
@@ -1505,12 +1519,14 @@ bool GatewayGatewayConfig::operator==(const GatewayGatewayConfig &b) const
         && serverPortDown == b.serverPortDown
         && keepaliveInterval == b.keepaliveInterval
         && statInterval == b.statInterval
-        && (memcmp(&pushTimeoutMs, &b.pushTimeoutMs, sizeof(timeval)))
+        && (memcmp(&pushTimeoutMs, &b.pushTimeoutMs, sizeof(timeval)) == 0)
         && forwardCRCValid == b.forwardCRCValid
         && forwardCRCError == b.forwardCRCError
         && forwardCRCDisabled == b.forwardCRCDisabled
         && gpsTTYPath == b.gpsTTYPath
-        && (memcmp(& refGeoCoordinates, &b. refGeoCoordinates, sizeof(struct coord_s)))
+        && (fabs(refGeoCoordinates.lat - b.refGeoCoordinates.lat) < 0.00001)
+        && (fabs(refGeoCoordinates.lon - b.refGeoCoordinates.lon) < 0.00001)
+        && (abs(refGeoCoordinates.alt - b.refGeoCoordinates.alt)  == 0)
         && fakeGPS == b.fakeGPS
         && beaconPeriod == b.beaconPeriod
         && beaconFreqHz == b.beaconFreqHz
@@ -1689,7 +1705,7 @@ bool GatewayConfigFileJson::operator==(
     const GatewayConfigFileJson &b
 ) const
 {
-    return gatewayConf == b.gatewayConf;
+    return sx130xConf == b.sx130xConf;
     return (sx130xConf == b.sx130xConf)
         && (gatewayConf == b.gatewayConf)
         && (debugConf == b.debugConf);
