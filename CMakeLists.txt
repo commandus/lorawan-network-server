@@ -1,6 +1,7 @@
 # Options:
-# -D ENABLE_PKT2
-# -D ENABLE_LGW_EMBEDDED
+# -DENABLE_PKT2=on
+# -DENABLE_LISTENER_EMBEDDED=on
+#
 
 cmake_minimum_required(VERSION 3.9)
 set(PROJECT_NAME "lorawan-network-n-app-server")

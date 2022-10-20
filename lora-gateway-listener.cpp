@@ -5,15 +5,29 @@
 #include "utilstring.h"
 #include "errlist.h"
 
-static const std::string ERR_MSG_GATEWAY[] = {
-    "payload length setting is mandatory for implicit header mode",
-    "CRC enable setting is mandatory for implicit header mode",
-    "coding rate setting is mandatory for implicit header mode",
-    "invalid configuration for FSK channel"
+#define ERR_CODE_LORA_GATEWAY_BASE -800
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED       ERR_CODE_LORA_GATEWAY_BASE - 1
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_TIME_STAMP         ERR_CODE_LORA_GATEWAY_BASE - 2
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_SX1261_RADIO       ERR_CODE_LORA_GATEWAY_BASE - 3
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_TX_GAIN_LUT        ERR_CODE_LORA_GATEWAY_BASE - 4
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_INVALID_RADIO      ERR_CODE_LORA_GATEWAY_BASE - 5
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_DEMODULATION       ERR_CODE_LORA_GATEWAY_BASE - 6
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_MULTI_SF_CHANNEL   ERR_CODE_LORA_GATEWAY_BASE - 7
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_STD_CHANNEL        ERR_CODE_LORA_GATEWAY_BASE - 9
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_FSK_CHANNEL        ERR_CODE_LORA_GATEWAY_BASE - 10
+
+static const std::string ERR_MSG_LORA_GATEWAY[] = {
+    "Failed to configure board",
+    "Failed to configure fine timestamp",
+    "Failed to configure the SX1261 radio",
+    "Failed to configure concentrator TX Gain LUT",
+    "Invalid configuration for radio",
+    "Invalid configuration for demodulation parameters",
+    "Invalid configuration for Lora multi-SF channel"
 };
 
 LoraGatewayListener::LoraGatewayListener()
-    : lastConfig(nullptr)
+    : last_lgw_retcode(0), lastConfig(nullptr)
 {
 }
 
@@ -23,7 +37,53 @@ LoraGatewayListener::~LoraGatewayListener()
 
 int LoraGatewayListener::setup(GatewayConfigFileJson *config)
 {
+    last_lgw_retcode = 0;
     lastConfig = config;
+    if (!config)
+        return ERR_CODE_INSUFFICIENT_PARAMS;
+    last_lgw_retcode = lgw_board_setconf(&config->sx130xConf.boardConf);
+    if (last_lgw_retcode)
+        return ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED;
+    if (config->sx130xConf.tsConf.enable) {
+        last_lgw_retcode = lgw_ftime_setconf(&config->sx130xConf.tsConf);
+        if (last_lgw_retcode)
+            return ERR_CODE_LORA_GATEWAY_CONFIGURE_TIME_STAMP;
+    }
+    last_lgw_retcode = lgw_sx1261_setconf(&config->sx130xConf.sx1261Config.value);
+    if (last_lgw_retcode)
+        return ERR_CODE_LORA_GATEWAY_CONFIGURE_SX1261_RADIO;
+
+    for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
+        last_lgw_retcode = lgw_txgain_setconf(i, &config->sx130xConf.txLut[i]);
+        if (last_lgw_retcode)
+            return ERR_CODE_LORA_GATEWAY_CONFIGURE_TX_GAIN_LUT;
+
+    }
+
+    for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
+        last_lgw_retcode = lgw_rxrf_setconf(i, &config->sx130xConf.rfConfs[i]);
+        if (last_lgw_retcode)
+            return ERR_CODE_LORA_GATEWAY_CONFIGURE_INVALID_RADIO;
+    }
+    last_lgw_retcode = lgw_demod_setconf(&config->sx130xConf.demodConf);
+    if (last_lgw_retcode)
+        return ERR_CODE_LORA_GATEWAY_CONFIGURE_DEMODULATION;
+
+    for (int i = 0; i < LGW_MULTI_NB; i++) {
+        last_lgw_retcode = lgw_rxif_setconf(i, &config->sx130xConf.ifConfs[i]);
+        if (last_lgw_retcode)
+            return ERR_CODE_LORA_GATEWAY_CONFIGURE_MULTI_SF_CHANNEL;
+    }
+    if (config->sx130xConf.ifStdConf.enable) {
+        last_lgw_retcode = lgw_rxif_setconf(8, &config->sx130xConf.ifStdConf);
+        if (last_lgw_retcode)
+            return ERR_CODE_LORA_GATEWAY_CONFIGURE_STD_CHANNEL;
+    } else; // TODO
+    if (config->sx130xConf.ifStdConf.enable) {
+        last_lgw_retcode = lgw_rxif_setconf(9, &config->sx130xConf.ifFSKConf);
+        if (last_lgw_retcode)
+            return ERR_CODE_LORA_GATEWAY_CONFIGURE_FSK_CHANNEL;
+    } else; // TODO
 }
 
 std::string LoraGatewayListener::version()

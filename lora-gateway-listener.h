@@ -6,23 +6,12 @@
 
 class LoraGatewayListener {
 public:
+    int last_lgw_retcode;
     GatewayConfigFileJson *lastConfig;
 
     LoraGatewayListener();
     ~LoraGatewayListener();
 
-    /*
-        lgw_board_setconf(&boardconf);
-        lgw_ftime_setconf(&tsconf);
-        lgw_sx1261_setconf(&sx1261conf);
-        lgw_txgain_setconf(i, &txlut[i]);
-        lgw_rxrf_setconf(i, &rfconf);
-        lgw_demod_setconf(&demodconf);
-        lgw_rxif_setconf(i, &ifconf);
-        lgw_rxif_setconf(8, &ifconf);
-        lgw_rxif_setconf(9, &ifconf);
-        lgw_debug_setconf(&debugconf);
-    */
     int setup(GatewayConfigFileJson *config);
     /*
         lgw_version_info();

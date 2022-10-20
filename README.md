@@ -450,8 +450,8 @@ const host = window.location.origin + '/';
 
 Options:
 
-- -D ENABLE_PKT2 enable PKT2 parser
-- -D ENABLE_LISTENER_EMBEDDED enable Lora gateway
+- -DENABLE_PKT2=on enable PKT2 parser
+- -DENABLE_LISTENER_EMBEDDED=on enable Lora gateway
 
 ```
 mkdir build
