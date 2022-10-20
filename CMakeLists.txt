@@ -1,3 +1,7 @@
+# Options:
+# -D ENABLE_PKT2
+# -D ENABLE_LGW_EMBEDDED
+
 cmake_minimum_required(VERSION 3.9)
 set(PROJECT_NAME "lorawan-network-n-app-server")
 project(${PROJECT_NAME} VERSION 1.0)
@@ -22,6 +26,18 @@ if(ENABLE_PKT2)
 			HINTS "." ".." "../../pkt2" "~/src/pkt2"
 			)
 endif(ENABLE_PKT2)
+
+option(ENABLE_LISTENER_EMBEDDED "Build with embedded Lora gateway" OFF)
+if(ENABLE_LISTENER_EMBEDDED)
+	find_library(LIBLORAGW
+			NAMES loragw
+			HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder"
+	)
+	find_library(LIBTINYMT32
+			NAMES tinymt32
+			HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder"
+	)
+endif(ENABLE_LISTENER_EMBEDDED)
 
 include_directories("third_party" ${CURL_INCLUDE_DIR} ".")
 link_directories(${CMAKE_SOURCE_DIR}/../lorawan-ws)
@@ -65,7 +81,7 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	device-channel-plan-file-json.cpp device-history-service-json.cpp
 	regional-parameter-channel-plan-file-json.cpp
 	ws-handler.cpp database-config-json.cpp 
-	embedded-listener.cpp gateway-file-json.cpp
+	embedded-listener.cpp gateway-file-json.cpp lora-gateway-listener.cpp
 	third_party/get_rss/get_rss.c
 	third_party/argtable3/argtable3.c
 )
@@ -84,6 +100,7 @@ add_library(lorawan STATIC
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
+	${LIBLORAGW} ${LIBTINYMT32}
 		OpenSSL::Crypto
 )
 target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)

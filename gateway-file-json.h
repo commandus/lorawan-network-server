@@ -1,10 +1,7 @@
 #ifndef GATEWAY_FILE_JSON_H_
 #define GATEWAY_FILE_JSON_H_ 1
 
-#include <vector>
 #include "gateway-lora.h"
-#include "regional-parameter-channel-plan.h"
-#include "regional-parameter-channel-plans.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -17,7 +14,39 @@ public:
     virtual int parse(rapidjson::Value &jsonValue) = 0;
     virtual void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const = 0;
     std::string toString();
-    virtual bool set() = 0;
+};
+
+/**
+    "sx1261_conf": {
+        "rssi_offset": 0,
+        "spectral_scan": {
+            "enable": false,
+            "freq_start": 867100000,
+            "nb_chan": 8,
+            "nb_scan": 2000,
+            "pace_s": 10
+        },
+        "lbt": {
+            "enable": false,
+            "rssi_target": -70,
+            "channels":[
+                {"freq_hz": 867100000, "bandwidth": 125000, "scan_time_us": 128,  "transmit_time_ms": 400}
+            ]
+        }
+    }
+ */
+class GatewaySX1261Config : public GatewayJsonConfig {
+public:
+    struct lgw_conf_sx1261_s value;
+    spectral_scan_t spectralScan;
+    struct lgw_conf_lbt_s lbt;
+    GatewaySX1261Config();
+
+    int parse(rapidjson::Value &jsonValue) override;
+    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
+    void reset();
+
+    bool operator==(const GatewaySX1261Config &value) const;
 };
 
 /**
@@ -55,43 +84,6 @@ public:
         "chan_FSK":       {"enable": true, "radio": 1, "if":  300000, "bandwidth": 125000, "datarate": 50000}
     },
 */
-
-
-/**
-    "sx1261_conf": {
-        "rssi_offset": 0,
-        "spectral_scan": {
-            "enable": false,
-            "freq_start": 867100000,
-            "nb_chan": 8,
-            "nb_scan": 2000,
-            "pace_s": 10
-        },
-        "lbt": {
-            "enable": false,
-            "rssi_target": -70,
-            "channels":[
-                {"freq_hz": 867100000, "bandwidth": 125000, "scan_time_us": 128,  "transmit_time_ms": 400}
-            ]
-        }
-    }
- */
-class GatewaySX1261Config : public GatewayJsonConfig {
-public:
-    struct lgw_conf_sx1261_s value;
-    spectral_scan_t spectralScan;
-    struct lgw_conf_lbt_s lbt;
-    GatewaySX1261Config();
-
-    int parse(rapidjson::Value &jsonValue) override;
-    void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
-    bool set() override;
-
-    void reset();
-
-    bool operator==(const GatewaySX1261Config &value) const;
-};
-
 class GatewaySX130xConfig : public GatewayJsonConfig {
 public:
     GatewaySX1261Config sx1261Config;
@@ -113,7 +105,7 @@ public:
     void reset();
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
-    bool set() override;
+
     bool operator==(const GatewaySX130xConfig &value) const;
 };
 
@@ -170,7 +162,7 @@ public:
     void reset();
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
-    bool set() override;
+
     bool operator==(const GatewayGatewayConfig &value) const;
 };
 
@@ -190,7 +182,6 @@ public:
     void reset();
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
-    bool set() override;
     bool operator==(const GatewayDebugConfig &value) const;
 };
 
@@ -206,7 +197,6 @@ public:
     void reset();
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
-    bool set() override;
     bool operator==(const GatewayConfigFileJson &value) const;
 };
 

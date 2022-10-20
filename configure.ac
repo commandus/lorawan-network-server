@@ -134,9 +134,8 @@ AC_ARG_ENABLE([listener-udp],
 esac],[listener_udp=true])
 AM_CONDITIONAL([ENABLE_LISTENER_UDP], [test x$listener_udp = xtrue])
 
-ENABLE_LISTENER_EMBEDDED
 AC_ARG_ENABLE([listener-embedded],
-[  --enable-listener-embedded    Turn on embedded listener],
+[  --enable-listener-embedded    Turn on embedded Lora gateway],
 [case "${enableval}" in
   yes) listener_embedded=true ;;
   no)  listener_embedded=false ;;
@@ -213,6 +212,10 @@ AC_MSG_NOTICE([  logger-huffman on])
 fi
 if test x$logger_pkt2 = xtrue; then
 AC_MSG_NOTICE([  pkt2 on])
+fi
+
+if test x$listener_embedded = xtrue; then
+AC_MSG_NOTICE([embedded Lora gateway on])
 fi
 
 AC_OUTPUT

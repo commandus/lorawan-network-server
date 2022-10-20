@@ -442,9 +442,25 @@ git clone https://github.com/commandus/lorawan-ws-angular.git
 If you are use anoter web server, check web service location in the config.ts:
 ```
 const host = window.location.origin + '/';
-``
+```
 
 ### cmake
+
+#### Set option
+
+Options:
+
+- -D ENABLE_PKT2 enable PKT2 parser
+- -D ENABLE_LISTENER_EMBEDDED enable Lora gateway
+
+```
+mkdir build
+cd build
+cmake -D ENABLE_LGW_EMBEDDED=on ..
+make
+
+```
+#### clang instead of gcc
 
 For instance, you can use Clang instead of gcc:
 

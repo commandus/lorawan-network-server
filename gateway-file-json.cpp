@@ -1,7 +1,5 @@
-#include <fstream>
-#include <regex>
-#include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -16,7 +14,7 @@
 #include "utilstring.h"
 #include "errlist.h"
 
-static const std::string ERR_MSG_GATEWAY[] = {
+static const std::string ERR_MSG_GATEWAY_CONFIG[] = {
     "payload length setting is mandatory for implicit header mode",
     "CRC enable setting is mandatory for implicit header mode",
     "coding rate setting is mandatory for implicit header mode",
@@ -42,27 +40,6 @@ std::string GatewayJsonConfig::toString()
     return std::string(buffer.GetString());
 }
 
-/**
-    "sx1261_conf": {
-        "rssi_offset": 0,
-        "spectral_scan": {
-            "enable": false,
-            "freq_start": 867100000,
-            "nb_chan": 8,
-            "nb_scan": 2000,
-            "pace_s": 10
-        },
-        "lbt": {
-            "enable": false,
-            "rssi_target": -70,
-            "channels":[
-                {"freq_hz": 867100000, "bandwidth": 125000, "scan_time_us": 128,  "transmit_time_ms": 400}
-            ]
-        }
-    }
- */
-
-
 GatewaySX1261Config::GatewaySX1261Config()
 {
     reset();
@@ -84,13 +61,6 @@ bool GatewaySX1261Config::operator==(
     return (memcmp(&value, &b.value, sizeof(struct lgw_conf_sx1261_s)) == 0)
         && (memcmp(&spectralScan, &b.spectralScan, sizeof(spectral_scan_t)) == 0)
         && (memcmp(&lbt.channels, &b.lbt.channels, lbt.nb_channel * sizeof(struct lgw_conf_chan_lbt_s)) == 0);
-}
-
-bool GatewaySX1261Config::set()
-{
-    bool r = lgw_sx1261_setconf(&value) == LGW_HAL_SUCCESS;
-    // if (r) r = lgw_rxrf_setconf(i, &rfconf) != LGW_HAL_SUCCESS;
-    return r;
 }
 
 int GatewaySX1261Config::parse(rapidjson::Value &jsonValue)
@@ -362,30 +332,6 @@ void GatewaySX130xConfig::reset()
     memset(&ifStdConf, 0, sizeof(struct lgw_conf_rxif_s));
     memset(&ifFSKConf, 0, sizeof(struct lgw_conf_rxif_s));
     memset(&demodConf, 0, sizeof(struct lgw_conf_demod_s));
-}
-
-bool GatewaySX130xConfig::set()
-{
-    bool r = lgw_board_setconf(&boardConf) == LGW_HAL_SUCCESS;
-    if (r)
-        r = lgw_ftime_setconf(&tsConf) == LGW_HAL_SUCCESS;
-    // GatewaySX1261Config::set() : lgw_sx1261_setconf(&sx1261conf) != LGW_HAL_SUCCESS
-    for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-        r = lgw_txgain_setconf(i, &txLut[i]) == LGW_HAL_SUCCESS;
-        if (!r)
-            return r;
-    }
-    for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-        r = lgw_rxrf_setconf(i, &rfConfs[i]) == LGW_HAL_SUCCESS;
-        if (!r)
-            return r;
-    }
-    r = lgw_demod_setconf(&demodConf) == LGW_HAL_SUCCESS;
-
-    for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-        r = lgw_rxif_setconf(i, &ifConfs[i]) == LGW_HAL_SUCCESS;
-    }
-    return r;
 }
 
 bool GatewaySX130xConfig::operator==(
@@ -1506,11 +1452,6 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.AddMember("autoquit_threshold", jautoquitThreshold, allocator);
 }
 
-bool GatewayGatewayConfig::set()
-{
-    return true;
-}
-
 bool GatewayGatewayConfig::operator==(const GatewayGatewayConfig &b) const
 {
     return gatewayId == b.gatewayId
@@ -1624,11 +1565,6 @@ void GatewayDebugConfig::toJSON(
     jsonValue.AddMember("log_file", jlfn, allocator);
 }
 
-bool GatewayDebugConfig::set()
-{
-    return true;
-}
-
 bool GatewayDebugConfig::operator==(const GatewayDebugConfig &b) const
 {
     return memcmp(&value, &b.value, sizeof(struct lgw_conf_debug_s)) == 0;
@@ -1689,16 +1625,6 @@ void GatewayConfigFileJson::toJSON(
     rapidjson::Value jDebug;
     debugConf.toJSON(jDebug, allocator);
     jsonValue.AddMember("debug_conf", jDebug, allocator);
-}
-
-bool GatewayConfigFileJson::set()
-{
-    bool r = sx130xConf.set();
-    if (r)
-        r = gatewayConf.set();
-    if (r)
-        r = debugConf.set();
-    return r;
 }
 
 bool GatewayConfigFileJson::operator==(
