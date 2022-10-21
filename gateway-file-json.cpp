@@ -1,3 +1,6 @@
+// disable rapidjson's assert
+#define NDEBUG
+
 #include <iomanip>
 #include <sstream>
 
@@ -14,19 +17,24 @@
 #include "utilstring.h"
 #include "errlist.h"
 
-static const std::string ERR_MSG_GATEWAY_CONFIG[] = {
-    "payload length setting is mandatory for implicit header mode",
-    "CRC enable setting is mandatory for implicit header mode",
-    "coding rate setting is mandatory for implicit header mode",
-    "invalid configuration for FSK channel"
-};
+GatewayJsonConfig::GatewayJsonConfig()
+    : errorCode(0), errorOffset(0)
+{
+
+}
 
 int GatewayJsonConfig::parseString(
     const std::string &json
 )
 {
     rapidjson::Document doc;
-    doc.Parse<rapidjson::kParseCommentsFlag>(json.c_str());
+    rapidjson::ParseResult r = doc.Parse<rapidjson::kParseCommentsFlag>(json.c_str());
+    if (!r) {
+        errorCode = r.Code();
+        errorOffset  = r.Offset();
+        errorDescription = std::string(GetParseError_En(r.Code()));
+        return ERR_CODE_INVALID_JSON;
+    }
     return parse(doc);
 }
 
@@ -317,12 +325,11 @@ void GatewaySX130xConfig::reset()
 {
     sx1261Config.reset();
     antennaGain = 0;
-    ifCount = 0;
     memset(&boardConf, 0, sizeof(struct lgw_conf_board_s));
     memset(&tsConf, 0, sizeof(struct lgw_conf_ftime_s));
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-        tx_freq_min[0] = 0;
-        tx_freq_max[0] = 0;
+        tx_freq_min[i] = 0;
+        tx_freq_max[i] = 0;
         memset(&rfConfs[i], 0, sizeof(struct lgw_conf_rxrf_s));
         memset(&txLut[i], 0, sizeof(struct lgw_tx_gain_lut_s));
     }
@@ -339,7 +346,6 @@ bool GatewaySX130xConfig::operator==(
 ) const
 {
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-
         if (memcmp(&rfConfs[i], &b.rfConfs[i], sizeof(struct lgw_conf_rxrf_s)))
             return false;
 
@@ -359,8 +365,6 @@ bool GatewaySX130xConfig::operator==(
     return
         (sx1261Config == b.sx1261Config)
         && (antennaGain == b.antennaGain)
-        && (ifCount == b.ifCount)
-
         // && (memcmp(&boardConf, &b.boardConf, sizeof(struct lgw_conf_board_s)) == 0)
         && boardConf.lorawan_public == b.boardConf.lorawan_public
         && boardConf.clksrc == b.boardConf.clksrc
@@ -446,12 +450,15 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                 if (jValue.IsBool()) {
                     tsConf.enable = jValue.GetBool();
                 }
-                tsConf.mode = LGW_FTIME_MODE_ALL_SF;
+                tsConf.mode = LGW_FTIME_MODE_HIGH_CAPACITY;
                 if (tsConf.enable) {
                     if (jFineTimestamp.HasMember("mode")) {
                         rapidjson::Value &jMode = jFineTimestamp["mode"];
                         if (jMode.IsString()) {
                             std::string s = jMode.GetString();
+                            if (s == "all_sf" || s == "ALL_SF") {
+                                tsConf.mode = LGW_FTIME_MODE_ALL_SF;
+                            }
                             if (s == "high_capacity" || s == "HIGH_CAPACITY") {
                                 tsConf.mode = LGW_FTIME_MODE_HIGH_CAPACITY;
                             }
@@ -474,7 +481,7 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                     if (jRadioEnable.IsBool()) {
                         rfConfs[radioIndex].enable = jRadioEnable.GetBool();
                     }
-                    rfConfs[radioIndex].type = LGW_RADIO_TYPE_SX1250;
+                    rfConfs[radioIndex].type = LGW_RADIO_TYPE_NONE;
                     if (rfConfs[radioIndex].enable) {
                         if (jRadio.HasMember("type")) {
                             rapidjson::Value &jType = jRadio["type"];
@@ -486,7 +493,9 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                                 if (s == "SX1257") {
                                     rfConfs[radioIndex].type = LGW_RADIO_TYPE_SX1257;
                                 }
-                                // "SX1250" by default
+                                if (s == "SX1250") {
+                                    rfConfs[radioIndex].type = LGW_RADIO_TYPE_SX1250;
+                                }
                             }
                         }
                         if (jRadio.HasMember("freq")) {
@@ -667,14 +676,12 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
         demodConf.multisf_datarate = 0xff;  // all
 
     // set configuration for Lora multi-SF channels (bandwidth cannot be set)
-    ifCount = 0;
     std::string cmsf = "chan_multiSF_0";
     for (int ch = 0; ch < LGW_MULTI_NB; ch++) {
         std::stringstream ssChannelName;
         cmsf[13] = '0' + ch;
         rapidjson::Value &jChannelSF = jsonValue[cmsf.c_str()];
         if (jChannelSF.IsObject()) {
-            ifCount++;
             if (jChannelSF.HasMember("enable")) {
                 rapidjson::Value &jChannelEnable = jChannelSF["enable"];
                 if (jChannelEnable.IsBool()) {
@@ -1134,7 +1141,6 @@ void GatewaySX130xConfig::toJSON(
 
     jsonValue.AddMember("chan_FSK", jChannelFSK, allocator);
 }
-
 
 /*
     "gateway_conf": {
@@ -1631,7 +1637,6 @@ bool GatewayConfigFileJson::operator==(
     const GatewayConfigFileJson &b
 ) const
 {
-    return sx130xConf == b.sx130xConf;
     return (sx130xConf == b.sx130xConf)
         && (gatewayConf == b.gatewayConf)
         && (debugConf == b.debugConf);

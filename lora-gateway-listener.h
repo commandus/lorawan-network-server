@@ -4,10 +4,21 @@
 #include <vector>
 #include "gateway-file-json.h"
 
+
+class LGWStatus {
+public:
+    uint32_t inst_tstamp;     ///< SX1302 counter (INST)
+    uint32_t trig_tstamp;     ///< SX1302 counter (PPS)
+    float temperature;        ///< Concentrator temperature
+};
+
 class LoraGatewayListener {
 public:
-    int last_lgw_retcode;
-    GatewayConfigFileJson *lastConfig;
+    int lastLgwCode;
+    GatewayConfigFileJson *config;
+
+    int fdGpsTty;    ///< file descriptor of the GPS TTY port
+    uint64_t eui;    ///< Gateway EUI
 
     LoraGatewayListener();
     ~LoraGatewayListener();
@@ -17,6 +28,8 @@ public:
         lgw_version_info();
     */
     std::string version();
+    // SX1302 Status
+    bool getStatus(LGWStatus &status);
     /*
         lgw_gps_enable(gps_tty_path, "ubx7", 0, &gps_tty_fd);
         lgw_start();

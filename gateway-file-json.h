@@ -1,6 +1,17 @@
 #ifndef GATEWAY_FILE_JSON_H_
 #define GATEWAY_FILE_JSON_H_ 1
 
+/**
+ * Parse Lora gateway JSON file
+ * Usage:
+ *     std::string v = file2string(fn.c_str());
+ *     GatewayConfigFileJson c;
+ *     int r = c.parseString(v);
+ *     if (r) {
+ *       std::cerr << "Parse error " << c.errorDescription << " at " << c.errorOffset << std::endl;
+ *       return r;
+ *     }
+ */
 #include "gateway-lora.h"
 
 #pragma clang diagnostic push
@@ -8,8 +19,14 @@
 #include "rapidjson/document.h"
 #pragma clang diagnostic pop
 
+
 class GatewayJsonConfig {
 public:
+    int errorCode;
+    size_t errorOffset;
+    std::string errorDescription;
+
+    GatewayJsonConfig();
     int parseString(const std::string &json);
     virtual int parse(rapidjson::Value &jsonValue) = 0;
     virtual void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const = 0;
@@ -95,7 +112,6 @@ public:
     uint32_t tx_freq_min[LGW_RF_CHAIN_NB];
     uint32_t tx_freq_max[LGW_RF_CHAIN_NB];
     struct lgw_tx_gain_lut_s txLut[LGW_RF_CHAIN_NB];
-    uint8_t ifCount;
     struct lgw_conf_rxif_s ifConfs[LGW_MULTI_NB];
     struct lgw_conf_rxif_s ifStdConf;
     struct lgw_conf_rxif_s ifFSKConf;
