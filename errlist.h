@@ -133,6 +133,23 @@
 #define ERR_CODE_NO_PACKET_PARSER           -610
 #define ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND   -611
 
+// embedded gateway config
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED       -612
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_TIME_STAMP         -613
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_SX1261_RADIO       -614
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_TX_GAIN_LUT        -615
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_INVALID_RADIO      -616
+
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_DEMODULATION       -617
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_MULTI_SF_CHANNEL   -618
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_STD_CHANNEL        -619
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_FSK_CHANNEL        -620
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_DEBUG              -621
+
+#define ERR_CODE_LORA_GATEWAY_CONFIGURE_GPS_FAILED         -622
+#define ERR_CODE_LORA_GATEWAY_START_FAILED                 -623
+#define ERR_CODE_LORA_GATEWAY_GET_EUI                      -624
+
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
 #define ERR_WARNING						"Warning "
@@ -253,6 +270,22 @@
 #define ERR_INIT_LOGGER_HUFFMAN_DB      "No huffman-logger database assigned"
 #define ERR_NO_PACKET_PARSER            "No packet parser"
 #define ERR_LOAD_WS_PASSWD_NOT_FOUND    "User password file not found"
+
+#define ERR_LORA_GATEWAY_CONFIGURE_BOARD_FAILED       "Failed to configure board"
+#define ERR_LORA_GATEWAY_CONFIGURE_TIME_STAMP         "Failed to configure fine timestamp"
+#define ERR_LORA_GATEWAY_CONFIGURE_SX1261_RADIO       "Failed to configure the SX1261 radio"
+#define ERR_LORA_GATEWAY_CONFIGURE_TX_GAIN_LUT        "Failed to configure concentrator TX Gain LUT"
+#define ERR_LORA_GATEWAY_CONFIGURE_INVALID_RADIO      "Invalid configuration for radio"
+
+#define ERR_LORA_GATEWAY_CONFIGURE_DEMODULATION       "Invalid configuration for demodulation parameters"
+#define ERR_LORA_GATEWAY_CONFIGURE_MULTI_SF_CHANNEL   "Invalid configuration for Lora multi-SF channel"
+#define ERR_LORA_GATEWAY_CONFIGURE_STD_CHANNEL        "Invalid configuration for Lora standard channel"
+#define ERR_LORA_GATEWAY_CONFIGURE_FSK_CHANNEL        "Invalid configuration for Lora FSK channel"
+#define ERR_LORA_GATEWAY_CONFIGURE_DEBUG              "Failed to configure debug"
+
+#define ERR_LORA_GATEWAY_CONFIGURE_GPS_FAILED          "Failed to configure GPS"
+#define ERR_LORA_GATEWAY_START_FAILED                  "Failed to start the concentrator"
+#define ERR_LORA_GATEWAY_GET_EUI                       "Failed to get concentrator EUI"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
