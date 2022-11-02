@@ -43,17 +43,17 @@ class IdentityService;
 typedef char DEVICENAME[8];
 
 enum ERR_CODE_TX {
-	JIT_ERROR_OK = 0,           	// Packet ok to be sent
-	JIT_ERROR_TOO_LATE = 1,     	// Too late to send this packet
-	JIT_ERROR_TOO_EARLY = 2,    	// Too early to queue this packet
-	JIT_ERROR_FULL = 3,         	// Downlink queue is full
-	JIT_ERROR_EMPTY = 4,        	// Downlink queue is empty
-	JIT_ERROR_COLLISION_PACKET = 5, // A packet is already enqueued for this timeframe
-	JIT_ERROR_COLLISION_BEACON = 6, // A beacon is planned for this timeframe
-	JIT_ERROR_TX_FREQ = 7,      	// The required frequency for downlink is not supported
-	JIT_ERROR_TX_POWER = 8,     	// The required power for downlink is not supported
-	JIT_ERROR_GPS_UNLOCKED = 9, 	// GPS timestamp could not be used as GPS is unlocked
-	JIT_ERROR_INVALID = 10       	// Packet is invalid
+	JIT_TX_OK = 0,                 	// Packet ok to be sent
+	JIT_TX_ERROR_TOO_LATE = 1,     	// Too late to send this packet
+	JIT_TX_ERROR_TOO_EARLY = 2,    	// Too early to queue this packet
+	JIT_TX_ERROR_FULL = 3,         	// Downlink queue is full
+	JIT_TX_ERROR_EMPTY = 4,        	// Downlink queue is empty
+	JIT_TX_ERROR_COLLISION_PACKET = 5, // A packet is already enqueued for this timeframe
+	JIT_TX_ERROR_COLLISION_BEACON = 6, // A beacon is planned for this timeframe
+	JIT_TX_ERROR_TX_FREQ = 7,      	// The required frequency for downlink is not supported
+	JIT_TX_ERROR_TX_POWER = 8,     	// The required power for downlink is not supported
+	JIT_TX_ERROR_GPS_UNLOCKED = 9, 	// GPS timestamp could not be used as GPS is unlocked
+	JIT_TX_ERROR_INVALID = 10       	// Packet is invalid
 };
 
 void string2DEVADDR(DEVADDR &retval, const std::string &str);
@@ -106,10 +106,10 @@ int getMetadataName(
 #define SEMTECH_GW_PUSH_ACK		1
 // gateway initiate receiving packates from the metwork server (because of NAT)
 #define SEMTECH_GW_PULL_DATA	2
-// network server responds on PULL_DATA
-#define SEMTECH_GW_PULL_ACK		3
 // network server send packet to the gateway afrer PULL_DATA - PULL_ACK sequence
-#define SEMTECH_GW_PULL_RESP	4
+#define SEMTECH_GW_PULL_RESP	3
+// network server responds on PULL_DATA
+#define SEMTECH_GW_PULL_ACK		4
 // gateway inform network server about does PULL_RESP data transmission was successful or not
 #define SEMTECH_GW_TX_ACK		5
 
@@ -118,6 +118,23 @@ typedef ALIGN struct {
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
 } PACKED SEMTECH_PREFIX;		// 4 bytes
+
+typedef ALIGN struct {
+    uint64_t gatewayId;
+    time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
+    uint32_t tmst;				// Internal timestamp of "RX finished" event (32b unsigned). In microseconds
+    uint8_t chan;				// Concentrator "IF" channel used for RX (unsigned integer)
+    uint8_t rfch;				// Concentrator "RF chain" used for RX (unsigned integer)
+    uint32_t freq;				// RX central frequency in Hz, not Mhz. MHz (unsigned float, Hz precision) 868.900000
+    int8_t stat;				// CRC status: 1 = OK, -1 = fail, 0 = no CRC
+    MODULATION modu;			// LORA, FSK
+    BANDWIDTH bandwith;
+    SPREADING_FACTOR spreadingFactor;
+    CODING_RATE codingRate;
+    uint32_t bps;				// FSK bits per second
+    int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
+    float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
+} PACKED SEMTECH_PROTOCOL_METADATA;
 
 /**
  * Semtech PUSH DATA packet described in section 3.2
@@ -130,7 +147,7 @@ typedef ALIGN struct {
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
-} PACKED SEMTECH_PREFIX_GW;	// 12 bytes
+} PACKED SEMTECH_PREFIX_GW;	    // 12 bytes
 // After prefix "JSON object", starting with {, ending with }, see section 4
 
 // After prefix "JSON object", starting with {, ending with }, see section 4
@@ -677,6 +694,7 @@ public:
 };
 
 uint64_t deveui2int(const DEVEUI &value);
+void int2deveui(DEVEUI &retval, const uint64_t value);
 void int2DEVADDR(DEVADDR &retval, uint32_t value);
 
 std::string MHDR2String(const MHDR &value);
@@ -855,9 +873,9 @@ bool isDEVEUIEmpty(const DEVEUI &eui);
  * @param devEUI Device EUI
  */
 void deriveJSIntKey(
-        KEY128 &retval,
-        const KEY128 &nwkKey,
-        const DEVEUI &devEUI
+    KEY128 &retval,
+    const KEY128 &nwkKey,
+    const DEVEUI &devEUI
 );
 
 /**

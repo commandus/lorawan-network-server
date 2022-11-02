@@ -38,6 +38,7 @@ typedef enum {
 } SPREADING_FACTOR;
 
 typedef enum {
+    CRLORA_0FF    = 0,
     CRLORA_4_5    = 1,
     CRLORA_4_6    = 2,   // default?
     CRLORA_4_7    = 3,
@@ -71,8 +72,8 @@ typedef enum {
 } CRCSTATUS;
 
 typedef enum {
-    TEMP_SRC_EXT,   /* the temperature has been measured with an external sensor */
-    TEMP_SRC_MCU    /* the temperature has been measured by the gateway MCU */
+    TEMP_SRC_EXT,   // the temperature has been measured with an external sensor
+    TEMP_SRC_MCU    // the temperature has been measured by the gateway MCU
 } TEMPERATURE_SRC;
 
 #endif

@@ -32,7 +32,7 @@ public:
 	std::string addr;
 	// socket
 	int socket;
-	// Gateway send PULL_DATA packet to inform network server what gateway current adddress and port are (possibly over NAT)
+	// Gateway send PULL_DATA packet to inform network server what gateway current address and port are (possibly over NAT)
 	struct sockaddr_in6 sockaddr;
 	int errcode;
 	time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'expanded' format e.g. 2021-02-24 04:54:01 GMT
