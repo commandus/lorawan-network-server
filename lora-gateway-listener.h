@@ -101,20 +101,21 @@ private:
     bool downstreamThreadRunning;
     bool jitThreadRunning;
     bool gpsThreadRunning;
+    bool gpsCheckTimeRunning;
     bool spectralScanThreadRunning;
     bool reportReady;               ///< true when there is a new report to send to the server
     bool gps_ref_valid;             ///< is GPS reference acceptable (ie. not too old)
     // control access
-    std::mutex mutexGPSTimeReference;      ///< control access to set system time
-    std::mutex mLGW;                 ///< control access to the concentrator
-    std::mutex mReportSpectralScan;  ///< control access to spectral scan report
-    std::mutex mLog;                 ///< control access to log facility
-    std::mutex mx_xcorr;             ///< control access to the XTAL correction
+    std::mutex mutexGPSTimeReference;        ///< control access to set system time
+    std::mutex mLGW;                         ///< control access to the concentrator
+    std::mutex mReportSpectralScan;          ///< control access to spectral scan report
+    std::mutex mLog;                         ///< control access to log facility
+    std::mutex mXTALcorrection;              ///< control access to the XTAL correction
 
     struct jit_queue_s jit_queue[LGW_RF_CHAIN_NB];  ///< Just In Time TX scheduling for each radio channel
     struct tref gpsTimeReference;    ///< time reference used for GPS <-> timestamp conversion
     bool xtal_correct_ok;            ///< set true when XTAL correction is stable enough
-    double xtal_correct;
+    double xtal_correct;             ///< XTAL frequency correction coefficient. XTAL(crystal) in timing refers to a quartz crystal.
 
     int setSystemTime(const uint32_t ppmCountUS);
     bool gpsEnabled;
@@ -126,11 +127,12 @@ private:
     int syncGPSLocation();
 
     // threads
-    void upstreamRunner();
-    void downstreamRunner();
-    void jitRunner();
+    void upstreamRunner();      // receive Lora packets from end-device(s)
+    void downstreamRunner();    // transmit beacons
+    void jitRunner();           // transmit from JIT queue
     void spectralScanRunner();
     void gpsRunner();
+    void gpsCheckTimeRunner();
     bool getTxGainLutIndex(uint8_t rf_chain, int8_t rf_power, uint8_t * lut_index);
 protected:
     void log(
@@ -150,8 +152,9 @@ public:
     ~LoraGatewayListener();
 
     int setup(GatewayConfigFileJson *config);
-    /*
-        lgw_version_info();
+    /**
+        LGW library version.
+        Calls lgw_version_info();
     */
     std::string version();
     // SX1302 Status
@@ -182,7 +185,7 @@ public:
         )> value
     );
     void setLogVerbosity(int level);
-    int transmit(TxPacket &packet);
+    int enqueueTxPacket(TxPacket &tx);
 };
 
 #endif

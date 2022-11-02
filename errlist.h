@@ -342,7 +342,7 @@
 #define ERR_LORA_GATEWAY_SENT                           "Gateway sent successfully"
 #define ERR_LORA_GATEWAY_JIT_DEQUEUE_FAILED             "JIT dequeue failed"
 #define ERR_LORA_GATEWAY_JIT_PEEK_FAILED                "JIT peek failed"
-#define ERR_LORA_GATEWAY_JIT_ENQUEUE_FAILED             "JIT enqueue failed"
+#define ERR_LORA_GATEWAY_JIT_ENQUEUE_FAILED             "JIT enqueueTxPacket failed"
 
 #define ERR_LORA_GATEWAY_FETCH                          "Failed Lora packet fetch, exiting"
 #define ERR_LORA_GATEWAY_UNKNOWN_STATUS                 "Received Lora packet with unknown status"

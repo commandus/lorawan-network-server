@@ -211,7 +211,7 @@ int LoraPacketProcessor::ack
 }
 
 /**
- * Identify device, if device identified successfully, enqueue packet or MAC
+ * Identify device, if device identified successfully, enqueueTxPacket packet or MAC
  * @param time received time
  * @param packet Semtech gateway packet
  */ 
@@ -250,7 +250,7 @@ int LoraPacketProcessor::put(
 						<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
 						<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
 					onLog(this, LOG_DEBUG, LOG_IDENTITY_SVC, 0, ss.str());
-                    // enqueue packet route to the target device or network server itself
+                    // enqueueTxPacket packet route to the target device or network server itself
 					enqueueControl(time, packet);
 				}
 			} else {
@@ -396,7 +396,7 @@ void LoraPacketProcessor::setDeviceChannelPlan(const DeviceChannelPlan *value)
 /**
  * Prepare response to the Join Request.
  * Check does device identifier exists, if it does,
- * enqueue Join Request to be replied in 5s or 6s
+ * enqueueTxPacket Join Request to be replied in 5s or 6s
  *
  * Called from UDPListener::parseBuffer()
  *
@@ -446,7 +446,7 @@ int LoraPacketProcessor::join(
         // device has been identified
         // set device identifier
         packet.devId = networkIdentity;
-        // enqueue response to be replied in 5s or 6s
+        // enqueueTxPacket response to be replied in 5s or 6s
         enqueueJoinResponse(time, networkIdentity.devaddr, packet);
     } else {
         // device EUI is NOT identified

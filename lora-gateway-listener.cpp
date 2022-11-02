@@ -12,6 +12,11 @@
 #include "utilstring.h"
 #include "errlist.h"
 
+// XTAL correction constants
+#define GPS_REF_MAX_AGE     30          // maximum admitted delay in seconds of GPS loss before considering latest GPS sync unusable
+#define XERR_INIT_AVG       16          // number of measurements the XTAL correction is averaged on as initial value
+#define XERR_FILT_COEF      256         // coefficient for low-pass XTAL error tracking
+
 GatewayMeasurements::GatewayMeasurements()
 {
     reset();
@@ -347,6 +352,72 @@ void LoraGatewayListener::gpsRunner()
     gpsThreadRunning = false;
 }
 
+/**
+ * Check time reference and calculate XTAL correction
+ */
+void LoraGatewayListener::gpsCheckTimeRunner() {
+    gpsCheckTimeRunning = true;
+
+    // GPS reference validation variables
+    long gps_ref_age = 0;
+    bool ref_valid_local = false;
+    double xtal_err_cpy;
+
+    // variables for XTAL correction averaging
+    unsigned init_cpt = 0;
+    double init_acc = 0.0;
+    double x;
+
+    while (!stopRequest) {
+        wait_ms(1000);
+        // calculate when the time reference was last updated
+        mutexGPSTimeReference.lock();
+        gps_ref_age = (long)difftime(time(nullptr), gpsTimeReference.systime);
+        if ((gps_ref_age >= 0) && (gps_ref_age <= GPS_REF_MAX_AGE)) {
+            /* time ref is ok, validate and  */
+            gps_ref_valid = true;
+            ref_valid_local = true;
+            xtal_err_cpy = gpsTimeReference.xtal_err;
+        } else {
+            // time ref is too old, invalidate
+            gps_ref_valid = false;
+            ref_valid_local = false;
+        }
+        mutexGPSTimeReference.unlock();
+
+        // manage XTAL correction
+        if (!ref_valid_local) {
+            // couldn't sync, or sync too old -> invalidate XTAL correction
+            mXTALcorrection.lock();
+            xtal_correct_ok = false;
+            xtal_correct = 1.0;
+            mXTALcorrection.unlock();
+            init_cpt = 0;
+            init_acc = 0.0;
+        } else {
+            if (init_cpt < XERR_INIT_AVG) {
+                /* initial accumulation */
+                init_acc += xtal_err_cpy;
+                ++init_cpt;
+            } else if (init_cpt == XERR_INIT_AVG) {
+                /* initial average calculation */
+                mXTALcorrection.lock();
+                xtal_correct = (double)(XERR_INIT_AVG) / init_acc;
+                xtal_correct_ok = true;
+                mXTALcorrection.unlock();
+                ++init_cpt;
+            } else {
+                // tracking with low-pass filter
+                x = 1 / xtal_err_cpy;
+                mXTALcorrection.lock();
+                xtal_correct = xtal_correct - xtal_correct/XERR_FILT_COEF + x/XERR_FILT_COEF;
+                mXTALcorrection.unlock();
+            }
+        }
+    }
+    gpsCheckTimeRunning = false;
+}
+
 #define STATUS_SIZE        200
 // max number of packets per fetch/send cycle
 #define NB_PKT_MAX         255
@@ -356,14 +427,17 @@ void LoraGatewayListener::gpsRunner()
 #define GATEWAY_PROTOCOL    2
 #define UNIX_GPS_EPOCH_OFFSET 315964800 // Number of seconds ellapsed between 01.Jan.1970 00:00:00 and 06.Jan.1980 00:00:00
 
-void LoraGatewayListener::upstreamRunner() {
+/**
+ * Receive Lora packets from end-device(s)
+ */
+void LoraGatewayListener::upstreamRunner()
+{
     SEMTECH_PROTOCOL_METADATA metadata;
     std::string payload;
 
     metadata.gatewayId = config->gatewayConf.gatewayId;
 
     upstreamThreadRunning = true;
-    unsigned pkt_in_dgram; // nb on Lora metadata in the current datagram
 
     // allocate memory for metadata fetching and processing
     struct lgw_pkt_rx_s rxpkt[NB_PKT_MAX]; // array containing inbound packets + metadata
@@ -373,17 +447,7 @@ void LoraGatewayListener::upstreamRunner() {
     bool ref_ok = false; // determine if GPS time reference must be used or not
     struct tref local_ref; // time reference used for UTC <-> timestamp conversion
 
-    uint8_t buff_ack[32]; // buffer to receive acknowledges
-
-    // ping measurement variables
-    struct timespec send_time;
     struct timespec recv_time;
-
-    // GPS synchronization variables
-    struct timespec pkt_utc_time;
-
-    // packets received per channel per sf
-    static uint32_t nb_pkt_log[LGW_IF_CHAIN_NB][8]; // [CH][SF]
 
     while (!stopRequest) {
         // fetch packets
@@ -414,7 +478,7 @@ void LoraGatewayListener::upstreamRunner() {
         }
 
         // serialize Lora packets metadata and payload
-        pkt_in_dgram = 0;
+        int pkt_in_dgram = 0;
         for (int i = 0; i < nb_pkt; ++i) {
             p = &rxpkt[i];
             // basic metadata filtering
@@ -453,6 +517,7 @@ void LoraGatewayListener::upstreamRunner() {
 
             if (ref_ok) {
                 // convert metadata timestamp to UTC absolute time
+                struct timespec pkt_utc_time;
                 int r = lgw_cnt2utc(local_ref, p->count_us, &pkt_utc_time);
                 if (r == LGW_GPS_SUCCESS)
                     metadata.t = pkt_utc_time.tv_sec;
@@ -488,7 +553,7 @@ void LoraGatewayListener::upstreamRunner() {
                 default:
                     log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_STATUS, ERR_LORA_GATEWAY_UNKNOWN_STATUS);
                     metadata.stat = -2;
-                    stop();
+                    continue;
                     return;
             }
 
@@ -524,8 +589,8 @@ void LoraGatewayListener::upstreamRunner() {
                         break;
                     default:
                         metadata.spreadingFactor = DRLORA_SF5;
-                        stop();
-                        return;
+                        log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_DATARATE, ERR_LORA_GATEWAY_UNKNOWN_DATARATE);
+                        continue;
                 }
                 switch (p->bandwidth) {
                     case BW_125KHZ:
@@ -539,8 +604,8 @@ void LoraGatewayListener::upstreamRunner() {
                         break;
                     default:
                         metadata.bandwith = BANDWIDTH_INDEX_125KHZ;
-                        stop();
-                        return;
+                        log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_BANDWIDTH, ERR_LORA_GATEWAY_UNKNOWN_BANDWIDTH);
+                        continue;
                 }
 
                 // Packet ECC coding rate, 11-13 useful chars
@@ -562,7 +627,7 @@ void LoraGatewayListener::upstreamRunner() {
                         break;
                     default:
                         log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_CODERATE, ERR_LORA_GATEWAY_UNKNOWN_CODERATE);
-                        stop();
+                        continue;
                 }
 
                 // Signal RSSI, payload size
@@ -575,18 +640,16 @@ void LoraGatewayListener::upstreamRunner() {
                 metadata.bps = p->datarate;
             } else {
                 log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_MODULATION, ERR_LORA_GATEWAY_UNKNOWN_MODULATION);
-                stop();
-                return;
+                continue;
             }
 
             payload = std::string((char *)p->payload, p->size);
             pkt_in_dgram++;
         }
 
-        // restart fetch sequence without sending empty JSON if all packets have been filtered out
-        if (pkt_in_dgram == 0) {
+        // restart fetch sequence without empty call if all packets have been filtered out
+        if (pkt_in_dgram == 0)
             continue;
-        }
 
         // send to the network server
         if (onUpstream)
@@ -673,21 +736,27 @@ bool LoraGatewayListener::getTxGainLutIndex(
     return true;
 }
 
-int LoraGatewayListener::transmit(
+/**
+ * Validate transmission packet in tx param, if packet is valid, enqueueTxPacket packet to be sent or send immediately
+ * @param tx
+ * @return
+ */
+int LoraGatewayListener::enqueueTxPacket(
     TxPacket &tx
 )
 {
-    // initialize TX struct and try to parse JSON
-    enum jit_pkt_type_e downlink_type;
+    // determine packet type (class A, B or C)
+    enum jit_pkt_type_e downlinkClass;
+    // and calculate appropriate time to send
     switch(tx.pkt.tx_mode) {
         case IMMEDIATE:
             // TX procedure: send immediately
-            downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_C;
+            downlinkClass = JIT_PKT_TYPE_DOWNLINK_CLASS_C;
             break;
         case TIMESTAMPED:
             // tx.pkt.count_us is time stamp
             // Concentrator timestamp is given, we consider it is a Class A downlink
-            downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
+            downlinkClass = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
             break;
         case ON_GPS:
         {
@@ -727,21 +796,23 @@ int LoraGatewayListener::transmit(
                 log(LOG_INFO, 0, MSG_LORA_GATEWAY_SEND_AT_GPS_TIME);
             }
             // GPS timestamp is given, we consider it is a Class B downlink
-            downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_B;
+            downlinkClass = JIT_PKT_TYPE_DOWNLINK_CLASS_B;
         }
         default:
             log(LOG_WARNING, ERR_CODE_LORA_GATEWAY_UNKNOWN_TX_MODE, ERR_LORA_GATEWAY_UNKNOWN_TX_MODE);
             return ERR_CODE_LORA_GATEWAY_UNKNOWN_TX_MODE;
     }
 
+    // Validate is channel allowed
     if (!config->sx130xConf.rfConfs[tx.pkt.rf_chain].tx_enable) {
         log(LOG_ERR, ERR_CODE_LORA_GATEWAY_TX_CHAIN_DISABLED, ERR_LORA_GATEWAY_TX_CHAIN_DISABLED);
         return ERR_CODE_LORA_GATEWAY_TX_CHAIN_DISABLED;
     }
 
+    // Correct radio transmission power
     tx.pkt.rf_power -= config->sx130xConf.antennaGain;
 
-    // Set modulation
+    // Validate preamble length
     switch (tx.pkt.modulation) {
         case MOD_LORA:
             // Check minimum Lora preamble length
@@ -768,11 +839,9 @@ int LoraGatewayListener::transmit(
     // reset error/warning results
     int jit_result = JIT_ERROR_OK;
     int warning_result = JIT_ERROR_OK;
-    int warning_value = 0;
 
     // check TX frequency before trying to queue packet
-    if ((tx.pkt.freq_hz < config->sx130xConf.tx_freq_min[tx.pkt.rf_chain]) || (tx.pkt.freq_hz > config->sx130xConf.tx_freq_max[tx.pkt.rf_chain]))
-    {
+    if ((tx.pkt.freq_hz < config->sx130xConf.tx_freq_min[tx.pkt.rf_chain]) || (tx.pkt.freq_hz > config->sx130xConf.tx_freq_max[tx.pkt.rf_chain])) {
         jit_result = JIT_ERROR_TX_FREQ;
         log(LOG_ERR, ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY, ERR_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY);
         return ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY;
@@ -785,7 +854,6 @@ int LoraGatewayListener::transmit(
         if ((r < 0) || (config->sx130xConf.txLut[tx.pkt.rf_chain].lut[tx_lut_idx].rf_power != tx.pkt.rf_power)) {
             // this RF power is not supported, throw a warning, and use the closest lower power supported
             warning_result = JIT_ERROR_TX_POWER;
-            warning_value = (int32_t) config->sx130xConf.txLut[tx.pkt.rf_chain].lut[tx_lut_idx].rf_power;
             log(LOG_WARNING, ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_POWER, ERR_LORA_GATEWAY_TX_UNSUPPORTED_POWER);
             tx.pkt.rf_power = config->sx130xConf.txLut[tx.pkt.rf_chain].lut[tx_lut_idx].rf_power;
         }
@@ -797,7 +865,7 @@ int LoraGatewayListener::transmit(
         uint32_t current_concentrator_time;
         lgw_get_instcnt(&current_concentrator_time);
         mLGW.unlock();
-        jit_result = jit_enqueue(&jit_queue[tx.pkt.rf_chain], current_concentrator_time, &tx.pkt, downlink_type);
+        jit_result = jit_enqueue(&jit_queue[tx.pkt.rf_chain], current_concentrator_time, &tx.pkt, downlinkClass);
         if (jit_result) {
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_JIT_ENQUEUE_FAILED, ERR_LORA_GATEWAY_JIT_ENQUEUE_FAILED);
             return ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY;
@@ -807,36 +875,14 @@ int LoraGatewayListener::transmit(
         }
         measurements.inc(meas_nb_tx_requested);
     }
+    return LORA_OK;
 }
 
+/**
+ * Transmit beacons
+ */
 void LoraGatewayListener::downstreamRunner() {
     downstreamThreadRunning = true;
-    // configuration and metadata for an outbound packet
-    struct lgw_pkt_tx_s txpkt;
-    bool sent_immediate = false; // option to sent the packet immediately
-
-    // local timekeeping variables
-    struct timespec send_time; // time of the pull request
-    struct timespec recv_time; // time of return from recv socket call
-
-    // data buffers
-    uint8_t buff_down[1000]; // buffer to receive downstream packets
-    int msg_len;
-
-    // protocol variables
-    uint8_t token_h; // random token for acknowledgement matching
-    uint8_t token_l; // random token for acknowledgement matching
-    bool req_ack = false; // keep track of whether PULL_DATA was acknowledged or not
-
-    // JSON parsing variables
-    const char *str; // pointer to sub-strings in the JSON data
-    short x0, x1;
-    uint64_t x2;
-    double x3, x4;
-
-    // variables to send on GPS timestamp
-    struct tref local_ref; // time reference used for GPS <-> timestamp conversion
-    struct timespec gps_tx; // GPS time that needs to be converted to timestamp
 
     // beacon variables
     struct lgw_pkt_tx_s beacon_pkt;
@@ -847,22 +893,17 @@ void LoraGatewayListener::downstreamRunner() {
     time_t diff_beacon_time;
     struct timespec next_beacon_gps_time; // gps time of next beacon packet
     struct timespec last_beacon_gps_time; // gps time of last enqueued beacon packet
-    int retry;
 
     // beacon data fields, byte 0 is Least Significant Byte
     int32_t field_latitude; // 3 bytes, derived from reference latitude
     int32_t field_longitude; // 3 bytes, derived from reference longitude
     uint16_t field_crc1, field_crc2;
 
-    // auto-quit variable
-    uint32_t autoquit_cnt = 0; // count the number of PULL_DATA sent since the latest PULL_ACK
-
     // Just In Time downlink
     uint32_t current_concentrator_time;
     enum jit_error_e jit_result = JIT_ERROR_OK;
     enum jit_pkt_type_e downlink_type;
     enum jit_error_e warning_result = JIT_ERROR_OK;
-    int32_t warning_value = 0;
     uint8_t tx_lut_idx = 0;
 
     // beacon variables initialization
@@ -919,7 +960,7 @@ void LoraGatewayListener::downstreamRunner() {
 
     // network common part beacon fields (little endian)
     for (int i = 0; i < (int)beacon_RFU1_size; i++) {
-        beacon_pkt.payload[beacon_pyld_idx++] = 0x0;
+        beacon_pkt.payload[beacon_pyld_idx++] = 0;
     }
 
     // network common part beacon fields (little endian)
@@ -928,62 +969,52 @@ void LoraGatewayListener::downstreamRunner() {
 
     // calculate the latitude and longitude that must be publicly reported
     field_latitude = (int32_t)((config->gatewayConf.refGeoCoordinates.lat / 90.0) * (double)(1<<23));
-    if (field_latitude > (int32_t)0x007FFFFF) {
-        field_latitude = (int32_t)0x007FFFFF; // +90 N is represented as 89.99999 N
-    } else if (field_latitude < (int32_t)0xFF800000) {
-        field_latitude = (int32_t)0xFF800000;
+    if (field_latitude > (int32_t) 0x007fffff) {
+        field_latitude = (int32_t) 0x007ffffF; // +90 N is represented as 89.99999 N
+    } else if (field_latitude < (int32_t) 0xff800000) {
+        field_latitude = (int32_t) 0xff800000;
     }
     field_longitude = (int32_t)((config->gatewayConf.refGeoCoordinates.lon / 180.0) * (double)(1<<23));
-    if (field_longitude > (int32_t)0x007FFFFF) {
-        field_longitude = (int32_t)0x007FFFFF; // +180 E is represented as 179.99999 E
-    } else if (field_longitude < (int32_t)0xFF800000) {
-        field_longitude = (int32_t)0xFF800000;
+    if (field_longitude > (int32_t) 0x007fffff) {
+        field_longitude = (int32_t) 0x007fffff; // +180 E is represented as 179.99999 E
+    } else if (field_longitude < (int32_t) 0xff800000) {
+        field_longitude = (int32_t) 0xff800000;
     }
 
     // gateway specific beacon fields
     beacon_pkt.payload[beacon_pyld_idx++] = config->gatewayConf.beaconInfoDesc;
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF &  field_latitude;
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (field_latitude >>  8);
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (field_latitude >> 16);
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF &  field_longitude;
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (field_longitude >>  8);
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (field_longitude >> 16);
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff &  field_latitude;
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_latitude >> 8);
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_latitude >> 16);
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff &  field_longitude;
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_longitude >> 8);
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_longitude >> 16);
 
     // RFU
     for (int i = 0; i < (int)beacon_RFU2_size; i++) {
-        beacon_pkt.payload[beacon_pyld_idx++] = 0x0;
+        beacon_pkt.payload[beacon_pyld_idx++] = 0;
     }
 
     // CRC of the beacon gateway specific part fields
     field_crc2 = crc16((beacon_pkt.payload + 6 + beacon_RFU1_size), 7 + beacon_RFU2_size);
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF &  field_crc2;
-    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (field_crc2 >> 8);
-
-    // JIT queue initialization
-    jit_queue_init(&jit_queue[0]);
-    jit_queue_init(&jit_queue[1]);
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff &  field_crc2;
+    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_crc2 >> 8);
 
     while (!stopRequest) {
-        // auto-quit if the threshold is crossed
-        if ((config->gatewayConf.autoQuitThreshold > 0) && (autoquit_cnt >= config->gatewayConf.autoQuitThreshold)) {
-            log(LOG_ERR, ERR_CODE_LORA_GATEWAY_AUTOQUIT_THRESHOLD, ERR_LORA_GATEWAY_AUTOQUIT_THRESHOLD);
-            stop();
-            break;
-        }
-
+        // time of the pull request
+        struct timespec send_time;
         clock_gettime(CLOCK_MONOTONIC, &send_time);
         measurements.inc(meas_dw_pull_sent);
-        req_ack = false;
-        autoquit_cnt++;
 
         // listen to packets and process them until a new PULL request must be sent
+        struct timespec recv_time; // time of return from recv socket call
         recv_time = send_time;
         while (((int)difftimespec(recv_time, send_time) < config->gatewayConf.keepaliveInterval) && !stopRequest) {
             // try to receive a datagram
             clock_gettime(CLOCK_MONOTONIC, &recv_time);
 
             // Pre-allocate beacon slots in JiT queue, to check downlink collisions
-            retry = 0;
+            int retry = 0;
             uint8_t beacon_loop = JIT_NUM_BEACON_IN_QUEUE - jit_queue[0].num_beacon;
             while (beacon_loop && config->gatewayConf.beaconPeriod) {
                 mutexGPSTimeReference.lock();
@@ -1033,15 +1064,15 @@ void LoraGatewayListener::downstreamRunner() {
 
                     // load time in beacon payload
                     beacon_pyld_idx = beacon_RFU1_size;
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF &  next_beacon_gps_time.tv_sec;
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (next_beacon_gps_time.tv_sec >>  8);
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (next_beacon_gps_time.tv_sec >> 16);
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (next_beacon_gps_time.tv_sec >> 24);
+                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff &  next_beacon_gps_time.tv_sec;
+                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >>  8);
+                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >> 16);
+                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >> 24);
 
                     // calculate CRC
                     field_crc1 = crc16(beacon_pkt.payload, 4 + beacon_RFU1_size); // CRC for the network common part
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & field_crc1;
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xFF & (field_crc1 >> 8);
+                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & field_crc1;
+                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_crc1 >> 8);
 
                     // Insert beacon packet in JiT queue
                     mLGW.lock();
@@ -1066,14 +1097,13 @@ void LoraGatewayListener::downstreamRunner() {
                             ss << std::hex << std::setw(2) << std::setfill('0') << beacon_pkt.payload[i];
                         }
                         log(LOG_INFO, 0, ss.str());
-
                     } else {
                         log(LOG_INFO, ERR_CODE_LORA_GATEWAY_BEACON_FAILED, ERR_LORA_GATEWAY_BEACON_FAILED);
                         // update stats
                         if (jit_result != JIT_ERROR_COLLISION_BEACON) {
                             measurements.inc(meas_nb_beacon_rejected);
                         }
-                        // In case previous enqueue failed, we retry one period later until it succeeds
+                        // In case previous enqueueTxPacket failed, we retry one period later until it succeeds
                         // Note: In case the GPS has been unlocked for a while, there can be lots of retries
                         //       to be done from last beacon time to a new valid one
                         retry++;
@@ -1083,16 +1113,13 @@ void LoraGatewayListener::downstreamRunner() {
                     break;
                 }
             }
-            // the datagram is a PULL_RESP
-            TxPacket packet;
-            int r = transmit(packet);
         }
     }
     downstreamThreadRunning = false;
 }
 
 /**
- * Send packets from JIT queue
+ * Transmit packets from JIT queue
  **/
 void LoraGatewayListener::jitRunner() {
     jitThreadRunning = true;
@@ -1119,9 +1146,9 @@ void LoraGatewayListener::jitRunner() {
                         // update beacon stats
                         if (pkt_type == JIT_PKT_TYPE_BEACON) {
                             // Compensate beacon frequency with xtal error
-                            mx_xcorr.lock();    // prevent xtal_correct
+                            mXTALcorrection.lock();    // prevent xtal_correct
                             pkt.freq_hz = (uint32_t)(xtal_correct * (double) pkt.freq_hz);
-                            mx_xcorr.unlock();
+                            mXTALcorrection.unlock();
 
                             // write to log
                             std::stringstream ss;
@@ -1194,13 +1221,16 @@ void LoraGatewayListener::jitRunner() {
 
 LoraGatewayListener::LoraGatewayListener()
     : logVerbosity(0), onUpstream(nullptr), onSpectralScan(nullptr), onLog(nullptr), stopRequest(false),
-    gpsThreadRunning(false), spectralScanThreadRunning(false), jitThreadRunning(false),
+    gpsThreadRunning(false), gpsCheckTimeRunning(false), spectralScanThreadRunning(false), jitThreadRunning(false),
     upstreamThreadRunning(false), downstreamThreadRunning(false),
     reportReady(false), gps_ref_valid(false),
     lastLgwCode(0), config(nullptr), fdGpsTty(-1), eui(0),
     gpsCoordsLastSynced(0), gpsTimeLastSynced(0), gpsEnabled(false),
     xtal_correct_ok(false), xtal_correct(1.0)
 {
+    // JIT queue initialization
+    jit_queue_init(&jit_queue[0]);
+    jit_queue_init(&jit_queue[1]);
 }
 
 LoraGatewayListener::~LoraGatewayListener()
@@ -1334,6 +1364,10 @@ int LoraGatewayListener::start()
             std::thread gpsThread(&LoraGatewayListener::gpsRunner, this);
             gpsThread.detach();
         }
+        if (!gpsCheckTimeRunning) {
+            std::thread gpsCheckTimeThread(&LoraGatewayListener::gpsCheckTimeRunner, this);
+            gpsCheckTimeThread.detach();
+        }
     }
     return 0;
 }
@@ -1400,3 +1434,4 @@ void LoraGatewayListener::setOnUpstream(
     // no prevent mutex required
     onUpstream = value;
 }
+
