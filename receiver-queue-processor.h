@@ -18,7 +18,7 @@
 #define DB_DEF_TIMEOUT_MS 1 * 1000
 
 /**
- * ReceiverQueueService enqueue application data payload,
+ * ReceiverQueueService enqueueTxPacket application data payload,
  * ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
  * to the database(s) async
  */ 

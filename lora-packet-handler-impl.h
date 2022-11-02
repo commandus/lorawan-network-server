@@ -27,7 +27,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		GatewayList *gatewayList;
         const DeviceChannelPlan *deviceChannelPlan;
 
-		// ReceiverQueueService enqueue data payload packets received from gateways (with deduplication)
+		// ReceiverQueueService enqueueTxPacket data payload packets received from gateways (with deduplication)
 		ReceiverQueueService *receiverQueueService;
 		// ReceiverQueueProcessor get payload from the queue, parseRX and put parsed data
 		ReceiverQueueProcessor *receiverQueueProcessor;
