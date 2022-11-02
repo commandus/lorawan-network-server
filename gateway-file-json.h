@@ -161,6 +161,7 @@ public:
     bool forwardCRCValid;
     bool forwardCRCError;
     bool forwardCRCDisabled;
+    bool gpsEnabled;
     std::string gpsTTYPath;
     struct coord_s refGeoCoordinates;
     bool fakeGPS;

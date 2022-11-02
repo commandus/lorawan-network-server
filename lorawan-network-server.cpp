@@ -67,7 +67,9 @@ static int lastSysSignal = 0;
 // web service config
 static WSConfig wsConfig;
 // web service special path
+#ifdef ENABLE_WS
 static WsSpecialPathHandler *wsSpecialPathHandler = nullptr;
+#endif
 static AuthUserService *authUserService = nullptr;
 
 #ifdef _MSC_VER
@@ -94,6 +96,7 @@ void done()
 {
     if (runListener)
         runListener->done();
+#ifdef ENABLE_WS
     if (wsSpecialPathHandler) {
         delete wsSpecialPathHandler;
         wsSpecialPathHandler = nullptr;
@@ -102,6 +105,7 @@ void done()
         delete authUserService;
         authUserService = nullptr;
     }
+#endif
 }
 
 void signalHandler(int signal)
@@ -259,6 +263,7 @@ static void wsOnLog(
 }
 
 static void wsRun(char *programPath, Configuration* config) {
+#ifdef ENABLE_WS
     wsSpecialPathHandler = new WsSpecialPathHandler();
     wsSpecialPathHandler->configDatabases = runListener->configDatabases;
     wsSpecialPathHandler->regionalParameterChannelPlans = runListener->regionalParameterChannelPlans;
@@ -267,7 +272,6 @@ static void wsRun(char *programPath, Configuration* config) {
     wsSpecialPathHandler->config = config;
     wsSpecialPathHandler->gatewayStatService = runListener->gatewayStatService;
     wsSpecialPathHandler->deviceStatService = runListener->deviceStatService;
-
     std::string userListFileName = getDefaultConfigFileName(programPath, config->wsConfig.jwtUserListFileName);
     if (!util::fileExists(userListFileName)) {
         runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND,
@@ -279,6 +283,7 @@ static void wsRun(char *programPath, Configuration* config) {
     wsSpecialPathHandler->jwtAuthService = authUserService;
 
     wsConfig.onSpecialPathHandler = wsSpecialPathHandler;
+#endif
 
     // databases
     // default database
@@ -342,7 +347,7 @@ static void wsRun(char *programPath, Configuration* config) {
         ss2 << std::endl;
         runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss2.str());
     }
-
+#ifdef ENABLE_WS
     if (startWS(wsConfig)) {
         if (config->serverConfig.verbosity > 5)
             runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
@@ -351,6 +356,9 @@ static void wsRun(char *programPath, Configuration* config) {
                                 ERR_WS_START_FAILED);
         exit(ERR_CODE_WS_START_FAILED);
     }
+#else
+    exit(ERR_CODE_WS_START_FAILED);
+#endif
 }
 
 static void run()

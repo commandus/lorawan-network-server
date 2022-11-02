@@ -17,6 +17,13 @@
 #include "utilstring.h"
 #include "errlist.h"
 
+#define DEFAULT_BEACON_POWER        14
+#define DEFAULT_BEACON_BW_HZ        125000
+#define DEFAULT_BEACON_FREQ_HZ      869525000
+#define DEFAULT_BEACON_DATARATE     9
+#define DEFAULT_BEACON_FREQ_NB      1
+#define DEFAULT_KEEPALIVE           5   // default time interval for downstream keep-alive packet
+
 GatewayJsonConfig::GatewayJsonConfig()
     : errorCode(0), errorOffset(0)
 {
@@ -1179,18 +1186,19 @@ void GatewayGatewayConfig::reset()
     serverPortUp = 0;
     serverPortDown = 0;
     keepaliveInterval = 0;
-    statInterval = 0;
+    statInterval = DEFAULT_KEEPALIVE;
     forwardCRCValid = false;
     forwardCRCError = false;
     forwardCRCDisabled = false;
+    gpsEnabled = false;
     fakeGPS = false;
     beaconPeriod = 0;
-    beaconFreqHz = 0;
-    beaconFreqNb = 0;
+    beaconFreqHz = DEFAULT_BEACON_FREQ_HZ;
+    beaconFreqNb = DEFAULT_BEACON_FREQ_NB;
     beaconFreqStep = 0;
-    beaconDataRate = 0;
-    beaconBandwidthHz = 0;
-    beaconPower = 0;
+    beaconDataRate = DEFAULT_BEACON_DATARATE;
+    beaconBandwidthHz = DEFAULT_BEACON_BW_HZ;
+    beaconPower = DEFAULT_BEACON_POWER;
     beaconInfoDesc = 0;
     autoQuitThreshold = 0;
 
@@ -1228,6 +1236,7 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
             serverPortDown = jServerPortDown.GetUint();
         }
     }
+    keepaliveInterval = DEFAULT_KEEPALIVE;
     if (jsonValue.HasMember("keepalive_interval")) {
         rapidjson::Value &jKeepaliveInterval = jsonValue["keepalive_interval"];
         if (jKeepaliveInterval.IsInt()) {
@@ -1269,6 +1278,7 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
         rapidjson::Value &jGpsTTYPath = jsonValue["gps_tty_path"];
         if (jGpsTTYPath.IsString()) {
             gpsTTYPath = jGpsTTYPath.GetString();
+            gpsEnabled = !gpsTTYPath.empty();
         }
     }
     if (jsonValue.HasMember("ref_latitude")) {
@@ -1301,12 +1311,14 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
             beaconPeriod = jValue.GetInt();
         }
     }
+    beaconFreqHz = DEFAULT_BEACON_FREQ_HZ;
     if (jsonValue.HasMember("beacon_freq_hz")) {
         rapidjson::Value &jValue = jsonValue["beacon_freq_hz"];
         if (jValue.IsInt()) {
             beaconFreqHz = jValue.GetInt();
         }
     }
+    beaconFreqNb = DEFAULT_BEACON_FREQ_NB;
     if (jsonValue.HasMember("beacon_freq_nb")) {
         rapidjson::Value &jValue = jsonValue["beacon_freq_nb"];
         if (jValue.IsInt()) {
@@ -1319,18 +1331,21 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
             beaconFreqStep = jValue.GetInt();
         }
     }
+    beaconDataRate = DEFAULT_BEACON_DATARATE;
     if (jsonValue.HasMember("beacon_datarate")) {
         rapidjson::Value &jValue = jsonValue["beacon_datarate"];
         if (jValue.IsInt()) {
             beaconDataRate = jValue.GetInt();
         }
     }
+    beaconBandwidthHz = DEFAULT_BEACON_BW_HZ;
     if (jsonValue.HasMember("beacon_bw_hz")) {
         rapidjson::Value &jValue = jsonValue["beacon_bw_hz"];
         if (jValue.IsInt()) {
             beaconBandwidthHz = jValue.GetInt();
         }
     }
+    beaconPower = DEFAULT_BEACON_POWER;
     if (jsonValue.HasMember("beacon_power")) {
         rapidjson::Value &jValue = jsonValue["beacon_power"];
         if (jValue.IsInt()) {

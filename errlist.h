@@ -17,6 +17,7 @@
 #define LOG_PACKET_HANDLER					4
 #define LOG_PACKET_QUEUE					5
 #define LOG_UDP_EMITTER						6
+#define LOG_EMBEDDED_GATEWAY    			7
 
 // Error codes
 #define LORA_OK            					0
@@ -149,6 +150,41 @@
 #define ERR_CODE_LORA_GATEWAY_CONFIGURE_GPS_FAILED         -622
 #define ERR_CODE_LORA_GATEWAY_START_FAILED                 -623
 #define ERR_CODE_LORA_GATEWAY_GET_EUI                      -624
+#define ERR_CODE_LORA_GATEWAY_GPS_GET_TIME                 -625
+#define ERR_CODE_LORA_GATEWAY_GPS_SYNC_TIME                -626
+#define ERR_CODE_LORA_GATEWAY_GPS_DISABLED                 -627
+
+#define ERR_CODE_LORA_GATEWAY_GPS_GET_COORDS               -628
+#define ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_START_FAILED   -629
+#define ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_TIMEOUT        -630
+#define ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_FAILED         -631
+#define ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_ABORTED        -632
+#define ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_UNEXPECTED_STATUS -633
+#define ERR_CODE_LORA_GATEWAY_STATUS_FAILED                 -634
+#define ERR_CODE_LORA_GATEWAY_EMIT_ALLREADY                 -635
+#define ERR_CODE_LORA_GATEWAY_SCHEDULED_ALLREADY            -636
+#define ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_ABORT_FAILED    -637
+#define ERR_CODE_LORA_GATEWAY_SEND_FAILED                   -638
+#define ERR_CODE_LORA_GATEWAY_SENT                          -639
+#define ERR_CODE_LORA_GATEWAY_JIT_DEQUEUE_FAILED            -640
+#define ERR_CODE_LORA_GATEWAY_JIT_PEEK_FAILED               -641
+#define ERR_CODE_LORA_GATEWAY_JIT_ENQUEUE_FAILED            -642
+#define ERR_CODE_LORA_GATEWAY_FETCH                         -643
+#define ERR_CODE_LORA_GATEWAY_UNKNOWN_STATUS                -644
+#define ERR_CODE_LORA_GATEWAY_UNKNOWN_DATARATE              -645
+#define ERR_CODE_LORA_GATEWAY_UNKNOWN_BANDWIDTH             -646
+#define ERR_CODE_LORA_GATEWAY_UNKNOWN_CODERATE              -647
+#define ERR_CODE_LORA_GATEWAY_UNKNOWN_MODULATION            -648
+#define ERR_CODE_LORA_GATEWAY_RECEIVED                      -649
+#define ERR_CODE_LORA_GATEWAY_AUTOQUIT_THRESHOLD            -650
+#define ERR_CODE_LORA_GATEWAY_BEACON_FAILED                 -651
+#define ERR_CODE_LORA_GATEWAY_UNKNOWN_TX_MODE               -652
+#define ERR_CODE_LORA_GATEWAY_SEND_AT_GPS_TIME              -653
+#define ERR_CODE_LORA_GATEWAY_SEND_AT_GPS_TIME_DISABLED     -654
+#define ERR_CODE_LORA_GATEWAY_SEND_AT_GPS_TIME_INVALID      -655
+#define ERR_CODE_LORA_GATEWAY_TX_CHAIN_DISABLED             -656
+#define ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY      -657
+#define ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_POWER          -658
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -286,6 +322,48 @@
 #define ERR_LORA_GATEWAY_CONFIGURE_GPS_FAILED          "Failed to configure GPS"
 #define ERR_LORA_GATEWAY_START_FAILED                  "Failed to start the concentrator"
 #define ERR_LORA_GATEWAY_GET_EUI                       "Failed to get concentrator EUI"
+#define ERR_LORA_GATEWAY_GPS_GET_TIME                  "Could not get GPS time"
+#define ERR_LORA_GATEWAY_GPS_SYNC_TIME                 "GPS out of sync"
+
+#define ERR_LORA_GATEWAY_GPS_DISABLED                  "GPS disabled"
+#define ERR_LORA_GATEWAY_GPS_GET_COORDS                "Could not get GPS coordinates"
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_START_FAILED    "Spectral scan start failed"
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_TIMEOUT         "Timeout on Spectral Scan"
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_FAILED          "Spectral scan status failed"
+
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_ABORTED         "Spectral scan has been aborted"
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_UNEXPECTED_STATUS "Unexpected spectral scan status"
+#define ERR_LORA_GATEWAY_STATUS_FAILED                  "Getting gateway status failed"
+#define ERR_LORA_GATEWAY_EMIT_ALLREADY                  "Concentrator is currently emitting"
+#define ERR_LORA_GATEWAY_SCHEDULED_ALLREADY             "Downlink was already scheduled on, overwriting it"
+
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_ABORT_FAILED     "Spectral scan abort failed"
+#define ERR_LORA_GATEWAY_SEND_FAILED                    "Gateway send failed"
+#define ERR_LORA_GATEWAY_SENT                           "Gateway sent successfully"
+#define ERR_LORA_GATEWAY_JIT_DEQUEUE_FAILED             "JIT dequeue failed"
+#define ERR_LORA_GATEWAY_JIT_PEEK_FAILED                "JIT peek failed"
+#define ERR_LORA_GATEWAY_JIT_ENQUEUE_FAILED             "JIT enqueue failed"
+
+#define ERR_LORA_GATEWAY_FETCH                          "Failed Lora packet fetch, exiting"
+#define ERR_LORA_GATEWAY_UNKNOWN_STATUS                 "Received Lora packet with unknown status"
+#define ERR_LORA_GATEWAY_UNKNOWN_DATARATE               "Received Lora packet with unknown data rate"
+#define ERR_LORA_GATEWAY_UNKNOWN_BANDWIDTH              "Received Lora packet with unknown bandwidth"
+#define ERR_LORA_GATEWAY_UNKNOWN_CODERATE               "Received Lora packet with unknown code rate"
+
+#define ERR_LORA_GATEWAY_UNKNOWN_MODULATION             "Received Lora packet with unknown modulation"
+#define ERR_LORA_GATEWAY_RECEIVED                       "Received Lora packet "
+#define ERR_LORA_GATEWAY_AUTOQUIT_THRESHOLD             "Last PULL_DATA were not ACKed, exiting application"
+#define ERR_LORA_GATEWAY_BEACON_FAILED                  "Beacon queuing failed"
+#define ERR_LORA_GATEWAY_DUPLICATE_ACK                  "Duplicate ACK received"
+
+#define ERR_LORA_GATEWAY_UNKNOWN_TX_MODE                "Unknown Tx mode"
+#define ERR_LORA_GATEWAY_SEND_AT_GPS_TIME               "No valid GPS time reference yet, impossible to send packet on specific GPS time, TX aborted"
+#define ERR_LORA_GATEWAY_SEND_AT_GPS_TIME_DISABLED      "GPS disabled, impossible to send packet on specific GPS time, TX aborted"
+#define ERR_LORA_GATEWAY_SEND_AT_GPS_TIME_INVALID       "Сould not convert GPS time to timestamp, TX aborted"
+#define ERR_LORA_GATEWAY_TX_CHAIN_DISABLED              "TX is not enabled on RF chain, TX aborted"
+
+#define ERR_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY       "Unsupported frequency, TX aborted"
+#define ERR_LORA_GATEWAY_TX_UNSUPPORTED_POWER           "RF power is not supported, closest lower power used"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -360,7 +438,7 @@
 #define MSG_DEV_HISTORY_INIT            "Initialize device history service.."
 #define MSG_RECEIVER_QUEUE_START        "Start received message queue service .."
 #define MSG_RECEIVER_QUEUE_INIT         "Initialize receiver message queue service .."
-#define MSG_START_PACKET_PROCESSOR                  "Start LoRaWAN packet processor.."
+#define MSG_START_PACKET_PROCESSOR      "Start LoRaWAN packet processor.."
 #define MSG_LISTENER_DAEMON_RUN         "Listener daemon run .."
 #define MSG_LISTENER_RUN                "Listener run .."
 #define MSG_INIT_LOGGER_HUFFMAN         "Initialize payload parser logger-huffman, database "
@@ -369,6 +447,8 @@
 #define MSG_LISTEN_SOCKETS              "Listen sockets "
 #define MSG_LISTEN_SOCKET_COUNT         " socket(s)"
 #define MSG_LISTEN_LARGEST_SOCKET       "Largest socket "
+
+#define MSG_LORA_GATEWAY_SEND_AT_GPS_TIME   "A packet will be sent on timestamp (calculated from GPS time)"
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

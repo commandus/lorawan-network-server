@@ -34,6 +34,7 @@ C_STORAGE += identity-service-lmdb.cpp db-identity.cpp
 endif
 
 # Parsers
+PACKET_PARSER_SRC =
 PACKET_PARSER_LIB =
 PACKET_PARSER_DEF = 
 
@@ -43,12 +44,25 @@ PACKET_PARSER_DEF += -DENABLE_PKT2
 endif
 
 if ENABLE_LOGGER_HUFFMAN
+PACKET_PARSER_SRC += logger-loader.cpp
 PACKET_PARSER_LIB += -L/home/andrei/src/logger-passport -L/home/andrei/src/logger-huffman -llogger-huffman -llogger-passport
 PACKET_PARSER_DEF += -DENABLE_LOGGER_HUFFMAN
 endif
 
+# Embedded web service
+WS_SRC =
+WS_LIB =
+WS_DEF = 
+
+if ENABLE_WS
+WS_SRC += ws-handler.cpp
+WS_LIB += -L/home/andrei/src/lorawan-ws -lws-sqlite -lmicrohttpd
+WS_DEF = -DENABLE_WS
+endif
+
 WS_AUTH_LIB = 
 WS_AUTH_DEF = 
+
 if ENABLE_JWT
 WS_AUTH_LIB += -lssl -lcrypto
 WS_AUTH_DEF += -DENABLE_JWT
@@ -66,7 +80,6 @@ BACKEND_DB_DEF += -DENABLE_DB_SQLITE
 
 if ENABLE_WS
 BACKEND_DB_SRC += ws-sqlite.cpp
-BACKEND_DB_LIB += -L/home/andrei/src/lorawan-ws -lws-sqlite -lmicrohttpd
 BACKEND_DB_DEF += -DENABLE_DB_JSON
 endif
 
@@ -115,7 +128,8 @@ endif
 
 if ENABLE_LISTENER_EMBEDDED
 LGW_HOME = third_party/packet_forwarder
-LGW_SRC = embedded-listener.cpp gateway-file-json.cpp lora-gateway-listener.cpp
+LGW_SRC = embedded-listener.cpp gateway-file-json.cpp lora-gateway-listener.cpp \
+	third_party/packet_forwarder/jitqueue.c
 LGW_LIB = -L$(LGW_HOME) -lloragw -ltinymt32
 LGW_DEF = -DENABLE_LISTENER_EMBEDDED
 endif
@@ -204,24 +218,18 @@ nobase_dist_include_HEADERS = \
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 
 lorawan_network_server_SOURCES = \
-	lorawan-network-server.cpp run-listener.cpp daemonize.cpp \
-	config-json.cpp lora-packet-handler-impl.cpp \
-	config-filename.cpp third_party/get_rss/get_rss.c \
-	identity-service-dir-txt.cpp $(C_STORAGE) $(C_QUEUE_STORAGE) \
-	gateway-stat-service-file.cpp gateway-stat-service-post.cpp  \
-	device-stat-service-file.cpp device-stat-service-post.cpp \
-	packet-listener.cpp $(LISTENER_SRC) $(LGW_SRC) \
-	db-any.cpp $(BACKEND_DB_SRC) \
-	device-channel-plan-file-json.cpp device-history-service-json.cpp  \
-	regional-parameter-channel-plan-file-json.cpp \
-	ws-handler.cpp logger-loader.cpp auth-file.cpp \
-	third_party/argtable3/argtable3.c
+	lorawan-network-server.cpp run-listener.cpp daemonize.cpp config-json.cpp lora-packet-handler-impl.cpp \
+	config-filename.cpp identity-service-dir-txt.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp \
+	device-stat-service-file.cpp device-stat-service-post.cpp packet-listener.cpp db-any.cpp \
+	device-channel-plan-file-json.cpp device-history-service-json.cpp regional-parameter-channel-plan-file-json.cpp \
+	auth-file.cpp third_party/get_rss/get_rss.c third_party/argtable3/argtable3.c \
+	$(C_STORAGE) $(C_QUEUE_STORAGE) $(LISTENER_SRC) $(LGW_SRC) $(BACKEND_DB_SRC) $(WS_SRC) $(PACKET_PARSER_SRC)
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) $(LISTENER_LIB) $(LGW_LIB) \
-    $(BACKEND_DB_LIB) -lcurl $(WS_AUTH_LIB)
+    $(BACKEND_DB_LIB) -lcurl $(WS_AUTH_LIB) $(WS_LIB)
 lorawan_network_server_CPPFLAGS = $(commoncppflags) \
-    $(BACKEND_DB_DEF) $(LISTENER_DEF) $(LGW_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF)
+    $(BACKEND_DB_DEF) $(LISTENER_DEF) $(LGW_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF) $(WS_DEF)
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp \

@@ -95,7 +95,7 @@ AC_ARG_ENABLE([db-postgres],
   yes) db_postgres=true ;;
   no)  db_postgres=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-db-postgres]) ;;
-esac],[db_postgres=true])
+esac],[db_postgres=false])
 AM_CONDITIONAL([ENABLE_DB_POSTGRES], [test x$db_postgres = xtrue])
 
 AC_ARG_ENABLE([db-mysql],
@@ -151,7 +151,7 @@ AC_ARG_ENABLE([ws],
   yes) enable_ws=true ;;
   no)  enable_ws=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-ws]) ;;
-esac],[enable_ws=true])
+esac],[enable_ws=false])
 AM_CONDITIONAL([ENABLE_WS], [test x$enable_ws = xtrue])
 
 # Add database headers and libs

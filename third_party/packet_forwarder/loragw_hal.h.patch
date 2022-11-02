@@ -1,0 +1,4 @@
+586c586
+< int lgw_spectral_scan_get_results(int16_t levels_dbm[static LGW_SPECTRAL_SCAN_RESULT_SIZE], uint16_t results[static LGW_SPECTRAL_SCAN_RESULT_SIZE]);
+---
+> int lgw_spectral_scan_get_results(int16_t levels_dbm[LGW_SPECTRAL_SCAN_RESULT_SIZE], uint16_t results[LGW_SPECTRAL_SCAN_RESULT_SIZE]);

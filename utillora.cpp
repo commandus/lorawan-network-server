@@ -2872,6 +2872,14 @@ uint64_t deveui2int(
 	return NTOH8(v);
 }
 
+void int2deveui(
+    DEVEUI &retval,
+    const uint64_t value
+)
+{
+    *(uint64_t *) &retval = (uint64_t) NTOH8(value);
+}
+
 uint32_t getMic(const std::string &v)
 {
 	uint32_t r = *((uint32_t *) (v.c_str() + v.size() - 4));
@@ -3072,20 +3080,20 @@ ERR_CODE_TX extractTXAckCode(
 )
 {
 	if ((sz < sizeof(SEMTECH_PREFIX_GW)) || ((const char *) buffer)[3] != 5) /// 5- PKT_TX_ACK
-		return JIT_ERROR_OK;	// it is not transmission ACK packet
+		return JIT_TX_OK;	// it is not transmission ACK packet
 	std::string s(((const char *) buffer ) + sizeof(SEMTECH_PREFIX_GW), sz);
 	std::size_t p = s.find("txpk_ack");
 	if (p == std::string::npos)
-		return JIT_ERROR_OK;
+		return JIT_TX_OK;
 	p = s.find("error", p);
 	if (p == std::string::npos)
-		return JIT_ERROR_OK;
+		return JIT_TX_OK;
 	for (int i = 1; i < TRACK_CODE_SSIZE; i++) {
 		std::size_t f = s.find(TxAckCodes[i], p);
 		if (f != std::string::npos)
 			return (ERR_CODE_TX) i;
 	}
-	return JIT_ERROR_OK;
+	return JIT_TX_OK;
 }
 
 const char *getTXAckCodeName
