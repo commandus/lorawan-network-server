@@ -1,8 +1,6 @@
 /*
  * C++ wrapper of lora_pkt_fwd.c (C)2019 Semtech License: Revised BSD License, see LICENSE.TXT file include in the project
  */
-#include <iostream>
-#include <sstream>
 #include <iomanip>
 #include <thread>
 
@@ -1223,7 +1221,7 @@ LoraGatewayListener::LoraGatewayListener()
     : logVerbosity(0), onUpstream(nullptr), onSpectralScan(nullptr), onLog(nullptr), stopRequest(false),
     gpsThreadRunning(false), gpsCheckTimeRunning(false), spectralScanThreadRunning(false), jitThreadRunning(false),
     upstreamThreadRunning(false), downstreamThreadRunning(false),
-    reportReady(false), gps_ref_valid(false),
+    gps_ref_valid(false),
     lastLgwCode(0), config(nullptr), fdGpsTty(-1), eui(0),
     gpsCoordsLastSynced(0), gpsTimeLastSynced(0), gpsEnabled(false),
     xtal_correct_ok(false), xtal_correct(1.0)
@@ -1231,6 +1229,12 @@ LoraGatewayListener::LoraGatewayListener()
     // JIT queue initialization
     jit_queue_init(&jit_queue[0]);
     jit_queue_init(&jit_queue[1]);
+}
+
+LoraGatewayListener::LoraGatewayListener(GatewayConfigFileJson *cfg)
+    : LoraGatewayListener()
+{
+    config = cfg;
 }
 
 LoraGatewayListener::~LoraGatewayListener()
@@ -1244,10 +1248,9 @@ void LoraGatewayListener::setLogVerbosity(
     logVerbosity = level;
 }
 
-int LoraGatewayListener::setup(GatewayConfigFileJson *config)
+int LoraGatewayListener::setup()
 {
     lastLgwCode = 0;
-    config = config;
     if (!config)
         return ERR_CODE_INSUFFICIENT_PARAMS;
     lastLgwCode = lgw_board_setconf(&config->sx130xConf.boardConf);
@@ -1434,4 +1437,3 @@ void LoraGatewayListener::setOnUpstream(
     // no prevent mutex required
     onUpstream = value;
 }
-

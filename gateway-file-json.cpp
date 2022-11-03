@@ -385,6 +385,22 @@ bool GatewaySX130xConfig::operator==(
         && (memcmp(&tsConf, &b.tsConf, sizeof(struct lgw_conf_ftime_s)) == 0);
 }
 
+std::string GatewaySX130xConfig::getUsbPath()
+{
+    if (boardConf.com_path[63] == '\0')
+        return std::string(boardConf.com_path);
+    else
+        return std::string(boardConf.com_path, 64);
+}
+
+void GatewaySX130xConfig::setUsbPath(const std::string &value)
+{
+    size_t sz = value.size();
+    if (sz > 64)
+        sz = 64;
+    strncpy(boardConf.com_path, value.c_str(), sz);
+}
+
 int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
     reset();
     if (jsonValue.HasMember("sx1261_conf")) {

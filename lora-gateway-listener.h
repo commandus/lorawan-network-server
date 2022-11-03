@@ -103,7 +103,6 @@ private:
     bool gpsThreadRunning;
     bool gpsCheckTimeRunning;
     bool spectralScanThreadRunning;
-    bool reportReady;               ///< true when there is a new report to send to the server
     bool gps_ref_valid;             ///< is GPS reference acceptable (ie. not too old)
     // control access
     std::mutex mutexGPSTimeReference;        ///< control access to set system time
@@ -149,9 +148,10 @@ public:
     float temperature;   ///< Gateway temperature
 
     LoraGatewayListener();
+    LoraGatewayListener(GatewayConfigFileJson *cfg);
     ~LoraGatewayListener();
 
-    int setup(GatewayConfigFileJson *config);
+    int setup();
     /**
         LGW library version.
         Calls lgw_version_info();

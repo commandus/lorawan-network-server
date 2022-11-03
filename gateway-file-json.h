@@ -123,6 +123,9 @@ public:
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
 
     bool operator==(const GatewaySX130xConfig &value) const;
+
+    std::string getUsbPath();
+    void setUsbPath(const std::string &value);
 };
 
 /*
@@ -152,9 +155,9 @@ public:
 class GatewayGatewayConfig  : public GatewayJsonConfig {
 public:
     uint64_t gatewayId;
-    std::string serverAddress;
-    uint16_t serverPortUp;
-    uint16_t serverPortDown;
+    std::string serverAddress;  // not used
+    uint16_t serverPortUp;      // not used
+    uint16_t serverPortDown;    // not used
     uint32_t keepaliveInterval;
     uint32_t statInterval;
     struct timeval pushTimeoutMs;

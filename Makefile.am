@@ -57,7 +57,7 @@ WS_DEF =
 if ENABLE_WS
 WS_SRC += ws-handler.cpp
 WS_LIB += -L/home/andrei/src/lorawan-ws -lws-sqlite -lmicrohttpd
-WS_DEF = -DENABLE_WS
+WS_DEF += -DENABLE_WS
 endif
 
 WS_AUTH_LIB = 
@@ -129,8 +129,8 @@ endif
 if ENABLE_LISTENER_EMBEDDED
 LGW_HOME = third_party/packet_forwarder
 LGW_SRC = embedded-listener.cpp gateway-file-json.cpp lora-gateway-listener.cpp \
-	third_party/packet_forwarder/jitqueue.c
-LGW_LIB = -L$(LGW_HOME) -lloragw -ltinymt32
+	third_party/packet_forwarder/jitqueue.c utilusb.cpp
+LGW_LIB = -L$(LGW_HOME) -lloragw -ltinymt32 -lusb
 LGW_DEF = -DENABLE_LISTENER_EMBEDDED
 endif
 
@@ -184,7 +184,7 @@ rapid_headers = \
 	third_party/rapidjson/msinttypes/inttypes.h third_party/rapidjson/msinttypes/stdint.h
 
 nobase_dist_include_HEADERS = \
-	run-listener.h platform.h utilstring.h utildate.h utilfile.h strptime.h lora-radio.h \
+	run-listener.h platform.h utilstring.h utildate.h utilfile.h utilusb.h strptime.h lora-radio.h \
 	utillora.h net-id.h dev-addr.h udp-socket.h udp-emitter.h lora-encrypt.h \
 	packet-listener.h udp-listener.h embedded-listener.h \
 	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
@@ -436,8 +436,16 @@ test_gateway_file_json_SOURCES = \
 test_gateway_file_json_LDADD = -Lthird_party/packet_forwarder -lloragw -ltinymt32
 test_gateway_file_json_CPPFLAGS = $(commoncppflags)
 
+test_gateway_listen_SOURCES = \
+    tests/test-gateway-listen.cpp \
+    lora-gateway-listener.cpp gateway-file-json.cpp utilstring.cpp utilusb.cpp utildate.cpp \
+    third_party/packet_forwarder/jitqueue.c
+test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -ltinymt32 -lusb
+test_gateway_listen_CPPFLAGS = $(commoncppflags)
+
 check_PROGRAMS = \
-test-gateway-file-json
+	test-gateway-listen
+#   test-gateway-file-json \
 #	test-encrypt-join-accept-response \
 #   test-dev-addr \
 #   test-queue-processor \
