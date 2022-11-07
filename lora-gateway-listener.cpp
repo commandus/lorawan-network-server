@@ -455,7 +455,7 @@ void LoraGatewayListener::upstreamRunner()
         if (nb_pkt == LGW_HAL_ERROR) {
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_FETCH, ERR_LORA_GATEWAY_FETCH);
             // fatal error, exit
-            stop();
+            stop(0);
             return;
         }
 
@@ -922,7 +922,7 @@ void LoraGatewayListener::downstreamRunner() {
             break;
         default:
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_BANDWIDTH, ERR_LORA_GATEWAY_UNKNOWN_BANDWIDTH);
-            stop();
+            stop(0);
     }
     switch (config->gatewayConf.beaconDataRate) {
         case 8:
@@ -947,7 +947,7 @@ void LoraGatewayListener::downstreamRunner() {
             break;
         default:
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_DATARATE, ERR_LORA_GATEWAY_UNKNOWN_DATARATE);
-            stop();
+            stop(0);
     }
     beacon_pkt.size = beacon_RFU1_size + 4 + 2 + 7 + beacon_RFU2_size + 2;
     beacon_pkt.coderate = CR_LORA_4_5;
@@ -1375,13 +1375,41 @@ int LoraGatewayListener::start()
     return 0;
 }
 
-int LoraGatewayListener::stop()
+bool LoraGatewayListener::isRunning()
 {
+    return upstreamThreadRunning
+        && downstreamThreadRunning
+        && jitThreadRunning
+        && gpsThreadRunning
+        && gpsCheckTimeRunning
+        && spectralScanThreadRunning;
+}
+
+int LoraGatewayListener::stop(int waitSeconds)
+{
+    stopRequest = true;
     if (fdGpsTty >= 0) {
         lastLgwCode = lgw_gps_disable(fdGpsTty);
         fdGpsTty = -1;
     }
-    return 0;
+    if (waitSeconds <= 0) {
+        if (onStop)
+            onStop(this, false);
+        return ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT;
+    }
+
+    bool success = false;
+    for (int i = 0; i < waitSeconds; i++) {
+        if (isRunning()) {
+            sleep(1);
+            continue;
+        }
+        success = true;
+    }
+    if (onStop) {
+        onStop(this, success);
+    }
+    return success ? LORA_OK : ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT;
 }
 
 void LoraGatewayListener::log(
@@ -1436,4 +1464,14 @@ void LoraGatewayListener::setOnUpstream(
 {
     // no prevent mutex required
     onUpstream = value;
+}
+
+void LoraGatewayListener::setOnStop(
+    std::function<void(
+        const LoraGatewayListener *listener,
+        bool gracefullyStopped
+    )> value
+)
+{
+    onStop = value;
 }

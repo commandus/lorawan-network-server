@@ -186,6 +186,7 @@
 #define ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY      -657
 #define ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_POWER          -658
 #define ERR_CODE_LORA_GATEWAY_USB_NOT_FOUND                 -659
+#define ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT              -660
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -367,6 +368,7 @@
 #define ERR_LORA_GATEWAY_TX_UNSUPPORTED_POWER           "RF power is not supported, closest lower power used"
 
 #define ERR_LORA_GATEWAY_USB_NOT_FOUND                  "Gateway USB path not found"
+#define ERR_LORA_GATEWAY_SHUTDOWN_TIMEOUT               "Gateway shutdown timeout"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"

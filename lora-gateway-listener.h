@@ -94,6 +94,11 @@ private:
         const std::string &message
     )> onLog;
 
+    std::function<void(
+        const LoraGatewayListener *listener,
+        bool gracefullyStopped
+    )> onStop;
+
     // thread control
     bool stopRequest;               ///< set to true to stop all threads
     // thread finish indicators
@@ -103,6 +108,7 @@ private:
     bool gpsThreadRunning;
     bool gpsCheckTimeRunning;
     bool spectralScanThreadRunning;
+
     bool gps_ref_valid;             ///< is GPS reference acceptable (ie. not too old)
     // control access
     std::mutex mutexGPSTimeReference;        ///< control access to set system time
@@ -160,7 +166,9 @@ public:
     // SX1302 Status
     bool getStatus(LGWStatus &status);
     int start();
-    int stop();
+    int stop(int waitSeconds);
+    bool isRunning();
+
     void setOnSpectralScan(
         std::function<void(
             const LoraGatewayListener *listener,
@@ -182,6 +190,12 @@ public:
                 const LoraGatewayListener *listener,
                 const SEMTECH_PROTOCOL_METADATA *metadata,
                 const std::string &payload
+        )> value
+    );
+    void setOnStop(
+        std::function<void(
+            const LoraGatewayListener *listener,
+            bool gracefullyStopped
         )> value
     );
     void setLogVerbosity(int level);
