@@ -2,14 +2,17 @@
 
 #include <usb.h>
 
-#define FTDI_VENDOR 0x0403
-#define FTDI_PRODUCT 0x6001
+#define FTDI_VENDOR 0x0483
+#define FTDI_PRODUCT 0x5740
 
 /**
  * Vendor 0403 Product 6001
+ * 0483:5740 bus 003 dev 006
+ * 0483:5740 STMicroelectronics Virtual COM Port
  * @return count if FTDI USB devices
  */
 size_t ls_ftdi(std::vector<std::string> *retval) {
+
     size_t r = 0;
     struct usb_bus *bus;
     struct usb_device *dev;

@@ -438,7 +438,7 @@ test_gateway_file_json_CPPFLAGS = $(commoncppflags)
 
 test_gateway_listen_SOURCES = \
     tests/test-gateway-listen.cpp \
-    lora-gateway-listener.cpp gateway-file-json.cpp utilstring.cpp utilusb.cpp utildate.cpp \
+    lora-gateway-listener.cpp gateway-file-json.cpp utilstring.cpp utildate.cpp \
     errlist.cpp \
     third_party/packet_forwarder/jitqueue.c
 test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -ltinymt32 -lusb

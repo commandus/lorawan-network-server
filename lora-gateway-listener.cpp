@@ -174,8 +174,6 @@ void LoraGatewayListener::spectralScanRunner()
                 break;
             wait_ms(1000);
         }
-        if (stopRequest)
-            break;
         spectralScanStarted = false;
 
         // Start spectral scan (if no downlink programmed)
@@ -185,10 +183,11 @@ void LoraGatewayListener::spectralScanRunner()
             if (config->sx130xConf.rfConfs[i].tx_enable) {
                 int x = lgw_status((uint8_t)i, TX_STATUS, &tx_status);
                 if (x != LGW_HAL_SUCCESS) {
-                    printf("Failed to get TX status on chain ");
+                    log(LOG_ERR, ERR_CODE_LORA_GATEWAY_GET_TX_STATUS, ERR_LORA_GATEWAY_GET_TX_STATUS);
                 } else {
                     if (tx_status == TX_SCHEDULED || tx_status == TX_EMITTING) {
                         printf("Skip spectral scan");
+                        log(LOG_ERR, ERR_CODE_LORA_GATEWAY_SKIP_SPECTRAL_SCAN, ERR_LORA_GATEWAY_SKIP_SPECTRAL_SCAN);
                         break;
                     }
                 }
@@ -205,7 +204,6 @@ void LoraGatewayListener::spectralScanRunner()
             spectralScanStarted = true;
         }
         mLGW.unlock();
-
         if (spectralScanStarted) {
             // Wait for scan to be completed
             status = LGW_SPECTRAL_SCAN_STATUS_UNKNOWN;
@@ -231,7 +229,6 @@ void LoraGatewayListener::spectralScanRunner()
                 // wait a bit before checking status again
                 wait_ms(10);
             } while (status != LGW_SPECTRAL_SCAN_STATUS_COMPLETED && status != LGW_SPECTRAL_SCAN_STATUS_ABORTED);
-
             if (status == LGW_SPECTRAL_SCAN_STATUS_COMPLETED) {
                 // Get spectral scan results
                 memset(levels, 0, sizeof levels);
@@ -865,6 +862,20 @@ int LoraGatewayListener::enqueueTxPacket(
         mLGW.unlock();
         jit_result = jit_enqueue(&jit_queue[tx.pkt.rf_chain], current_concentrator_time, &tx.pkt, downlinkClass);
         if (jit_result) {
+            switch (jit_result) {
+                case JIT_ERROR_TOO_EARLY:
+                    measurements.inc(meas_nb_tx_rejected_too_early);
+                    break;
+                case JIT_ERROR_TOO_LATE:
+                    measurements.inc(meas_nb_tx_rejected_too_late);
+                    break;
+                case JIT_ERROR_COLLISION_PACKET:
+                    measurements.inc(meas_nb_tx_rejected_collision_packet);
+                    break;
+                default:
+                    break;
+            }
+
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_JIT_ENQUEUE_FAILED, ERR_LORA_GATEWAY_JIT_ENQUEUE_FAILED);
             return ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY;
         } else {
@@ -1096,11 +1107,16 @@ void LoraGatewayListener::downstreamRunner() {
                         }
                         log(LOG_INFO, 0, ss.str());
                     } else {
-                        log(LOG_INFO, ERR_CODE_LORA_GATEWAY_BEACON_FAILED, ERR_LORA_GATEWAY_BEACON_FAILED);
                         // update stats
-                        if (jit_result != JIT_ERROR_COLLISION_BEACON) {
-                            measurements.inc(meas_nb_beacon_rejected);
+                        switch (jit_result) {
+                            case JIT_ERROR_COLLISION_BEACON:
+                                measurements.inc(meas_nb_tx_rejected_collision_beacon);
+                                break;
+                            default:
+                                measurements.inc(meas_nb_beacon_rejected);
+                                break;
                         }
+                        log(LOG_INFO, ERR_CODE_LORA_GATEWAY_BEACON_FAILED, ERR_LORA_GATEWAY_BEACON_FAILED);
                         // In case previous enqueueTxPacket failed, we retry one period later until it succeeds
                         // Note: In case the GPS has been unlocked for a while, there can be lots of retries
                         //       to be done from last beacon time to a new valid one
@@ -1266,10 +1282,11 @@ int LoraGatewayListener::setup()
         return ERR_CODE_LORA_GATEWAY_CONFIGURE_SX1261_RADIO;
 
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-        lastLgwCode = lgw_txgain_setconf(i, &config->sx130xConf.txLut[i]);
-        if (lastLgwCode)
-            return ERR_CODE_LORA_GATEWAY_CONFIGURE_TX_GAIN_LUT;
-
+        if (config->sx130xConf.txLut[i].size) {
+            lastLgwCode = lgw_txgain_setconf(i, &config->sx130xConf.txLut[i]);
+            if (lastLgwCode)
+                return ERR_CODE_LORA_GATEWAY_CONFIGURE_TX_GAIN_LUT;
+        }
     }
 
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
@@ -1328,10 +1345,13 @@ int LoraGatewayListener::start()
             (char *) DEF_GPS_FAMILY, 0, &fdGpsTty);
         if (lastLgwCode) {
             config->gatewayConf.gpsEnabled = false;
-            // continue
             // return ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED;
         }
     }
+    // load config
+    int r = setup();
+    if (r)
+        return r;
     // starting the concentrator
     lastLgwCode = lgw_start();
     if (lastLgwCode)

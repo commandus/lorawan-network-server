@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 161
+#define ERR_COUNT 163
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -142,6 +142,8 @@ static const char *errList[ERR_COUNT] = {
     ERR_LORA_GATEWAY_SPECTRAL_SCAN_FAILED,
     ERR_LORA_GATEWAY_SPECTRAL_SCAN_ABORTED,
     ERR_LORA_GATEWAY_SPECTRAL_SCAN_UNEXPECTED_STATUS,
+    ERR_LORA_GATEWAY_GET_TX_STATUS,
+    ERR_LORA_GATEWAY_SKIP_SPECTRAL_SCAN,
 
     ERR_LORA_GATEWAY_STATUS_FAILED,
     ERR_LORA_GATEWAY_EMIT_ALLREADY,

@@ -23,19 +23,18 @@ typedef enum {
     meas_up_ack_rcv,            ///< number of datagrams acknowledged for upstream traffic
     meas_dw_pull_sent,          ///< number of PULL requests sent for downstream traffic
 
-    meas_dw_ack_rcv,            ///< number of PULL requests acknowledged for downstream traffic
     meas_dw_dgram_rcv,          ///< count PULL response packets received for downstream traffic
     meas_dw_network_byte,       ///< sum of UDP bytes sent for upstream traffic
     meas_dw_payload_byte,       ///< sum of radio payload bytes sent for upstream traffic
     meas_nb_tx_ok,              ///< count packets emitted successfully
-
     meas_nb_tx_fail,            ///< count packets were TX failed for other reasons
+
     meas_nb_tx_requested,       ///< count TX request from server (downlinks)
     meas_nb_tx_rejected_collision_packet,  ///< count packets were TX request were rejected due to collision with another packet already programmed
     meas_nb_tx_rejected_collision_beacon,  ///< count packets were TX request were rejected due to collision with a beacon already programmed
     meas_nb_tx_rejected_too_late,          ///< count packets were TX request were rejected because it is too late to program it
-
     meas_nb_tx_rejected_too_early,         ///< count packets were TX request were rejected because timestamp is too much in advance
+
     meas_nb_beacon_queued,                 ///< count beacon inserted in jit queue
     meas_nb_beacon_sent,                   ///< count beacon actually sent to concentrator
     meas_nb_beacon_rejected                ///< count beacon rejected for queuing
