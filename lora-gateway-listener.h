@@ -8,7 +8,7 @@
 #include "utillora.h"
 #include "gateway-file-json.h"
 
-#define MEASUREMENT_COUNT_SIZE 24
+#define MEASUREMENT_COUNT_SIZE 23
 
 typedef enum {
     meas_nb_rx_rcv,             ///< count packets received
@@ -40,6 +40,8 @@ typedef enum {
     meas_nb_beacon_rejected                ///< count beacon rejected for queuing
 } MEASUREMENT_ENUM;
 
+const char *getMeasurementName(int index);
+
 // measurements to establish statistics
 class GatewayMeasurements {
 private:
@@ -53,6 +55,7 @@ public:
     // increment
     void inc(MEASUREMENT_ENUM index);
     void inc(MEASUREMENT_ENUM index, uint32_t v);
+    void get(uint32_t retval[MEASUREMENT_COUNT_SIZE]);
 };
 
 class LGWStatus {
@@ -71,7 +74,6 @@ public:
 class LoraGatewayListener {
 private:
     int logVerbosity;
-    GatewayMeasurements measurements;
 
     std::function<void(
         const LoraGatewayListener *listener,
@@ -147,6 +149,7 @@ protected:
 public:
     int lastLgwCode;
     GatewayConfigFileJson *config;
+    GatewayMeasurements measurements;
 
     int fdGpsTty;        ///< file descriptor of the GPS TTY port
     uint64_t eui;        ///< Gateway EUI

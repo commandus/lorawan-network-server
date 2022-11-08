@@ -15,6 +15,58 @@
 #define XERR_INIT_AVG       16          // number of measurements the XTAL correction is averaged on as initial value
 #define XERR_FILT_COEF      256         // coefficient for low-pass XTAL error tracking
 
+const char *MEASUREMENT_NAME[MEASUREMENT_COUNT_SIZE] = {
+    "Received",
+    "CRC OK",
+    "CRC ERROR",
+    "No CRC",
+    "Forwarded",
+    "Bytes down",
+    "Radio payload down",
+    "Datagrams",
+    "ACKed",
+    "PULL requests",
+    "PULL responses",
+    "Bytes up",
+    "Radio payload up",
+    "TX emitted",
+    "TX failed",
+    "TX requests",
+    "TX packet collision",
+    "TX beacon collision",
+    "TX too late",
+    "TX too early",
+    "Beacon queued",
+    "Beacon sent",
+    "Beacon rejected"
+};
+
+const char *MEASUREMENT_SHORT_NAME[MEASUREMENT_COUNT_SIZE] = {
+        "Recv",
+        "CRCOk",
+        "CRCerr",
+        "NoCRC",
+        "Fwd",
+        "Down",
+        "RadPd",
+        "Dgrams",
+        "ACKed",
+        "PULreq",
+        "PULres",
+        "ByteUp",
+        "RadPUp",
+        "TXemit",
+        "TXfail",
+        "TXreq",
+        "TXpCol",
+        "TXbCol",
+        "TX2lat",
+        "TX2ear",
+        "BecQue",
+        "BecSen",
+        "BecRej"
+};
+
 GatewayMeasurements::GatewayMeasurements()
 {
     reset();
@@ -62,6 +114,15 @@ void GatewayMeasurements::inc(
 {
     mAccess.lock();
     value[index] += v;
+    mAccess.unlock();
+}
+
+void GatewayMeasurements::get(
+    uint32_t retval[MEASUREMENT_COUNT_SIZE]
+)
+{
+    mAccess.lock();
+    memcpy(retval, value, sizeof(value));
     mAccess.unlock();
 }
 
@@ -1494,4 +1555,11 @@ void LoraGatewayListener::setOnStop(
 )
 {
     onStop = value;
+}
+
+const char *getMeasurementName(int index)
+{
+    if (index < 0 || index >= MEASUREMENT_COUNT_SIZE)
+        return "";
+    return MEASUREMENT_SHORT_NAME[index];
 }
