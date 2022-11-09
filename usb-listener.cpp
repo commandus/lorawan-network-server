@@ -1,4 +1,4 @@
-#include "udp-listener.h"
+#include "usb-listener.h"
 #include <iostream>
 #include <cstring>
 #include <syslog.h>
@@ -10,38 +10,31 @@
 #include "utilstring.h"
 #include "errlist.h"
 
-#define DEF_BUFFER_SIZE     4096
 
-UDPListener::UDPListener() : PacketListener()
+USBListener::USBListener() : PacketListener()
 {
-	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
-	setBufferSize(DEF_BUFFER_SIZE);
 }
 
-UDPListener::~UDPListener() {
+USBListener::~USBListener() {
 	clear();
 }
 
-void UDPListener::setBufferSize(size_t value) {
-    buffer.resize(value);
-}
-
-std::string UDPListener::toString() const{
+std::string USBListener::toString() const{
 	std::stringstream ss;
-	for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
-		ss << it->toString() << std::endl;
-	}
+    ss << "{\"config\": " << config.toString()
+        << ", \"listener\": " << listener.toString()
+        << "}";
 	return ss.str();
 }
 
-void UDPListener::clear() {
+void USBListener::clear() {
 	for (std::vector<UDPSocket>::iterator it = sockets.begin(); it != sockets.end(); it++) {
 		it->closeSocket();
 	}
 	sockets.clear();	
 }
 
-bool UDPListener::addSocket(
+bool USBListener::addSocket(
 	const std::string &address,
 	MODE_FAMILY familyHint
 ) {
@@ -61,7 +54,7 @@ bool UDPListener::addSocket(
 	return true;
 }
 
-int UDPListener::largestSocket() {
+int USBListener::largestSocket() {
 	int r = -1;
 	for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
 		if (it->sock > r)
@@ -70,7 +63,7 @@ int UDPListener::largestSocket() {
 	return r;
 }
 
-bool UDPListener::add(
+bool USBListener::add(
     const std::string& value,
     int hint
 )
@@ -78,7 +71,7 @@ bool UDPListener::add(
     return addSocket(value, (MODE_FAMILY) hint);
 }
 
-int UDPListener::parseBuffer(
+int USBListener::parseBuffer(
     const std::string &buffer,
     size_t bytesReceived,
     int socket,
@@ -248,7 +241,7 @@ int UDPListener::parseBuffer(
     return pr;
 }
 
-int UDPListener::listen() {
+int USBListener::listen() {
     int sz = sockets.size();
 	if (!sz)
 		return ERR_CODE_SOCKET_NO_ONE;
@@ -331,7 +324,7 @@ int UDPListener::listen() {
 	return LORA_OK;
 }
 
-void UDPListener::setLastRemoteAddress(
+void USBListener::setLastRemoteAddress(
 	struct sockaddr *value
 	) {
 	if (value->sa_family == AF_INET6)

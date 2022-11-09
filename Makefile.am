@@ -128,8 +128,9 @@ endif
 
 if ENABLE_LISTENER_EMBEDDED
 LGW_HOME = third_party/packet_forwarder
-LGW_SRC = embedded-listener.cpp gateway-file-json.cpp lora-gateway-listener.cpp \
-	third_party/packet_forwarder/jitqueue.c utilusb.cpp
+LGW_SRC = embedded-listener.cpp gateway-file-json.cpp gateway-settings.cpp \
+    lora-gateway-listener.cpp usb-listener.cpp utilusb.cpp \
+    third_party/packet_forwarder/jitqueue.c
 LGW_LIB = -L$(LGW_HOME) -lloragw -ltinymt32 -lusb
 LGW_DEF = -DENABLE_LISTENER_EMBEDDED
 endif
@@ -186,7 +187,7 @@ rapid_headers = \
 nobase_dist_include_HEADERS = \
 	run-listener.h platform.h utilstring.h utildate.h utilfile.h utilusb.h strptime.h lora-radio.h \
 	utillora.h net-id.h dev-addr.h udp-socket.h udp-emitter.h lora-encrypt.h \
-	packet-listener.h udp-listener.h embedded-listener.h \
+	packet-listener.h udp-listener.h embedded-listener.h usb-listener.h \
 	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
 	errlist.h daemonize.h device-history-item.h gateway-stat.h gateway-list.h lorawan-mac.h \
@@ -195,7 +196,7 @@ nobase_dist_include_HEADERS = \
 	receiver-queue-service.h receiver-queue-service-file-json.h receiver-queue-service-dir-txt.h receiver-queue-service-lmdb.h \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
-	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h \
+	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h gateway-settings.h \
 	auth-user.h auth-file.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
@@ -438,7 +439,7 @@ test_gateway_file_json_CPPFLAGS = $(commoncppflags)
 
 test_gateway_listen_SOURCES = \
     tests/test-gateway-listen.cpp \
-    lora-gateway-listener.cpp gateway-file-json.cpp utilstring.cpp utildate.cpp \
+    lora-gateway-listener.cpp gateway-settings.cpp gateway-file-json.cpp utilstring.cpp utildate.cpp \
     errlist.cpp \
     third_party/packet_forwarder/jitqueue.c
 test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -ltinymt32 -lusb

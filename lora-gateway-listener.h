@@ -6,7 +6,7 @@
 #include <functional>
 
 #include "utillora.h"
-#include "gateway-file-json.h"
+#include "gateway-settings.h"
 
 #define MEASUREMENT_COUNT_SIZE 23
 
@@ -46,16 +46,17 @@ const char *getMeasurementName(int index);
 class GatewayMeasurements {
 private:
     uint32_t value[MEASUREMENT_COUNT_SIZE];
-    std::mutex mAccess;
+    mutable std::mutex mAccess;
 public:
     void reset();
     GatewayMeasurements();
-    const uint32_t get(MEASUREMENT_ENUM index);
+    const uint32_t get(MEASUREMENT_ENUM index) const;
     void set(MEASUREMENT_ENUM index, uint32_t v);
     // increment
     void inc(MEASUREMENT_ENUM index);
     void inc(MEASUREMENT_ENUM index, uint32_t v);
-    void get(uint32_t retval[MEASUREMENT_COUNT_SIZE]);
+    void get(uint32_t retval[MEASUREMENT_COUNT_SIZE]) const;
+    std::string toString() const;
 };
 
 class LGWStatus {
@@ -146,20 +147,20 @@ protected:
         int errorCode,
         const std::string &message
     );
+    // Apply config
+    int setup();
 public:
     int lastLgwCode;
-    GatewayConfigFileJson *config;
+    GatewaySettings *config;
     GatewayMeasurements measurements;
 
     int fdGpsTty;        ///< file descriptor of the GPS TTY port
     uint64_t eui;        ///< Gateway EUI
-    float temperature;   ///< Gateway temperature
 
     LoraGatewayListener();
-    LoraGatewayListener(GatewayConfigFileJson *cfg);
+    LoraGatewayListener(GatewaySettings *cfg);
     ~LoraGatewayListener();
 
-    int setup();
     /**
         LGW library version.
         Calls lgw_version_info();
@@ -202,6 +203,8 @@ public:
     );
     void setLogVerbosity(int level);
     int enqueueTxPacket(TxPacket &tx);
+
+    std::string toString() const;
 };
 
 #endif
