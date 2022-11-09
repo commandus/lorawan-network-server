@@ -22,18 +22,9 @@
  */
 class PacketListener
 {
-private:
-	GatewayList *gatewayList;
 protected:
+    GatewayList *gatewayList;
     int *sysSignalPtr;
-
-    int parseBuffer(
-        const std::string &buffer,
-        size_t bytesReceived,
-        int socket,
-        const struct timeval &receivedTime,
-        const struct sockaddr_in6 &gwAddress
-    );
 public:
 	int verbosity;
 	IdentityService *identityService;
@@ -67,8 +58,6 @@ public:
 
 	PacketListener();
 	~PacketListener();
-
-	virtual void setBufferSize(size_t value);
 
     virtual std::string toString() const;
 

@@ -34,6 +34,14 @@ private:
         const std::string &address,
         MODE_FAMILY familyHint
     );
+protected:
+    int parseBuffer(
+        const std::string &buffer,
+        size_t bytesReceived,
+        int socket,
+        const struct timeval &receivedTime,
+        const struct sockaddr_in6 &gwAddress
+    );
 public:
 	std::vector<UDPSocket> sockets;
 
@@ -45,8 +53,7 @@ public:
 	void clear() override;
     bool add(const std::string &value, int hint) override;
 	int listen() override;
-
-    void setBufferSize(size_t value) override;
+    void setBufferSize(size_t value);
 };
 
 #endif
