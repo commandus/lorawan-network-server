@@ -3,6 +3,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <math.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -1235,7 +1236,7 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
     if (jsonValue.HasMember("server_address")) {
         rapidjson::Value &jServerAddress = jsonValue["server_address"];
         if (jServerAddress.IsString()) {
-            value.serverAddress = jServerAddress.GetString();
+            serverAddr = jServerAddress.GetString();
         }
     }
     if (jsonValue.HasMember("serv_port_up")) {
@@ -1291,8 +1292,8 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
     if (jsonValue.HasMember("gps_tty_path")) {
         rapidjson::Value &jGpsTTYPath = jsonValue["gps_tty_path"];
         if (jGpsTTYPath.IsString()) {
-            value.gpsTTYPath = jGpsTTYPath.GetString();
-            value.gpsEnabled = !value.gpsTTYPath.empty();
+            gpsTtyPath = jGpsTTYPath.GetString();
+            value.gpsEnabled = !gpsTtyPath.empty();
         }
     }
     if (jsonValue.HasMember("ref_latitude")) {
@@ -1395,7 +1396,7 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.AddMember("gateway_ID", jgatewayId, allocator);
 
     rapidjson::Value jserverAddress;
-    jserverAddress.SetString(value.serverAddress.c_str(), value.serverAddress.size(), allocator);
+    jserverAddress.SetString(serverAddr.c_str(), serverAddr.size(), allocator);
     jsonValue.AddMember("server_address", jserverAddress, allocator);
 
     rapidjson::Value jserverPortUp;
@@ -1431,7 +1432,7 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.AddMember("forward_crc_disabled", jforwardCRCDisabled, allocator);
 
     rapidjson::Value jgpsTTYPath;
-    jgpsTTYPath.SetString(value.gpsTTYPath.c_str(), value.gpsTTYPath.size(),allocator);
+    jgpsTTYPath.SetString(gpsTtyPath.c_str(), gpsTtyPath.size(),allocator);
     jsonValue.AddMember("gps_tty_path", jgpsTTYPath, allocator);
 
     rapidjson::Value jrefGeoCoordinatesLat;
@@ -1490,7 +1491,7 @@ void GatewayGatewayConfig::toJSON(
 bool GatewayGatewayConfig::operator==(const GatewayGatewayConfig &b) const
 {
     return value.gatewayId == b.value.gatewayId
-        && value.serverAddress == b.value.serverAddress
+        && serverAddr == b.serverAddr
         && value.serverPortUp == b.value.serverPortUp
         && value.serverPortDown == b.value.serverPortDown
         && value.keepaliveInterval == b.value.keepaliveInterval
@@ -1499,7 +1500,7 @@ bool GatewayGatewayConfig::operator==(const GatewayGatewayConfig &b) const
         && value.forwardCRCValid == b.value.forwardCRCValid
         && value.forwardCRCError == b.value.forwardCRCError
         && value.forwardCRCDisabled == b.value.forwardCRCDisabled
-        && value.gpsTTYPath == b.value.gpsTTYPath
+        && gpsTtyPath == b.gpsTtyPath
         && (fabs(value.refGeoCoordinates.lat - b.value.refGeoCoordinates.lat) < 0.00001)
         && (fabs(value.refGeoCoordinates.lon - b.value.refGeoCoordinates.lon) < 0.00001)
         && (abs(value.refGeoCoordinates.alt - b.value.refGeoCoordinates.alt)  == 0)
@@ -1698,4 +1699,14 @@ gateway_t *GatewayConfigFileJson::gateway()
 struct lgw_conf_debug_s *GatewayConfigFileJson::debug()
 {
     return &debugConf.value;
+}
+
+std::string *GatewayConfigFileJson::serverAddress()
+{
+    return &gatewayConf.serverAddr;
+}
+
+std::string *GatewayConfigFileJson::gpsTTYPath()
+{
+    return &gatewayConf.gpsTtyPath;
 }

@@ -248,7 +248,12 @@ int UDPListener::parseBuffer(
     return pr;
 }
 
-int UDPListener::listen() {
+/**
+ * Listen UDP port(s)
+ * @param config not used,
+ * @return
+ */
+int UDPListener::listen(void *config) {
     int sz = sockets.size();
 	if (!sz)
 		return ERR_CODE_SOCKET_NO_ONE;

@@ -38,6 +38,13 @@ if(ENABLE_LISTENER_EMBEDDED)
 			NAMES tinymt32
 			HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder"
 	)
+	set(SRC_LISTENER_EMBEDDED
+			usb-listener.cpp
+			lora-gateway-listener.cpp
+			gateway-settings.cpp
+			gateway-file-json.cpp
+			third_party/packet_forwarder/jitqueue.c
+	)
 endif(ENABLE_LISTENER_EMBEDDED)
 
 include_directories("third_party" ${CURL_INCLUDE_DIR} ".")
@@ -82,7 +89,7 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	device-channel-plan-file-json.cpp device-history-service-json.cpp
 	regional-parameter-channel-plan-file-json.cpp
 	ws-handler.cpp database-config-json.cpp 
-	embedded-listener.cpp gateway-file-json.cpp lora-gateway-listener.cpp
+    ${SRC_LISTENER_EMBEDDED}
 	third_party/get_rss/get_rss.c
 	third_party/argtable3/argtable3.c
 )

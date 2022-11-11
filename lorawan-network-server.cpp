@@ -302,9 +302,11 @@ static void wsRun(char *programPath, Configuration* config) {
 
     if (!defDbExists) {
         std::stringstream ss;
-        ss << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase << std::endl;   // just warning
-        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_NO_DEFAULT_WS_DATABASE,
-                                ss.str());
+        ss << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase        // just warning
+            << std::endl;
+
+        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC,
+            ERR_CODE_NO_DEFAULT_WS_DATABASE, ss.str());
     }
 
     // named databases
@@ -318,9 +320,11 @@ static void wsRun(char *programPath, Configuration* config) {
             }
         }
     }
+#ifdef ENABLE_WS
 #ifdef ENABLE_LOGGER_HUFFMAN
     if (wsSpecialPathHandler)
         wsSpecialPathHandler->loggerParser = runListener->loggerParserEnv;
+#endif
 #endif
 
     if (config->serverConfig.verbosity > 5) {
@@ -366,10 +370,17 @@ static void run()
     if (runListener->config->wsConfig.enabled)
         wsRun(nullptr, runListener->config);
     if (runListener && runListener->listener) {
+        void *config;
+#ifdef ENABLE_LISTENER_USB
+        config = &runListener->config->gatewayConfig;
+#endif
         runListener->start();
+#ifdef ENABLE_LISTENER_UDP
+        config = nullptr;
         runListener->listener->add(runListener->config->serverConfig.listenAddressIPv4, MODE_FAMILY_HINT_IPV4);
         runListener->listener->add(runListener->config->serverConfig.listenAddressIPv6, MODE_FAMILY_HINT_IPV6);
-        int r = runListener->listener->listen();
+#endif
+        int r = runListener->listener->listen(config);
         if (r) {
             std::stringstream ss;
             ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;

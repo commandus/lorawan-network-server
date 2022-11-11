@@ -65,7 +65,7 @@ public:
     int add(const std::vector<std::string> &value, int hint);
 	virtual void clear();
 
-	virtual int listen() = 0;
+	virtual int listen(void *config) = 0;
 
 	void setLogger(
 		int verbosity,

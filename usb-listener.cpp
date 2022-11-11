@@ -1,17 +1,66 @@
-#include "usb-listener.h"
 #include <iostream>
-#include <cstring>
-#include <syslog.h>
-#include <csignal>
-#include <cerrno>
-#include <sys/select.h>
+#include <iomanip>
 
-#include "third_party/get_rss/get_rss.h"
+#include "usb-listener.h"
 #include "utilstring.h"
 #include "errlist.h"
 
+void onUpstream(
+    const LoraGatewayListener *listener,
+    const SEMTECH_PROTOCOL_METADATA *metadata,
+    const std::string &payload
+)
+{
+    if (!listener)
+        return;
+    std::stringstream ss;
+    if (metadata) {
+        ss << "gatewayId: " << std::hex << metadata->gatewayId
+           << std::dec << " frequency: " << metadata->freq
+           << " CRC status: " << (int) metadata->stat
+           << " modulation: " << (int) metadata->modu
+           << " bandwidth: " << (int) metadata->bandwith
+           << " SF" << (int) metadata->spreadingFactor
+           << " coding rate: " << (int) metadata->codingRate
+           << " bps: " << (int) metadata->bps
+           << " RSSI: " << (int) metadata->rssi
+           << " lsnr: " << metadata->lsnr;
+    }
+    size_t sz = payload.size();
+    if (sz >= 8) {
+        uint32_t addr;
+        memmove(&addr, &payload[1], sizeof(DEVADDR));
+#if BYTE_ORDER == BIG_ENDIAN
+        addr = be32toh(addr);
+#endif
+        uint16_t fcnt;
+        memmove(&fcnt, &payload[6], sizeof(fcnt));
+#if BYTE_ORDER == BIG_ENDIAN
+        fcnt = be16toh(fcnt);
+#endif
+        ss
+            << " addr: " << std::hex << std::right << std::setw(8) << std::setfill('0') << addr
+            << " FCnt: " << std::dec << fcnt
+            << " payload: " << hexString(payload) << std::endl;
+    }
+    listener->log(LOG_INFO, LOG_EMBEDDED_GATEWAY, ss.str());
+}
 
-USBListener::USBListener() : PacketListener()
+void onSpectralScan(
+    const LoraGatewayListener *listener,
+    const uint32_t frequency,
+    const uint16_t results[LGW_SPECTRAL_SCAN_RESULT_SIZE]
+){
+    std::stringstream ss;
+    ss << MSG_SPECTRAL_SCAN_FREQUENCY "Spectral scan, frequency " << frequency << std::endl;
+    for (int i = 0; i < LGW_SPECTRAL_SCAN_RESULT_SIZE; i++) {
+        ss << std::dec << std::right << std::setw(7) << std::setfill('0') << results[i] << " ";
+    }
+    listener->log(LOG_INFO, LOG_EMBEDDED_GATEWAY, ss.str());
+}
+
+USBListener::USBListener()
+    : PacketListener()
 {
 }
 
@@ -21,46 +70,13 @@ USBListener::~USBListener() {
 
 std::string USBListener::toString() const{
 	std::stringstream ss;
-    ss << "{\"config\": " << config.toString()
-        << ", \"listener\": " << listener.toString()
+    ss << "{\"listener\": " << listener.toString()
         << "}";
 	return ss.str();
 }
 
 void USBListener::clear() {
-	for (std::vector<UDPSocket>::iterator it = sockets.begin(); it != sockets.end(); it++) {
-		it->closeSocket();
-	}
-	sockets.clear();	
-}
-
-bool USBListener::addSocket(
-	const std::string &address,
-	MODE_FAMILY familyHint
-) {
-	UDPSocket s(address, MODE_OPEN_SOCKET_LISTEN, familyHint);
-	if (s.errcode) {
-		if (onLog) {
-			std::stringstream ss;
-			ss << ERR_MESSAGE << s.errcode << ": " 
-				<< strerror_lorawan_ns(s.errcode) << " " << address
-				<< ", errno " << s.lasterrno << ": " << strerror(s.lasterrno)
-				;
-			onLog(this, LOG_ERR, LOG_UDP_LISTENER, s.errcode, ss.str());
-		}
-		return false;
-	}
-    sockets.push_back(s);	// copy socket to the vector
-	return true;
-}
-
-int USBListener::largestSocket() {
-	int r = -1;
-	for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
-		if (it->sock > r)
-			r = it->sock;
-	}
-	return r;
+    listener.stop(0);
 }
 
 bool USBListener::add(
@@ -68,267 +84,17 @@ bool USBListener::add(
     int hint
 )
 {
-    return addSocket(value, (MODE_FAMILY) hint);
 }
 
-int USBListener::parseBuffer(
-    const std::string &buffer,
-    size_t bytesReceived,
-    int socket,
-    const struct timeval &receivedTime,
-    const struct sockaddr_in6 &gwAddress
-) {
-    std::vector<SemtechUDPPacket> packets;
-    // get packets
-    SEMTECH_PREFIX_GW dataPrefix;
-    GatewayStat gatewayStat;
-    int pr = LORA_OK;
-    if (bytesReceived < sizeof(SEMTECH_PREFIX))
-        pr = ERR_CODE_PACKET_TOO_SHORT;
-    else {
-        SEMTECH_PREFIX *prefix = (SEMTECH_PREFIX *) buffer.c_str();
-        switch (prefix->tag) {
-            case SEMTECH_GW_PUSH_DATA:
-                pr = SemtechUDPPacket::parse((const struct sockaddr *) &gwAddress, dataPrefix,
-                                             gatewayStat, packets, buffer.c_str(), bytesReceived, identityService);
-                if (handler) {
-                    if (pr == LORA_OK) {
-                        // send ACK immediately
-                        handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
-                    }
-                    if (pr == ERR_CODE_IS_JOIN) {
-                        // send ACK immediately too
-                        handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
-                        if (packets.size() > 0) {
-                            // enqueueTxPacket JOIN request packet
-                            handler->join(receivedTime, socket, (const sockaddr_in *) &gwAddress, packets[0]);
-                        }
-                    }
-                }
-                break;
-            case SEMTECH_GW_PULL_DATA:	// PULL_DATA
-                gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
-                pr = SemtechUDPPacket::parsePrefixGw(dataPrefix, buffer.c_str(), bytesReceived);
-                if (pr != LORA_OK)
-                    break;
-                // check is gateway in service
-                {
-                    std::stringstream sse;
-                    sse << strerror_lorawan_ns(pr)
-                        << " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-                        << ", token: " << std::hex << dataPrefix.token;
-                    onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
-                    // send PULL ACK immediately
-                    if (handler) {
-                        handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
-                    }
-                    if (gatewayList) {
-                        if (!gatewayList->setSocketAddress(dataPrefix.mac, socket, (const struct sockaddr_in *) &gwAddress)) {
-                            std::stringstream ss;
-                            ss << ERR_MESSAGE << ERR_CODE_INVALID_GATEWAY_ID << ": "
-                               << ERR_INVALID_GATEWAY_ID
-                               << " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-                               << " gateway: " << DEVEUI2string(dataPrefix.mac);
-                            ;
-                            onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
-                            break;
-                        }
-                    }
-                }
-                break;
-            case SEMTECH_GW_TX_ACK:	// TX_ACK
-                //
-                gatewayStat.errcode = ERR_CODE_NO_GATEWAY_STAT;
-                {
-                    pr = SemtechUDPPacket::parsePrefixGw(dataPrefix, buffer.c_str(), bytesReceived);
-                    if (pr != LORA_OK)
-                        break;
-                    ERR_CODE_TX r = extractTXAckCode(buffer.c_str(), bytesReceived);
-                    std::stringstream ss;
-                    if (r) {
-                        ss << ERR_MESSAGE << " " << r << ": ";
-                        // TODO re-send in second window or later if device is class C
-                    }
-                    ss << "TX ACK " << getTXAckCodeName(r)
-                       << " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-                       << " gateway: " << DEVEUI2string(dataPrefix.mac);
-                    onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
-                    pr = LORA_OK;
-                }
-                break;
-            default:
-                pr = ERR_CODE_INVALID_PACKET;
-                break;
-        }
-    }
+int USBListener::listen(void *config)
+{
+    if (!config)
+        return ERR_CODE_LORA_GATEWAY_START_FAILED;
+    listener.config = (GatewaySettings *) config;
+    listener.setLogVerbosity(verbosity);
+    listener.setOnLog(onLog);
+    listener.setOnSpectralScan(onSpectralScan);
+    listener.setOnUpstream(onUpstream);
 
-    if (onDeviceStatDump) {
-        for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
-            onDeviceStatDump(deviceStatEnv, *itp);
-        }
-    }
-    switch (pr) {
-        case ERR_CODE_IS_JOIN:
-            break;
-        case ERR_CODE_PACKET_TOO_SHORT:
-        case ERR_CODE_INVALID_PROTOCOL_VERSION:
-        case ERR_CODE_NO_GATEWAY_STAT:
-        case ERR_CODE_INVALID_STAT:
-        case ERR_CODE_INVALID_PACKET:
-        case ERR_CODE_INVALID_JSON:
-            // ignore invalid mic, inconsistent packet removed, json can contain other valid packets
-            // case ERR_CODE_INVALID_MIC:
-        {
-            std::stringstream sse;
-            sse << strerror_lorawan_ns(pr)
-                << " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-                << " (" << bytesReceived
-                << " bytes): " << hexString(buffer.c_str(), bytesReceived);
-            onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
-        }
-            break;
-        case ERR_CODE_PULLOUT:
-        {
-        }
-            break;
-        default: // including ERR_CODE_INVALID_PACKET, it will contain some valid packets in the JSON, continue
-            // process data packets if exists
-            for (std::vector<SemtechUDPPacket>::iterator itp(packets.begin()); itp != packets.end(); itp++) {
-                if (itp->errcode) {
-                    std::string v = std::string(buffer.c_str(), bytesReceived);
-                    std::stringstream ss;
-                    ss << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << " "
-                       << ": " << ERR_INVALID_PACKET
-                       << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-                       << ", packet: " << hexString(v);
-                    onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
-                    continue;
-                } else {
-                    if (onLog) {
-                        std::stringstream ss;
-                        ss << MSG_RXPK
-                           << itp->toDebugString();
-                        onLog(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
-                    }
-
-                    if (handler) {
-                        handler->put(receivedTime, *itp);
-                    } else {
-                        if (onLog) {
-                            std::stringstream ss;
-                            ss << MSG_READ_BYTES
-                               << UDPSocket::addrString((const struct sockaddr *) &gwAddress) << ": "
-                               << itp->toString();
-                            onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
-                        }
-                    }
-
-                }
-            }
-            // reflect stat
-            if (gatewayStat.errcode == 0) {
-                if (gatewayList)
-                    gatewayList->copyId(gatewayStat, (const sockaddr *) &gwAddress);
-                std::stringstream ss;
-                ss << MSG_GATEWAY_STAT
-                   << gatewayStat.toString() << ". Server memory " << getCurrentRSS()/ 1024 << "K";
-                onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
-                if (onGatewayStatDump)
-                    onGatewayStatDump(gwStatEnv, &gatewayStat);
-            }
-            break;
-    }
-    return pr;
-}
-
-int USBListener::listen() {
-    int sz = sockets.size();
-	if (!sz)
-		return ERR_CODE_SOCKET_NO_ONE;
-
-    std::stringstream ss;
-    ss << MSG_LISTEN_SOCKETS;
-    for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
-        ss << it->toString() << " ";
-    }
-    ss << sz << MSG_LISTEN_SOCKET_COUNT;
-    onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
-
-    while (!stopped) {
-		fd_set readHandles;
-	    FD_ZERO(&readHandles);
-		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
-			FD_SET(it->sock, &readHandles);
-		}
-
-		struct timeval timeoutInterval;
-        timeoutInterval.tv_sec = 1;
-        timeoutInterval.tv_usec = 0;
-
-        int rs = select(largestSocket() + 1, &readHandles, nullptr, nullptr, &timeoutInterval);
-        if (rs == -1) {
-			int serrno = errno;
-			if (onLog) {
-				std::stringstream ss;
-				ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT
-					<< ", errno " << serrno << ": " << strerror(errno);
-				onLog(this, LOG_WARNING, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
-			}
-			if (serrno == EINTR){ // Interrupted system call
-				if (sysSignalPtr) {
-					if (*sysSignalPtr == 0 || *sysSignalPtr == SIGUSR2)
-						continue;
-				}
-			}
-			return ERR_CODE_SELECT;
-		}
-		if (rs == 0) {
-			// timeout, nothing to do
-			// std::stringstream ss;ss << MSG_TIMEOUT;logMessage(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
-			continue;
-		}
-		struct timeval receivedTime;
-		gettimeofday(&receivedTime, NULL);
-		// By default, there are two sockets: one for IPv4, second for IPv6
-		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
-			if (!FD_ISSET(it->sock, &readHandles))
-				continue;
-			struct sockaddr_in6 gwAddress;
-			int bytesReceived = it->recv((void *) buffer.c_str(), buffer.size() - 1, &gwAddress);	// add extra trailing byte for null-terminated string
-			if (bytesReceived <= 0) {
-				if (onLog) {
-					std::stringstream ss;
-					ss << ERR_MESSAGE << ERR_CODE_SOCKET_READ << " "
-						<< UDPSocket::addrString((const struct sockaddr *) &gwAddress) << ", errno "
-						<< errno << ": " << strerror(errno);
-					onLog(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
-				}
-				continue;
-			}
-			// rapidjson operates with \0 terminated string, just in case add terminator. Extra space is reserved
-			buffer[bytesReceived] = '\0';
-			std::stringstream ss;
-			char *json = SemtechUDPPacket::getSemtechJSONCharPtr(buffer.c_str(), bytesReceived);
-			ss << MSG_RECEIVED
-				<< UDPSocket::addrString((const struct sockaddr *) &gwAddress)
-				<< " (" << bytesReceived
-				<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
-			if (json)
-				ss << "; " << json;
-			onLog(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
-
-			// parseRX packet result code
-			int pr = parseBuffer(buffer, bytesReceived, it->sock, receivedTime, gwAddress);
-		}
-	}
-	return LORA_OK;
-}
-
-void USBListener::setLastRemoteAddress(
-	struct sockaddr *value
-	) {
-	if (value->sa_family == AF_INET6)
-		memmove(&remotePeerAddress, value, sizeof(struct sockaddr_in6));
-	else
-		memmove(&remotePeerAddress, value, sizeof(struct sockaddr_in));
+    return listener.start();
 }

@@ -9,6 +9,7 @@
 #pragma clang diagnostic pop
 
 #include "errlist.h"
+#include "utilstring.h"
 
 #define DEF_BUFFER_SIZE	4096
 
@@ -375,6 +376,20 @@ int Configuration::parse(
 			if (ldn.IsString())
 				loggerDatabaseName = ldn.GetString();
 		}
+#ifdef ENABLE_LISTENER_USB
+        if (doc.HasMember("embeddedGatewayConfig")) {
+			rapidjson::Value &gwc =  doc["embeddedGatewayConfig"];
+			if (gwc.IsString()) {
+				std::string path = gwc.GetString();
+                if (!path.empty()) {
+                    std::string v = file2string(path.c_str());
+                    if (!v.empty()) {
+                        gatewayConfig.parseString(v);
+                    }
+                }
+            }
+		}
+#endif
 	} else
 		return ERR_CODE_INVALID_JSON;
 	return r;

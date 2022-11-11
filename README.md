@@ -298,8 +298,9 @@ git pull
 make
 ```
 
+Embedded gateway require UDP listener off:
 ```
-/configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-jwt --enable-listener-udp=no --enable-listener-embedded
+./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-ws --enable-jwt --enable-listener-udp=no --enable-listener-usb
 ```
 
 Create a new SQLite database file:

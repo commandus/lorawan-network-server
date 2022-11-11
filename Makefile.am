@@ -126,13 +126,19 @@ LISTENER_LIB =
 LISTENER_DEF = -DENABLE_LISTENER_UDP
 endif
 
-if ENABLE_LISTENER_EMBEDDED
+if ENABLE_LISTENER_USB
+LISTENER_SRC = usb-listener.cpp lora-gateway-listener.cpp third_party/packet_forwarder/jitqueue.c
+LISTENER_LIB = -Lthird_party/packet_forwarder -lloragw -ltinymt32
+LISTENER_DEF = -DENABLE_LISTENER_USB
+endif
+
+if ENABLE_LISTENER_SPI
 LGW_HOME = third_party/packet_forwarder
 LGW_SRC = embedded-listener.cpp gateway-file-json.cpp gateway-settings.cpp \
     lora-gateway-listener.cpp usb-listener.cpp utilusb.cpp \
     third_party/packet_forwarder/jitqueue.c
 LGW_LIB = -L$(LGW_HOME) -lloragw -ltinymt32 -lusb
-LGW_DEF = -DENABLE_LISTENER_EMBEDDED
+LGW_DEF = -DENABLE_LISTENER_SPI
 endif
 
 #

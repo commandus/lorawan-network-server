@@ -134,14 +134,23 @@ AC_ARG_ENABLE([listener-udp],
 esac],[listener_udp=true])
 AM_CONDITIONAL([ENABLE_LISTENER_UDP], [test x$listener_udp = xtrue])
 
-AC_ARG_ENABLE([listener-embedded],
-[  --enable-listener-embedded    Turn on embedded Lora gateway],
+AC_ARG_ENABLE([listener-usb],
+[  --enable-listener-usb    Turn on embedded USB gateway],
 [case "${enableval}" in
-  yes) listener_embedded=true ;;
-  no)  listener_embedded=false ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-listener-embedded]) ;;
-esac],[listener_embedded=false])
-AM_CONDITIONAL([ENABLE_LISTENER_EMBEDDED], [test x$listener_embedded = xtrue])
+  yes) listener_usb=true ;;
+  no)  listener_usb=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-listener-usb]) ;;
+esac],[listener_usb=false])
+AM_CONDITIONAL([ENABLE_LISTENER_USB], [test x$listener_usb = xtrue])
+
+AC_ARG_ENABLE([listener-spi],
+[  --enable-listener-spi    Turn on embedded SPI Lora gateway],
+[case "${enableval}" in
+  yes) listener_spi=true ;;
+  no)  listener_spi=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-listener-spi]) ;;
+esac],[listener_spi=false])
+ AM_CONDITIONAL([ENABLE_LISTENER_SPI], [test x$listener_spi = xtrue])
 
 # Embedded web service
 
@@ -212,6 +221,14 @@ AC_MSG_NOTICE([  logger-huffman on])
 fi
 if test x$logger_pkt2 = xtrue; then
 AC_MSG_NOTICE([  pkt2 on])
+fi
+
+AC_MSG_NOTICE([Gateway:])
+if test x$listener_udp = xtrue; then
+AC_MSG_NOTICE([  gateway udp on])
+fi
+if test x$listener_usb = xtrue; then
+AC_MSG_NOTICE([  gateway usb on])
 fi
 
 if test x$listener_embedded = xtrue; then

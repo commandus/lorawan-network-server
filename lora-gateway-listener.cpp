@@ -3,7 +3,7 @@
  */
 #include <iomanip>
 #include <thread>
-
+#include <math.h>
 #include <syslog.h>
 
 #include "lora-gateway-listener.h"
@@ -141,6 +141,7 @@ std::string GatewayMeasurements::toString() const
         ss << "\"" << getMeasurementName(i) << "\": " << m[i];
     }
     ss << "}";
+    return ss.str();
 }
 
 TxPacket::TxPacket()
@@ -235,6 +236,7 @@ void LoraGatewayListener::spectralScanRunner()
     if (!config)
         return;
     spectralScanThreadRunning = true;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Spectral scan thread started.");
 
     uint32_t freqHz = config->sx1261()->spectralScan.freq_hz_start;
     uint32_t freqHzStop = config->sx1261()->spectralScan.freq_hz_start + config->sx1261()->spectralScan.nb_chan * 200E3;
@@ -277,7 +279,7 @@ void LoraGatewayListener::spectralScanRunner()
                 mLGW.unlock();
                 // write to log
                 log(LOG_WARNING, ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_START_FAILED, ERR_LORA_GATEWAY_SPECTRAL_SCAN_START_FAILED);
-                continue; // main while loop
+                continue;
             }
             spectralScanStarted = true;
         }
@@ -339,12 +341,14 @@ void LoraGatewayListener::spectralScanRunner()
             }
         }
     }
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Spectral scan thread finished.");
     spectralScanThreadRunning = false;
 }
 
 void LoraGatewayListener::gpsRunner()
 {
     gpsThreadRunning = true;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "GPS thread started.");
     char serial_buff[128]; // buffer to receive GPS data
     memset(serial_buff, 0, sizeof serial_buff);
 
@@ -422,6 +426,7 @@ void LoraGatewayListener::gpsRunner()
             wr_idx -= LGW_GPS_MIN_MSG_SIZE;
         }
     }
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "GPS thread finished.");
     gpsThreadRunning = false;
 }
 
@@ -429,7 +434,8 @@ void LoraGatewayListener::gpsRunner()
  * Check time reference and calculate XTAL correction
  */
 void LoraGatewayListener::gpsCheckTimeRunner() {
-    gpsCheckTimeRunning = true;
+    gpsCheckTimeThreadRunning = true;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Check time thread started.");
 
     // GPS reference validation variables
     long gps_ref_age = 0;
@@ -488,7 +494,8 @@ void LoraGatewayListener::gpsCheckTimeRunner() {
             }
         }
     }
-    gpsCheckTimeRunning = false;
+    gpsCheckTimeThreadRunning = false;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Check time thread finished.");
 }
 
 #define STATUS_SIZE        200
@@ -511,6 +518,7 @@ void LoraGatewayListener::upstreamRunner()
     metadata.gatewayId = config->gateway()->gatewayId;
 
     upstreamThreadRunning = true;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Upstream thread started.");
 
     // allocate memory for metadata fetching and processing
     struct lgw_pkt_rx_s rxpkt[NB_PKT_MAX]; // array containing inbound packets + metadata
@@ -734,6 +742,8 @@ void LoraGatewayListener::upstreamRunner()
         measurements.inc(meas_up_ack_rcv);
     }
     upstreamThreadRunning = false;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Upstream thread finished.");
+
 }
 
 #define PROTOCOL_VERSION            2           // v1.6
@@ -968,9 +978,9 @@ int LoraGatewayListener::enqueueTxPacket(
 /**
  * Transmit beacons
  */
-void LoraGatewayListener::downstreamRunner() {
-    downstreamThreadRunning = true;
-
+void LoraGatewayListener::downstreamBeaconRunner() {
+    downstreamBeaconThreadRunning = true;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Beacon downstream thread started.");
     // beacon variables
     struct lgw_pkt_tx_s beacon_pkt;
     uint8_t beacon_chan;
@@ -1088,126 +1098,115 @@ void LoraGatewayListener::downstreamRunner() {
     beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_crc2 >> 8);
 
     while (!stopRequest) {
-        // time of the pull request
-        struct timespec send_time;
-        clock_gettime(CLOCK_MONOTONIC, &send_time);
-        measurements.inc(meas_dw_pull_sent);
-
-        // listen to packets and process them until a new PULL request must be sent
-        struct timespec recv_time; // time of return from recv socket call
-        recv_time = send_time;
-        while (((int)difftimespec(recv_time, send_time) < config->gateway()->keepaliveInterval) && !stopRequest) {
-            // try to receive a datagram
-            clock_gettime(CLOCK_MONOTONIC, &recv_time);
-
-            // Pre-allocate beacon slots in JiT queue, to check downlink collisions
-            int retry = 0;
-            uint8_t beacon_loop = JIT_NUM_BEACON_IN_QUEUE - jit_queue[0].num_beacon;
-            while (beacon_loop && config->gateway()->beaconPeriod) {
-                mutexGPSTimeReference.lock();
-                // Wait for GPS to be ready before inserting beacons in JiT queue
-                if (gps_ref_valid && xtal_correct_ok) {
-                    // compute GPS time for next beacon to come
-                    //   LoRaWAN: T = k*beacon_period + TBeaconDelay
-                    //            with TBeaconDelay = [1.5ms +/- 1µs]*/
-                    if (last_beacon_gps_time.tv_sec == 0) {
-                        // if no beacon has been queued, get next slot from current GPS time
-                        diff_beacon_time = gpsTimeReference.gps.tv_sec % ((time_t) config->gateway()->beaconPeriod);
-                        next_beacon_gps_time.tv_sec = gpsTimeReference.gps.tv_sec + ((time_t) config->gateway()->beaconPeriod - diff_beacon_time);
-                    } else {
-                        // if there is already a beacon, take it as reference
-                        next_beacon_gps_time.tv_sec = last_beacon_gps_time.tv_sec + config->gateway()->beaconPeriod;
-                    }
-                    // now we can add a beacon_period to the reference to get next beacon GPS time
-                    next_beacon_gps_time.tv_sec += (retry * config->gateway()->beaconPeriod);
-                    next_beacon_gps_time.tv_nsec = 0;
+        // Pre-allocate beacon slots in JiT queue, to check downlink collisions
+        int retry = 0;
+        int beacon_loop = JIT_NUM_BEACON_IN_QUEUE - jit_queue[0].num_beacon;
+        while (beacon_loop > 0 && config->gateway()->beaconPeriod > 0) {
+            mutexGPSTimeReference.lock();
+            // Wait for GPS to be ready before inserting beacons in JiT queue
+            if (gps_ref_valid && xtal_correct_ok) {
+                // compute GPS time for next beacon to come
+                //   LoRaWAN: T = k*beacon_period + TBeaconDelay
+                //            with TBeaconDelay = [1.5ms +/- 1µs]*/
+                if (last_beacon_gps_time.tv_sec == 0) {
+                    // if no beacon has been queued, get next slot from current GPS time
+                    diff_beacon_time = gpsTimeReference.gps.tv_sec % ((time_t) config->gateway()->beaconPeriod);
+                    next_beacon_gps_time.tv_sec = gpsTimeReference.gps.tv_sec + ((time_t) config->gateway()->beaconPeriod - diff_beacon_time);
+                } else {
+                    // if there is already a beacon, take it as reference
+                    next_beacon_gps_time.tv_sec = last_beacon_gps_time.tv_sec + config->gateway()->beaconPeriod;
+                }
+                // now we can add a beacon_period to the reference to get next beacon GPS time
+                next_beacon_gps_time.tv_sec += (retry * config->gateway()->beaconPeriod);
+                next_beacon_gps_time.tv_nsec = 0;
 
 #if DEBUG_BEACON
-                    {
-                        time_t time_gps = gpsTimeReference.gps.tv_sec + UNIX_GPS_EPOCH_OFFSET;
-                        time_t time_last_beacon = last_beacon_gps_time.tv_sec + UNIX_GPS_EPOCH_OFFSET;
-                        time_t time_next_beacon = next_beacon_gps_time.tv_sec + UNIX_GPS_EPOCH_OFFSET;
-                        std::stringstream ss;
-                        ss << "Beacon GPS time now " << ctime(&time_gps)
-                            << ", last " << ctime(&time_last_beacon)
-                            << ", next " << ctime(&time_next_beacon);
-                        log(LOG_DEBUG, 0, ss.str());
-                    }
+                {
+                    time_t time_gps = gpsTimeReference.gps.tv_sec + UNIX_GPS_EPOCH_OFFSET;
+                    time_t time_last_beacon = last_beacon_gps_time.tv_sec + UNIX_GPS_EPOCH_OFFSET;
+                    time_t time_next_beacon = next_beacon_gps_time.tv_sec + UNIX_GPS_EPOCH_OFFSET;
+                    std::stringstream ss;
+                    ss << "Beacon GPS time now " << ctime(&time_gps)
+                        << ", last " << ctime(&time_last_beacon)
+                        << ", next " << ctime(&time_next_beacon);
+                    log(LOG_DEBUG, 0, ss.str());
+                }
 #endif
 
-                    // convert GPS time to concentrator time, and set packet counter for JiT trigger
-                    lgw_gps2cnt(gpsTimeReference, next_beacon_gps_time, &(beacon_pkt.count_us));
-                    mutexGPSTimeReference.unlock();
+                // convert GPS time to concentrator time, and set packet counter for JiT trigger
+                lgw_gps2cnt(gpsTimeReference, next_beacon_gps_time, &(beacon_pkt.count_us));
+                mutexGPSTimeReference.unlock();
 
-                    // apply frequency correction to beacon TX frequency
-                    if (config->gateway()->beaconFreqNb > 1) {
-                        // floor rounding
-                        beacon_chan = (next_beacon_gps_time.tv_sec / config->gateway()->beaconPeriod) % config->gateway()->beaconFreqNb;
-                    } else {
-                        beacon_chan = 0;
-                    }
-                    // Compute beacon frequency
-                    beacon_pkt.freq_hz = config->gateway()->beaconFreqHz + (beacon_chan * config->gateway()->beaconFreqStep);
-
-                    // load time in beacon payload
-                    beacon_pyld_idx = beacon_RFU1_size;
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff &  next_beacon_gps_time.tv_sec;
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >>  8);
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >> 16);
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >> 24);
-
-                    // calculate CRC
-                    field_crc1 = crc16(beacon_pkt.payload, 4 + beacon_RFU1_size); // CRC for the network common part
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & field_crc1;
-                    beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_crc1 >> 8);
-
-                    // Insert beacon packet in JiT queue
-                    mLGW.lock();
-                    lgw_get_instcnt(&current_concentrator_time);
-                    mLGW.unlock();
-                    jit_result = jit_enqueue(&jit_queue[0], current_concentrator_time, &beacon_pkt, JIT_PKT_TYPE_BEACON);
-                    if (jit_result == JIT_ERROR_OK) {
-                        // update stats
-                        measurements.inc(meas_nb_beacon_queued);
-                        // One more beacon in the queue
-                        beacon_loop--;
-                        retry = 0;
-                        last_beacon_gps_time.tv_sec = next_beacon_gps_time.tv_sec; // keep this beacon time as reference for next one to be programmed
-
-                        // display beacon payload
-                        std::stringstream ss;
-                        ss << "Beacon queued, count_us " << beacon_pkt.count_us
-                            << ", freq_hz " << beacon_pkt.freq_hz
-                            << ", size " << beacon_pkt.size
-                            << "  => ";
-                        for (int i = 0; i < beacon_pkt.size; ++i) {
-                            ss << std::hex << std::setw(2) << std::setfill('0') << beacon_pkt.payload[i];
-                        }
-                        log(LOG_INFO, 0, ss.str());
-                    } else {
-                        // update stats
-                        switch (jit_result) {
-                            case JIT_ERROR_COLLISION_BEACON:
-                                measurements.inc(meas_nb_tx_rejected_collision_beacon);
-                                break;
-                            default:
-                                measurements.inc(meas_nb_beacon_rejected);
-                                break;
-                        }
-                        log(LOG_INFO, ERR_CODE_LORA_GATEWAY_BEACON_FAILED, ERR_LORA_GATEWAY_BEACON_FAILED);
-                        // In case previous enqueueTxPacket failed, we retry one period later until it succeeds
-                        // Note: In case the GPS has been unlocked for a while, there can be lots of retries
-                        //       to be done from last beacon time to a new valid one
-                        retry++;
-                    }
+                // apply frequency correction to beacon TX frequency
+                if (config->gateway()->beaconFreqNb > 1) {
+                    // floor rounding
+                    beacon_chan = (next_beacon_gps_time.tv_sec / config->gateway()->beaconPeriod) % config->gateway()->beaconFreqNb;
                 } else {
-                    mutexGPSTimeReference.unlock();
-                    break;
+                    beacon_chan = 0;
                 }
+                // Compute beacon frequency
+                beacon_pkt.freq_hz = config->gateway()->beaconFreqHz + (beacon_chan * config->gateway()->beaconFreqStep);
+
+                // load time in beacon payload
+                beacon_pyld_idx = beacon_RFU1_size;
+                beacon_pkt.payload[beacon_pyld_idx++] = 0xff &  next_beacon_gps_time.tv_sec;
+                beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >>  8);
+                beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >> 16);
+                beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (next_beacon_gps_time.tv_sec >> 24);
+
+                // calculate CRC
+                field_crc1 = crc16(beacon_pkt.payload, 4 + beacon_RFU1_size); // CRC for the network common part
+                beacon_pkt.payload[beacon_pyld_idx++] = 0xff & field_crc1;
+                beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_crc1 >> 8);
+
+                // Insert beacon packet in JiT queue
+                mLGW.lock();
+                lgw_get_instcnt(&current_concentrator_time);
+                mLGW.unlock();
+                jit_result = jit_enqueue(&jit_queue[0], current_concentrator_time, &beacon_pkt, JIT_PKT_TYPE_BEACON);
+                if (jit_result == JIT_ERROR_OK) {
+                    // update stats
+                    measurements.inc(meas_nb_beacon_queued);
+                    // One more beacon in the queue
+                    beacon_loop--;
+                    retry = 0;
+                    last_beacon_gps_time.tv_sec = next_beacon_gps_time.tv_sec; // keep this beacon time as reference for next one to be programmed
+
+                    // display beacon payload
+                    std::stringstream ss;
+                    ss << "Beacon queued, count_us " << beacon_pkt.count_us
+                        << ", freq_hz " << beacon_pkt.freq_hz
+                        << ", size " << beacon_pkt.size
+                        << "  => ";
+                    for (int i = 0; i < beacon_pkt.size; ++i) {
+                        ss << std::hex << std::setw(2) << std::setfill('0') << beacon_pkt.payload[i];
+                    }
+                    log(LOG_INFO, 0, ss.str());
+                } else {
+                    // update stats
+                    switch (jit_result) {
+                        case JIT_ERROR_COLLISION_BEACON:
+                            measurements.inc(meas_nb_tx_rejected_collision_beacon);
+                            break;
+                        default:
+                            measurements.inc(meas_nb_beacon_rejected);
+                            break;
+                    }
+                    log(LOG_INFO, ERR_CODE_LORA_GATEWAY_BEACON_FAILED, ERR_LORA_GATEWAY_BEACON_FAILED);
+                    // In case previous enqueueTxPacket failed, we retry one period later until it succeeds
+                    // Note: In case the GPS has been unlocked for a while, there can be lots of retries
+                    //       to be done from last beacon time to a new valid one
+                    retry++;
+                }
+            } else {
+                mutexGPSTimeReference.unlock();
+                break;
             }
         }
+        sleep(1);
     }
-    downstreamThreadRunning = false;
+    downstreamBeaconThreadRunning = false;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Beacon downstream thread finished.");
 }
 
 /**
@@ -1215,6 +1214,7 @@ void LoraGatewayListener::downstreamRunner() {
  **/
 void LoraGatewayListener::jitRunner() {
     jitThreadRunning = true;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "JIT thread started.");
     int result = LGW_HAL_SUCCESS;
     struct lgw_pkt_tx_s pkt;
     int pkt_index = -1;
@@ -1309,16 +1309,17 @@ void LoraGatewayListener::jitRunner() {
         }
     }
     jitThreadRunning = false;
+    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "JIT thread finished.");
 }
 
 LoraGatewayListener::LoraGatewayListener()
     : logVerbosity(0), onUpstream(nullptr), onSpectralScan(nullptr), onLog(nullptr), stopRequest(false),
-    gpsThreadRunning(false), gpsCheckTimeRunning(false), spectralScanThreadRunning(false), jitThreadRunning(false),
-    upstreamThreadRunning(false), downstreamThreadRunning(false),
-    gps_ref_valid(false),
-    lastLgwCode(0), config(nullptr), fdGpsTty(-1), eui(0),
-    gpsCoordsLastSynced(0), gpsTimeLastSynced(0), gpsEnabled(false),
-    xtal_correct_ok(false), xtal_correct(1.0)
+      gpsThreadRunning(false), gpsCheckTimeThreadRunning(false), spectralScanThreadRunning(false), jitThreadRunning(false),
+      upstreamThreadRunning(false), downstreamBeaconThreadRunning(false),
+      gps_ref_valid(false),
+      lastLgwCode(0), config(nullptr), fdGpsTty(-1), eui(0),
+      gpsCoordsLastSynced(0), gpsTimeLastSynced(0), gpsEnabled(false),
+      xtal_correct_ok(false), xtal_correct(1.0)
 {
     // JIT queue initialization
     jit_queue_init(&jit_queue[0]);
@@ -1419,11 +1420,11 @@ int LoraGatewayListener::start()
 {
     if (!config)
         return ERR_CODE_NO_CONFIG;
-
+    stopRequest = false;
     lastLgwCode = 0;
     // GPS sync
     if (config->gateway()->gpsEnabled) {
-        lastLgwCode = lgw_gps_enable((char *) config->gateway()->gpsTTYPath.c_str(),
+        lastLgwCode = lgw_gps_enable((char *) config->gpsTTYPath()->c_str(),
             (char *) DEF_GPS_FAMILY, 0, &fdGpsTty);
         if (lastLgwCode) {
             config->gateway()->gpsEnabled = false;
@@ -1447,11 +1448,10 @@ int LoraGatewayListener::start()
         std::thread upstreamThread(&LoraGatewayListener::upstreamRunner, this);
         upstreamThread.detach();
     }
-    if (!downstreamThreadRunning) {
-        std::thread downstreamThread(&LoraGatewayListener::downstreamRunner, this);
-        downstreamThread.detach();
+    if (!downstreamBeaconThreadRunning) {
+        std::thread downstreamBeaconThread(&LoraGatewayListener::downstreamBeaconRunner, this);
+        downstreamBeaconThread.detach();
     }
-
     if (!jitThreadRunning) {
         std::thread jitThread(&LoraGatewayListener::jitRunner, this);
         jitThread.detach();
@@ -1469,7 +1469,7 @@ int LoraGatewayListener::start()
             std::thread gpsThread(&LoraGatewayListener::gpsRunner, this);
             gpsThread.detach();
         }
-        if (!gpsCheckTimeRunning) {
+        if (!gpsCheckTimeThreadRunning) {
             std::thread gpsCheckTimeThread(&LoraGatewayListener::gpsCheckTimeRunner, this);
             gpsCheckTimeThread.detach();
         }
@@ -1480,12 +1480,23 @@ int LoraGatewayListener::start()
 bool LoraGatewayListener::isRunning()
 {
     return upstreamThreadRunning
-        && downstreamThreadRunning
-        && jitThreadRunning
-        && gpsThreadRunning
-        && gpsCheckTimeRunning
-        && spectralScanThreadRunning;
+           && downstreamBeaconThreadRunning
+           && jitThreadRunning
+       && ((!gpsEnabled) || (gpsThreadRunning && gpsCheckTimeThreadRunning))
+       && ((!config) || (!config->sx1261()->spectralScan.enable) || spectralScanThreadRunning);
 }
+
+bool LoraGatewayListener::isStopped()
+{
+    return (!upstreamThreadRunning)
+       && (!downstreamBeaconThreadRunning)
+       && (!jitThreadRunning)
+       && (!gpsThreadRunning)
+       && (!gpsCheckTimeThreadRunning)
+       && (!spectralScanThreadRunning);
+}
+
+#define DEF_WAIT_SECONDS    60
 
 int LoraGatewayListener::stop(int waitSeconds)
 {
@@ -1495,19 +1506,20 @@ int LoraGatewayListener::stop(int waitSeconds)
         fdGpsTty = -1;
     }
     if (waitSeconds <= 0) {
-        if (onStop)
-            onStop(this, false);
-        return ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT;
+        waitSeconds = DEF_WAIT_SECONDS;
     }
 
     bool success = false;
     for (int i = 0; i < waitSeconds; i++) {
-        if (isRunning()) {
+        if (!isStopped()) {
             sleep(1);
             continue;
         }
         success = true;
     }
+
+    if (success)
+        success = lgw_stop() == 0;
     if (onStop) {
         onStop(this, success);
     }
@@ -1518,14 +1530,14 @@ void LoraGatewayListener::log(
     int level,
     int errorcode,
     const std::string &message
-)
+) const
 {
     if (!onLog)
         return;
     if (level > logVerbosity)
         return;
     mLog.lock();
-    onLog(this, LOG_EMBEDDED_GATEWAY, level, errorcode, message);
+    onLog((void *) this, LOG_EMBEDDED_GATEWAY, level, errorcode, message);
     mLog.unlock();
 }
 
@@ -1543,7 +1555,7 @@ void LoraGatewayListener::setOnSpectralScan(
 
 void LoraGatewayListener::setOnLog(
     std::function<void(
-        const LoraGatewayListener *listener,
+        void *listener,
         int level,
         int modulecode,
         int errorcode,

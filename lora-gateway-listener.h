@@ -89,7 +89,7 @@ private:
     )> onSpectralScan;
 
     std::function<void(
-        const LoraGatewayListener *listener,
+        void *listener,
         int level,
         int moduleCode,
         int errorCode,
@@ -105,10 +105,10 @@ private:
     bool stopRequest;               ///< set to true to stop all threads
     // thread finish indicators
     bool upstreamThreadRunning;
-    bool downstreamThreadRunning;
+    bool downstreamBeaconThreadRunning;
     bool jitThreadRunning;
     bool gpsThreadRunning;
-    bool gpsCheckTimeRunning;
+    bool gpsCheckTimeThreadRunning;
     bool spectralScanThreadRunning;
 
     bool gps_ref_valid;             ///< is GPS reference acceptable (ie. not too old)
@@ -116,7 +116,7 @@ private:
     std::mutex mutexGPSTimeReference;        ///< control access to set system time
     std::mutex mLGW;                         ///< control access to the concentrator
     std::mutex mReportSpectralScan;          ///< control access to spectral scan report
-    std::mutex mLog;                         ///< control access to log facility
+    mutable std::mutex mLog;                 ///< control access to log facility
     std::mutex mXTALcorrection;              ///< control access to the XTAL correction
 
     struct jit_queue_s jit_queue[LGW_RF_CHAIN_NB];  ///< Just In Time TX scheduling for each radio channel
@@ -135,18 +135,13 @@ private:
 
     // threads
     void upstreamRunner();      // receive Lora packets from end-device(s)
-    void downstreamRunner();    // transmit beacons
+    void downstreamBeaconRunner();    // transmit beacons
     void jitRunner();           // transmit from JIT queue
     void spectralScanRunner();
     void gpsRunner();
     void gpsCheckTimeRunner();
     bool getTxGainLutIndex(uint8_t rf_chain, int8_t rf_power, uint8_t * lut_index);
 protected:
-    void log(
-        int level,
-        int errorCode,
-        const std::string &message
-    );
     // Apply config
     int setup();
 public:
@@ -161,6 +156,12 @@ public:
     LoraGatewayListener(GatewaySettings *cfg);
     ~LoraGatewayListener();
 
+    void log(
+        int level,
+        int errorCode,
+        const std::string &message
+    ) const;
+
     /**
         LGW library version.
         Calls lgw_version_info();
@@ -171,6 +172,7 @@ public:
     int start();
     int stop(int waitSeconds);
     bool isRunning();
+    bool isStopped();
 
     void setOnSpectralScan(
         std::function<void(
@@ -181,7 +183,7 @@ public:
     );
     void setOnLog(
         std::function<void(
-            const LoraGatewayListener *listener,
+            void *listener,
             int level,
             int moduleCode,
             int errorCode,
@@ -190,9 +192,9 @@ public:
     );
     void setOnUpstream(
         std::function<void(
-                const LoraGatewayListener *listener,
-                const SEMTECH_PROTOCOL_METADATA *metadata,
-                const std::string &payload
+            const LoraGatewayListener *listener,
+            const SEMTECH_PROTOCOL_METADATA *metadata,
+            const std::string &payload
         )> value
     );
     void setOnStop(

@@ -23,7 +23,6 @@ class USBListener : public PacketListener
 {
 public:
     LoraGatewayListener listener;   ///< USB gateway listener
-    GatewayConfigFileJson config;   ///< gateway config
 
     USBListener();
 	~USBListener();
@@ -32,7 +31,12 @@ public:
 
 	void clear() override;
     bool add(const std::string &value, int hint) override;
-	int listen() override;
+    /**
+     * Start listening
+     * @param config GatewaySettings
+     * @return 0- success
+     */
+	int listen(void *config) override;
 };
 
 #endif

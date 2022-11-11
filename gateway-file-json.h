@@ -64,6 +64,8 @@ public:
 class GatewayGatewayConfig  : public GatewayJsonConfig {
 public:
     gateway_t value;
+    std::string serverAddr;
+    std::string gpsTtyPath;
     GatewayGatewayConfig();
     void reset();
     int parse(rapidjson::Value &jsonValue) override;
@@ -101,6 +103,8 @@ public:
     sx130x_config_t *sx130x() override;
     gateway_t *gateway() override;
     struct lgw_conf_debug_s *debug() override;
+    std::string *serverAddress() override;
+    std::string *gpsTTYPath() override;
 };
 
 #endif

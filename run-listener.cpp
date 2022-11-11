@@ -229,8 +229,8 @@ void RunListener::init(
 #ifdef ENABLE_LISTENER_UDP
     listener = new UDPListener();
 #endif
-#ifdef ENABLE_LISTENER_EMBEDDED
-    listener = new EmbeddedListener();
+#ifdef ENABLE_LISTENER_USB
+    listener = new USBListener();
 #endif
     if (!listener)
         return;

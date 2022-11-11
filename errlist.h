@@ -189,6 +189,7 @@
 #define ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_POWER          -660
 #define ERR_CODE_LORA_GATEWAY_USB_NOT_FOUND                 -661
 #define ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT              -662
+#define ERR_CODE_LORA_GATEWAY_STOP_FAILED                   -663
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -373,6 +374,7 @@
 
 #define ERR_LORA_GATEWAY_USB_NOT_FOUND                  "Gateway USB path not found"
 #define ERR_LORA_GATEWAY_SHUTDOWN_TIMEOUT               "Gateway shutdown timeout"
+#define ERR_LORA_GATEWAY_STOP_FAILED                    "Gateway stop failed"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -454,9 +456,11 @@
 #define MSG_START_OUTPUT_DB_SVC         "Start output database service .."
 #define MSG_CHECKING_DB_AVAILABILITY    "Checking database availability.."
 #define MSG_LISTEN_SOCKETS              "Listen sockets "
+#define MSG_LISTEN_EMBEDDED_USB         "Listen USB gateway "
+#define MSG_LISTEN_EMBEDDED_PCI         "Listen PCI gateway "
 #define MSG_LISTEN_SOCKET_COUNT         " socket(s)"
 #define MSG_LISTEN_LARGEST_SOCKET       "Largest socket "
-
+#define MSG_SPECTRAL_SCAN_FREQUENCY     "Spectral scan, frequency "
 #define MSG_LORA_GATEWAY_SEND_AT_GPS_TIME   "A packet will be sent on timestamp (calculated from GPS time)"
 
 const char *logLevelString(int logLevel);

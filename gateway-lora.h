@@ -2,30 +2,10 @@
 #define GATEWAY_LORA 1
 
 /*
-    Semtech's Lora concentrator definitions
+    Semtech's Lora concentrator configuration structures
+    @see gateway-settings.h
 */
-#include <string>
-
-#include <stdint.h>         // C99 types
-#include <stdbool.h>        // bool type
-#include <stdio.h>          // printf, fprintf, snprintf, fopen, fputs
-#include <inttypes.h>       // PRIx64, PRIu64...
-
-#include <string.h>         // memset
-#include <signal.h>         // sigaction
-#include <time.h>           // time, clock_gettime, strftime, gmtime
-#include <sys/time.h>       // timeval
-#include <unistd.h>         // getopt, access
-#include <stdlib.h>         // atoi, exit
-#include <errno.h>          // error messages
-#include <math.h>           // modf
-
-#include <sys/socket.h>     // socket specific definitions
-#include <netinet/in.h>     // INET constants and stuff
-#include <arpa/inet.h>      // IP address conversion stuff
-#include <netdb.h>          // gai_strerror
-
-#include <pthread.h>
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,6 +25,7 @@ extern "C" {
 #include "packet_forwarder/loragw_gps.h"
 
 #include "packet_forwarder/jitqueue.h"
+
 
 /**
  * spectral scan
@@ -80,7 +61,6 @@ typedef struct sx130x_config_s {
 
 typedef struct gateway_s {
     uint64_t gatewayId;
-    std::string serverAddress;  // not used
     uint16_t serverPortUp;      // not used
     uint16_t serverPortDown;    // not used
     uint32_t keepaliveInterval;
@@ -90,10 +70,9 @@ typedef struct gateway_s {
     bool forwardCRCError;
     bool forwardCRCDisabled;
     bool gpsEnabled;
-    std::string gpsTTYPath;
     struct coord_s refGeoCoordinates;
     bool fakeGPS;
-    uint32_t beaconPeriod;
+    uint32_t beaconPeriod;  ///< send class B beacon period in seconds. 0- do not send beacons, Must be >=6s and <86400
     uint32_t beaconFreqHz;
     uint8_t beaconFreqNb;
     uint32_t beaconFreqStep;
