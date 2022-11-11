@@ -5,6 +5,9 @@
 #include <vector>
 
 #include "utilidentity.h"
+#ifdef ENABLE_LISTENER_USB
+#include "gateway-file-json.h"
+#endif
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -108,6 +111,9 @@ class Configuration {
 		int gatewayPort;
 		ServerConfig serverConfig;
 		WebServiceConfig wsConfig;
+#ifdef ENABLE_LISTENER_USB
+        GatewayConfigFileJson gatewayConfig;
+#endif
 		Configuration();
 		Configuration(const char* value);
 		int parse(

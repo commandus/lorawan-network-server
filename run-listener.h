@@ -8,9 +8,13 @@
 #ifdef ENABLE_LISTENER_UDP
 #include "udp-listener.h"
 #endif
-#ifdef ENABLE_LISTENER_EMBEDDED
+#ifdef ENABLE_LISTENER_USB
 #include "embedded-listener.h"
 #endif
+#ifdef ENABLE_LISTENER_USB
+#include "usb-listener.h"
+#endif
+
 #include "receiver-queue-processor.h"
 #include "lora-packet-handler-impl.h"
 

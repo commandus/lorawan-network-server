@@ -8,15 +8,16 @@
 #include "identity-service.h"
 #include "device-history-service-abstract.h"
 #include "gateway-list.h"
+#include "lora-gateway-listener.h"
 
 /**
- * Listen Semtech's gateway directly
+ * Listen SPI connected gateway
+ * TODO not implemented yet
  */
 class EmbeddedListener : public PacketListener
 {
-private:
-    std::string buffer;
 public:
+    LoraGatewayListener listener;
     EmbeddedListener();
 	~EmbeddedListener();
 
@@ -24,9 +25,7 @@ public:
 
 	void clear() override;
     bool add(const std::string &value, int hint) override;
-	int listen() override;
-
-    void setBufferSize(size_t value) override;
+	int listen(void *config) override;
 };
 
 #endif
