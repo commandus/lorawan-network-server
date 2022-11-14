@@ -981,6 +981,11 @@ int LoraGatewayListener::enqueueTxPacket(
 void LoraGatewayListener::downstreamBeaconRunner() {
     downstreamBeaconThreadRunning = true;
     log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Beacon downstream thread started.");
+    if (!gpsEnabled) {
+        // TODO remove this return in production
+        log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, "Beacon downstream thread stopped: no GPS enabled.");
+        return;
+    }
     // beacon variables
     struct lgw_pkt_tx_s beacon_pkt;
     uint8_t beacon_chan;
@@ -1319,7 +1324,8 @@ LoraGatewayListener::LoraGatewayListener()
       gps_ref_valid(false),
       lastLgwCode(0), config(nullptr), fdGpsTty(-1), eui(0),
       gpsCoordsLastSynced(0), gpsTimeLastSynced(0), gpsEnabled(false),
-      xtal_correct_ok(false), xtal_correct(1.0)
+      xtal_correct_ok(false), xtal_correct(1.0),
+      packetListener(nullptr)
 {
     // JIT queue initialization
     jit_queue_init(&jit_queue[0]);
@@ -1480,7 +1486,7 @@ int LoraGatewayListener::start()
 bool LoraGatewayListener::isRunning()
 {
     return upstreamThreadRunning
-           && downstreamBeaconThreadRunning
+           && ((!gpsEnabled) || downstreamBeaconThreadRunning)
            && jitThreadRunning
        && ((!gpsEnabled) || (gpsThreadRunning && gpsCheckTimeThreadRunning))
        && ((!config) || (!config->sx1261()->spectralScan.enable) || spectralScanThreadRunning);

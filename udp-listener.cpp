@@ -300,7 +300,7 @@ int UDPListener::listen(void *config) {
 			continue;
 		}
 		struct timeval receivedTime;
-		gettimeofday(&receivedTime, NULL);
+		gettimeofday(&receivedTime, nullptr);
 		// By default, there are two sockets: one for IPv4, second for IPv6
 		for (std::vector<UDPSocket>::const_iterator it = sockets.begin(); it != sockets.end(); it++) {
 			if (!FD_ISSET(it->sock, &readHandles))

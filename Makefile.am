@@ -127,7 +127,9 @@ LISTENER_DEF = -DENABLE_LISTENER_UDP
 endif
 
 if ENABLE_LISTENER_USB
-LISTENER_SRC = usb-listener.cpp lora-gateway-listener.cpp third_party/packet_forwarder/jitqueue.c
+LISTENER_SRC = usb-listener.cpp lora-gateway-listener.cpp \
+    gateway-file-json.cpp \
+    third_party/packet_forwarder/jitqueue.c
 LISTENER_LIB = -Lthird_party/packet_forwarder -lloragw -ltinymt32
 LISTENER_DEF = -DENABLE_LISTENER_USB
 endif

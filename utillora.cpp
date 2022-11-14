@@ -1096,6 +1096,29 @@ rfmMetaData::rfmMetaData(
 		gatewayId = *(uint64_t *) &aprefix->mac;
 }
 
+rfmMetaData::rfmMetaData(
+    const SEMTECH_PREFIX_GW &aPrefix,
+    const SEMTECH_PROTOCOL_METADATA *m
+)
+{
+    gatewayId = deveui2int(aPrefix.mac);
+    if (m) {
+        t = m->t;
+        tmst = m->tmst;
+        chan = m->chan;
+        rfch = m->rfch;
+        freq = m->freq;
+        stat = m->stat;
+        modu = m->modu;
+        bandwith = m->bandwith;
+        spreadingFactor = m->spreadingFactor;
+        codingRate = m->codingRate;
+        bps = m->bps;
+        rssi = m->rssi;
+        lsnr = m->lsnr;
+    }
+}
+
 /**
  * GPS time of pkt RX, number of milliseconds since 06.Jan.1980
  */ 
@@ -2051,6 +2074,19 @@ void SemtechUDPPacket::clearPrefix()
 	prefix.token = 0;
 	prefix.tag = 0;
 	memset(&prefix.mac, 0, sizeof(prefix.mac));
+}
+
+SemtechUDPPacket::SemtechUDPPacket(
+    const SEMTECH_PREFIX_GW &aPrefix,
+    const SEMTECH_PROTOCOL_METADATA *aMetadata,
+    const std::string &payload,
+    IdentityService *identityService
+)
+    : errcode(0), downlink(false)
+{
+    memmove(&prefix, &aPrefix, sizeof(SEMTECH_PREFIX_GW));
+    metadata.push_back(rfmMetaData(prefix, aMetadata));
+    parseData(payload, identityService);
 }
 
 SemtechUDPPacket::SemtechUDPPacket(

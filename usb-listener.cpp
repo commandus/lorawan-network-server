@@ -44,6 +44,22 @@ void onUpstream(
             << " payload: " << hexString(payload) << std::endl;
     }
     listener->log(LOG_INFO, LOG_EMBEDDED_GATEWAY, ss.str());
+    if (listener->packetListener) {
+        if (listener->packetListener->handler) {
+            // get time
+            struct timeval receivedTime;
+            gettimeofday(&receivedTime, nullptr);
+            // get gateway id
+            SEMTECH_PREFIX_GW prefix;
+            prefix.version = 2;
+            prefix.token = 0;   // random number 0
+            prefix.tag = SEMTECH_GW_PUSH_DATA;
+            int2deveui(prefix.mac, listener->config->gateway()->gatewayId);
+            // construct Semtech packet
+            SemtechUDPPacket p(prefix, metadata, payload, listener->packetListener->identityService);
+            listener->packetListener->handler->put(receivedTime, p);
+        }
+    }
 }
 
 void onSpectralScan(
@@ -90,11 +106,22 @@ int USBListener::listen(void *config)
 {
     if (!config)
         return ERR_CODE_LORA_GATEWAY_START_FAILED;
+    // set itself
+    listener.packetListener = this;
+    // set config
     listener.config = (GatewaySettings *) config;
+    // copy verbosity level
     listener.setLogVerbosity(verbosity);
+    // copy log
     listener.setOnLog(onLog);
     listener.setOnSpectralScan(onSpectralScan);
     listener.setOnUpstream(onUpstream);
 
-    return listener.start();
+    int r =  listener.start();
+    if (r)
+        return r;
+    while (!listener.isStopped()) {
+        // wait until all threads are stopped
+        sleep(1);
+    }
 }

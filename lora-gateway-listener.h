@@ -7,6 +7,7 @@
 
 #include "utillora.h"
 #include "gateway-settings.h"
+#include "packet-listener.h"
 
 #define MEASUREMENT_COUNT_SIZE 23
 
@@ -145,6 +146,7 @@ protected:
     // Apply config
     int setup();
 public:
+    PacketListener *packetListener;
     int lastLgwCode;
     GatewaySettings *config;
     GatewayMeasurements measurements;
