@@ -34,5 +34,6 @@
 		"issuer": "local",
 		"secret": "1-2-3",
 		"userListFileName": "passwd.json"
-	}
+	},
+	"embeddedGatewayConfig": "/home/andrei/git/rak_common_for_gateway/lora/rak2287/sx1302_hal/packet_forwarder/global_conf.json"
 }

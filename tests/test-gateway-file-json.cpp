@@ -23,6 +23,7 @@ void testLoadFile(const std::string &fn)
     int r = c.parseString(v);
     if (r) {
         std::cerr << "Error " << r << std::endl;
+        std::cerr << "Parse error " << c.errorDescription << " at " << c.errorOffset << std::endl;
         return;
     }
 
@@ -51,7 +52,6 @@ void signalHandler(int signal)
         case SIGINT:
             std::cerr << "Interrupt" << std::endl;
             exit(signal);
-            break;
         case SIGSEGV:
             std::cerr << "Segmentation fault" << std::endl;
             printTrace();
@@ -83,4 +83,3 @@ int main(int argc, char **argv)
     // testEmpty();
     testLoadFile("/home/andrei/git/rak_common_for_gateway/lora/rak2287/sx1302_hal/packet_forwarder/global_conf.json");
 }
-

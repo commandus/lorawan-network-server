@@ -19,5 +19,5 @@ cp $PATH_PKT_FWD/libloragw/inc/loragw_reg.h .
 cp $PATH_PKT_FWD/packet_forwarder/src/jitqueue.c .
 cp $PATH_PKT_FWD/packet_forwarder/src/lora_pkt_fwd.c .
 
-
+patch loragw_hal.h -i loragw_hal.h.patch
 exit 0
