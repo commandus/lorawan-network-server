@@ -116,7 +116,7 @@ int getMetadataName(
 typedef ALIGN struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// random token
-	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02 PUSH_DATA
+	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02
 } PACKED SEMTECH_PREFIX;		// 4 bytes
 
 typedef ALIGN struct {
@@ -449,6 +449,8 @@ public:
 	rfmMetaData(const rfmMetaData &value);
 	// copy gateway address from prefix
 	rfmMetaData(const SEMTECH_PREFIX_GW *aprefix, const rfmMetaData &value);
+    // copy gateway address from prefix
+    rfmMetaData(const SEMTECH_PREFIX_GW &aPrefix, const SEMTECH_PROTOCOL_METADATA *aMetadata);
 
 	uint32_t tmms() const;			// GPS time of pkt RX, number of milliseconds since 06.Jan.1980
 	std::string modulation() const;
@@ -566,6 +568,8 @@ public:
 	);
 	SemtechUDPPacket();
     SemtechUDPPacket(const SemtechUDPPacket &value);
+    // Called from UsbListener usb-listener.cpp
+    SemtechUDPPacket(const SEMTECH_PREFIX_GW &aPrefix, const SEMTECH_PROTOCOL_METADATA *metadata, const std::string &payload, IdentityService *identityService);
 	// Called from parseRX()
 	SemtechUDPPacket(const struct sockaddr *gatewayAddress, const SEMTECH_PREFIX_GW *prefix, const rfmMetaData *metadata, const std::string &data, IdentityService *identityService);
 	// TODO I dont remember what is it for
