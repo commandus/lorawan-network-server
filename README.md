@@ -644,7 +644,10 @@ JWT token if user successfully authorized.
 
 Set pluginsPath in the lorawan-network-server.json main configuration file.
 
-Each plugin (in .so dynamically loaded library file) must contain c++ function named payload2InsertClausesFunc().
+Each plugin (in .so dynamically loaded library file) must contain function named payload2InsertClausesFunc().
+
+Function payload2InsertClausesFunc() must be declared as extern "C" function.
+
 
 Plugin receives binary payload and return none, one or more INSERT SQL clauses to be inserted to databases.
 
@@ -653,7 +656,7 @@ See payload-insert.h header and example-plugins/ source directory for more detai
 If no option pluginsPath is set, no any plugins would be loaded.
 
 If option pluginsPath is set, path is found, lorawan-network-server try load
-payload2InsertClausesFunc() c++ function from .so libraries.
+payload2InsertClausesFunc() extern "C" function from .so libraries.
 
 When lorawan-network-server receives payload from gateway(s), loaded functions
 are called one by one.

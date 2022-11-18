@@ -133,28 +133,31 @@ int DatabaseNConfig::insertClauses(
 	const std::string &nullValueString
 )
 {
-    int r = 0;
-#ifdef ENABLE_PKT2
-	std::string s = parsePacket(env, inputFormat,
-        config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
-        config->getDialect(), data, message,
-	    &config->tableAliases, &config->fieldAliases, properties);
-    if (!s.empty()) {
-        retClauses.push_back(s);
-        return r;
-    }
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
     int dialect = 0;
     if (db)
         dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
-    std::string s = loggerSQLInsertRaw(dialect, data, properties);
-    if (!s.empty()) {
-        retClauses.push_back(s);
-        r = loggerSQLInsertPackets(env, retClauses, dialect, properties, nullValueString);
-        return r;
-    }
+    int r = this->plugins->callChain(retClauses, env, message, inputFormat, dialect, data,
+        properties, nullValueString);
+    if (r < 0) {
+#ifdef ENABLE_PKT2
+        std::string s = parsePacket(env, inputFormat,
+            config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
+            dialect, data, message,
+            &config->tableAliases, &config->fieldAliases, properties);
+        if (!s.empty()) {
+            retClauses.push_back(s);
+            return r;
+        }
 #endif
+#ifdef ENABLE_LOGGER_HUFFMAN
+        std::string s = loggerSQLInsertRaw(dialect, data, properties);
+        if (!s.empty()) {
+            retClauses.push_back(s);
+            r = loggerSQLInsertPackets(env, retClauses, dialect, properties, nullValueString);
+            return r;
+        }
+#endif
+    }
     return r;
 }
 

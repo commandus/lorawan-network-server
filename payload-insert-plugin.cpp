@@ -2,7 +2,7 @@
 
 #include "utilfile.h"
 
-#define FUNC_NAME   "payload2InsertClausesFunc"
+#define FUNC_NAME   "payload2InsertClauses"
 #ifdef _MSC_VER
 #else
 #include <dlfcn.h>
@@ -48,7 +48,7 @@ int PayloadInsertPlugins::callChain(
     return -1;
 }
 
-// load plugins
+// load plugin by file name
 int PayloadInsertPlugins::push(
     const std::string &file
 )

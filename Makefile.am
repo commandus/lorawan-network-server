@@ -168,7 +168,7 @@ LIBLORAWANSRC = \
 	strptime.cpp lora-encrypt.cpp identity-service.cpp receiver-queue-processor.cpp regional-parameter-channel-plan.cpp \
 	device-stat-service-abstract.cpp device-channel-plan.cpp packet-queue.cpp gateway-list.cpp \
 	gateway-stat-service-abstract.cpp semtech-pull-resp-packet.cpp receiver-queue-service.cpp \
-	semtech-metadata-tx.cpp database-config-json.cpp auth-user.cpp \
+	semtech-metadata-tx.cpp database-config-json.cpp auth-user.cpp payload-insert-plugin.cpp \
 	$(SRC_AES) third_party/base64/base64.cpp
 
 #
@@ -235,7 +235,6 @@ lorawan_network_server_SOURCES = \
 	device-stat-service-file.cpp device-stat-service-post.cpp packet-listener.cpp db-any.cpp \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp regional-parameter-channel-plan-file-json.cpp \
 	auth-file.cpp third_party/get_rss/get_rss.c third_party/argtable3/argtable3.c \
-	payload-insert-plugin.cpp \
 	$(C_STORAGE) $(C_QUEUE_STORAGE) $(LISTENER_SRC) $(LGW_SRC) $(BACKEND_DB_SRC) $(WS_SRC) $(PACKET_PARSER_SRC)
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
@@ -268,13 +267,12 @@ mac_gw_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
 mac_gw_CPPFLAGS = $(commoncppflags)
 
 mac_ns_SOURCES = \
-	mac-ns.cpp macgw-config-json.cpp \
-	config-json.cpp \
+	mac-ns.cpp macgw-config-json.cpp config-json.cpp \
 	lora-packet-handler-impl.cpp config-filename.cpp \
-	$(C_STORAGE) \
-	db-any.cpp  $(BACKEND_DB_SRC) \
+    db-any.cpp \
 	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp \
     device-history-service-json.cpp control-packet.cpp \
+	$(C_STORAGE) $(BACKEND_DB_SRC) \
 	third_party/argtable3/argtable3.c
 mac_ns_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \

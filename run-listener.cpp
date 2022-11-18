@@ -470,7 +470,9 @@ void RunListener::init(
     if (config->pluginsPath.empty()) {
         logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_PLUGIN_PATH_NOT_FOUND);
     } else {
-        logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LOAD_PLUGINS);
+        std::stringstream ss1;
+        ss1 << MSG_LOAD_PLUGINS << "\"" << config->pluginsPath << "\"";
+        logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss1.str());
         plugins.unload();
         int r = plugins.load(config->pluginsPath);
         if (r <= 0)
