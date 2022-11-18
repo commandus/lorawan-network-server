@@ -539,7 +539,7 @@ int main(
 		}
 	}
 
-	DatabaseByConfig dbAny(configDatabases);
+	DatabaseByConfig dbAny(configDatabases, nullptr);
 
 	if (config.command == "print")
 		doPrint(env, &config, &dbAny, config.message_type, config.payload);

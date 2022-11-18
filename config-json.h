@@ -108,6 +108,7 @@ class Configuration {
         std::vector<std::string> databaseExtraConfigFileNames;  ///< logger passport directories
 		std::string protoPath;
         std::string loggerDatabaseName;
+        std::string pluginsPath;
 		int gatewayPort;
 		ServerConfig serverConfig;
 		WebServiceConfig wsConfig;
@@ -121,8 +122,7 @@ class Configuration {
 		);
 		void clear();
 		std::string toString();
-
-    std::string toDescriptionTableString() const;
+        std::string toDescriptionTableString() const;
 };
 
 #endif

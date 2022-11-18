@@ -54,8 +54,8 @@ int ReceiverQueueProcessor::onPacket(
 }
 
 ReceiverQueueProcessor::ReceiverQueueProcessor()
-	: isStarted(false), isDone(true), threadDb(NULL), onLog(NULL),
-      parserEnv(NULL), databaseByConfig(NULL)
+	: isStarted(false), isDone(true), threadDb(nullptr), onLog(nullptr),
+      parserEnv(nullptr), databaseByConfig(nullptr)
 {
 }
 
@@ -215,7 +215,7 @@ void ReceiverQueueProcessor::put2databases() {
             }
             db->close();
         }
-        // remove database from queue if database connection is ok
+        // remove database record from queue if database connection is ok
         if (hasDbId) {
             if (receiverQueueService->pop(dbId, entry) != 0) {
                 if (onLog) {

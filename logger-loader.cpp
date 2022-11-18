@@ -3,13 +3,17 @@
 #include "db-any.h"
 
 DbLoggerKosaPacketsLoader::DbLoggerKosaPacketsLoader()
-        : db(nullptr), dbDialect(0)
+    : db(nullptr), dbDialect(0)
 {
 }
 
 DbLoggerKosaPacketsLoader::DbLoggerKosaPacketsLoader(DatabaseIntf *adb)
 {
     setDatabase(adb);
+}
+
+DbLoggerKosaPacketsLoader::~DbLoggerKosaPacketsLoader()
+{
 }
 
 bool DbLoggerKosaPacketsLoader::load(

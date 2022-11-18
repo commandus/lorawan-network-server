@@ -366,6 +366,11 @@ int Configuration::parse(
 			if (vpp.IsString())
 				protoPath = vpp.GetString();
 		}
+        if (doc.HasMember("pluginsPath")) {
+            rapidjson::Value &v =  doc["pluginsPath"];
+            if (v.IsString())
+                pluginsPath = v.GetString();
+        }
 		if (doc.HasMember("gatewayPort")) {
 			rapidjson::Value &gwp =  doc["gatewayPort"];
 			if (gwp.IsInt())
@@ -416,6 +421,7 @@ void Configuration::clear() {
 	databaseConfigFileName = "";
     databaseExtraConfigFileNames.clear();
 	protoPath = "";
+    pluginsPath = "";
 	serverConfig.clear();
 }
 
@@ -459,6 +465,11 @@ std::string Configuration::toString() {
 	rapidjson::Value pp;
 	pp.SetString(protoPath.c_str(), protoPath.size(), allocator);
 	doc.AddMember("protoPath", pp, allocator);
+
+
+    rapidjson::Value psp;
+    psp.SetString(pluginsPath.c_str(), pluginsPath.size(), allocator);
+    doc.AddMember("pluginsPath", psp, allocator);
 
 	rapidjson::Value gwp;
 	gwp.SetInt(gatewayPort);

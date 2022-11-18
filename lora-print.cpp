@@ -329,7 +329,7 @@ int main(
 		}
 	}
 
-	DatabaseByConfig databaseByConfig(configDatabases);
+	DatabaseByConfig databaseByConfig(configDatabases, nullptr);
 	// Start identity service
 	switch (config.identityStorageType) {
 		case IDENTITY_STORAGE_LMDB:

@@ -17,11 +17,18 @@
 
 #include "receiver-queue-processor.h"
 #include "lora-packet-handler-impl.h"
+#ifdef ENABLE_LOGGER_HUFFMAN
+#include "logger-loader.h"
+#endif
 
 class RunListener {
+private:
+    PayloadInsertPlugins plugins;
+#ifdef ENABLE_LOGGER_HUFFMAN
+    DbLoggerKosaPacketsLoader loggerKosaPacketsLoader;
+#endif
 public:
     Configuration *config;
-
     GatewayList *gatewayList;
     GatewayStatService *gatewayStatService;
     DeviceStatService *deviceStatService;

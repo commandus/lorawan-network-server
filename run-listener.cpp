@@ -22,7 +22,6 @@
 
 #ifdef ENABLE_LOGGER_HUFFMAN
 #include "logger-huffman/logger-parse.h"
-#include "logger-loader.h"
 #include "database-config-json.h"
 #endif
 
@@ -467,6 +466,22 @@ void RunListener::init(
         // exit(ERR_CODE_INIT_QUEUE);
     }
 
+    // Try load payload parser plugins
+    if (config->pluginsPath.empty()) {
+        logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_PLUGIN_PATH_NOT_FOUND);
+    } else {
+        logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LOAD_PLUGINS);
+        plugins.unload();
+        int r = plugins.load(config->pluginsPath);
+        if (r <= 0)
+            logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_NO_PLUGINS_LOADED);
+        else {
+            std::stringstream ss;
+            ss << MSG_LOADED_PLUGINS_COUNT << r;
+            logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, ss.str());
+        }
+    }
+
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_START_OUTPUT_DB_SVC);
 #ifdef ENABLE_PKT2
     configDatabases = new ConfigDatabases(config->databaseConfigFileName);
@@ -482,7 +497,7 @@ void RunListener::init(
         logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, MSG_DATABASE_LIST);
 
     // helper class to find out database by name or sequence number (id)
-    dbByConfig = new DatabaseByConfig(configDatabases);
+    dbByConfig = new DatabaseByConfig(configDatabases, &plugins);
     // check out database connectivity
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_CHECKING_DB_AVAILABILITY);
     bool dbOk = true;
@@ -521,7 +536,6 @@ void RunListener::init(
         exit(ERR_CODE_LOAD_DATABASE_CONFIG);
     }
 
-
 #ifdef ENABLE_PKT2
     onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser PKT2 ..");
 	parserEnv = initPkt2(config->protoPath, 0);
@@ -531,7 +545,6 @@ void RunListener::init(
 	}
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
-    DbLoggerKosaPacketsLoader loggerKosaPacketsLoader;
     bool hasLoggerKosaPacketsLoader = false;
     // set database to load from
     if (!config->loggerDatabaseName.empty()) {
@@ -596,7 +609,6 @@ void RunListener::init(
 
     // Set databases
     receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
-
 
     // Set up listener
     listener->setHandler(processor);

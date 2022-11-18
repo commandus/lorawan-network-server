@@ -54,18 +54,23 @@ std::string UDPSocket::addrString(
 ) {
 	char buf[INET6_ADDRSTRLEN];
 	int port;
-	if (value->sa_family == AF_INET) {
-		if (inet_ntop(AF_INET, &((struct sockaddr_in *) value)->sin_addr, buf, sizeof(buf)) == NULL)
-			return "";
-		port = ntohs(((struct sockaddr_in *) value)->sin_port);
-	} else {
-		if (value->sa_family == AF_INET6) {
-			if (inet_ntop(AF_INET6, &((struct sockaddr_in6 *) value)->sin6_addr, buf, sizeof(buf)) == NULL) {
+	switch (value->sa_family) {
+        case AF_INET:
+            if (inet_ntop(AF_INET, &((struct sockaddr_in *) value)->sin_addr, buf, sizeof(buf)) == nullptr)
+                return "";
+            port = ntohs(((struct sockaddr_in *) value)->sin_port);
+            break;
+        case AF_INET6:
+			if (inet_ntop(AF_INET6, &((struct sockaddr_in6 *) value)->sin6_addr, buf, sizeof(buf)) == nullptr) {
 				return "";
 			}
-		}
-		port = ntohs(((struct sockaddr_in6 *) value)->sin6_port);
-	}
+            port = ntohs(((struct sockaddr_in6 *) value)->sin6_port);
+            break;
+        case AF_UNSPEC:
+            return "embedded";
+        default:
+            return "";
+    }
 	std::stringstream ss;
 	ss << buf << ":" << port;
 	return ss.str();

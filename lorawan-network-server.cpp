@@ -30,7 +30,6 @@
 #include "utildate.h"
 
 #include "config-json.h"
-#include "identity-service-dir-txt.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
@@ -425,6 +424,11 @@ static void invalidatePaths(char *programPath, Configuration *config)
         if (config->protoPath.empty())
             config->protoPath = DEF_PROTO_PATH;
         config->protoPath = getDefaultConfigFileName(programPath, config->protoPath);;
+    }
+    if (!config->pluginsPath.empty()) {
+        if (!util::fileExists(config->pluginsPath)) {
+            config->pluginsPath = getDefaultConfigFileName(programPath, config->pluginsPath);;
+        }
     }
     if (!util::fileExists(config->serverConfig.regionalSettingsStorageName)) {
         // if proto path is not specified, try use default ./proto/ path

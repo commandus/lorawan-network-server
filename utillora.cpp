@@ -2084,6 +2084,7 @@ SemtechUDPPacket::SemtechUDPPacket(
 )
     : errcode(0), downlink(false)
 {
+    gatewayAddress.sin6_family = PF_UNSPEC;
     memmove(&prefix, &aPrefix, sizeof(SEMTECH_PREFIX_GW));
     metadata.push_back(rfmMetaData(prefix, aMetadata));
     parseData(payload, identityService);

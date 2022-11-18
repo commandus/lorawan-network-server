@@ -501,13 +501,14 @@ cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scr
 
 ## Configuration files
 
-### server config ~/.lorawan-network-server.json
+### Main config ~/.lorawan-network-server.json
 
 - gatewaysFileName Gateways list. Default ~/gateway.json
 - databaseConfigFileName databases list default "dbs.js"
 - databaseExtraConfigFileNames list of extra configuration files and subdirectories, e.g. device passport files folder path
 - loggerDatabaseName database name used by logger. Database name assigned in file (see databaseConfigFileName option).
 - protoPath protobuf message description files directory path. Default "proto"
+- pluginsPath path to the folder with dynamically loaded libraries (.so) with payload2InsertClausesFunc() functions  
 - server Network server properties, including end-device list served by the server
 - configFileName (optional) Redirect config file to another one
 
@@ -638,6 +639,29 @@ Option userListFileName is a JSON file name with user passwords used by embedded
 
 When web browser request "/token?user=<user-name>&password=<password>", embedded web service return
 JWT token if user successfully authorized. 
+
+#### How to configure plugins
+
+Set pluginsPath in the lorawan-network-server.json main configuration file.
+
+Each plugin (in .so dynamically loaded library file) must contain c++ function named payload2InsertClausesFunc().
+
+Plugin receives binary payload and return none, one or more INSERT SQL clauses to be inserted to databases.
+
+See payload-insert.h header and example-plugins/ source directory for more details how to implement plugin.
+
+If no option pluginsPath is set, no any plugins would be loaded.
+
+If option pluginsPath is set, path is found, lorawan-network-server try load
+payload2InsertClausesFunc() c++ function from .so libraries.
+
+When lorawan-network-server receives payload from gateway(s), loaded functions
+are called one by one.
+
+First function which returns >=0 break functions chain. If function return negative
+number, next function in the chain would be called.
+
+Chain of functions sorted by .so file name.
 
 #### Message queue
 
@@ -1636,6 +1660,31 @@ dpkg-query -L firebird-dev
 ```
 sudo apt install liblmdb-dev 
 ```
+
+## Add own payload 
+
+### Dynamically loaded libraries
+
+pluginsPath
+Plugins sorted alphabetically by library file name.
+
+### Static include
+
+In the db-any.cpp file rewrite DatabaseNConfig::insertClauses method:
+
+```
+int DatabaseNConfig::insertClauses(
+```
+
+Parameters:
+
+- std::vector<std::string> &retClauses 
+- void *env
+- const std::string &message: name of preferred handler (message type name). Default "".
+- int inputFormat: 0- binary (always) 1- hex (never used)
+- const std::string &data: payload
+- const std::map<std::string, std::string> *properties: LoRaWAN metdata properties
+- const std::string &nullValueString: magic number 8888 by default
 
 ## Known bugs
 

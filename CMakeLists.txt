@@ -74,7 +74,7 @@ set(LIBLORAWANSRC
 	strptime.cpp lora-encrypt.cpp identity-service.cpp receiver-queue-processor.cpp regional-parameter-channel-plan.cpp
 	device-stat-service-abstract.cpp device-channel-plan.cpp packet-queue.cpp gateway-list.cpp
 	gateway-stat-service-abstract.cpp semtech-pull-resp-packet.cpp receiver-queue-service.cpp
-	semtech-metadata-tx.cpp auth-file.cpp auth-user.cpp
+	semtech-metadata-tx.cpp auth-file.cpp auth-user.cpp payload-insert-plugin.cpp
 	${SRC_AES}
 	third_party/base64/base64.cpp
 )

@@ -158,7 +158,9 @@ endif
 #
 bin_PROGRAMS = lorawan-network-server lora-print print-netid \
     dev-payload \
-    mac-ns mac-gw proto-db
+    mac-ns mac-gw proto-db	
+
+lib_LTLIBRARIES = libplugin-esp32-demo.la
 
 LIBLORAWANSRC = \
 	utillora.cpp errlist.cpp net-id.cpp dev-addr.cpp udp-socket.cpp device-history-item.cpp gateway-stat.cpp \
@@ -205,6 +207,7 @@ nobase_dist_include_HEADERS = \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
 	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h gateway-settings.h \
+	payload-insert.h payload-insert-plugin.h \
 	auth-user.h auth-file.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
@@ -232,13 +235,23 @@ lorawan_network_server_SOURCES = \
 	device-stat-service-file.cpp device-stat-service-post.cpp packet-listener.cpp db-any.cpp \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp regional-parameter-channel-plan-file-json.cpp \
 	auth-file.cpp third_party/get_rss/get_rss.c third_party/argtable3/argtable3.c \
+	payload-insert-plugin.cpp \
 	$(C_STORAGE) $(C_QUEUE_STORAGE) $(LISTENER_SRC) $(LGW_SRC) $(BACKEND_DB_SRC) $(WS_SRC) $(PACKET_PARSER_SRC)
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) $(LISTENER_LIB) $(LGW_LIB) \
     $(BACKEND_DB_LIB) -lcurl $(WS_AUTH_LIB) $(WS_LIB)
+
 lorawan_network_server_CPPFLAGS = $(commoncppflags) \
     $(BACKEND_DB_DEF) $(LISTENER_DEF) $(LGW_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF) $(WS_DEF)
+
+#
+#	Dynamic loaded library
+#
+libplugin_esp32_demo_la_SOURCES = \
+	example-plugins/plugin-esp32-demo.cpp
+libplugin_esp32_demo_la_CPPFLAGS = -fPIC
+libplugin_esp32_demo_la_LDFLAGS = -version-info 0:2:0
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp \

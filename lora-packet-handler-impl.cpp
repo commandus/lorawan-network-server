@@ -97,7 +97,7 @@ int LoraPacketProcessor::putMACRequests(
     value.appendMACs(ms);
     std::stringstream ss;
     ss << "Put MAC commands " << hexString(ms) << ", size " << ms.size() << ", MACs: "
-        << hexString(value.getMACs())  << " to be send to  "
+        << hexString(value.getMACs())  << MSG_TO_BE_SEND_TO
         << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
         << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI);
     onLog(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());

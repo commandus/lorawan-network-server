@@ -11,7 +11,8 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
+
+LT_INIT
 
 AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
 build_mac=no

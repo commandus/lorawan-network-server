@@ -23,14 +23,14 @@
 
 #define JSON_TYPE_NAME "json"
 
-DatabaseNConfig::DatabaseNConfig
-(
-	const ConfigDatabase *aConfig
+DatabaseNConfig::DatabaseNConfig(
+	const ConfigDatabase *aConfig,
+    PayloadInsertPlugins *aPlugins
 )
+    : db(nullptr), plugins(aPlugins)
 {
 	config = aConfig;
 	// unknown database type
-	db = nullptr;
 	if (config->type == "sqlite3")
 #ifdef ENABLE_DB_SQLITE	
 		db = new DatabaseSQLite();
@@ -139,14 +139,21 @@ int DatabaseNConfig::insertClauses(
         config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
         config->getDialect(), data, message,
 	    &config->tableAliases, &config->fieldAliases, properties);
-    retClauses.push_back(s);
+    if (!s.empty()) {
+        retClauses.push_back(s);
+        return r;
+    }
 #endif
 #ifdef ENABLE_LOGGER_HUFFMAN
     int dialect = 0;
     if (db)
         dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
-    retClauses.push_back(loggerSQLInsertRaw(dialect, data, properties));
-    r = loggerSQLInsertPackets(env, retClauses, dialect, properties, nullValueString);
+    std::string s = loggerSQLInsertRaw(dialect, data, properties);
+    if (!s.empty()) {
+        retClauses.push_back(s);
+        r = loggerSQLInsertPackets(env, retClauses, dialect, properties, nullValueString);
+        return r;
+    }
 #endif
     return r;
 }
@@ -211,7 +218,6 @@ void DatabaseNConfig::setProperties(
 
 }
 
-
 int DatabaseNConfig::exec(
 	const std::string &statement
 ) const
@@ -264,9 +270,10 @@ void DatabaseByConfig::prepare(
 
 DatabaseByConfig::DatabaseByConfig
 (
-	const ConfigDatabasesIntf *aconfig
+	const ConfigDatabasesIntf *aconfig,
+    PayloadInsertPlugins *aPlugins
 )
-	: config(aconfig)
+	: config(aconfig), plugins(aPlugins)
 {
 
 }
@@ -344,7 +351,7 @@ DatabaseIntf* DatabaseByConfig::findDb
 	if (retConfig)
 		*retConfig = cd;
 	if (!cd)
-		return NULL;
+		return nullptr;
 	return open(cd);
 }
 
@@ -353,8 +360,8 @@ DatabaseNConfig* DatabaseByConfig::get(
 ) const
 {
 	if (id < 0 || id >= config->dbs.size())
-		return NULL;
-	return new DatabaseNConfig(&config->dbs[id]);
+		return nullptr;
+	return new DatabaseNConfig(&config->dbs[id], plugins);
 }
 
 DatabaseNConfig* DatabaseByConfig::find(
@@ -363,8 +370,8 @@ DatabaseNConfig* DatabaseByConfig::find(
 {
 	const ConfigDatabase *cd = config->findByName(name);
 	if (!cd)
-		return NULL;
-	return new DatabaseNConfig(cd);
+		return nullptr;
+	return new DatabaseNConfig(cd, plugins);
 }
 
 /**

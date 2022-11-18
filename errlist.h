@@ -18,6 +18,7 @@
 #define LOG_PACKET_QUEUE					5
 #define LOG_UDP_EMITTER						6
 #define LOG_EMBEDDED_GATEWAY    			7
+#define LOG_TEMPERATURE_LOGGER_PASSPORT     8
 
 // Error codes
 #define LORA_OK            					0
@@ -462,6 +463,11 @@
 #define MSG_LISTEN_LARGEST_SOCKET       "Largest socket "
 #define MSG_SPECTRAL_SCAN_FREQUENCY     "Spectral scan, frequency "
 #define MSG_LORA_GATEWAY_SEND_AT_GPS_TIME   "A packet will be sent on timestamp (calculated from GPS time)"
+#define MSG_TO_BE_SEND_TO               " to be send to "
+#define MSG_LOAD_PLUGINS                "Load plugins "
+#define MSG_PLUGIN_PATH_NOT_FOUND       "No plugin directory specified or path not found "
+#define MSG_NO_PLUGINS_LOADED           "No any plugin found"
+#define MSG_LOADED_PLUGINS_COUNT        "Plugins loaded: "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);
