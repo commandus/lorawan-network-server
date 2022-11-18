@@ -1,9 +1,8 @@
-#ifndef DUMB_LOGGER_LOADER_H
-#define DUMB_LOGGER_LOADER_H     1
+#ifndef DB_LOGGER_PLUME_PACKETS_LOADER_H
+#define DB_LOGGER_PLUME_PACKETS_LOADER_H     1
 
 #include "logger-huffman/logger-collection.h"
 #include "db-intf.h"
-#endif
 
 /**
  * Database logger plume loader class implementation
@@ -18,6 +17,7 @@ private:
 public:
     DbLoggerKosaPacketsLoader();
     DbLoggerKosaPacketsLoader(DatabaseIntf *db);
+    ~DbLoggerKosaPacketsLoader();
     bool load(LoggerKosaPackets &retVal, uint32_t addr) override;
     /**
      * Set database interface
@@ -25,3 +25,5 @@ public:
      */
     void setDatabase(DatabaseIntf *db);
 };
+
+#endif

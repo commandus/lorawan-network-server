@@ -1,6 +1,7 @@
 {
 	"gatewaysFileName": "./gateway.json",
 	"databaseConfigFileName": "dbs.json",
+	"pluginsPath": "plugins",
 	"databaseExtraConfigFileNames": [
 		"/home/andrei/src/logger-passport/tests/passport"
 	],

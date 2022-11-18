@@ -4,6 +4,7 @@
 #include "db-intf.h"
 #include "pkt2/database-config.h"
 #include "receiver-queue-service.h"
+#include "payload-insert-plugin.h"
 
 #ifdef ENABLE_PKT2
 #include "pkt2/str-pkt2.h"
@@ -21,9 +22,10 @@ class DatabaseNConfig
 public:
 	const ConfigDatabase *config;
 	DatabaseIntf* db;
+    PayloadInsertPlugins *plugins;
     std::string lastErroneousStatement;
 
-	DatabaseNConfig(const ConfigDatabase *aConfig);
+	DatabaseNConfig(const ConfigDatabase *aConfig, PayloadInsertPlugins *aPlugins);
 	~DatabaseNConfig();
 	std::string tableName(void *env, const std::string &message) const;
 	std::string selectClause(void *env, const std::string &message);
@@ -61,10 +63,11 @@ class DatabaseByConfig
 {
 private:
 	const ConfigDatabasesIntf *config;
+    PayloadInsertPlugins *plugins;  // propagate plugins to all databases
 protected:
 	DatabaseIntf* open(const ConfigDatabase *dbc) const;
 public:
-	DatabaseByConfig(const ConfigDatabasesIntf *config);
+	DatabaseByConfig(const ConfigDatabasesIntf *config, PayloadInsertPlugins *aPlugins);
 	~DatabaseByConfig();
 
     /**
