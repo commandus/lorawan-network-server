@@ -8,9 +8,6 @@
  * receiverQueueService = new JsonFileReceiverQueueService();
  * // create processor to serve queue
  * receiverQueueProcessor = new ReceiverQueueProcessor();
- * // create protobuf declarations
- * void *parserEnv = initPkt2("proto", 0);
- * receiverQueueProcessor->setParserEnv(parserEnv);
  * // load database config
  * ConfigDatabases configDatabases("dbs.js");
  * // create helper object
@@ -38,6 +35,7 @@
 #endif
 
 #include "logger-huffman/logger-parse.h"
+#include "utilthread.h"
 
 int ReceiverQueueProcessor::onPacket(
         struct timeval &time,
@@ -55,7 +53,7 @@ int ReceiverQueueProcessor::onPacket(
 
 ReceiverQueueProcessor::ReceiverQueueProcessor()
 	: isStarted(false), isDone(true), threadDb(nullptr), onLog(nullptr),
-      parserEnv(nullptr), databaseByConfig(nullptr)
+    databaseByConfig(nullptr)
 {
 }
 
@@ -72,13 +70,6 @@ void ReceiverQueueProcessor::setLogger(
 		const std::string &message
 )> value) {
 	onLog = value;
-}
-
-void ReceiverQueueProcessor::setParserEnv(
-	void *value
-)
-{
-    parserEnv = value;
 }
 
 void ReceiverQueueProcessor::setDatabaseByConfig
@@ -101,6 +92,7 @@ void ReceiverQueueProcessor::start(
 	this->databaseByConfig->getIds(ids);
 	receiverQueueService->setDbs(ids);
 	threadDb = new std::thread(&ReceiverQueueProcessor::runner, this);
+    setThreadName(threadDb, MODULE_NAME_RECEIVER_QUEUE_PROCESSOR);
     threadDb->detach();
 }
 
@@ -141,8 +133,6 @@ void ReceiverQueueProcessor::runner()
  * Called from processQueue()
  */
 void ReceiverQueueProcessor::put2databases() {
-    if (!parserEnv)
-        return;
     if (!databaseByConfig)
         return;
     if (!receiverQueueService)
@@ -168,7 +158,7 @@ void ReceiverQueueProcessor::put2databases() {
             if (r && onLog) {
                 std::stringstream ss;
                 ss << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_lorawan_ns(r);
-                onLog(NULL, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+                onLog(nullptr, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
                 continue;
             }
 
@@ -176,7 +166,7 @@ void ReceiverQueueProcessor::put2databases() {
             entry.setProperties(properties, db->config->properties);
 
             if (!prepared) {
-                databaseByConfig->prepare(parserEnv, entry.value);
+                databaseByConfig->prepare(entry.value);
                 if (onLog) {
                     std::stringstream ss;
                     ss << MSG_PREPARE << db->config->id << " (" << db->config->name
@@ -191,7 +181,7 @@ void ReceiverQueueProcessor::put2databases() {
                 prepared = true;
             }
 
-            r = db->insert(parserEnv, "", 0, entry.value.payload, &properties);
+            r = db->insert("", 0, entry.value.payload, &properties);
             if (onLog) {
                 std::stringstream ss;
                 if (r) {
@@ -200,16 +190,10 @@ void ReceiverQueueProcessor::put2databases() {
                        << ": " << db->db->errmsg
                        << ", SQL statement: " << db->lastErroneousStatement
                        << ", payload: " << hexString(entry.value.payload);
-#ifdef ENABLE_LOGGER_HUFFMAN
-                    ss <<  " loggerParserState: " << loggerParserState(parserEnv, 4);
-#endif
                     onLog(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
                 } else {
                     ss << MSG_DB_INSERT
-                       << " database id " << db->config->id << " " << db->config->name;
-#ifdef ENABLE_LOGGER_HUFFMAN
-                    ss << " loggerParserState: " << loggerParserState(parserEnv, 4);
-#endif
+                       << ". " << MSG_DATABASE << db->config->id << " " << db->config->name;
                     onLog(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
                 }
             }
@@ -220,15 +204,12 @@ void ReceiverQueueProcessor::put2databases() {
             if (receiverQueueService->pop(dbId, entry) != 0) {
                 if (onLog) {
                     std::stringstream ss;
-                    ss << "Database: " << dbId << " " << db->config->name << " pop() error";
+                    ss << MSG_DATABASE << dbId << " " << db->config->name << " pop() error";
                     onLog(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
                 }
             }
         }
     }
-#ifdef ENABLE_LOGGER_HUFFMAN
-    loggerRemoveCompletedOrExpired(parserEnv);
-#endif
 }
 
 /**

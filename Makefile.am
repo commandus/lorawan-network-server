@@ -1,6 +1,8 @@
 SUBDIRS = .
 ACLOCAL_AMFLAGS = -I m4
 
+VERSION_INFO = 0:2:0
+
 commoncppflags = -I. -Ithird_party -I../../third_party
 
 GEN = 
@@ -161,10 +163,17 @@ bin_PROGRAMS = lorawan-network-server lora-print print-netid \
     mac-ns mac-gw proto-db	
 
 lib_LTLIBRARIES = libplugin-esp32-demo.la
+if ENABLE_PKT2
+    lib_LTLIBRARIES += libplugin-pkt2.la
+endif
+if ENABLE_LOGGER_HUFFMAN
+    lib_LTLIBRARIES += libplugin-logger-huffman.la
+endif
 
 LIBLORAWANSRC = \
 	utillora.cpp errlist.cpp net-id.cpp dev-addr.cpp udp-socket.cpp device-history-item.cpp gateway-stat.cpp \
 	lorawan-mac.cpp lora-rejoin.cpp utilstring.cpp utildate.cpp utilfile.cpp utilidentity.cpp utilcurl.cpp \
+	utilthread.cpp \
 	strptime.cpp lora-encrypt.cpp identity-service.cpp receiver-queue-processor.cpp regional-parameter-channel-plan.cpp \
 	device-stat-service-abstract.cpp device-channel-plan.cpp packet-queue.cpp gateway-list.cpp \
 	gateway-stat-service-abstract.cpp semtech-pull-resp-packet.cpp receiver-queue-service.cpp \
@@ -196,7 +205,7 @@ rapid_headers = \
 
 nobase_dist_include_HEADERS = \
 	run-listener.h platform.h utilstring.h utildate.h utilfile.h utilusb.h strptime.h lora-radio.h \
-	utillora.h net-id.h dev-addr.h udp-socket.h udp-emitter.h lora-encrypt.h \
+	utillora.h utilthread.h net-id.h dev-addr.h udp-socket.h udp-emitter.h lora-encrypt.h \
 	packet-listener.h udp-listener.h embedded-listener.h usb-listener.h \
 	config-json.h semtech-metadata-tx.h packet-handler-abstract.h \
 	lora-packet-handler-abstract.h lora-packet-handler-impl.h packet-queue.h \
@@ -207,7 +216,7 @@ nobase_dist_include_HEADERS = \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
 	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h gateway-settings.h \
-	payload-insert.h payload-insert-plugin.h \
+	payload-insert.h payload-insert-plugin.h log-intf.h \
 	auth-user.h auth-file.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \
@@ -245,12 +254,28 @@ lorawan_network_server_CPPFLAGS = $(commoncppflags) \
     $(BACKEND_DB_DEF) $(LISTENER_DEF) $(LGW_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF) $(WS_DEF)
 
 #
-#	Dynamic loaded library
+#	Dynamic loaded library (plugins)
 #
 libplugin_esp32_demo_la_SOURCES = \
 	example-plugins/plugin-esp32-demo.cpp
-libplugin_esp32_demo_la_CPPFLAGS = -fPIC
-libplugin_esp32_demo_la_LDFLAGS = -version-info 0:2:0
+libplugin_esp32_demo_la_CPPFLAGS =
+libplugin_esp32_demo_la_LDFLAGS = -version-info $(VERSION_INFO)
+
+if ENABLE_PKT2
+libplugin_pkt2_la_SOURCES = example-plugins/plugin-pkt2.cpp
+libplugin_pkt2_la_CPPFLAGS = -DENABLE_PKT2
+libplugin_pkt2_la_LDFLAGS = -version-info $(VERSION_INFO)
+libplugin_pkt2_la_LIBADD = -L/home/andrei/src/pkt2 -lpkt2 -lprotobuf
+endif
+
+if ENABLE_LOGGER_HUFFMAN
+libplugin_logger_huffman_la_SOURCES = example-plugins/plugin-logger-huffman.cpp logger-loader.cpp \
+    db-any.cpp $(BACKEND_DB_SRC)
+libplugin_logger_huffman_la_CPPFLAGS = -DENABLE_LOGGER_HUFFMAN $(BACKEND_DB_DEF)
+libplugin_logger_huffman_la_LDFLAGS = -version-info $(VERSION_INFO) $(BACKEND_DB_LIB)
+libplugin_logger_huffman_la_LIBADD = -L/home/andrei/src/logger-passport -L/home/andrei/src/logger-huffman \
+    -llogger-huffman -llogger-passport
+endif
 
 mac_gw_SOURCES = \
 	mac-gw.cpp macgw-config-json.cpp \

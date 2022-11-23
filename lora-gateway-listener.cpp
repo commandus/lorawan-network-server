@@ -8,6 +8,7 @@
 
 #include "lora-gateway-listener.h"
 #include "utilstring.h"
+#include "utilthread.h"
 #include "errlist.h"
 
 // XTAL correction constants
@@ -1452,20 +1453,24 @@ int LoraGatewayListener::start()
 
     if (!upstreamThreadRunning) {
         std::thread upstreamThread(&LoraGatewayListener::upstreamRunner, this);
+        setThreadName(&upstreamThread, MODULE_NAME_GW_UPSTREAM);
         upstreamThread.detach();
     }
     if (!downstreamBeaconThreadRunning) {
         std::thread downstreamBeaconThread(&LoraGatewayListener::downstreamBeaconRunner, this);
+        setThreadName(&downstreamBeaconThread, MODULE_NAME_GW_DOWNSTREAM);
         downstreamBeaconThread.detach();
     }
     if (!jitThreadRunning) {
         std::thread jitThread(&LoraGatewayListener::jitRunner, this);
+        setThreadName(&jitThread, MODULE_NAME_GW_JIT);
         jitThread.detach();
     }
 
     if (config->sx1261()->spectralScan.enable) {
         if (!spectralScanThreadRunning) {
             std::thread spectralScanThread(&LoraGatewayListener::spectralScanRunner, this);
+            setThreadName(&spectralScanThread, MODULE_NAME_GW_SPECTRAL_SCAN);
             spectralScanThread.detach();
         }
     }
@@ -1473,10 +1478,12 @@ int LoraGatewayListener::start()
     if (gpsEnabled) {
         if (!gpsThreadRunning) {
             std::thread gpsThread(&LoraGatewayListener::gpsRunner, this);
+            setThreadName(&gpsThread, MODULE_NAME_GW_GPS);
             gpsThread.detach();
         }
         if (!gpsCheckTimeThreadRunning) {
             std::thread gpsCheckTimeThread(&LoraGatewayListener::gpsCheckTimeRunner, this);
+            setThreadName(&gpsCheckTimeThread, MODULE_NAME_GW_GPS_CHECK_TIME);
             gpsCheckTimeThread.detach();
         }
     }

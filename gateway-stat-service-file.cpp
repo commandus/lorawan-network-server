@@ -1,13 +1,15 @@
 #include <sstream>
 #include "gateway-stat-service-file.h"
 #include "utilstring.h"
+#include "utilthread.h"
+#include "errlist.h"
 
 /**
  * Gateway statistics service append statistics to the file
  * specified in the option parameter of init() method
  */
 GatewayStatServiceFile::GatewayStatServiceFile()
-    : state(0), timeoutSeconds(DEF_GW_STAT_TIMEOUT_SECONDS), threadRun(NULL)
+    : state(0), timeoutSeconds(DEF_GW_STAT_TIMEOUT_SECONDS), threadRun(nullptr)
 {
 
 }
@@ -56,6 +58,7 @@ int GatewayStatServiceFile::init(
     state = 1;  // 0- stopped, 1- run, 2- stop request
     storageName = aFileName;
     threadRun = new std::thread(&GatewayStatServiceFile::runner, this);
+    setThreadName(threadRun, MODULE_NAME_GW_STAT_SVC_FILE);
     threadRun->detach();
     return 0;
 }

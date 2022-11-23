@@ -13,6 +13,7 @@
 
 #ifdef ENABLE_PKT2
 #include <google/protobuf/message.h>
+void *env;
 #endif
 
 #include "argtable3/argtable3.h"
@@ -223,7 +224,6 @@ int parseCmd(
 
 void doInsert
 (
-	void* env,
 	LoraPrintConfiguration *config,
 	DatabaseByConfig *databaseByConfig,
 	const std::string &messageType,
@@ -231,7 +231,7 @@ void doInsert
 	const std::map<std::string, std::string> *properties
 )
 {
-    databaseByConfig->prepare(env, config->devAddr, binData);
+    databaseByConfig->prepare(config->devAddr, binData);
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
 		
 		DatabaseNConfig *db = databaseByConfig->find(*it);
@@ -240,7 +240,7 @@ void doInsert
 			exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
 		}
         std::vector<std::string> clauses;
-        db->insertClauses(clauses, env, messageType, INPUT_FORMAT_BINARY, binData, properties);
+        db->insertClauses(clauses, messageType, INPUT_FORMAT_BINARY, binData, properties);
         std::string s;
         for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
             s += *it;
@@ -256,7 +256,6 @@ void doInsert
  */ 
 void doPrint
 (
-	void* env,
 	LoraPrintConfiguration *config,
 	const std::string &forceMessageType,
 	int outputFormat,
@@ -272,7 +271,6 @@ void doPrint
 
 static ConfigDatabasesIntf *configDatabases = nullptr;
 static IdentityService *identityService = nullptr;
-static void* env = nullptr;
 
 void done() {
 
@@ -455,9 +453,9 @@ int main(
 			properties["activation"] =  activation2string(it->devId.activation);	// (ABP|OTAA)
 			properties["class"] = deviceclass2string(it->devId.deviceclass);		// A|B|C
 
-			doInsert(env, &config, &databaseByConfig, config.message_type, payload, &properties);
+			doInsert(&config, &databaseByConfig, config.message_type, payload, &properties);
 		} else {
-			doPrint(env, &config, config.message_type, config.outputFormat, payload);
+			doPrint(&config, config.message_type, config.outputFormat, payload);
 		}
 
 	}

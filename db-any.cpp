@@ -17,10 +17,6 @@
 
 #include "errlist.h"
 
-#ifdef ENABLE_LOGGER_HUFFMAN
-#include "logger-huffman/logger-parse.h"
-#endif
-
 #define JSON_TYPE_NAME "json"
 
 DatabaseNConfig::DatabaseNConfig(
@@ -108,24 +104,18 @@ std::string DatabaseNConfig::createClause
 	const std::string &message
 ) const
 {
-#ifdef ENABLE_PKT2
-	return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, config->getDialect(), 
-		&config->tableAliases, &config->fieldAliases, &config->properties);
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
     int dialect = 0;
     if (db)
-        dialect = sqlDialectByName(db->type);
-    return loggerSQLCreateTable1(dialect);
-#endif
-#if (!defined ENABLE_PKT2) && (!defined ENABLE_LOGGER_HUFFMAN)
-    return "";
-#endif
+        dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
+    if (plugins)
+        return this->plugins->create(message, config->type == JSON_TYPE_NAME ? 0 : 3,
+    dialect,  &config->tableAliases, &config->fieldAliases,&config->properties);
+    else
+        return "";
 }
 
 int DatabaseNConfig::insertClauses(
     std::vector<std::string> &retClauses,
-    void *env,
     const std::string &message,
     int inputFormat,
     const std::string &data,
@@ -133,31 +123,14 @@ int DatabaseNConfig::insertClauses(
 	const std::string &nullValueString
 )
 {
+    if (!plugins)
+        return -1;
     int dialect = 0;
     if (db)
         dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
-    int r = this->plugins->callChain(retClauses, env, message, inputFormat, dialect, data,
+    int r = plugins->insert(retClauses, message, inputFormat, config->type == JSON_TYPE_NAME ? 0 : 3,
+        dialect, data, &config->tableAliases, &config->fieldAliases,
         properties, nullValueString);
-    if (r < 0) {
-#ifdef ENABLE_PKT2
-        std::string s = parsePacket(env, inputFormat,
-            config->type == JSON_TYPE_NAME ? OUTPUT_FORMAT_JSON : OUTPUT_FORMAT_SQL,
-            dialect, data, message,
-            &config->tableAliases, &config->fieldAliases, properties);
-        if (!s.empty()) {
-            retClauses.push_back(s);
-            return r;
-        }
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-        std::string s = loggerSQLInsertRaw(dialect, data, properties);
-        if (!s.empty()) {
-            retClauses.push_back(s);
-            r = loggerSQLInsertPackets(env, retClauses, dialect, properties, nullValueString);
-            return r;
-        }
-#endif
-    }
     return r;
 }
 
@@ -173,7 +146,6 @@ int DatabaseNConfig::createTable(void *env, const std::string &message)
  * @return 0- success, ERR_CODE_INVALID_PACKET- data is not parseable, otherwise database error code
  */ 
 int DatabaseNConfig::insert(
-	void *env,
 	const std::string &message,
 	int inputFormat,
 	const std::string &data,
@@ -183,7 +155,7 @@ int DatabaseNConfig::insert(
 {
     int r = 0;
 	std::vector<std::string> clauses;
-    insertClauses(clauses, env, message, inputFormat, data, properties, nullValueString);
+    insertClauses(clauses, message, inputFormat, data, properties, nullValueString);
 	if (clauses.empty())
 		return ERR_CODE_INVALID_PACKET;
     for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
@@ -193,6 +165,8 @@ int DatabaseNConfig::insert(
             break;
         }
     }
+    if (plugins)
+        plugins->afterInsert();
     return r;
 }
 
@@ -218,7 +192,6 @@ void DatabaseNConfig::setProperties(
             }
         }
     }
-
 }
 
 int DatabaseNConfig::exec(
@@ -244,29 +217,21 @@ int DatabaseNConfig::close() const
 }
 
 void DatabaseByConfig::prepare(
-    void *env,
     const ReceiverQueueValue &value
 )
 {
-#ifdef ENABLE_PKT2
-    // nothing to do
-#endif
-
-#ifdef ENABLE_LOGGER_HUFFMAN
     DEVADDRINT a(value.addr);
-    loggerParsePacket(env, a.a, value.payload);
-#endif
+    if (plugins)
+        plugins->prepare(a.a, value.payload);
 }
 
 void DatabaseByConfig::prepare(
-    void *env,
     uint32_t addr,
     const std::string &payload
 )
 {
-#ifdef ENABLE_LOGGER_HUFFMAN
-    loggerParsePacket(env, addr, payload);
-#endif
+    if (plugins)
+        plugins->prepare(addr, payload);
 }
 
 //------------------- DatabaseByConfig -------------------
@@ -276,9 +241,11 @@ DatabaseByConfig::DatabaseByConfig
 	const ConfigDatabasesIntf *aconfig,
     PayloadInsertPlugins *aPlugins
 )
-	: config(aconfig), plugins(aPlugins)
+	: config(aconfig)
 {
-
+    plugins = aPlugins;
+    if (plugins)
+        plugins->dbByConfig = this;
 }
 
 DatabaseByConfig::~DatabaseByConfig()

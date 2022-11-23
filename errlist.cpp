@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 164
+#define ERR_COUNT 165
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -172,7 +172,8 @@ static const char *errList[ERR_COUNT] = {
     ERR_LORA_GATEWAY_TX_UNSUPPORTED_POWER,
     ERR_LORA_GATEWAY_USB_NOT_FOUND,
     ERR_LORA_GATEWAY_SHUTDOWN_TIMEOUT,
-    ERR_LORA_GATEWAY_STOP_FAILED
+    ERR_LORA_GATEWAY_STOP_FAILED,
+    ERR_INIT_PLUGINS_FAILED
 };
 
 const char *strerror_lorawan_ns

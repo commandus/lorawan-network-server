@@ -508,7 +508,7 @@ cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scr
 - databaseExtraConfigFileNames list of extra configuration files and subdirectories, e.g. device passport files folder path
 - loggerDatabaseName database name used by logger. Database name assigned in file (see databaseConfigFileName option).
 - protoPath protobuf message description files directory path. Default "proto"
-- pluginsPath path to the folder with dynamically loaded libraries (.so) with payload2InsertClausesFunc() functions  
+- pluginsPath path to the folder with dynamically loaded libraries (.so) with extern "C" payload2InsertClauses() function  
 - server Network server properties, including end-device list served by the server
 - configFileName (optional) Redirect config file to another one
 
@@ -644,19 +644,24 @@ JWT token if user successfully authorized.
 
 Set pluginsPath in the lorawan-network-server.json main configuration file.
 
-Each plugin (in .so dynamically loaded library file) must contain function named payload2InsertClausesFunc().
+Each plugin (in .so dynamically loaded library file) must contain function named payload2InsertClauses().
 
-Function payload2InsertClausesFunc() must be declared as extern "C" function.
+Function payload2InsertClauses() must be declared as extern "C" function.
 
+Function payload2InsertClauses() is mandatory.
+
+There are couple optional functions, see section "Writing payload parser plugins" and file payload-insert.h for more details.
 
 Plugin receives binary payload and return none, one or more INSERT SQL clauses to be inserted to databases.
+
+If database "driver" type is JSON not SQL, payload2InsertClauses() must return one JSON string. 
 
 See payload-insert.h header and example-plugins/ source directory for more details how to implement plugin.
 
 If no option pluginsPath is set, no any plugins would be loaded.
 
 If option pluginsPath is set, path is found, lorawan-network-server try load
-payload2InsertClausesFunc() extern "C" function from .so libraries.
+payload2InsertClauses() extern "C" function from .so libraries.
 
 When lorawan-network-server receives payload from gateway(s), loaded functions
 are called one by one.
@@ -1664,32 +1669,70 @@ dpkg-query -L firebird-dev
 sudo apt install liblmdb-dev 
 ```
 
-## Add own payload 
+## Writing payload parser plugins 
 
-### Dynamically loaded libraries
+Payload parser plugins are dynamically loaded libraries (.so files in the plugins/ directory).
 
-pluginsPath
-Plugins sorted alphabetically by library file name.
+Server receives payload, decipher it and pass it to the first payload parser plugin in the chain.
 
-### Static include
+If plugin does not recognize payload, it returns negative number, for instance, -1.
+In this case, next plugin try to parse payload.
+Plugins in the chain are sorted by file name in ascending order.
 
-In the db-any.cpp file rewrite DatabaseNConfig::insertClauses method:
+When plugin detect payload as parseable, it parses payload. 
+Plugin must return count of produced "INSERT" clauses: 0, 1 or more.
+If plugin return 0, 1 or more, the plugin chain breaks.
 
+Config file parameter pluginsPath set directory where plugin files are located.
+
+Some plugin examples you can find in the example-plugin/ directory.
+Make produce some example plugins located in hidden directory .libs. You can copy them to the plugins/
+directory.
+
+Mandatory function is extern "C" payload2InsertClauses().
+
+Optional are
+
+- pluginInit() if you need create some environment, do it in this function
+- pluginDone() do not forget free up environment in this call
+- payloadPrepare() called when server start store payload in databases
+- payloadCreate() return "CREATE TABLE .." clauses helpful for database administration 
+- afterInsert() called when server finish store payload in databases
+
+Plugin life cycle diagram:
 ```
-int DatabaseNConfig::insertClauses(
+          |
+          | Server started
+          |
++--------------------+
+|     pluginInit     |
++--------------------+
+          | 
+          | Receive new payload  <---------+
+          |                                |
++-----------------------+                  |
+|     payloadPrepare    |                  |
++-----------------------+                  |
+          |                                |
+          | Next database in the list <--+ |
+          |                              | |
++-----------------------+                | |
+| payload2InsertClauses |                | |
++-----------------------+                | |
+          |                              | |
+          |------------------------------+ |
+          |                                |
++---------------------+                    |
+|     afterInsert     |                    |
++---------------------+                    |
+          |                                |
+          |--------------------------------+
+          | Server stopped
+          |          
++---------------------+
+|     Plugin done     |
++---------------------+
 ```
-
-Parameters:
-
-- std::vector<std::string> &retClauses 
-- void *env
-- const std::string &message: name of preferred handler (message type name). Default "".
-- int inputFormat: 0- binary (always) 1- hex (never used)
-- const std::string &data: payload
-- const std::map<std::string, std::string> *properties: LoRaWAN metdata properties
-- const std::string &nullValueString: magic number 8888 by default
-
-## Known bugs
 
 Javascript parser does not support merge using the spread operator like
 

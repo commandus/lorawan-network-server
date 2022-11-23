@@ -14,16 +14,10 @@
 #include "receiver-queue-service-dir-txt.h"
 #include "receiver-queue-service-file-json.h"
 
-#ifdef ENABLE_PKT2
-#include "pkt2/database-config.h"
-#else
+// JSON
 #include "database-config-json.h"
-#endif
-
-#ifdef ENABLE_LOGGER_HUFFMAN
-#include "logger-huffman/logger-parse.h"
-#include "database-config-json.h"
-#endif
+// Javascript, disabled
+// #include "pkt2/database-config.h"
 
 #ifdef _MSC_VER
 #undef ENABLE_TERM_COLOR
@@ -43,12 +37,6 @@ RunListener::RunListener()
     processor(nullptr), dbByConfig(nullptr),
     deviceHistoryService(nullptr), regionalParameterChannelPlans(nullptr),
     deviceChannelPlan(nullptr), configDatabases(nullptr),
-#ifdef ENABLE_PKT2
-    parserEnv(nullptr),
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    loggerParserEnv(nullptr),
-#endif
     receiverQueueService(nullptr)
 {
 }
@@ -60,12 +48,6 @@ RunListener::RunListener(Configuration *aConfig, int *lastSysSignal)
     processor(nullptr), dbByConfig(nullptr),
     deviceHistoryService(nullptr), regionalParameterChannelPlans(nullptr),
     deviceChannelPlan(nullptr), configDatabases(nullptr),
-#ifdef ENABLE_PKT2
-    parserEnv(nullptr),
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    loggerParserEnv(nullptr),
-#endif
     receiverQueueService(nullptr)
 {
     init(aConfig, lastSysSignal);
@@ -181,16 +163,7 @@ void RunListener::done()
         delete configDatabases;
         configDatabases = nullptr;
     }
-#ifdef ENABLE_PKT2
-    if (parserEnv)
-		donePkt2(parserEnv);
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    if (loggerParserEnv) {
-        doneLoggerParser(loggerParserEnv);
-        loggerParserEnv = nullptr;
-    }
-#endif
+    plugins.done();
     if (config) {
         delete config;
         config = nullptr;
@@ -485,11 +458,10 @@ void RunListener::init(
     }
 
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_START_OUTPUT_DB_SVC);
-#ifdef ENABLE_PKT2
-    configDatabases = new ConfigDatabases(config->databaseConfigFileName);
-#else
+    // Javascript, disabled
+    // configDatabases = new ConfigDatabases(config->databaseConfigFileName);
+    // JSON
     configDatabases = new ConfigDatabasesJson(config->databaseConfigFileName);
-#endif
     if (configDatabases->dbs.empty()) {
         logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, LORA_OK, ERR_LOAD_DATABASE_CONFIG);
         // exit(ERR_CODE_LOAD_DATABASE_CONFIG);
@@ -538,47 +510,14 @@ void RunListener::init(
         exit(ERR_CODE_LOAD_DATABASE_CONFIG);
     }
 
-#ifdef ENABLE_PKT2
-    onLog(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, "Initialize payload parser PKT2 ..");
-	parserEnv = initPkt2(config->protoPath, 0);
-	if (!parserEnv) {
-        listenerOnLog(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_PROTO, ERR_LOAD_PROTO);
-		exit(ERR_CODE_LOAD_PROTO);
+    logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_PLUGINS);
+    // TODO pass
+    int pec = plugins.init(config->protoPath, config->loggerDatabaseName,
+        config->databaseExtraConfigFileNames, this, 0);
+	if (pec) {
+        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_PLUGINS_FAILED, ERR_INIT_PLUGINS_FAILED);
+		exit(ERR_CODE_INIT_PLUGINS_FAILED);
 	}
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    bool hasLoggerKosaPacketsLoader = false;
-    // set database to load from
-    if (!config->loggerDatabaseName.empty()) {
-        DatabaseNConfig *kldb = dbByConfig->find(config->loggerDatabaseName);
-        if (kldb) {
-            loggerKosaPacketsLoader.setDatabase(kldb->db);
-            int r = kldb->open();
-            if (r == ERR_CODE_NO_DATABASE) {
-                hasLoggerKosaPacketsLoader = false;
-            } else {
-                hasLoggerKosaPacketsLoader = true;
-            }
-        }
-    }
-    if (hasLoggerKosaPacketsLoader) {
-        std::stringstream sskldb;
-        sskldb << MSG_INIT_LOGGER_HUFFMAN << config->loggerDatabaseName;
-        logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
-    } else {
-        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
-    }
-    loggerParserEnv = initLoggerParser(config->databaseExtraConfigFileNames,
-       [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
-            logMessage(env, level, moduleCode, errorCode, message);
-        },
-        &loggerKosaPacketsLoader);
-    if (!loggerParserEnv) {
-        logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER,
-                   ERR_INIT_LOGGER_HUFFMAN_PARSER);
-        exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
-    }
-#endif
 
     // Set up processor
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_START_PACKET_PROCESSOR);
@@ -595,14 +534,7 @@ void RunListener::init(
     processor->reserveFPort(config->serverConfig.controlFPort);
     processor->setDeviceChannelPlan(deviceChannelPlan);
 
-    // Set pkt2 environment
     receiverQueueProcessor = new ReceiverQueueProcessor();
-#ifdef ENABLE_PKT2
-    receiverQueueProcessor->setParserEnv(parserEnv);
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    receiverQueueProcessor->setParserEnv(loggerParserEnv);
-#endif
     receiverQueueProcessor->setLogger(
         [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
             logMessage(env, level, moduleCode, errorCode, message);

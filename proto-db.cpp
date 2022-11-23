@@ -14,11 +14,8 @@
 
 #ifdef ENABLE_PKT2
 #include <google/protobuf/message.h>
-#include "pkt2/database-config.h"
-#else
-#include "database-config-json.h"
 #endif
-
+#include "database-config-json.h"
 
 #include "argtable3/argtable3.h"
 #include "base64/base64.h"
@@ -431,7 +428,7 @@ void doInsert
     DEVADDR a;
     string2DEVADDR(a, config->addr);
     DEVADDRINT ai(a);
-    dbAny->prepare(env, ai.a, hex2string(hexData));
+    dbAny->prepare(ai.a, hex2string(hexData));
 	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
 		
 		DatabaseNConfig *db = dbAny->find(*it);
@@ -450,7 +447,7 @@ void doInsert
 
 		if (verbosity) {
             std::vector<std::string> clauses;
-            db->insertClauses(clauses, env, messageType, 1, hexData, &properties);
+            db->insertClauses(clauses, messageType, 1, hexData, &properties);
             std::string s;
             for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
                 s += *it;
@@ -459,12 +456,12 @@ void doInsert
             std::cout << s << std::endl;  // 1- INPUT_FORMAT_HEX
 		}
 
-		r = db->insert(env, messageType, 1, hexData, &properties);   // 1- INPUT_FORMAT_HEX
+		r = db->insert(messageType, 1, hexData, &properties);   // 1- INPUT_FORMAT_HEX
 
 		if (r) {
 			std::cerr << ERR_DB_INSERT << r << " database " << *it << ": " << db->db->errmsg << std::endl;
             std::vector<std::string> clauses;
-            db->insertClauses(clauses, env, messageType, 1, hexData, &properties);
+            db->insertClauses(clauses, messageType, 1, hexData, &properties);
             std::string s;
             for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
                 s += *it;
@@ -516,12 +513,7 @@ int main(
 		exit(ERR_CODE_LOAD_PROTO);
 	}
 
-	ConfigDatabasesIntf *configDatabases;
-#ifdef ENABLE_PKT2
-    configDatabases = new ConfigDatabases(config.databaseConfigFileName);
-#else
-    configDatabases = new ConfigDatabasesJson(config.dbConfigFileName);
-#endif
+	ConfigDatabasesIntf *configDatabases = new ConfigDatabasesJson(config.dbConfigFileName);
 
 	if (configDatabases->dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;

@@ -48,6 +48,11 @@
 
 #include "ws-handler.h"
 
+#ifdef ENABLE_LOGGER_HUFFMAN
+#include "logger-huffman/logger-parse.h"
+#include "logger-loader.h"
+#endif
+
 const std::string programName = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
@@ -261,6 +266,12 @@ static void wsOnLog(
     std::cerr << message << std::endl;
 }
 
+#ifdef ENABLE_WS
+#ifdef ENABLE_LOGGER_HUFFMAN
+    LoggerHuffmanEnv loggerHuffmanEnv;
+#endif
+#endif
+
 static void wsRun(char *programPath, Configuration* config) {
 #ifdef ENABLE_WS
     wsSpecialPathHandler = new WsSpecialPathHandler();
@@ -321,8 +332,42 @@ static void wsRun(char *programPath, Configuration* config) {
     }
 #ifdef ENABLE_WS
 #ifdef ENABLE_LOGGER_HUFFMAN
-    if (wsSpecialPathHandler)
-        wsSpecialPathHandler->loggerParser = runListener->loggerParserEnv;
+    if (wsSpecialPathHandler) {
+        bool hasLoggerKosaPacketsLoader = false;
+        // set database to load from
+        if (!config->loggerDatabaseName.empty()) {
+            DatabaseNConfig *kldb = nullptr;
+            if (runListener->dbByConfig)
+                kldb = runListener->dbByConfig->find(config->loggerDatabaseName);
+            if (kldb) {
+                loggerHuffmanEnv.loader.setDatabase(kldb->db);
+                int r = kldb->open();
+                if (r == ERR_CODE_NO_DATABASE) {
+                    hasLoggerKosaPacketsLoader = false;
+                } else {
+                    hasLoggerKosaPacketsLoader = true;
+                }
+            }
+        }
+        if (hasLoggerKosaPacketsLoader) {
+            std::stringstream sskldb;
+            sskldb << MSG_INIT_LOGGER_HUFFMAN << config->loggerDatabaseName;
+            runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
+        } else {
+            runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
+        }
+        void *env = initLoggerParser(config->databaseExtraConfigFileNames,
+           [](void *lenv, int level, int moduleCode, int errorCode, const std::string &message) {
+               wsOnLog(runListener->listener, level, moduleCode, errorCode, message);
+            },
+            &loggerHuffmanEnv.loader);
+        if (!env) {
+            runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC,
+                ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER, ERR_INIT_LOGGER_HUFFMAN_PARSER);
+            exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
+        }
+        wsSpecialPathHandler->loggerParser = env;
+    }
 #endif
 #endif
 
@@ -355,11 +400,13 @@ static void wsRun(char *programPath, Configuration* config) {
         if (config->serverConfig.verbosity > 5)
             runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
     } else {
-        runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
+        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
                                 ERR_WS_START_FAILED);
         exit(ERR_CODE_WS_START_FAILED);
     }
 #else
+    runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
+        ERR_WS_START_FAILED);
     exit(ERR_CODE_WS_START_FAILED);
 #endif
 }

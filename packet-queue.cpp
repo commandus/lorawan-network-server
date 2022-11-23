@@ -11,6 +11,7 @@
 
 #include "utildate.h"
 #include "utilstring.h"
+#include "utilthread.h"
 #include "errlist.h"
 #include "udp-socket.h"
 #include "lorawan-mac.h"
@@ -825,6 +826,7 @@ void PacketQueue::start(
 	fdWakeup = eventfd(0, EFD_CLOEXEC);
 
 	threadSend = new std::thread(&PacketQueue::runner, this);
+    setThreadName(threadSend, MODULE_NAME_PACKET_QUEUE_SEND);
     threadSend->detach();
 }
 
