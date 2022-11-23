@@ -17,16 +17,11 @@
 
 #include "receiver-queue-processor.h"
 #include "lora-packet-handler-impl.h"
-#ifdef ENABLE_LOGGER_HUFFMAN
-#include "logger-loader.h"
-#endif
+#include "log-intf.h"
 
-class RunListener {
+class RunListener : public LogIntf {
 private:
     PayloadInsertPlugins plugins;
-#ifdef ENABLE_LOGGER_HUFFMAN
-    DbLoggerKosaPacketsLoader loggerKosaPacketsLoader;
-#endif
 public:
     Configuration *config;
     GatewayList *gatewayList;
@@ -52,14 +47,6 @@ public:
     ConfigDatabasesIntf *configDatabases;
     ReceiverQueueService *receiverQueueService;
 
-    // pkt2 environment
-#ifdef ENABLE_PKT2
-    void* parserEnv;
-#endif
-#ifdef ENABLE_LOGGER_HUFFMAN
-    void* loggerParserEnv;
-#endif
-
     RunListener();
     RunListener(Configuration *config, int *lastSysSignal);
 
@@ -70,7 +57,7 @@ public:
         int moduleCode,
         int errorCode,
         const std::string &message
-    );
+    ) override;
     void init(Configuration *config, int *lastSysSignal);
     void start();
     void stop();

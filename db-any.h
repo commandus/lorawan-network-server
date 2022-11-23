@@ -6,10 +6,6 @@
 #include "receiver-queue-service.h"
 #include "payload-insert-plugin.h"
 
-#ifdef ENABLE_PKT2
-#include "pkt2/str-pkt2.h"
-#endif
-
 /**
  * Return SQL dialect number by the name
  * @param name SQL dialect name
@@ -31,7 +27,6 @@ public:
 	std::string selectClause(void *env, const std::string &message);
 	std::string createClause(void *env, const std::string &message) const;
 	int insertClauses(std::vector<std::string> &retClauses,
-		void *env,
 		const std::string &message,
 		int inputFormat,
 		const std::string &data,
@@ -40,7 +35,6 @@ public:
 	);
 	int createTable(void *env, const std::string &message);
 	int insert(
-		void *env,
 		const std::string &message,
 		int inputFormat,
 		const std::string &data,
@@ -73,19 +67,17 @@ public:
     /**
      * Prepare received packet. Device can send two or more packets.
      * Preparation means collect packets. After all packets received, collector returns value to be inserted into the database.
-     * @param env logger packet collector descriptor.  Receives and logger passport descriptor returned by initLoggerParser()
      * @param value received value payload and address
      */
-    void prepare(void *env, const ReceiverQueueValue &value);
+    void prepare(const ReceiverQueueValue &value);
 
     /**
      * Prepare received packet. Device can send two or more packets.
      * Preparation means collect packets. After all packets received, collector returns value to be inserted into the database.
-     * @param env logger packet collector descriptor.  Receives and logger passport descriptor returned by initLoggerParser()
      * @param addr LoRaWAN address
      * @param payload received value payload
      */
-    void prepare(void *env, uint32_t addr, const std::string &payload);
+    void prepare(uint32_t addr, const std::string &payload);
 
     size_t count() const;
 	/**

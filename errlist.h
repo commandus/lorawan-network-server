@@ -20,6 +20,18 @@
 #define LOG_EMBEDDED_GATEWAY    			7
 #define LOG_TEMPERATURE_LOGGER_PASSPORT     8
 
+// Module and thread names
+#define MODULE_NAME_RECEIVER_QUEUE_PROCESSOR        "RcvQue"
+#define MODULE_NAME_DEVICE_STAT_SVC_FILE            "DStatF"
+#define MODULE_NAME_GW_STAT_SVC_FILE                "GStatF"
+#define MODULE_NAME_GW_UPSTREAM                     "GwUp"
+#define MODULE_NAME_GW_DOWNSTREAM                   "GwDown"
+#define MODULE_NAME_GW_JIT                          "GwJit"
+#define MODULE_NAME_GW_SPECTRAL_SCAN                "GwSS"
+#define MODULE_NAME_GW_GPS                          "GwGPS"
+#define MODULE_NAME_GW_GPS_CHECK_TIME               "GwGPSCT"
+#define MODULE_NAME_PACKET_QUEUE_SEND               "PkQue"
+
 // Error codes
 #define LORA_OK            					0
 #define ERR_CODE_COMMAND_LINE		    	-500                
@@ -191,6 +203,7 @@
 #define ERR_CODE_LORA_GATEWAY_USB_NOT_FOUND                 -661
 #define ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT              -662
 #define ERR_CODE_LORA_GATEWAY_STOP_FAILED                   -663
+#define ERR_CODE_INIT_PLUGINS_FAILED                        -664
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -377,6 +390,8 @@
 #define ERR_LORA_GATEWAY_SHUTDOWN_TIMEOUT               "Gateway shutdown timeout"
 #define ERR_LORA_GATEWAY_STOP_FAILED                    "Gateway stop failed"
 
+#define ERR_INIT_PLUGINS_FAILED                         "Initialize plugin(s) failed "
+
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
 #define MSG_PROTO_DB_PROG_NAME			"proto-dbSqlite3 helper utility"
@@ -409,6 +424,7 @@
 #define MSG_MAC_COMMANDS                "MAC commands"
 #define MSG_SEND_TO                     "Send to "
 #define MSG_DATABASE_LIST				"Databases: "
+#define MSG_DATABASE    				"Database: "
 #define MSG_DEFAULT_DATABASE			"(default)"
 #define MSG_CONN_ESTABLISHED			"established"
 #define MSG_CONN_FAILED					"failed"
@@ -468,6 +484,8 @@
 #define MSG_PLUGIN_PATH_NOT_FOUND       "No plugin directory specified or path not found "
 #define MSG_NO_PLUGINS_LOADED           "No any plugin found"
 #define MSG_LOADED_PLUGINS_COUNT        "Plugins loaded: "
+#define MSG_INIT_PLUGINS                "Initialize plugin(s).."
+#define MSG_DONE_PLUGINS                "Finalize plugin(s).."
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

@@ -2,11 +2,6 @@
 #include <iomanip>
 #include "payload-insert.h"
 
-#define SQL_POSTGRESQL 0
-#define SQL_MYSQL 1
-#define SQL_FIREBIRD 2
-#define SQL_SQLITE 3
-
 // Bluetooth or Wi-Fi event
 typedef struct {
     uint8_t tag;		// 'B'- bluetooth 'W'- Wi-Fi
@@ -124,9 +119,12 @@ static std::string insertWiFiEvent(
  * @param env
  * @param message name of preferred handler (message type name). Default "".
  * @param inputFormat: 0- binary (always) 1- hex (never used)
+ * @param outputFormat 0- json 3- sql
  * @param sqlDialect SQL_POSTGRESQL = 0 SQL_MYSQL = 1 SQL_FIREBIRD = 2 SQL_SQLITE = 3
  * @param data: payload
  * @param properties: LoRaWAN metadata properties
+ * @param tableAliases optional aliases (not used)
+ * @param fieldAliases optional aliases (not used)
  * @param nullValueString: magic number "8888" by default. You can set it to "NULL".
  *
  * Property keys are:
@@ -151,13 +149,20 @@ extern "C" int payload2InsertClauses(
     std::vector<std::string> &retClauses,
     void *env,
     const std::string &message,
-    int inputFormat,
+    int inputFormat,    // always 0
+    int outputFormat,   // 3- SQL, 0- JSON
     int sqlDialect, // SQL_POSTGRESQL = 0 SQL_MYSQL = 1 SQL_FIREBIRD = 2 SQL_SQLITE = 3
     const std::string &data,
+    const std::map<std::string, std::string> *tableAliases,
+    const std::map<std::string, std::string> *fieldAliases,
     const std::map<std::string, std::string> *properties,
     const std::string &nullValueString
 )
 {
+    if (outputFormat == 0) {
+        // JSON not implemented yet
+        return 0;
+    }
     size_t sz = data.size();
     switch (sz) {
         case 8:

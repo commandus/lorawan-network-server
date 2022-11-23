@@ -26,4 +26,14 @@ public:
     void setDatabase(DatabaseIntf *db);
 };
 
+/**
+ * Helper class keep logger handler and loader
+ */
+class LoggerHuffmanEnv {
+public:
+    void *env;
+    DbLoggerKosaPacketsLoader loader;
+};
+
+
 #endif

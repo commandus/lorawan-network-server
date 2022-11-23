@@ -38,14 +38,14 @@ void donePkt2(void *env);
 
 /**
  * Parse packet by declaration
- * @param env packet declaratuions
+ * @param env packet declarations
  * @param inputFormat 0- binary, 1- hex string
  * @param outputFormat 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin 
- * @param sqlDialect 0- PostgeSQL, 1- MySQL, 1- Firebird
+ * @param sqlDialect 0- PostgreSQL, 1- MySQL, 1- Firebird
  * @param packet data
- * @param forceMessage "" If specifed, try only message type
- * @param tableAliases protobuf message to datanase table map
- * @param fieldAliases protobuf message attribute to datanase column map
+ * @param forceMessage "" If specified, try only message type
+ * @param tableAliases protobuf message to database table map
+ * @param fieldAliases protobuf message attribute to database column map
  * @param properties "session environment variables", e.g addr, eui, time, timestamp
  * @return empty string if fails
  */
@@ -56,9 +56,9 @@ std::string parsePacket(
 	int sqlDialect,
 	const std::string &packet,
 	const std::string &forceMessage,
-	const std::map<std::string, std::string> *tableAliases = NULL,
-	const std::map<std::string, std::string> *fieldAliases = NULL,
-	const std::map<std::string, std::string> *properties = NULL
+	const std::map<std::string, std::string> *tableAliases = nullptr,
+	const std::map<std::string, std::string> *fieldAliases = nullptr,
+	const std::map<std::string, std::string> *properties = nullptr
 );
 
 /**
