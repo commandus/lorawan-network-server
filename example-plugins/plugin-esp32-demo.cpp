@@ -161,7 +161,7 @@ extern "C" int payload2InsertClauses(
 {
     if (outputFormat == 0) {
         // JSON not implemented yet
-        return 0;
+        return -1;
     }
     size_t sz = data.size();
     switch (sz) {

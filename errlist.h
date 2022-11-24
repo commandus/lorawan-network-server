@@ -19,6 +19,8 @@
 #define LOG_UDP_EMITTER						6
 #define LOG_EMBEDDED_GATEWAY    			7
 #define LOG_TEMPERATURE_LOGGER_PASSPORT     8
+#define LOG_ORA_PRINT                       9
+
 
 // Module and thread names
 #define MODULE_NAME_RECEIVER_QUEUE_PROCESSOR        "RcvQue"
@@ -204,6 +206,7 @@
 #define ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT              -662
 #define ERR_CODE_LORA_GATEWAY_STOP_FAILED                   -663
 #define ERR_CODE_INIT_PLUGINS_FAILED                        -664
+#define ERR_CODE_LOAD_PLUGINS_FAILED                        -665
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -391,10 +394,11 @@
 #define ERR_LORA_GATEWAY_STOP_FAILED                    "Gateway stop failed"
 
 #define ERR_INIT_PLUGINS_FAILED                         "Initialize plugin(s) failed "
+#define ERR_LOAD_PLUGINS_FAILED                         "Load plugin(s) failed "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
-#define MSG_PROTO_DB_PROG_NAME			"proto-dbSqlite3 helper utility"
+#define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
 #define MSG_LORA_PRINT_PROG_NAME		"lora-print helper utility"
 #define MSG_INTERRUPTED 				"Interrupted "
 #define MSG_GRACEFULLY_STOPPED			"Stopped gracefully"

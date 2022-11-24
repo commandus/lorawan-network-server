@@ -19,7 +19,7 @@ class DatabaseIntf
 public:
 	std::string type;
 	std::string errmsg;
-	// Example: config->lasterr = sqlite3_open_v2(config->connectionString, (sqlite3 **) &config->dbSqlite3, SQLITE_OPEN_READWRITE, NULL);	// SQLITE_OPEN_READWRITE
+
 	virtual int open(
 		const std::string &connection,
 		const std::string &login,

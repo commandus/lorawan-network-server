@@ -70,7 +70,7 @@ message FileDescriptorProto {
   repeated int32 weak_dependency = 11;
 
   // All top-level definitions in this file.
-  repeated DescriptorProto message_type = 4;
+  repeated DescriptorProto messageType = 4;
   repeated EnumDescriptorProto enum_type = 5;
   repeated ServiceDescriptorProto service = 6;
   repeated FieldDescriptorProto extension = 7;
@@ -700,11 +700,11 @@ message SourceCodeInfo {
     // example, this path:
     //   [ 4, 3, 2, 7, 1 ]
     // refers to:
-    //   file.message_type(3)  // 4, 3
+    //   file.messageType(3)  // 4, 3
     //       .field(7)         // 2, 7
     //       .name()           // 1
-    // This is because FileDescriptorProto.message_type has field number 4:
-    //   repeated DescriptorProto message_type = 4;
+    // This is because FileDescriptorProto.messageType has field number 4:
+    //   repeated DescriptorProto messageType = 4;
     // and DescriptorProto.field has field number 2:
     //   repeated FieldDescriptorProto field = 2;
     // and FieldDescriptorProto.name has field number 1:
