@@ -38,8 +38,7 @@
 #define DEF_IDENTITY_STORAGE_NAME	"identity.json"
 #define DEF_IDENTITY_STORAGE_TYPE	"json"
 
-const std::string programName = "lora-print";
-#define DEF_CONFIG_FILE_NAME ".lora-print.json"
+const char *programName = "lora-print";
 
 static DatabaseByConfig *dbByConfig = nullptr;
 static PayloadInsertPlugins plugins;
@@ -61,11 +60,13 @@ public:
     uint32_t devAddr;                       // default 42
 	int outputFormat;					    // 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
 	int verbosity;						    // verbosity level
+    LoraPrintConfiguration() : devAddr(0), outputFormat(0), verbosity(0) {};
 };
 
 class PrintError: public LogIntf {
 public:
     int verbosity;
+    PrintError() : verbosity(0) {};
     void logMessage(void *env, int level, int moduleCode, int errorCode, const std::string &message) override {
         if (level > verbosity)
             return;
@@ -171,10 +172,10 @@ int parseCmd(
             config->devAddr = 42;
         }
 		for (int i = 0; i < a_dbname->count; i++) {
-			config->dbName.push_back(a_dbname->sval[i]);
+			config->dbName.emplace_back(a_dbname->sval[i]);
 		}
         for (int i = 0; i < a_extra_dbname->count; i++) {
-            config->extraDbName.push_back(a_extra_dbname->sval[i]);
+            config->extraDbName.emplace_back(a_extra_dbname->sval[i]);
         }
 
 		config->payload = "";
@@ -202,14 +203,13 @@ int parseCmd(
 		config->verbosity = a_verbosity->count;
 	}
 
-	config->identityStorageName = "";
 	if (a_identityStorageName->count) {
 		config->identityStorageName = *a_identityStorageName->sval;
 	}
 	if (config->identityStorageName.empty())
 		config->identityStorageName = DEF_IDENTITY_STORAGE_NAME;
 	
-	std::string sidentityStorageType = "";
+	std::string sidentityStorageType;
 	if (a_identityStorageType->count) {
 		sidentityStorageType = *a_identityStorageType->sval;
 	}
@@ -235,7 +235,7 @@ int parseCmd(
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
 		if (nerrors)
-			arg_print_errors(stderr, a_end, programName.c_str());
+			arg_print_errors(stderr, a_end, programName);
 		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
 		std::cerr << MSG_LORA_PRINT_PROG_NAME << std::endl;
@@ -265,13 +265,17 @@ void doInsert(
 			exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
 		}
         std::vector<std::string> clauses;
-        db->insertClauses(clauses, config->messageType, INPUT_FORMAT_BINARY, binData, properties);
-        std::string s;
+        std::map<std::string, std::string> validProperties;
+        db->setProperties(validProperties, *properties);
+        db->insertClauses(clauses, config->messageType, INPUT_FORMAT_BINARY, binData, &validProperties);
         for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
-            s += *it;
-            s += " ";
+            std::stringstream ss;
+            ss << "Execute " << *it << "..";
+            printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0, ss.str());
         }
-        std::cout << s << std::endl;
+        int r = db->insert(config->messageType, INPUT_FORMAT_BINARY, binData, &validProperties);
+        if (r)
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, strerror_lorawan_ns(r));
 	}
 }
 
@@ -303,8 +307,7 @@ void doPrint(
         int dialect = sqlDialectByName(db->config->type);
 
         std::stringstream ss;
-        ss
-            << "output format " << config->outputFormat
+        ss << "output format " << config->outputFormat
             << " message type \"" << config->messageType
             << "\" database \"" << *it
             << "\" type \"" << db->config->type
@@ -313,9 +316,11 @@ void doPrint(
         printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0,ss.str());
 
         std::vector<std::string> clauses;
+        std::map<std::string, std::string> validProperties;
+        db->setProperties(validProperties, *properties);
         plugins.insert(clauses, config->messageType, INPUT_FORMAT_BINARY, config->outputFormat,
             dialect, binData,
-            &db->config->tableAliases, &db->config->fieldAliases, properties, nullValueString);
+            &db->config->tableAliases, &db->config->fieldAliases, &validProperties, nullValueString);
 
         for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
             std::cout << *it << std::endl;
@@ -374,14 +379,13 @@ int main(
         exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 
-	if (config.dbName.size() == 0) {
+	if (config.dbName.empty()) {
 		// if not database is specified, use all of them
 		for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
 			config.dbName.push_back(it->name);
 		}
 	}
 
-	DatabaseByConfig databaseByConfig(configDatabases, nullptr);
 	// Start identity service
 	switch (config.identityStorageType) {
 		case IDENTITY_STORAGE_LMDB:
@@ -406,7 +410,7 @@ int main(
         exit(ERR_CODE_LOAD_PLUGINS_FAILED);
     }
     std::string dbName;
-    if (config.dbName.size())
+    if (!config.dbName.empty())
         dbName = config.dbName[0];
     dbByConfig = new DatabaseByConfig(configDatabases, &plugins);
     r = plugins.init(config.protoPath, dbName, config.extraDbName, &printError, 0);
@@ -443,7 +447,7 @@ int main(
 
     switch (r) {
         case ERR_CODE_IS_JOIN:
-            if (packets.size()) {
+            if (!packets.empty()) {
                 switch (packets[0].header.header.macheader.f.mtype) {
                     case MTYPE_JOIN_REQUEST:
                         {
@@ -467,9 +471,9 @@ int main(
                             NetworkIdentity ni;
                             int ir = identityService->getNetworkIdentity(ni, config.devEUI);
                             if (ir) {
-                                std::stringstream ss;
-                                ss << "Device EUI " << DEVEUI2string(config.devEUI) << " not found.";
-                                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+                                std::stringstream ss1;
+                                ss1 << "Device EUI " << DEVEUI2string(config.devEUI) << " not found.";
+                                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss1.str());
                                 done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
@@ -478,8 +482,8 @@ int main(
                             if (joinAcceptFrame) {
                                 encryptJoinAcceptResponse(*joinAcceptFrame, *key);
                                 std::cout << "Join accept "
-                                          << JOIN_ACCEPT_FRAME2string(*joinAcceptFrame)
-                                          << std::endl;
+                                    << JOIN_ACCEPT_FRAME2string(*joinAcceptFrame)
+                                    << std::endl;
                                 break;
                             }
 
@@ -487,8 +491,8 @@ int main(
                             if (joinAcceptCFListFrame) {
                                 encryptJoinAcceptCFListResponse(*joinAcceptCFListFrame, *key);
                                 std::cout << "Join accept CFList "
-                                          << JOIN_ACCEPT_FRAME_CFLIST2string(*joinAcceptCFListFrame)
-                                          << std::endl;
+                                    << JOIN_ACCEPT_FRAME_CFLIST2string(*joinAcceptCFListFrame)
+                                    << std::endl;
                                 break;
                             }
                             std::cerr << "Invalid Join Accept frame "
@@ -497,6 +501,8 @@ int main(
                                 << std::endl;
                         }
                         break;
+                    default:
+                        std::cerr << "Unknown frame " << std::endl;
                 }
             }
             break;
@@ -546,10 +552,10 @@ int main(
         properties["class"] = deviceclass2string(it->devId.deviceclass);		// A|B|C
 
         if (config.command == "sql") {
-			doInsert(&config, &databaseByConfig, payload, &properties);
+			doInsert(&config, dbByConfig, payload, &properties);
 		} else {
             DEVADDRINT a = it->getDeviceAddr();
-			doPrint(&config, &databaseByConfig, a.a, payload, &properties);
+			doPrint(&config, dbByConfig, a.a, payload, &properties);
 		}
 	}
     done();
