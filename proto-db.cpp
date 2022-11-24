@@ -1,6 +1,6 @@
 /**
  * @brief Database helper utility
- * @file proto-dbSqlite3.cpp
+ * @file proto-db.cpp
  * Copyright (c) 2021 andrey.ivanov@ikfia.ysn.ru Yu.G. Shafer Institute of Cosmophysical Research and Aeronomy of Siberian Branch of the Russian Academy of Sciences
  * MIT license
  */
@@ -35,15 +35,15 @@
 
 #include "config-filename.h"
 
-const std::string programName = "proto-dbSqlite3";
-#define DEF_CONFIG_FILE_NAME ".proto-dbSqlite3.json"
+const std::string programName = "proto-db";
+#define DEF_CONFIG_FILE_NAME ".proto-db.json"
 #define DEF_IDENTITY_STORAGE_NAME	"identity.json"
 #define DEF_IDENTITY_STORAGE_TYPE	"json"
 
 class Configuration {
 public:
 	std::string command;				// print|list|create|insert
-	std::string proto_path;				// proto file directory. Default 'proto
+	std::string protoPath;				// proto file directory. Default 'proto
 	std::string dbConfigFileName;		// Default dbs.js'
 	std::vector<std::string> dbname;	// database names
 
@@ -51,10 +51,10 @@ public:
 
 	int offset;							// list command, offset. Default 0.
 	int limit;							// list command, limit size. Default 10
-	std::vector<std::string> sort_asc;	// list command, sort by field ascending
-	std::vector<std::string> sort_desc;	// list command, sort by field descending
+	std::vector<std::string> sortAsc;	// list command, sort by field ascending
+	std::vector<std::string> sortDesc;	// list command, sort by field descending
 
-	std::string message_type;
+	std::string messageType;
 
 	// identity service
 	std::string identityStorageName;
@@ -126,8 +126,8 @@ int parseCmd(
 	void *argtable[] = {
 		a_command = arg_str0(NULL, NULL, "<command>", "print|list|create|insert. Default print"),
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
-		a_dbconfigfilename = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.js'"),
-		a_dbname = arg_strn("d", "dbname", "<database>", 0, 100, "database name, Default all"),
+		a_dbconfigfilename = arg_str0("c", "dbConfig", "<file>", "database config file name. Default 'dbs.js'"),
+		a_dbname = arg_strn("d", "dbName", "<database>", 0, 100, "database name, Default all"),
 
 		a_message_type = arg_str0("m", "message", "<pkt.msg>", "Message type packet and name"),
 		
@@ -165,9 +165,9 @@ int parseCmd(
 		if (a_command->count)
 			config->command = *a_command->sval;
 		if (a_proto_path->count)
-			config->proto_path = *a_proto_path->sval;
+			config->protoPath = *a_proto_path->sval;
 		else
-			config->proto_path = "proto";
+			config->protoPath = "proto";
 
 		if (a_dbconfigfilename->count)
 			config->dbConfigFileName = *a_dbconfigfilename->sval;
@@ -175,9 +175,9 @@ int parseCmd(
 			config->dbConfigFileName = "dbs.js";
 
 		if (a_message_type->count)
-			config->message_type = *a_message_type->sval;
+			config->messageType = *a_message_type->sval;
 		else
-			config->message_type = "";
+			config->messageType = "";
 
 		for (int i = 0; i < a_dbname->count; i++) {
 			config->dbname.push_back(a_dbname->sval[i]);
@@ -205,10 +205,10 @@ int parseCmd(
 			config->limit = 10;
 
 		for (int i = 0; i < a_sort_asc->count; i++) {
-			config->sort_asc.push_back(a_sort_asc->sval[i]);
+			config->sortAsc.push_back(a_sort_asc->sval[i]);
 		}
 		for (int i = 0; i < a_sort_desc->count; i++) {
-			config->sort_desc.push_back(a_sort_desc->sval[i]);
+			config->sortDesc.push_back(a_sort_desc->sval[i]);
 		}
 
 		config->identityStorageName = "";
@@ -251,15 +251,14 @@ int parseCmd(
 		}
 	}
 
-	if (config->message_type.empty()) {
+	if (config->messageType.empty()) {
 		if (config->command == "create") {
-			// try to get message_type from the payload
+			// try to get messageType from the payload
 			if (config->payload.empty()) {
 				nerrors++;
 				std::cerr << ERR_MESSAGE << ERR_CODE_NO_MESSAGE_TYPE << ": " << ERR_NO_MESSAGE_TYPE << std::endl;
 				std::cerr << ERR_MESSAGE << ERR_CODE_NO_PAYLOAD << ": " << ERR_NO_PAYLOAD << std::endl;
 			}
-
 		}
 	}
 
@@ -324,11 +323,11 @@ void doList
 		}
 		ss << "FROM " << quote << t << quote;
 
-		if (config->sort_asc.size() || config->sort_desc.size()) {
+		if (config->sortAsc.size() || config->sortDesc.size()) {
 			ss << " ORDER BY ";
 		}
 		bool isFirst = true;
-		for (std::vector<std::string>::const_iterator it(config->sort_asc.begin()); it != config->sort_asc.end(); it++)  {
+		for (std::vector<std::string>::const_iterator it(config->sortAsc.begin()); it != config->sortAsc.end(); it++)  {
 			if (isFirst)
 				isFirst = false;
 			else
@@ -336,7 +335,7 @@ void doList
 			ss << quote << *it << quote;
 		}
 
-		for (std::vector<std::string>::const_iterator it(config->sort_desc.begin()); it != config->sort_desc.end(); it++)  {
+		for (std::vector<std::string>::const_iterator it(config->sortDesc.begin()); it != config->sortDesc.end(); it++)  {
 			if (isFirst)
 				isFirst = false;
 			else
@@ -506,14 +505,14 @@ int main(
 	}
     void* env = nullptr;
 #ifdef ENABLE_PKT2
-	env = initPkt2(config.proto_path, 0);
+	env = initPkt2(config.protoPath, 0);
 #endif
 	if (!env) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
 		exit(ERR_CODE_LOAD_PROTO);
 	}
 
-	ConfigDatabasesIntf *configDatabases = new ConfigDatabasesJson(config.dbConfigFileName);
+    ConfigDatabasesIntf *configDatabases = new ConfigDatabasesJson(config.dbConfigFileName);
 
 	if (configDatabases->dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
@@ -534,19 +533,19 @@ int main(
 	DatabaseByConfig dbAny(configDatabases, nullptr);
 
 	if (config.command == "print")
-		doPrint(env, &config, &dbAny, config.message_type, config.payload);
+		doPrint(env, &config, &dbAny, config.messageType, config.payload);
 	if (config.command == "list")
-		doList(env, &config, &dbAny, config.message_type);
+		doList(env, &config, &dbAny, config.messageType);
 	if (config.command == "create") {
-		if (config.message_type.empty()) {
+		if (config.messageType.empty()) {
 #ifdef ENABLE_PKT2
 			google::protobuf::Message *m;
 			parsePacket2ProtobufMessage((void**) &m, env, 1, config.payload, "", NULL, NULL, NULL);
 			if (m)
-				config.message_type = m->GetTypeName();
+				config.messageType = m->GetTypeName();
 #endif
 		}
-		doCreate(env, &config, &dbAny, config.message_type, config.verbosity);
+		doCreate(env, &config, &dbAny, config.messageType, config.verbosity);
 	}
 	if (config.command == "insert") {
 		IdentityService *identityService = NULL;
@@ -588,7 +587,7 @@ int main(
  
 		deviceId.setProperties(properties);
 
-		doInsert(env, &config, &dbAny, config.message_type, config.payload, properties, config.verbosity);
+		doInsert(env, &config, &dbAny, config.messageType, config.payload, properties, config.verbosity);
 
 		if (identityService)
 			delete identityService;

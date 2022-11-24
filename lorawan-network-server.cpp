@@ -478,7 +478,7 @@ static void invalidatePaths(char *programPath, Configuration *config)
         }
     }
     if (!util::fileExists(config->serverConfig.regionalSettingsStorageName)) {
-        // if proto path is not specified, try use default ./proto/ path
+        // if regional parameters file name is not specified, try default regional-parameters.json file
         if (config->serverConfig.regionalSettingsStorageName.empty())
             config->serverConfig.regionalSettingsStorageName = DEF_REGIONAL_PARAMATERS_CONFIG_FILE_NAME;
         config->serverConfig.regionalSettingsStorageName = getDefaultConfigFileName(programPath, config->serverConfig.regionalSettingsStorageName);;

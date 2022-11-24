@@ -998,15 +998,24 @@ A- NwkAddr
 
 ## lora-print
 
-lora-print utility parse packet received from the Semtech gateway and try to decode payload.
+lora-print utility parse packet received from the Semtech's gateway and try to decode payload.
 
 Mandatory option is one of
 
 - -x, --hex=<hex-string>      LoraWAN packet to decode, hexadecimal string.
 - -6, --base64=<base64>       same, base64 encoded.
 
-lora-print utility parseRX payload by the packet description in one proto file.
+- -c, --dbConfig=<file>       database config file name. Default 'dbs.json'
 
+lora-print utility require at least one plugin to parse binary payload.
+Option -l set plugins directory path: 
+
+- -l, --plugins=<path>        plugin directory. Default 'plugins'
+
+There is pkt2 plugin in example-plugin. For instance, lora-print utility can parse payload by the packet description 
+in proto file using pkt2 plugin.
+
+pkt2 plugin require location of proto files.
 You can specify folder path where proto file stored using option:
 
 - -p, --proto=<path>          proto file directory. Default 'proto'
@@ -1029,10 +1038,16 @@ You can change output format by option -f <number>:
 - 11- csv header
 - 12- tab header
 
+Please note plugin must implement sql and json output, all others are optional.
+
 Option "sql" insert data into databases. By default lora-print just print packet to stdout.
 
-Example:
+Examples:
 
+```
+./lora-print -c dbs.json -l plugins -p /home/andrei/src/lorawan-network-server/proto -D /home/andrei/src/logger-passport/passports/ -x 0275d80000006cc3743eed467b227278706b223a5b7b22746d7374223a3339353933363034342c226368616e223a362c2272666368223a312c2266726571223a3836382e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a31302e302c2272737369223a2d33302c2273697a65223a33372c2264617461223a225144414452514741436741436a31794557356f6d6135324776627867352f79553957354d6667355a2f3730514279576e4e513d3d227d2c7b22746d7374223a3339353933363034342c226368616e223a312c2272666368223a302c2266726571223a3836342e3330303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a2d31362e322c2272737369223a2d3131352c2273697a65223a33372c2264617461223a225144414452514741436741436a31794557356f6d6135324776627867352f79553957354d6667355a2f3730514279576e4e513d3d227d5d7d
+
+```
 ```
 ./lora-print -x 024c7e0000006cc3743eed467b227278706b223a5b7b22746d7374223a313237353533303937322c226368616e223a362c2272666368223a312c2266726571223a3836382e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a2d392e352c2272737369223a2d3131352c2273697a65223a33372c2264617461223a2251444144525147416e5259436b4c72715672703677324a55547958744a4467315669464a354d44666b756e336f762f5653513d3d227d2c7b22746d7374223a313237353533303938302c226368616e223a342c2272666368223a302c2266726571223a3836342e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a22534631324257313235222c22636f6472223a22342f35222c226c736e72223a31302e382c2272737369223a2d32372c2273697a65223a33372c2264617461223a2251444144525147416e5259436b4c72715672703677324a55547958744a4467315669464a354d44666b756e336f762f5653513d3d227d5d7d
 
@@ -1050,8 +1065,8 @@ Usage: proto-db
 proto-db helper utility
   <command>                 print|list|create|insert. Default print
   -p, --proto=<path>        proto files directory. Default 'proto'
-  -c, --dbconfig=<file>     database config file name. Default 'dbs.js'
-  -d, --dbname=<database>   database name, Default all
+  -c, --dbConfig=<file>     database config file name. Default 'dbs.js'
+  -d, --dbName=<database>   database name, Default all
   -m, --message=<pkt.msg>   Message type packet and name
   -x, --hex=<hex-string>    print, insert command, payload data.
   -6, --base64=<base64>     print, insert command, payload data.
@@ -1730,7 +1745,7 @@ Plugin life cycle diagram:
           | Server stopped
           |          
 +---------------------+
-|     Plugin done     |
+|     pluginDone      |
 +---------------------+
 ```
 

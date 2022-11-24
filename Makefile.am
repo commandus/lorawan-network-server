@@ -326,10 +326,10 @@ proto_db_LDADD = $(L_LORAWAN) \
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 lora_print_SOURCES = \
-	lora-print.cpp \
-	db-any.cpp  $(BACKEND_DB_SRC) \
+	lora-print.cpp utilfile.cpp config-filename.cpp db-any.cpp \
 	third_party/argtable3/argtable3.c \
-	identity-service-dir-txt.cpp $(C_STORAGE)
+	identity-service-dir-txt.cpp \
+	$(BACKEND_DB_SRC) $(C_STORAGE)
 lora_print_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lpthread -lcurl $(BACKEND_DB_LIB)

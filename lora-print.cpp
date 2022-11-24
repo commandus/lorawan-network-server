@@ -6,15 +6,9 @@
  * MIT license
  */
 #include <iostream>
-#include <signal.h>
 #include <cstring>
 #include <vector>
 #include <map>
-
-#ifdef ENABLE_PKT2
-#include <google/protobuf/message.h>
-void *env;
-#endif
 
 #include "argtable3/argtable3.h"
 #include "base64/base64.h"
@@ -33,6 +27,9 @@ void *env;
 #include "utilidentity.h"
 #include "lora-encrypt.h"
 #include "database-config-json.h"
+#include "utilfile.h"
+#include "config-filename.h"
+#include "log-intf.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
@@ -44,22 +41,42 @@ void *env;
 const std::string programName = "lora-print";
 #define DEF_CONFIG_FILE_NAME ".lora-print.json"
 
+static DatabaseByConfig *dbByConfig = nullptr;
+static PayloadInsertPlugins plugins;
+
 class LoraPrintConfiguration {
 public:
-	std::string command;				// json|sql
-	std::string proto_path;				// proto file directory. Default 'proto
-	std::string dbconfig;				// Default dbs.js'
-	std::vector<std::string> dbname;	// database names
-	std::string payload;				// hex-string
-	std::string message_type;
+	std::string command;				    // json|sql
+	std::string protoPath;				    // proto file directory. Default 'proto'
+    std::string pluginsPath;			    // plugin file directory. Default 'plugins'
+	std::string dbConfig;				    // Default dbs.json'
+	std::vector<std::string> dbName;	    // database names
+    std::vector <std::string> extraDbName;  // passport
+	std::string payload;				    // hex-string
+	std::string messageType;
 	// identity service
 	std::string identityStorageName;
 	IDENTITY_STORAGE identityStorageType;
-    DEVEUI devEUI;                      // used for getting key to decipher Join Accept frame
-    uint32_t devAddr;                   // default 42
-	int outputFormat;					// 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
-	int verbosity;						// verbosity level
+    DEVEUI devEUI;                          // used for getting key to decipher Join Accept frame
+    uint32_t devAddr;                       // default 42
+	int outputFormat;					    // 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
+	int verbosity;						    // verbosity level
 };
+
+class PrintError: public LogIntf {
+public:
+    int verbosity;
+    void logMessage(void *env, int level, int moduleCode, int errorCode, const std::string &message) override {
+        if (level > verbosity)
+            return;
+        std::cerr << logLevelString(level) << " "
+            << (errorCode ? std::to_string(errorCode) + ": " : " ")
+            << message
+            << std::endl;
+    }
+};
+
+PrintError printError;
 
 /**
  * Parse command line
@@ -72,14 +89,15 @@ int parseCmd(
 	int argc,
 	char *argv[])
 {
-	struct arg_str *a_command, *a_proto_path, *a_dbconfig, *a_dbname, *a_message_type, *a_payload_hex,
-            *a_payload_base64, *a_dev_eui, *a_dev_addr, *a_identityStorageName, *a_identityStorageType;
+	struct arg_str *a_command, *a_proto_path, *a_plugins_path, *a_dbconfig, *a_dbname, *a_extra_dbname,
+        *a_message_type, *a_payload_hex,
+        *a_payload_base64, *a_dev_eui, *a_dev_addr, *a_identityStorageName, *a_identityStorageType;
 	struct arg_int *a_output_format;
 	struct arg_lit *a_payload_json, *a_verbosity, *a_help;
 	struct arg_end *a_end;
 
 	void *argtable[] = {
-		a_command = arg_str0(NULL, NULL, "<command>", "json|sql. Default json"),
+		a_command = arg_str0(nullptr, nullptr, "<command>", "json|sql. Default json"),
 
 		a_payload_hex = arg_str0("x", "hex", "<hex-string>", "LoraWAN packet to decode, hexadecimal string."),
 		a_payload_base64 = arg_str0("6", "base64", "<base64>", "same, base64 encoded."),
@@ -89,6 +107,7 @@ int parseCmd(
         a_dev_addr = arg_str0("a", "addr", "<hex>", "Device address. Default 2a (decimal 42"),
 
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
+        a_plugins_path = arg_str0("l", "plugins", "<path>", "plugin directory. Default 'plugins'"),
 		a_message_type = arg_str0("m", "message", "<pkt.msg>", "force nessage type packet and name"),
 
 		a_identityStorageName = arg_str0("i", "id-name", "<name>", "default " DEF_IDENTITY_STORAGE_NAME),
@@ -96,10 +115,11 @@ int parseCmd(
 
 		a_output_format = arg_int0("f", "format", "<0..8, 11..12>", "0- json(default), 1- csv, 2- tab, 3- sql, 4- sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header"),
 
-		a_dbconfig = arg_str0("c", "dbconfig", "<file>", "database config file name. Default 'dbs.js'"),
-		a_dbname = arg_strn("d", "dbname", "<database>", 0, 100, "database name, Default all"),
+		a_dbconfig = arg_str0("c", "dbConfig", "<file>", "database config file name. Default 'dbs.json'"),
+		a_dbname = arg_strn("d", "db", "<db-name>", 0, 100, "database name, Default all"),
+        a_extra_dbname = arg_strn("D", "extradb", "<path>", 0, 100, "Extra plugins options, Default none"),
 
-		a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level"),
+		a_verbosity = arg_litn("v", "verbose", 0, 7, "Set verbosity level (-vvvvvvv: debug)"),
 		a_help = arg_lit0("?", "help", "Show this help"),
 		a_end = arg_end(20)
 	};
@@ -120,19 +140,22 @@ int parseCmd(
 		if (a_command->count)
 			config->command = *a_command->sval;
 		if (a_proto_path->count)
-			config->proto_path = *a_proto_path->sval;
+			config->protoPath = *a_proto_path->sval;
 		else
-			config->proto_path = "proto";
-
+			config->protoPath = "proto";
+        if (a_plugins_path->count)
+            config->pluginsPath = *a_plugins_path->sval;
+        else
+            config->pluginsPath = "plugins";
 		if (a_dbconfig->count)
-			config->dbconfig = *a_dbconfig->sval;
+			config->dbConfig = *a_dbconfig->sval;
 		else
-			config->dbconfig = "dbs.js";
+			config->dbConfig = "dbs.json";
 
 		if (a_message_type->count)
-			config->message_type = *a_message_type->sval;
+			config->messageType = *a_message_type->sval;
 		else
-			config->message_type = "";
+			config->messageType = "";
 
         if (a_dev_eui->count) {
             string2DEVEUI(config->devEUI, *a_dev_eui->sval);
@@ -148,8 +171,11 @@ int parseCmd(
             config->devAddr = 42;
         }
 		for (int i = 0; i < a_dbname->count; i++) {
-			config->dbname.push_back(a_dbname->sval[i]);
+			config->dbName.push_back(a_dbname->sval[i]);
 		}
+        for (int i = 0; i < a_extra_dbname->count; i++) {
+            config->extraDbName.push_back(a_extra_dbname->sval[i]);
+        }
 
 		config->payload = "";
 		if (a_payload_hex->count)
@@ -159,7 +185,7 @@ int parseCmd(
 				config->payload = base64_decode(*a_payload_base64->sval, false);
 			}
 			catch (const std::exception& e) {
-				std::cerr << ERR_INVALID_BASE64 << std::endl;
+                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INVALID_BASE64, ERR_INVALID_BASE64);
 				nerrors++;
 			}
 		}
@@ -194,15 +220,15 @@ int parseCmd(
 		config->outputFormat = *a_output_format->ival;
 	}
 	if (config->outputFormat < 0 || config->outputFormat > 12 ) {
-		std::cerr << ERR_MESSAGE << ERR_CODE_WRONG_PARAM << ": " << ERR_WRONG_PARAM << std::endl;
-		nerrors++;
+        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_WRONG_PARAM, ERR_WRONG_PARAM);
+        nerrors++;
 	}
 
 	if (config->command.empty())
 		config->command = "json";
 
 	if (config->payload.empty()) {
-		std::cerr << ERR_MESSAGE << ERR_CODE_NO_PAYLOAD << ": " << ERR_NO_PAYLOAD << std::endl;
+        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_NO_PAYLOAD, ERR_NO_PAYLOAD);
 		nerrors++;
 	}
 
@@ -222,25 +248,24 @@ int parseCmd(
 	return 0;
 }
 
-void doInsert
-(
+void doInsert(
 	LoraPrintConfiguration *config,
 	DatabaseByConfig *databaseByConfig,
-	const std::string &messageType,
 	const std::string &binData,
 	const std::map<std::string, std::string> *properties
 )
 {
     databaseByConfig->prepare(config->devAddr, binData);
-	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
-		
+	for (std::vector<std::string>::const_iterator it(config->dbName.begin()); it != config->dbName.end(); it++) {
 		DatabaseNConfig *db = databaseByConfig->find(*it);
 		if (!db) {
-			std::cerr << ERR_DB_DATABASE_NOT_FOUND << *it << std::endl;
+            std::stringstream ss;
+            ss << ERR_DB_DATABASE_NOT_FOUND << *it;
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
 			exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
 		}
         std::vector<std::string> clauses;
-        db->insertClauses(clauses, messageType, INPUT_FORMAT_BINARY, binData, properties);
+        db->insertClauses(clauses, config->messageType, INPUT_FORMAT_BINARY, binData, properties);
         std::string s;
         for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
             s += *it;
@@ -254,19 +279,49 @@ void doInsert
  * Print LoraWan packet
  * @param outputFormat 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
  */ 
-void doPrint
-(
+void doPrint(
 	LoraPrintConfiguration *config,
-	const std::string &forceMessageType,
-	int outputFormat,
-	const std::string &binData
+    DatabaseByConfig *databaseByConfig,
+    const uint32_t &addr,
+	const std::string &binData,
+    const std::map<std::string, std::string> *properties
 )
 {
-#ifdef ENABLE_PKT2
-	std::cout << parsePacket(env, INPUT_FORMAT_BINARY, outputFormat, 0, binData, forceMessageType, NULL, NULL, NULL) << std::endl;
-#else
-    std::cerr << ERR_MESSAGE << ERR_CODE_NO_PACKET_PARSER << ": " << ERR_NO_PACKET_PARSER << std::endl;
-#endif
+    plugins.prepare(addr, binData);
+    std::string nullValueString = "8888";
+
+    databaseByConfig->prepare(config->devAddr, binData);
+    for (std::vector<std::string>::const_iterator it(config->dbName.begin()); it != config->dbName.end(); it++) {
+        DatabaseNConfig *db = databaseByConfig->find(*it);
+        if (!db) {
+            std::stringstream ss;
+            ss << ERR_DB_DATABASE_NOT_FOUND << *it;
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
+        }
+
+        int dialect = sqlDialectByName(db->config->type);
+
+        std::stringstream ss;
+        ss
+            << "output format " << config->outputFormat
+            << " message type \"" << config->messageType
+            << "\" database \"" << *it
+            << "\" type \"" << db->config->type
+            << "\" dialect \"" << dialect
+            << "\" payload \"" << hexString(binData);
+        printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0,ss.str());
+
+        std::vector<std::string> clauses;
+        plugins.insert(clauses, config->messageType, INPUT_FORMAT_BINARY, config->outputFormat,
+            dialect, binData,
+            &db->config->tableAliases, &db->config->fieldAliases, properties, nullValueString);
+
+        for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
+            std::cout << *it << std::endl;
+        }
+    }
+    plugins.afterInsert();
 }
 
 static ConfigDatabasesIntf *configDatabases = nullptr;
@@ -282,12 +337,8 @@ void done() {
         delete configDatabases;
         configDatabases = nullptr;
     }
-#ifdef ENABLE_PKT2
-    if (env) {
-        donePkt2(env);
-        env = nullptr;
-    }
-#endif
+    plugins.done();
+    plugins.unload();
 }
 
 int main(
@@ -299,31 +350,34 @@ int main(
 	if (parseCmd(&config, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
-#ifdef ENABLE_PKT2
-	env = initPkt2(config.proto_path, 0);
-	if (!env) {
-		std::cerr << ERR_LOAD_PROTO << std::endl;
-		exit(ERR_CODE_LOAD_PROTO);
-	}
-    configDatabases = new ConfigDatabases(config.dbconfig);
-#else
-    configDatabases = new ConfigDatabasesJson(config.dbconfig);
-#endif
+    printError.verbosity = config.verbosity;
 
+    if (!config.protoPath.empty()) {
+        if (!util::fileExists(config.protoPath)) {
+            config.protoPath = getDefaultConfigFileName(argv[0], config.protoPath);;
+        }
+    }
+    if (!config.pluginsPath.empty()) {
+        if (!util::fileExists(config.pluginsPath)) {
+            config.pluginsPath = getDefaultConfigFileName(argv[0], config.pluginsPath);;
+        }
+    }
+    if (config.pluginsPath.empty()) {
+        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, MSG_NO_PLUGINS_LOADED);
+        exit(ERR_CODE_INIT_PLUGINS_FAILED);
+    }
 
+    configDatabases = new ConfigDatabasesJson(config.dbConfig);
 	if (configDatabases->dbs.empty()) {
-		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
-#ifdef ENABLE_PKT2
-		donePkt2(env);
-#endif
+        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_LOAD_DATABASE_CONFIG, ERR_LOAD_DATABASE_CONFIG);
         done();
         exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 
-	if (config.dbname.size() == 0) {
+	if (config.dbName.size() == 0) {
 		// if not database is specified, use all of them
 		for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
-			config.dbname.push_back(it->name);
+			config.dbName.push_back(it->name);
 		}
 	}
 
@@ -341,13 +395,50 @@ int main(
 		default:
 			identityService = new JsonFileIdentityService();
 	}
-	identityService->init(config.identityStorageName, NULL);
+	identityService->init(config.identityStorageName, nullptr);
 
-	SEMTECH_PREFIX_GW dataprefix;
+    // Plugins load & init
+    int r = plugins.load(config.pluginsPath);
+    if (r <= 0) {
+        std::stringstream ss;
+        ss << ERR_LOAD_PLUGINS_FAILED << "plugins directory: \"" << config.pluginsPath << "\"";
+        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_LOAD_PLUGINS_FAILED, ss.str());
+        exit(ERR_CODE_LOAD_PLUGINS_FAILED);
+    }
+    std::string dbName;
+    if (config.dbName.size())
+        dbName = config.dbName[0];
+    dbByConfig = new DatabaseByConfig(configDatabases, &plugins);
+    r = plugins.init(config.protoPath, dbName, config.extraDbName, &printError, 0);
+    if (r) {
+        std::stringstream ss;
+        ss << ERR_INIT_PLUGINS_FAILED
+            << "plugins directory: \"" << config.pluginsPath << "\""
+            << ", proto directory: \"" << config.protoPath << "\""
+            << ", database name: \"" << dbName << "\"";
+        for (std::vector<std::string>::const_iterator it(config.extraDbName.begin()); it != config.extraDbName.end(); it++) {
+            ss << " extra db: " << *it;
+        }
+        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+        exit(ERR_CODE_INIT_PLUGINS_FAILED);
+    }
+
+    std::stringstream ss;
+    ss
+       << "plugins directory: \"" << config.pluginsPath << "\""
+       << ", proto directory: \"" << config.protoPath << "\""
+       << ", database name: \"" << dbName << "\"";
+    for (std::vector<std::string>::const_iterator it(config.extraDbName.begin()); it != config.extraDbName.end(); it++) {
+        ss << " extra db: " << *it;
+    }
+    printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+
+    // parse packet
+    SEMTECH_PREFIX_GW dataPrefix;
 	GatewayStat gatewayStat;
 	std::vector<SemtechUDPPacket> packets;
 
-	int r = SemtechUDPPacket::parse(NULL, dataprefix,
+	r = SemtechUDPPacket::parse(nullptr, dataPrefix,
         gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
 
     switch (r) {
@@ -368,7 +459,7 @@ int main(
                         {
                             JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
                             if (isDEVEUIEmpty(config.devEUI)) {
-                                std::cerr << "Device EUI missed. Provide -e <EUI> option." << std::endl;
+                                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, "Device EUI missed. Provide -e <EUI> option.");
                                 done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
@@ -376,7 +467,9 @@ int main(
                             NetworkIdentity ni;
                             int ir = identityService->getNetworkIdentity(ni, config.devEUI);
                             if (ir) {
-                                std::cerr << "Device EUI " << DEVEUI2string(config.devEUI) << " not found." << std::endl;
+                                std::stringstream ss;
+                                ss << "Device EUI " << DEVEUI2string(config.devEUI) << " not found.";
+                                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
                                 done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
@@ -409,7 +502,7 @@ int main(
             break;
         default:
             if (r)
-                std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
+                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, strerror_lorawan_ns(r));
 	}
 
 	if (gatewayStat.errcode == 0) {
@@ -427,8 +520,8 @@ int main(
 
 	for (std::vector<SemtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
 		if (it->errcode) {
-			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_PACKET << ": " << ERR_INVALID_PACKET << std::endl;
-			continue;
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INVALID_PACKET, ERR_INVALID_PACKET);
+            continue;
 		}
 		if (config.verbosity > 2) {
     		std::cerr << it->toJsonString() << std::endl;
@@ -439,27 +532,26 @@ int main(
 		}
 
 		std::string payload = it->payload;
-		if (config.command == "sql") {
-			std::map<std::string, std::string> properties;
-			// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
-			// time  timestamp 
-			time_t t(time(NULL));
-			properties["addr"] = it->getDeviceAddrStr();							// addr network address string
-			properties["fport"] = std::to_string((int) it->header.fport);			// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
-			properties["time"] = std::to_string(t);									// time 32-bit integer (seconds since Unix epoch)
-			properties["timestamp"] = time2string(t);								// timestamp string
-			properties["eui"] = it->getDeviceEUI();									// eui global end-device identifier in IEEE EUI64 address space
-			properties["name"] = it->devId.name;									// device name
-			properties["activation"] =  activation2string(it->devId.activation);	// (ABP|OTAA)
-			properties["class"] = deviceclass2string(it->devId.deviceclass);		// A|B|C
+        // set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
+        // time  timestamp
+        time_t t(time(nullptr));
+        std::map<std::string, std::string> properties;
+        properties["addr"] = it->getDeviceAddrStr();							    // addr network address string
+        properties["fport"] = std::to_string((int) it->header.fport);			// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
+        properties["time"] = std::to_string(t);									// time 32-bit integer (seconds since Unix epoch)
+        properties["timestamp"] = time2string(t);								// timestamp string
+        properties["eui"] = it->getDeviceEUI();									    // eui global end-device identifier in IEEE EUI64 address space
+        properties["name"] = it->devId.name;									    // device name
+        properties["activation"] =  activation2string(it->devId.activation);	// (ABP|OTAA)
+        properties["class"] = deviceclass2string(it->devId.deviceclass);		// A|B|C
 
-			doInsert(&config, &databaseByConfig, config.message_type, payload, &properties);
+        if (config.command == "sql") {
+			doInsert(&config, &databaseByConfig, payload, &properties);
 		} else {
-			doPrint(&config, config.message_type, config.outputFormat, payload);
+            DEVADDRINT a = it->getDeviceAddr();
+			doPrint(&config, &databaseByConfig, a.a, payload, &properties);
 		}
-
 	}
-
     done();
 	return 0;
 }
