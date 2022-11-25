@@ -4,6 +4,21 @@
 #include "payload-insert.h"
 #include "log-intf.h"
 
+/**
+ * Get output format name
+ * @param index output format number 0- json, 1- csv, 2- tab, 3- sql, 4- sql2, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv_header, 12- tab_header 13- insert
+ * @return output format name, "" if invalid
+ */
+std::string getOutputFormatName(int index);
+
+/**
+ * Get output format index
+ * @param name output format number 0- json, 1- csv, 2- tab, 3- sql, 4- sql2, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv_header, 12- tab_header 13- insert
+ * @return -1- inavalid name, 0..13:  output format index
+ */
+int getOutputFormatNumber(const std::string &name);
+
+
 class DatabaseByConfig;
 
 class PayloadInsertPlugins
