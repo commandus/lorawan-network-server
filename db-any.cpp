@@ -107,7 +107,7 @@ std::string DatabaseNConfig::createClause
         dialect = sqlDialectByName(db->type);   // TODO move name resolve to the constructor
     if (plugins)
         return this->plugins->create(message, config->type == JSON_TYPE_NAME ? 0 : 3,
-    dialect,  &config->tableAliases, &config->fieldAliases,&config->properties);
+    		dialect,  &config->tableAliases, &config->fieldAliases,&config->properties);
     else
         return "";
 }
@@ -136,9 +136,11 @@ int DatabaseNConfig::createTable(
     const std::string &message
 )
 {
-	std::string clause = createClause(message);
 	if (!db)
 		return ERR_CODE_NO_DATABASE;
+	std::string clause = createClause(message);
+	if (clause.empty())
+		return 0;
 	return db->exec(clause);
 }
 

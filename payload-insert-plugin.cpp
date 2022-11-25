@@ -152,8 +152,10 @@ std::string PayloadInsertPlugins::create(
 ) {
     std::stringstream ss;
     for (std::vector<Payload2InsertPluginInitFuncs>::const_iterator it(funcs.begin()); it != funcs.end(); it++) {
-        if (it->create != nullptr)
-            ss << it->create(it->env, message, outputFormat, sqlDialect, tableAliases, fieldAliases, properties) << std::endl;
+        if (it->create != nullptr) {
+            ss << it->create(it->env, message, outputFormat, sqlDialect, tableAliases, fieldAliases, properties)
+               << std::endl;
+        }
     }
     return ss.str();
 }

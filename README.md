@@ -1125,20 +1125,9 @@ Print records stored in database(s)
 Create table for iridium.IEPacket packet in the "mysql_1" database:
 
 ```
-./proto-db -d mysql_1 -m iridium.IEPacket create
+./proto-db -d mysql_1 -m iridium.IEPacket create -vvv
 ```
 Message type name (table name) passed in the -m option.
-
-Message type may be detected by payload. In this case -m message can be omitted.
-
-Tin this case you must provide payload using -x <hex string> or -6 <base64 string> option.
-
-Determine message type by the payload using -x <payload-hex>:
-
-```
-./proto-db create -d mysql -x 0100213887c1601c000000004a0000000000000000000000
-./proto-db -d sqlite -x 010021b8b06b581f000000004a0000000000000000000000 create
-```
 
 Print "iridium.IEPacket" messages stored in the "mysql_1" database:
 

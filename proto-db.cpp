@@ -266,6 +266,13 @@ int parseCmd(
 		config->verbosity = a_verbosity->count;
 	}
 
+	if (config->command == "insert") {
+		if (config->addr.empty()) {
+			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_ADDRESS << ": " << ERR_INVALID_ADDRESS << std::endl;
+			nerrors++;
+		}
+	}
+
 	if (config->fport > 233) {
 		std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_FPORT << ": " << ERR_INVALID_FPORT << std::endl;
 		nerrors++;
@@ -430,6 +437,7 @@ void doCreate
 		if (verbosity) {
 			std::cout << db->createClause(messageType) << std::endl;
 		}
+
 		r = db->createTable(messageType);
 		if (r) {
 			std::cerr << ERR_DB_CREATE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
