@@ -23,9 +23,9 @@ public:
 
 	DatabaseNConfig(const ConfigDatabase *aConfig, PayloadInsertPlugins *aPlugins);
 	~DatabaseNConfig();
-	std::string tableName(void *env, const std::string &message) const;
-	std::string selectClause(void *env, const std::string &message);
-	std::string createClause(void *env, const std::string &message) const;
+	std::string tableName(const std::string &message) const;
+	std::string selectClause(const std::string &message);
+	std::string createClause(const std::string &message) const;
 	int insertClauses(std::vector<std::string> &retClauses,
 		const std::string &message,
 		int inputFormat,
@@ -33,7 +33,7 @@ public:
         const std::map<std::string, std::string> *properties,
 		const std::string &nullValueString = "8888"
 	);
-	int createTable(void *env, const std::string &message);
+	int createTable(const std::string &message);
 	int insert(
 		const std::string &message,
 		int inputFormat,
