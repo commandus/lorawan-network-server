@@ -1000,10 +1000,46 @@ A- NwkAddr
 
 lora-print utility parse packet received from the Semtech's gateway and try to decode payload.
 
+Syntax is
+```
+lora-print <command> [options]
+```
+
+Option -x hex-data set payload in hexadecimal string. 
+
+Command "insert" insert parsed payload data into all databases:
+```
+./lora-print insert [options] -x 02a...
+```
+
+or just specified database (option -d database-name):
+
+```
+./lora-print insert [options] -d mysqlite3db -x 02a...
+```
+
+Other commands:
+
+- json(default)
+- csv w/o header
+- tab delimited w/o header
+- sql
+- sql2
+- pbtext
+- dbg debug output
+- hex hex string
+- bin binary string
+- csv_header csv header
+- tab_header tab header
+
+print out parsed data to the stdout in appropriate format.
+
 Mandatory option is one of
 
-- -x, --hex=<hex-string>      LoraWAN packet to decode, hexadecimal string.
-- -6, --base64=<base64>       same, base64 encoded.
+- -x, --hex=<hex-string>      LoraWAN packet to decode, hexadecimal string or
+- -6, --base64=<base64>       same, but base64 encoded.
+
+lora-print must have information about databases.
 
 - -c, --dbConfig=<file>       database config file name. Default 'dbs.json'
 
@@ -1011,6 +1047,8 @@ lora-print utility require at least one plugin to parse binary payload.
 Option -l set plugins directory path: 
 
 - -l, --plugins=<path>        plugin directory. Default 'plugins'
+
+If lora-print has no plugins, it can not parse payload data itself.
 
 There is pkt2 plugin in example-plugin. For instance, lora-print utility can parse payload by the packet description 
 in proto file using pkt2 plugin.
@@ -1023,20 +1061,6 @@ You can specify folder path where proto file stored using option:
 You can force specific packet description by selecting specific proto message: 
 
 - -m, --message=<pkt.msg>     force message type packet and name
-
-You can change output format by option -f <number>:
-
-- 0- json(default)
-- 1- csv w/o header
-- 2- tab delimited w/o header
-- 3- sql
-- 4- sql (version 2)
-- 5- pbtext
-- 6- debug output
-- 7- hex string
-- 8- binary string
-- 11- csv header
-- 12- tab header
 
 Please note plugin must implement sql and json output, all others are optional.
 
@@ -1059,23 +1083,43 @@ Please note Semtech packet can contain 1, 2 or more payloads with different down
 
 ### proto-db utility
 
+proto-db parse payload. Payload is deciphered data received from end-device without metadata.
+
+proto-db is helpful for test plugins.
+
+Also proto-db manipulates payload stored in the database:
+
+- insert inserts parsed payload to the database
+- list show parsed payload stored in the database
+- create table to store parsed payload in database
+
+proto-db parse payload passed in options:
+
+-x hexstring payload as hex string
+-6 base64 Base64 encoded payload 
+
+These options are mandatory for proto-db commands:
+
+- print print parsed payload data
+- insert inserts payload to the database
+- create outputs "CREATE table" clause for specified table(messageType)
+
+Default command is "print". "print" command outputs parsed payload as JSON string. In example "print" omitted:
+
 ```
-Usage: proto-db
- [-v?] [<command>] [-p <path>] [-c <file>] [-d <database-name>]... [-m <packet.message>] [-x <hex-string>] [-6 <base64-string>] [-o <number>] [-l <number>] [-s <field-name>]... [-S <field-name>]...
-proto-db helper utility
-  <command>                 print|list|create|insert. Default print
-  -p, --proto=<path>        proto files directory. Default 'proto'
-  -c, --dbConfig=<file>     database config file name. Default 'dbs.js'
-  -d, --dbName=<database>   database name, Default all
-  -m, --message=<pkt.msg>   Message type packet and name
-  -x, --hex=<hex-string>    print, insert command, payload data.
-  -6, --base64=<base64>     print, insert command, payload data.
-  -o, --offset=<number>     list command, offset. Default 0.
-  -l, --limit=<number>      list command, limit size. Default 10.
-  -s, --asc=<field-name>    list command, sort by field ascending.
-  -S, --desc=<field-name>   list command, sort by field descending.
-  -v, --verbose             Set verbosity level
-  -?, --help                Show this help```
+./proto-db -x 0100213887c1601c000000004a0000000000000000000000
+{"vega.SI13p1":{"vega.SI13p1.temperature": 28, "vega.SI13p1.counter1": 0, "vega.SI13p1.counter2": 74, "vega.SI13p1.activation": 1, "vega.SI13p1.ackrequest": 0, "vega.SI13p1.timeout": 0, "vega.SI13p1.input1": 0, "vega.SI13p1.input2": 1}}
+```
+
+Next proto-db commands:
+
+- list print stored records for specified table(messageType) in all databases or specified database (-d)
+- create output "CREATE table" clause for specified table(messageType)
+
+Print records stored in database(s) 
+
+```
+./proto-db list -m esp32temperature
 ```
 
 Create table for iridium.IEPacket packet in the "mysql_1" database:
@@ -1083,7 +1127,7 @@ Create table for iridium.IEPacket packet in the "mysql_1" database:
 ```
 ./proto-db -d mysql_1 -m iridium.IEPacket create
 ```
-Message type name passed in the -m option.
+Message type name (table name) passed in the -m option.
 
 Message type may be detected by payload. In this case -m message can be omitted.
 

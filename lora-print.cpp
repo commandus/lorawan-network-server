@@ -108,7 +108,7 @@ int parseCmd(
 
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
         a_plugins_path = arg_str0("l", "plugins", "<path>", "plugin directory. Default 'plugins'"),
-		a_message_type = arg_str0("m", "message", "<pkt.msg>", "force nessage type packet and name"),
+		a_message_type = arg_str0("m", "message", "<pkt.msg>", "force message type packet and name"),
 
 		a_identityStorageName = arg_str0("i", "id-name", "<name>", "default " DEF_IDENTITY_STORAGE_NAME),
 		a_identityStorageType = arg_str0("y", "id-type", "json|txt|lmdb", "default " DEF_IDENTITY_STORAGE_TYPE),

@@ -12,9 +12,6 @@
 #include <vector>
 #include <map>
 
-#ifdef ENABLE_PKT2
-#include <google/protobuf/message.h>
-#endif
 #include "database-config-json.h"
 
 #include "argtable3/argtable3.h"
@@ -44,10 +41,13 @@ class Configuration {
 public:
 	std::string command;				// print|list|create|insert
 	std::string protoPath;				// proto file directory. Default 'proto
-	std::string dbConfigFileName;		// Default dbs.js'
-	std::vector<std::string> dbname;	// database names
+    std::string pluginsPath;            // plugin directory. Default 'plugins'
+    std::vector<std::string> extraDbName;
 
-	std::string payload;				// hex-string
+    std::string dbConfigFileName;		// Default dbs.json'
+	std::vector<std::string> dbName;	// database names
+
+	std::string payload;				// hex or base64 string
 
 	int offset;							// list command, offset. Default 0.
 	int limit;							// list command, limit size. Default 10
@@ -65,10 +65,31 @@ public:
 	int verbosity;						// verbosity level
 };
 
+class PrintError: public LogIntf {
+public:
+    int verbosity;
+    PrintError() : verbosity(0) {};
+    void logMessage(void *env, int level, int moduleCode, int errorCode, const std::string &message) override {
+        if (level > verbosity)
+            return;
+        std::cerr << logLevelString(level) << " "
+                  << (errorCode ? std::to_string(errorCode) + ": " : " ")
+                  << message
+                  << std::endl;
+    }
+};
+
+PrintError printError;
+
+static PayloadInsertPlugins plugins;
+
 static void done()
 {
 	// destroy and free all
-	exit(0);
+    plugins.done();
+    plugins.unload();
+
+    exit(0);
 }
 
 static void stop()
@@ -116,17 +137,19 @@ int parseCmd(
 	int argc,
 	char *argv[])
 {
-	struct arg_str *a_command, *a_proto_path, *a_dbconfigfilename, *a_dbname, *a_message_type, 
-		*a_payload_hex, *a_payload_base64,
-		*a_sort_asc, *a_sort_desc, *a_addr, *a_identityStorageName, *a_identityStorageType;
+	struct arg_str *a_command, *a_proto_path, *a_plugins_path, *a_extra_dbname, *a_dbconfigfilename, *a_dbname, *a_message_type,
+		*a_payload_hex, *a_payload_base64, *a_sort_asc, *a_sort_desc, *a_addr, *a_identityStorageName,
+        *a_identityStorageType;
 	struct arg_int *a_offset, *a_limit, *a_fport;
 	struct arg_lit *a_verbosity, *a_help;
 	struct arg_end *a_end;
 
 	void *argtable[] = {
-		a_command = arg_str0(NULL, NULL, "<command>", "print|list|create|insert. Default print"),
+		a_command = arg_str0(nullptr, nullptr, "<command>", "print|list|create|insert. Default print"),
 		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
-		a_dbconfigfilename = arg_str0("c", "dbConfig", "<file>", "database config file name. Default 'dbs.js'"),
+        a_plugins_path = arg_str0("l", "plugins", "<path>", "plugin directory. Default 'plugins'"),
+        a_extra_dbname = arg_strn("D", "extradb", "<path>", 0, 100, "Extra plugins options, Default none"),
+        a_dbconfigfilename = arg_str0("c", "dbConfig", "<file>", "database config file name. Default 'dbs.json'"),
 		a_dbname = arg_strn("d", "dbName", "<database>", 0, 100, "database name, Default all"),
 
 		a_message_type = arg_str0("m", "message", "<pkt.msg>", "Message type packet and name"),
@@ -168,11 +191,18 @@ int parseCmd(
 			config->protoPath = *a_proto_path->sval;
 		else
 			config->protoPath = "proto";
+        if (a_plugins_path->count)
+            config->pluginsPath = *a_plugins_path->sval;
+        else
+            config->pluginsPath = "plugins";
+        for (int i = 0; i < a_extra_dbname->count; i++) {
+            config->extraDbName.emplace_back(a_extra_dbname->sval[i]);
+        }
 
 		if (a_dbconfigfilename->count)
 			config->dbConfigFileName = *a_dbconfigfilename->sval;
 		else
-			config->dbConfigFileName = "dbs.js";
+			config->dbConfigFileName = "dbs.json";
 
 		if (a_message_type->count)
 			config->messageType = *a_message_type->sval;
@@ -180,15 +210,15 @@ int parseCmd(
 			config->messageType = "";
 
 		for (int i = 0; i < a_dbname->count; i++) {
-			config->dbname.push_back(a_dbname->sval[i]);
+			config->dbName.push_back(a_dbname->sval[i]);
 		}
 
 		config->payload = "";
 		if (a_payload_hex->count)
-			config->payload = *a_payload_hex->sval;
+			config->payload = hex2string(*a_payload_hex->sval);
 		if (a_payload_base64->count)
 			try {
-				config->payload = hexString(base64_decode(*a_payload_base64->sval, false));
+				config->payload = base64_decode(*a_payload_base64->sval, false);
 			}
 			catch (const std::exception& e) {
 				std::cerr << ERR_INVALID_BASE64 << std::endl;
@@ -278,16 +308,13 @@ int parseCmd(
 	return 0;
 }
 
-void doList
-(
-	void* env,
+void doList(
 	Configuration *config,
 	DatabaseByConfig *dbAny,
 	const std::string &messageType
 )
 {
-	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
-		
+	for (std::vector<std::string>::const_iterator it(config->dbName.begin()); it != config->dbName.end(); it++) {
 		DatabaseNConfig *db = dbAny->find(*it);
 		if (!db) {
 			std::cerr << ERR_DB_DATABASE_NOT_FOUND << *it << std::endl;
@@ -300,7 +327,7 @@ void doList
 			exit(ERR_CODE_DB_DATABASE_OPEN);
 		}
 
-		std::string t(db->tableName(env, messageType));
+		std::string t(db->tableName(messageType));
 		std::stringstream ss;
 
 		std::string quote;
@@ -372,22 +399,22 @@ void doList
 			}
 			std::cout << std::endl;
 		}
-
 		r = db->close();
+        if (r) {
+            std::cerr << ERR_DB_DATABASE_CLOSE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
+        }
 	}
 }
 
 void doCreate
 (
-	void* env,
 	Configuration *config,
 	DatabaseByConfig *dbAny,
 	const std::string &messageType,
 	int verbosity
 )
 {
-	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
-		
+	for (std::vector<std::string>::const_iterator it(config->dbName.begin()); it != config->dbName.end(); it++) {
 		DatabaseNConfig *db = dbAny->find(*it);
 		if (!db) {
 			std::cerr << ERR_DB_DATABASE_NOT_FOUND << *it << std::endl;
@@ -401,35 +428,34 @@ void doCreate
 		}
 
 		if (verbosity) {
-			std::cout << db->createClause(env, messageType) << std::endl;
+			std::cout << db->createClause(messageType) << std::endl;
 		}
-		r = db->createTable(env, messageType);
+		r = db->createTable(messageType);
 		if (r) {
 			std::cerr << ERR_DB_CREATE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
-			std::cerr << "SQL statement: " << db->createClause(env, messageType) << std::endl;
+			std::cerr << "SQL statement: " << db->createClause(messageType) << std::endl;
 		}
 		r = db->close();
+        if (r) {
+            std::cerr << ERR_DB_DATABASE_CLOSE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
+        }
 	}
 }
 
-void doInsert
-(
-	void* env,
+void doInsert(
 	Configuration *config,
 	DatabaseByConfig *dbAny,
 	const std::string &messageType,
-	const std::string &hexData,
+	const std::string &payload,
 	const std::map<std::string, std::string> &props,
 	int verbosity
 )
 {
-    uint32_t addr;
     DEVADDR a;
     string2DEVADDR(a, config->addr);
     DEVADDRINT ai(a);
-    dbAny->prepare(ai.a, hex2string(hexData));
-	for (std::vector<std::string>::const_iterator it(config->dbname.begin()); it != config->dbname.end(); it++) {
-		
+    dbAny->prepare(ai.a, payload);
+	for (std::vector<std::string>::const_iterator it(config->dbName.begin()); it != config->dbName.end(); it++) {
 		DatabaseNConfig *db = dbAny->find(*it);
 		if (!db) {
 			std::cerr << ERR_DB_DATABASE_NOT_FOUND << *it << std::endl;
@@ -446,21 +472,20 @@ void doInsert
 
 		if (verbosity) {
             std::vector<std::string> clauses;
-            db->insertClauses(clauses, messageType, 1, hexData, &properties);
+            db->insertClauses(clauses, messageType, INPUT_FORMAT_BINARY, payload, &properties);
             std::string s;
             for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
                 s += *it;
                 s += " ";
             }
-            std::cout << s << std::endl;  // 1- INPUT_FORMAT_HEX
+            std::cout << s << std::endl;
 		}
-
-		r = db->insert(messageType, 1, hexData, &properties);   // 1- INPUT_FORMAT_HEX
+		r = db->insert(messageType, INPUT_FORMAT_BINARY, payload, &properties);   // 1- INPUT_FORMAT_HEX
 
 		if (r) {
 			std::cerr << ERR_DB_INSERT << r << " database " << *it << ": " << db->db->errmsg << std::endl;
             std::vector<std::string> clauses;
-            db->insertClauses(clauses, messageType, 1, hexData, &properties);
+            db->insertClauses(clauses, messageType, INPUT_FORMAT_BINARY, payload, &properties);
             std::string s;
             for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
                 s += *it;
@@ -469,24 +494,59 @@ void doInsert
 			std::cerr << "SQL statement: " << s << std::endl;
 		}
 		r = db->close();
+        if (r) {
+            std::cerr << ERR_DB_DATABASE_CLOSE << r << " database " << *it << ": " << db->db->errmsg << std::endl;
+        }
 	}
 }
 
-void doPrint
-(
-	void* env,
+void doPrint(
 	Configuration *config,
-	DatabaseByConfig *dbAny,
+	DatabaseByConfig *databaseByConfig,
 	const std::string &forceMessageType,
-	const std::string &hexData
+	const std::string &payload,
+    const std::map<std::string, std::string> &props,
+    int outputFormat
 )
 {
-#ifdef ENABLE_PKT2
-	std::cout << parsePacket(env, 1, 0, 0, hexData, forceMessageType, NULL, NULL, NULL) << std::endl;
-#else
-    std::cerr << ERR_MESSAGE << ERR_CODE_NO_PACKET_PARSER << ": " << ERR_NO_PACKET_PARSER << std::endl;
-#endif
+    const uint32_t addr = 0;
+    plugins.prepare(addr, payload);
+    std::string nullValueString = "8888";
 
+    databaseByConfig->prepare(addr, payload);
+    for (std::vector<std::string>::const_iterator it(config->dbName.begin()); it != config->dbName.end(); it++) {
+        DatabaseNConfig *db = databaseByConfig->find(*it);
+        if (!db) {
+            std::stringstream ss;
+            ss << ERR_DB_DATABASE_NOT_FOUND << *it;
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
+        }
+
+        int dialect = sqlDialectByName(db->config->type);
+
+        std::stringstream ss;
+        ss << "output format " << outputFormat << " " << getOutputFormatName(outputFormat)
+           << " message type \"" << config->messageType
+           << "\" database \"" << *it
+           << "\" type \"" << db->config->type
+           << "\" dialect \"" << dialect
+           << "\" payload \"" << hexString(payload);
+        printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0,ss.str());
+
+        std::vector<std::string> clauses;
+        std::map<std::string, std::string> validProperties;
+        db->setProperties(validProperties, props);
+        plugins.insert(clauses, config->messageType, INPUT_FORMAT_BINARY, outputFormat,
+    dialect, payload,
+        &db->config->tableAliases, &db->config->fieldAliases, &validProperties, nullValueString);
+
+        for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
+            std::cout << *it << std::endl;
+        }
+    }
+
+    plugins.afterInsert();
 }
 
 int main(
@@ -503,52 +563,70 @@ int main(
 	if (parseCmd(&config, argc, argv) != 0) {
 		exit(ERR_CODE_COMMAND_LINE);
 	}
-    void* env = nullptr;
-#ifdef ENABLE_PKT2
-	env = initPkt2(config.protoPath, 0);
-#endif
-	if (!env) {
-		std::cerr << ERR_LOAD_PROTO << std::endl;
-		exit(ERR_CODE_LOAD_PROTO);
-	}
-
     ConfigDatabasesIntf *configDatabases = new ConfigDatabasesJson(config.dbConfigFileName);
 
 	if (configDatabases->dbs.empty()) {
 		std::cerr << ERR_LOAD_DATABASE_CONFIG << std::endl;
-#ifdef ENABLE_PKT2
-		donePkt2(env);
-#endif
         delete configDatabases;
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 
-	if (config.dbname.size() == 0) {
+	if (config.dbName.size() == 0) {
 		// if not database is specified, use all of them
 		for (std::vector<ConfigDatabase>::const_iterator it(configDatabases->dbs.begin()); it != configDatabases->dbs.end(); it++) {
-			config.dbname.push_back(it->name);
+			config.dbName.push_back(it->name);
 		}
 	}
 
-	DatabaseByConfig dbAny(configDatabases, nullptr);
+    // Plugins load & init
+    int r = plugins.load(config.pluginsPath);
+    if (r <= 0) {
+        std::stringstream ss;
+        ss << ERR_LOAD_PLUGINS_FAILED << "plugins directory: \"" << config.pluginsPath << "\"";
+        std::cerr << ss.str() << std::endl;
+        exit(ERR_CODE_LOAD_PLUGINS_FAILED);
+    }
+    std::string dbName;
+    if (!config.dbName.empty())
+        dbName = config.dbName[0];
+    DatabaseByConfig dbAny(configDatabases, &plugins);
 
-	if (config.command == "print")
-		doPrint(env, &config, &dbAny, config.messageType, config.payload);
+    r = plugins.init(config.protoPath, dbName, config.extraDbName, &printError, 0);
+    if (r) {
+        std::stringstream ss;
+        ss << ERR_INIT_PLUGINS_FAILED
+           << "plugins directory: \"" << config.pluginsPath << "\""
+           << ", proto directory: \"" << config.protoPath << "\""
+           << ", database name: \"" << dbName << "\"";
+        for (std::vector<std::string>::const_iterator it(config.extraDbName.begin()); it != config.extraDbName.end(); it++) {
+            ss << " extra db: " << *it;
+        }
+        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+        exit(ERR_CODE_INIT_PLUGINS_FAILED);
+    }
+
+    // set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
+    std::map<std::string, std::string> properties;
+    time_t t(time(nullptr));
+    properties["addr"] = config.addr;						    // addr network address string
+    properties["fport"] = std::to_string(config.fport);		// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
+    properties["time"] = std::to_string(t);					// time (seconds since Unix epoch)
+    properties["timestamp"] = time2string(t);				// timestamp string
+    // TODO get it from command line
+    properties["deveui"] = "3232323232323232";				    // eui global end-device identifier in IEEE EUI64 address space
+    properties["name"] = "device32";						    // device name
+    properties["activation"] = "ABP";						    // (ABP|OTAA)
+    properties["class"] = "C";								    // A|B|C
+
+    if (config.command == "print")
+		doPrint(&config, &dbAny, config.messageType, config.payload, properties, OUTPUT_FORMAT_JSON);
 	if (config.command == "list")
-		doList(env, &config, &dbAny, config.messageType);
+		doList(&config, &dbAny, config.messageType);
 	if (config.command == "create") {
-		if (config.messageType.empty()) {
-#ifdef ENABLE_PKT2
-			google::protobuf::Message *m;
-			parsePacket2ProtobufMessage((void**) &m, env, 1, config.payload, "", NULL, NULL, NULL);
-			if (m)
-				config.messageType = m->GetTypeName();
-#endif
-		}
-		doCreate(env, &config, &dbAny, config.messageType, config.verbosity);
+		doCreate(&config, &dbAny, config.messageType, config.verbosity);
 	}
 	if (config.command == "insert") {
-		IdentityService *identityService = NULL;
+		IdentityService *identityService = nullptr;
 		// Start identity service
 		switch (config.identityStorageType) {
 			case IDENTITY_STORAGE_LMDB:
@@ -562,39 +640,23 @@ int main(
 			default:
 				identityService = new JsonFileIdentityService();
 		}
-		identityService->init(config.identityStorageName, NULL);
+		identityService->init(config.identityStorageName, nullptr);
 		DEVADDR devaddr;
 		string2DEVADDR(devaddr, config.addr);
 		DeviceId deviceId;
-		int r = identityService->get(deviceId, devaddr);
+		r = identityService->get(deviceId, devaddr);
 		if (r) {
 			std::cerr << ERR_MESSAGE << ERR_CODE_INVALID_ADDRESS << ": " << ERR_INVALID_ADDRESS << std::endl;
             delete configDatabases;
 			exit(ERR_CODE_INVALID_ADDRESS);
 		}
-		// set properties addr eui name activation (ABP|OTAA) class (A|B|C) name
-		std::map<std::string, std::string> properties;
-		time_t t(time(NULL));
-		properties["addr"] = config.addr;						// addr network address string
-		properties["fport"] = std::to_string(config.fport);		// application port number (1..223). 0- MAC, 224- test, 225..255- reserved
-		properties["time"] = std::to_string(t);					// time (seconds since Unix epoch)
-		properties["timestamp"] = time2string(t);				// timestamp string
-		// TODO get it from command line
-		properties["deveui"] = "3232323232323232";				// eui global end-device identifier in IEEE EUI64 address space
-		properties["name"] = "device32";						// device name
-		properties["activation"] = "ABP";						// (ABP|OTAA)
-		properties["class"] = "C";								// A|B|C
- 
 		deviceId.setProperties(properties);
 
-		doInsert(env, &config, &dbAny, config.messageType, config.payload, properties, config.verbosity);
+		doInsert(&config, &dbAny, config.messageType, config.payload, properties, config.verbosity);
 
 		if (identityService)
 			delete identityService;
 	}
-#ifdef ENABLE_PKT2
-    donePkt2(env);
-#endif
     if (configDatabases)
         delete configDatabases;
 	return 0;

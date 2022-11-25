@@ -74,13 +74,12 @@ DatabaseNConfig::~DatabaseNConfig()
 }
 
 std::string DatabaseNConfig::tableName(
-    void *env,
 	const std::string &message
 ) const
 {
 	std::map<std::string, std::string>::const_iterator it(config->tableAliases.find(message));
 	if (it == config->tableAliases.end())
-		return "";
+		return message;
 	else
 		return it->second;
 }
@@ -100,7 +99,6 @@ int sqlDialectByName(const std::string &name)
 
 std::string DatabaseNConfig::createClause
 (
-	void *env,
 	const std::string &message
 ) const
 {
@@ -134,9 +132,11 @@ int DatabaseNConfig::insertClauses(
     return r;
 }
 
-int DatabaseNConfig::createTable(void *env, const std::string &message)
+int DatabaseNConfig::createTable(
+    const std::string &message
+)
 {
-	std::string clause = createClause(env, message);
+	std::string clause = createClause(message);
 	if (!db)
 		return ERR_CODE_NO_DATABASE;
 	return db->exec(clause);
