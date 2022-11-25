@@ -21,7 +21,7 @@ extern "C" void pluginDone(
     donePkt2(env);
 }
 
-std::string payloadCreate(
+extern "C" std::string payloadCreate(
     void *env,
     const std::string &message,
     int outputFormat,
