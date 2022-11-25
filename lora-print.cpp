@@ -39,13 +39,14 @@
 #define DEF_IDENTITY_STORAGE_TYPE	"json"
 
 const char *programName = "lora-print";
+const char *supportedOutputFormats = "json|csv|tab|sql|sql2|pbtext|dbg|hex|bin|csv_header|tab_header|insert. Default json";
 
 static DatabaseByConfig *dbByConfig = nullptr;
 static PayloadInsertPlugins plugins;
 
 class LoraPrintConfiguration {
 public:
-	std::string command;				    // json|sql
+    int outputFormat;
 	std::string protoPath;				    // proto file directory. Default 'proto'
     std::string pluginsPath;			    // plugin file directory. Default 'plugins'
 	std::string dbConfig;				    // Default dbs.json'
@@ -58,9 +59,8 @@ public:
 	IDENTITY_STORAGE identityStorageType;
     DEVEUI devEUI;                          // used for getting key to decipher Join Accept frame
     uint32_t devAddr;                       // default 42
-	int outputFormat;					    // 0- json(default), 1- csv, 2- tab, 3- sql, 4- Sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header
 	int verbosity;						    // verbosity level
-    LoraPrintConfiguration() : devAddr(0), outputFormat(0), verbosity(0) {};
+    LoraPrintConfiguration() : devAddr(0), verbosity(0) {};
 };
 
 class PrintError: public LogIntf {
@@ -93,12 +93,11 @@ int parseCmd(
 	struct arg_str *a_command, *a_proto_path, *a_plugins_path, *a_dbconfig, *a_dbname, *a_extra_dbname,
         *a_message_type, *a_payload_hex,
         *a_payload_base64, *a_dev_eui, *a_dev_addr, *a_identityStorageName, *a_identityStorageType;
-	struct arg_int *a_output_format;
 	struct arg_lit *a_payload_json, *a_verbosity, *a_help;
 	struct arg_end *a_end;
 
 	void *argtable[] = {
-		a_command = arg_str0(nullptr, nullptr, "<command>", "json|sql. Default json"),
+		a_command = arg_str0(nullptr, nullptr, "<command>", supportedOutputFormats),
 
 		a_payload_hex = arg_str0("x", "hex", "<hex-string>", "LoraWAN packet to decode, hexadecimal string."),
 		a_payload_base64 = arg_str0("6", "base64", "<base64>", "same, base64 encoded."),
@@ -113,8 +112,6 @@ int parseCmd(
 
 		a_identityStorageName = arg_str0("i", "id-name", "<name>", "default " DEF_IDENTITY_STORAGE_NAME),
 		a_identityStorageType = arg_str0("y", "id-type", "json|txt|lmdb", "default " DEF_IDENTITY_STORAGE_TYPE),
-
-		a_output_format = arg_int0("f", "format", "<0..8, 11..12>", "0- json(default), 1- csv, 2- tab, 3- sql, 4- sql, 5- pbtext, 6- dbg, 7- hex, 8- bin, 11- csv header, 12- tab header"),
 
 		a_dbconfig = arg_str0("c", "dbConfig", "<file>", "database config file name. Default 'dbs.json'"),
 		a_dbname = arg_strn("d", "db", "<db-name>", 0, 100, "database name, Default all"),
@@ -136,10 +133,11 @@ int parseCmd(
 	// Parse the command line as defined by argtable[]
 	nerrors = arg_parse(argc, argv, argtable);
 
-	config->command = "";
+	config->outputFormat = 0;
 	if (!nerrors) {
-		if (a_command->count)
-			config->command = *a_command->sval;
+		if (a_command->count) {
+            config->outputFormat = getOutputFormatNumber(*a_command->sval);
+        }
 		if (a_proto_path->count)
 			config->protoPath = *a_proto_path->sval;
 		else
@@ -215,17 +213,10 @@ int parseCmd(
 	}
 	config->identityStorageType = string2storageType(sidentityStorageType);
 
-	config->outputFormat = 0;
-	if (a_output_format->count) {
-		config->outputFormat = *a_output_format->ival;
-	}
-	if (config->outputFormat < 0 || config->outputFormat > 12 ) {
+	if (config->outputFormat < 0) {
         printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_WRONG_PARAM, ERR_WRONG_PARAM);
         nerrors++;
 	}
-
-	if (config->command.empty())
-		config->command = "json";
 
 	if (config->payload.empty()) {
         printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_NO_PAYLOAD, ERR_NO_PAYLOAD);
@@ -273,9 +264,26 @@ void doInsert(
             ss << "Execute " << *it << "..";
             printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0, ss.str());
         }
-        int r = db->insert(config->messageType, INPUT_FORMAT_BINARY, binData, &validProperties);
-        if (r)
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, strerror_lorawan_ns(r));
+        int r = db->open();
+        if (r) {
+            std::stringstream ss;
+            ss << "Open " << db->config->type << " database  " << db->config->name <<  " error " << r;
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, ss.str());
+            continue;
+        }
+        r = db->insert(config->messageType, INPUT_FORMAT_BINARY, binData, &validProperties);
+        if (r) {
+            std::stringstream ss2;
+            ss2 << "Database " << db->config->type <<  " error " << r;
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, ss2.str());
+        }
+        r = db->close();
+        if (r) {
+            std::stringstream ss;
+            ss << "Close " << db->config->type << " database  " << db->config->name <<  " error " << r;
+            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, ss.str());
+            continue;
+        }
 	}
 }
 
@@ -307,7 +315,7 @@ void doPrint(
         int dialect = sqlDialectByName(db->config->type);
 
         std::stringstream ss;
-        ss << "output format " << config->outputFormat
+        ss << "output format " << config->outputFormat << " " << getOutputFormatName(config->outputFormat)
             << " message type \"" << config->messageType
             << "\" database \"" << *it
             << "\" type \"" << db->config->type
@@ -551,7 +559,7 @@ int main(
         properties["activation"] =  activation2string(it->devId.activation);	// (ABP|OTAA)
         properties["class"] = deviceclass2string(it->devId.deviceclass);		// A|B|C
 
-        if (config.command == "sql") {
+        if (config.outputFormat == 13) {
 			doInsert(&config, dbByConfig, payload, &properties);
 		} else {
             DEVADDRINT a = it->getDeviceAddr();
