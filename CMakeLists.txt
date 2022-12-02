@@ -1,15 +1,20 @@
 # Options:
 # -DENABLE_PKT2=on
 # -DENABLE_LISTENER_EMBEDDED=on
+# -DENABLE_MQTT=on
 #
 
 cmake_minimum_required(VERSION 3.9)
 set(PROJECT_NAME "lorawan-network-n-app-server")
 project(${PROJECT_NAME} VERSION 1.0)
 
+set(MQTTAPP_CMAKE_DIR ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${MQTTAPP_CMAKE_DIR} ${CMAKE_MODULE_PATH})
+
 set(CMAKE_CXX_STANDARD 11)
 
 option(ENABLE_PKT2 "Build with pkt2" OFF)
+option(ENABLE_MQTT "Build with MQTT" OFF)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -23,10 +28,22 @@ find_package(OpenSSL REQUIRED)
 
 if(ENABLE_PKT2)
 	find_library(LIBPKT2
-			NAMES pkt2
-			HINTS "." ".." "../../pkt2" "~/src/pkt2"
-			)
+		NAMES pkt2
+		HINTS "." ".." "../../pkt2" "~/src/pkt2"
+	)
 endif(ENABLE_PKT2)
+
+if(ENABLE_MQTT)
+	find_package(Paho REQUIRED)
+	if(NOT Paho_FOUND)
+		message(SEND_ERROR "Failed to find Paho C library")
+	endif()
+
+	find_package(Paho-C++ REQUIRED)
+	if(NOT Paho-C++_FOUND)
+		message(SEND_ERROR "Failed to find Paho C++ library")
+	endif()
+endif(ENABLE_MQTT)
 
 option(ENABLE_LISTENER_EMBEDDED "Build with embedded Lora gateway" OFF)
 if(ENABLE_LISTENER_EMBEDDED)
@@ -137,7 +154,7 @@ target_link_libraries(print-netid
 
 set(LORA_PRINT_SOURCES
 	lora-print.cpp
-	database-config-json.cpp
+	database-config-json.cpp config-filename.cpp
 	db-any.cpp ${BACKEND_DB_SRC} ${C_STORAGE}
 	third_party/argtable3/argtable3.c
 	identity-service-dir-txt.cpp
@@ -180,6 +197,18 @@ add_custom_command(TARGET mac-gw POST_BUILD
 add_custom_command(TARGET print-netid POST_BUILD
 	COMMAND "$<$<CONFIG:release>:${CMAKE_STRIP}>" print-netid
 )
+
+#
+# Plugins
+#
+if(ENABLE_MQTT)
+	set (SRC_PLUGIN_MQTT_WSS
+		example-plugins/plugin-mqtt-wss.cpp
+		mqtt-client-id.cpp utilstring.cpp
+	)
+	add_library(plugin-mqtt-wss SHARED ${SRC_PLUGIN_MQTT_WSS})
+	target_link_libraries(plugin-mqtt-wss paho-mqtt3as paho-mqttpp3)
+endif(ENABLE_MQTT)
 
 INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/lorawan-network-server DESTINATION cmake)
 INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/mac-gw DESTINATION cmake)

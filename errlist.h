@@ -19,7 +19,9 @@
 #define LOG_UDP_EMITTER						6
 #define LOG_EMBEDDED_GATEWAY    			7
 #define LOG_TEMPERATURE_LOGGER_PASSPORT     8
-#define LOG_ORA_PRINT                       9
+#define LOG_LORA_PRINT                      9
+#define LOG_PLUGIN_PKT2                     10
+#define LOG_PLUGIN_MQTT                     11
 
 
 // Module and thread names
@@ -207,6 +209,9 @@
 #define ERR_CODE_LORA_GATEWAY_STOP_FAILED                   -663
 #define ERR_CODE_INIT_PLUGINS_FAILED                        -664
 #define ERR_CODE_LOAD_PLUGINS_FAILED                        -665
+#define ERR_CODE_PLUGIN_MQTT_CONNECT                        -666
+#define ERR_CODE_PLUGIN_MQTT_DISCONNECT                     -667
+#define ERR_CODE_PLUGIN_MQTT_SEND                           -668
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -395,6 +400,9 @@
 
 #define ERR_INIT_PLUGINS_FAILED                         "Initialize plugin(s) failed "
 #define ERR_LOAD_PLUGINS_FAILED                         "Load plugin(s) failed "
+#define ERR_PLUGIN_MQTT_CONNECT                         "MQTT connect failed "
+#define ERR_PLUGIN_MQTT_DISCONNECT                      "MQTT disconnect failed "
+#define ERR_PLUGIN_MQTT_SEND                            "MQTT send failed "
 
 // Message en-us locale strings
 #define MSG_PROG_NAME					"LoRaWAN network listener"
@@ -490,6 +498,15 @@
 #define MSG_LOADED_PLUGINS_COUNT        "Plugins loaded: "
 #define MSG_INIT_PLUGINS                "Initialize plugin(s).."
 #define MSG_DONE_PLUGINS                "Finalize plugin(s).."
+
+#define MSG_PLUGIN_MQTT_INIT            "MQTT plugin initialized "
+#define MSG_PLUGIN_MQTT_DONE            "MQTT plugin done "
+
+#define MSG_PLUGIN_MQTT_CONNECTING      "Connecting to the MQTT server "
+#define MSG_PLUGIN_MQTT_CONNECTED       "Successfully connected to the MQTT server "
+#define MSG_PLUGIN_MQTT_DISCONNECTING   "Shutting down and disconnecting from the MQTT server..."
+#define MSG_PLUGIN_MQTT_SENDING         "Sending to the MQTT server "
+#define MSG_PLUGIN_MQTT_SENT            "Sent successfully to the MQTT server "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

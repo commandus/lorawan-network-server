@@ -31,14 +31,14 @@ public:
         std::string &content,
         std::string &contentType,
         void *env,
-        int modulecode,
+        int moduleCode,
         // copy following parameters from the web request
         const char *path,
         const char *method,
         const char *version,
         std::map<std::string, std::string> &params,
-        const char *upload_data,
-        size_t *upload_data_size,
+        const char *uploadData,
+        size_t *uploadDataSize,
         bool authorized
     ) override;
 };

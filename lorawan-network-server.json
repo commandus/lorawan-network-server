@@ -5,7 +5,16 @@
 	"databaseExtraConfigFileNames": [
 		"/home/andrei/src/logger-passport/tests/passport"
 	],
-	"loggerDatabaseName": "sqlite-logger",
+	"pluginsParams": [
+		["mqtt-pkt2-proto-dir", "proto"],
+		["logger-huffman-database-name", "sqlite-logger"],
+		["logger-huffman-passport", "../logger-passport/tests/passport"],
+		["mqtt-wss-service", "wss://mqtt.commandus.com:443"],
+		["mqtt-wss-user-name", "ikfia"],
+		["mqtt-wss-password", "dbmanager"],
+		["mqtt-wss-topic", "temperature/$(devname)"],
+		["mqtt-wss-send-binary", "false"]
+	],
 	"server": {
 		"identityStorageName": "identity.json",
 		"storageType": "json",

@@ -1,16 +1,45 @@
+/**
+ * Simple LoRaWAN network server PKT2 plugin
+ * MQTT plugin parse binary packet by protobuf description
+ * LoRaWAN network server's configuration file (lorawan-network-server.json)
+ * must provide parameters:
+ *
+ * "pluginsParams": [
+ *      ["mqtt-pkt2-proto-dir", "proto"]
+ *  ]
+ */
+
+#include <sstream>
+#include <syslog.h>
+
 #include "payload-insert.h"
 #include "pkt2/str-pkt2.h"
 #include "log-intf.h"
+#include "errlist.h"
+
+LogIntf *errLog = nullptr;
 
 extern "C" void *pluginInit(
     void *dbByConfig,   // DatabaseByConfig*
-    const std::string &protoPath,
-    const std::string &dbName,
-    const std::vector <std::string> &extras,
+    const std::map<std::string, std::vector <std::string> > &params,
     LogIntf *log,
     int verbosity   // always 0
 )
 {
+    std::map<std::string, std::vector<std::string> >::const_iterator pit = params.find("mqtt-pkt2-proto-dir");
+    std::string protoPath;
+    if (pit != params.end()) {
+        if (!pit->second.empty() && !pit->second[0].empty()) {
+            protoPath = pit->second[0];
+        }
+    }
+
+    errLog = log;
+    if (errLog) {
+        std::stringstream ss;
+        ss << "Plugin pkt2 initialized. Proto path: " << protoPath;
+        errLog->logMessage(nullptr, LOG_DEBUG, LOG_PLUGIN_PKT2, 0, ss.str());
+    }
     return initPkt2(protoPath, verbosity);
 }
 
@@ -85,6 +114,9 @@ extern "C" int payload2InsertClauses(
 {
     std::string s = parsePacket(env, inputFormat, outputFormat, sqlDialect, data, message,
         tableAliases, fieldAliases, properties);
+    if (errLog)
+        errLog->logMessage(nullptr, LOG_DEBUG, LOG_PLUGIN_PKT2, 0, s);
+            
     if (!s.empty())
         retClauses.push_back(s);
     return 0;

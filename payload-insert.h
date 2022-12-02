@@ -14,9 +14,7 @@ class DatabaseByConfig;
  */
 typedef void *(*pluginInitFunc)(
     DatabaseByConfig *dbByConfig,
-    const std::string &protoPath,
-    const std::string &databaseName,
-    const std::vector <std::string> &extras,
+    const std::map<std::string, std::vector <std::string> > &params,
     LogIntf *log,
     int rfu
 );

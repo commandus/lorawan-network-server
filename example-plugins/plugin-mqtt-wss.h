@@ -27,13 +27,12 @@ public:
     MqttSubscribeListener(MqttClientEnv *aClientEnv);
 };
 
-class MqttTerminalCallback : public virtual mqtt::callback, public virtual mqtt::iaction_listener
+class MqttPluginCallback : public virtual mqtt::callback, public virtual mqtt::iaction_listener
 {
     // The MQTT client
-    MqttClientEnv *aClientEnv;
+    MqttClientEnv *clientEnv;
     // Options to use if we need to reconnect
-    mqtt::connect_options& connOpts;
-    MqttSubscribeListener subscribeListener;1
+    MqttSubscribeListener subscribeListener;
 
     void reconnect();
     // Re-connection failure
@@ -55,7 +54,7 @@ class MqttTerminalCallback : public virtual mqtt::callback, public virtual mqtt:
     void delivery_complete(mqtt::delivery_token_ptr token) override;
 
 public:
-    MqttTerminalCallback(MqttClientEnv *aClientEnv, mqtt::connect_options& connOpts);
+    MqttPluginCallback(MqttClientEnv *aClientEnv);
 };
 
 typedef enum {
@@ -81,6 +80,7 @@ static const char *paramNames[4] = {
 
 class MqttClientEnv {
 public:
+    MqttPluginCallback callback;
     DatabaseByConfig *dbByConfig;
     std::string clientId;
     std::string mqttParameters[4];     ///< e.g. "wss://mqtt.acme.com:443"],
@@ -89,6 +89,7 @@ public:
     mqtt::async_client *mqttClient;
 
     int qos;
+    bool sendBinary;
 
     LogIntf *log;
     int lastStatusCode;

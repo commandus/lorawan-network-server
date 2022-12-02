@@ -37,7 +37,7 @@ public:
 	// unload plugins
 	~PayloadInsertPlugins();
 
-    int init(const std::string &protoPath, const std::string &dbName, const std::vector <std::string> &extras,
+    int init(const std::map<std::string, std::vector <std::string> > &params,
         LogIntf *logCallback, int rfu);
     void done();
 

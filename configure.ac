@@ -42,6 +42,15 @@ AC_ARG_ENABLE([logger-huffman],
 esac],[logger_huffman=false])
 AM_CONDITIONAL([ENABLE_LOGGER_HUFFMAN], [test x$logger_huffman = xtrue])
 
+AC_ARG_ENABLE([mqtt],
+[  --enable-mqtt    Turn on MQTT],
+[case "${enableval}" in
+  yes) mqtt=true ;;
+  no)  mqtt=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-mqtt]) ;;
+esac],[mqtt=false])
+AM_CONDITIONAL([ENABLE_MQTT], [test x$mqtt = xtrue])
+
 AC_ARG_ENABLE([jwt],
 [  --enable-jwt    Turn on JWT web service authorization],
 [case "${enableval}" in
@@ -216,11 +225,14 @@ if test x$db_firebird = xtrue; then
 AC_MSG_NOTICE([  Firebird])
 fi
 
-AC_MSG_NOTICE([Parsers:])
+AC_MSG_NOTICE([Plugins:])
+if test x$mqtt = xtrue; then
+AC_MSG_NOTICE([  mqtt on])
+fi
 if test x$logger_huffman = xtrue; then
 AC_MSG_NOTICE([  logger-huffman on])
 fi
-if test x$logger_pkt2 = xtrue; then
+if test x$pkt2 = xtrue; then
 AC_MSG_NOTICE([  pkt2 on])
 fi
 

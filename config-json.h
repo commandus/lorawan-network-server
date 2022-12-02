@@ -105,10 +105,8 @@ class Configuration {
 		std::string configFileName;
 		std::string gatewaysFileName;
 		std::string databaseConfigFileName;
-        std::vector<std::string> databaseExtraConfigFileNames;  ///< logger passport directories
-		std::string protoPath;
-        std::string loggerDatabaseName;
         std::string pluginsPath;
+		std::map<std::string, std::vector<std::string> > pluginsParams; ///< e.g. logger passport directories
 		int gatewayPort;
 		ServerConfig serverConfig;
 		WebServiceConfig wsConfig;

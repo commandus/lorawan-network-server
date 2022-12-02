@@ -20,9 +20,7 @@ std::string payloadCreate(
 
 extern "C" void *pluginInit(
     DatabaseByConfig *dbByConfig,
-    const std::string &protoPath,
-    const std::string &loggerDbName,
-    const std::vector <std::string> &passportDirs,
+    const std::map<std::string, std::vector <std::string> > &params,
     LogIntf *log,
     int verbosity   // always 0
 )
@@ -30,6 +28,20 @@ extern "C" void *pluginInit(
     LoggerHuffmanEnv *env = new LoggerHuffmanEnv;
     bool hasLoggerKosaPacketsLoader = false;
     // set database to load from
+    std::string loggerDbName;
+    std::map<std::string, std::vector <std::string> >::const_iterator pDb = params.find("logger-huffman-database-name");
+    if (pDb != params.end()) {
+        if (!pDb->second.empty())
+            loggerDbName = pDb->second[0];
+    }
+
+    // get passport dirs
+    std::vector <std::string> passportDirs;
+    std::map<std::string, std::vector <std::string> >::const_iterator pPd = params.find("logger-huffman-passport");
+    if (pPd != params.end()) {
+        passportDirs = pPd->second;
+    }
+
     if (!loggerDbName.empty()) {
         DatabaseNConfig *kldb = nullptr;
         if (dbByConfig)

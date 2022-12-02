@@ -308,6 +308,7 @@ Create a new SQLite database file:
 ./ws-sqlite -d logger-huffman.db -c
 ```
 
+
 Run SQLite3 client:
 ```
 sqlite3 logger-huffman.db
@@ -324,6 +325,13 @@ CREATE INDEX logger_lora_measured ON logger_lora (measured);
 Exit SQLite3 client:
 ```
 .q
+```
+
+Select
+
+```
+sqlite3 /home/andrei/dist/logger-huffman.db "select rowid, temperature, DATETIME(received, 'unixepoch', 'localtime') from vega_SI13 order by rowid desc limit 3"
+sqlite3 /home/andrei/dist/logger-huffman.db "select rowid, hall from esp32temperature order by rowid desc limit 3"
 ```
 
 Copy service/lorawand to /etc/init.d directory.
@@ -505,12 +513,15 @@ cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scr
 
 - gatewaysFileName Gateways list. Default ~/gateway.json
 - databaseConfigFileName databases list default "dbs.js"
-- databaseExtraConfigFileNames list of extra configuration files and subdirectories, e.g. device passport files folder path
+- pluginsParams list of extra configuration parameters passed to plugins.
 - loggerDatabaseName database name used by logger. Database name assigned in file (see databaseConfigFileName option).
 - protoPath protobuf message description files directory path. Default "proto"
 - pluginsPath path to the folder with dynamically loaded libraries (.so) with extern "C" payload2InsertClauses() function  
 - server Network server properties, including end-device list served by the server
 - configFileName (optional) Redirect config file to another one
+
+For instance, logger-huffman plugin require logger-huffman-passport parameter.
+Parameter "logger-huffman-passport" set list of files and directories where logger device passport files resides.
 
 Server config:
 

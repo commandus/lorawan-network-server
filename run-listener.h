@@ -22,6 +22,7 @@
 class RunListener : public LogIntf {
 private:
     PayloadInsertPlugins plugins;
+    std::mutex mDone;
 public:
     Configuration *config;
     GatewayList *gatewayList;

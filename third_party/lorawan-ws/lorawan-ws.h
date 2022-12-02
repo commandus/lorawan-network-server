@@ -12,26 +12,11 @@
 #include <fstream>
 
 #include "db-intf.h"
+#include "log-intf.h"
 
 typedef std::map<std::string, DatabaseIntf*> MAP_NAME_DATABASE;
 
 #define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
-
-/**
- * Log callback function prototype
- * @param env WSConfig
- * @param level 0- error, 1- warning,..
- * @param modulecode always 200
- * @param errorcode 0- no error (warning, info)
- * @param message optional error description
- */
-typedef std::function<void(
-    void *env,
-    int level,
-    int modulecode,
-    int errorcode,
-    const std::string &message
-)> LOG_CALLBACK;
 
 /**
  * Special path handler provided by host
@@ -85,7 +70,7 @@ typedef struct {
 	// databases
 	MAP_NAME_DATABASE databases;
 
-	LOG_CALLBACK onLog;
+    LogIntf *onLog;
     WebServiceRequestHandler *onSpecialPathHandler;
 
     // Authentication
@@ -93,8 +78,6 @@ typedef struct {
     std::string issuer;
     std::string secret;
 } WSConfig;
-
-void setLogCallback(LOG_CALLBACK value);
 
 /**
  * @param threadCount threads count, e.g. 2
