@@ -169,6 +169,9 @@ endif
 if ENABLE_LOGGER_HUFFMAN
     lib_LTLIBRARIES += libplugin-logger-huffman.la
 endif
+if ENABLE_MQTT
+    lib_LTLIBRARIES += libplugin-mqtt-wss.la
+endif
 
 LIBLORAWANSRC = \
 	utillora.cpp errlist.cpp net-id.cpp dev-addr.cpp udp-socket.cpp device-history-item.cpp gateway-stat.cpp \
@@ -233,7 +236,7 @@ nobase_dist_include_HEADERS = \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
 	device-channel-plan-file-json.h device-channel-plan.h regional-parameter-channel-plan.h regional-parameter-channel-plans.h regional-parameter-channel-plan-file-json.h \
 	third_party/get_rss/get_rss.h \
-	gateway-lora.h gateway-file-json.h lora-gateway-listener.h \
+	gateway-lora.h gateway-file-json.h lora-gateway-listener.h mqtt-client-id.h example-plugins/plugin-mqtt-wss.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -275,6 +278,14 @@ libplugin_logger_huffman_la_CPPFLAGS = -DENABLE_LOGGER_HUFFMAN $(BACKEND_DB_DEF)
 libplugin_logger_huffman_la_LDFLAGS = -version-info $(VERSION_INFO) $(BACKEND_DB_LIB)
 libplugin_logger_huffman_la_LIBADD = -L/home/andrei/src/logger-passport -L/home/andrei/src/logger-huffman \
     -llogger-huffman -llogger-passport
+endif
+
+if ENABLE_MQTT
+libplugin_mqtt_wss_la_SOURCES = example-plugins/plugin-mqtt-wss.cpp \
+    mqtt-client-id.cpp utilstring.cpp
+libplugin_mqtt_wss_la_CPPFLAGS = -DENABLE_MQTT
+libplugin_mqtt_wss_la_LDFLAGS = -version-info $(VERSION_INFO)
+libplugin_mqtt_wss_la_LIBADD = -lpaho-mqtt3as -lpaho-mqttpp3
 endif
 
 mac_gw_SOURCES = \
@@ -349,7 +360,16 @@ dist_config_DATA = \
    autogen.sh CMakeLists.txt CODE_OF_CONDUCT.md CONTRIBUTING.md COPYING HISTORY LICENSE README.md TODO \
    service/lorawan-network-server.service \
    third_party/argtable3/README \
-   tests/netid-list.sh tests/netid-list.txt
+   tests/netid-list.sh tests/netid-list.txt \
+   http/html/index.html http/php/gw-stat.txt http/php/post.php http/README \
+   proto/example/example1.proto \
+   proto/google/protobuf/descriptor.proto \
+   proto/hlogger/gps16.proto proto/hlogger/ie_ioheader.proto proto/hlogger/ie_location.proto \
+   proto/hlogger/iridiumpacket46420.proto proto/hlogger/packet46420.proto proto/hlogger/time5.proto \
+   proto/iridium/animals.proto proto/iridium/gps16.proto proto/iridium/ie_ioheader.proto proto/iridium/ie_location.proto proto/iridium/packet8.proto proto/iridium/time5.proto \
+   proto/logger/logger60.proto proto/logger/rec16.proto \
+   proto/probe/probe.proto proto/probe/text.proto \
+   proto/vega/sh2.proto proto/vega/si13_1.proto proto/vega/si13_2.proto
 
 #
 # Tests

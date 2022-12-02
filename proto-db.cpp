@@ -40,9 +40,8 @@ const std::string programName = "proto-db";
 class Configuration {
 public:
 	std::string command;				// print|list|create|insert
-	std::string protoPath;				// proto file directory. Default 'proto
     std::string pluginsPath;            // plugin directory. Default 'plugins'
-    std::vector<std::string> extraDbName;
+    std::map<std::string, std::vector <std::string> > pluginParameters;
 
     std::string dbConfigFileName;		// Default dbs.json'
 	std::vector<std::string> dbName;	// database names
@@ -137,7 +136,7 @@ int parseCmd(
 	int argc,
 	char *argv[])
 {
-	struct arg_str *a_command, *a_proto_path, *a_plugins_path, *a_extra_dbname, *a_dbconfigfilename, *a_dbname, *a_message_type,
+	struct arg_str *a_command, *a_plugins_path, *a_plugin_params, *a_dbconfigfilename, *a_dbname, *a_message_type,
 		*a_payload_hex, *a_payload_base64, *a_sort_asc, *a_sort_desc, *a_addr, *a_identityStorageName,
         *a_identityStorageType;
 	struct arg_int *a_offset, *a_limit, *a_fport;
@@ -145,10 +144,9 @@ int parseCmd(
 	struct arg_end *a_end;
 
 	void *argtable[] = {
-		a_command = arg_str0(nullptr, nullptr, "<command>", "print|list|create|insert. Default print"),
-		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
+		a_command = arg_str0("a", "action", "<command>", "print|list|create|insert. Default print"),
         a_plugins_path = arg_str0("l", "plugins", "<path>", "plugin directory. Default 'plugins'"),
-        a_extra_dbname = arg_strn("D", "extradb", "<path>", 0, 100, "Extra plugins options, Default none"),
+        a_plugin_params = arg_strn(nullptr, nullptr, "<parameter>", 0, 100, "Plugin parameter, first- name, next- value, \",\"- param separator"),
         a_dbconfigfilename = arg_str0("c", "dbConfig", "<file>", "database config file name. Default 'dbs.json'"),
 		a_dbname = arg_strn("d", "dbName", "<database>", 0, 100, "database name, Default all"),
 
@@ -187,16 +185,25 @@ int parseCmd(
 	if (!nerrors) {
 		if (a_command->count)
 			config->command = *a_command->sval;
-		if (a_proto_path->count)
-			config->protoPath = *a_proto_path->sval;
-		else
-			config->protoPath = "proto";
         if (a_plugins_path->count)
             config->pluginsPath = *a_plugins_path->sval;
         else
             config->pluginsPath = "plugins";
-        for (int i = 0; i < a_extra_dbname->count; i++) {
-            config->extraDbName.emplace_back(a_extra_dbname->sval[i]);
+        // load comma separated plugin parameters: Param1Name ParamVal , Param2Name ParamVal ParamVal
+        bool expectParamName = true;
+        std::string n, v;
+        for (int i = 0; i < a_plugin_params->count; i++) {
+            v = a_plugin_params->sval[i];
+            if (expectParamName) {
+                n = v;
+                expectParamName = false;
+                continue;
+            }
+            if (v == ",") {
+                expectParamName = true;
+                continue;
+            }
+            config->pluginParameters[n].emplace_back(v);
         }
 
 		if (a_dbconfigfilename->count)
@@ -527,7 +534,7 @@ void doPrint(
         if (!db) {
             std::stringstream ss;
             ss << ERR_DB_DATABASE_NOT_FOUND << *it;
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
             exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
         }
 
@@ -540,7 +547,7 @@ void doPrint(
            << "\" type \"" << db->config->type
            << "\" dialect \"" << dialect
            << "\" payload \"" << hexString(payload);
-        printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0,ss.str());
+        printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0,ss.str());
 
         std::vector<std::string> clauses;
         std::map<std::string, std::string> validProperties;
@@ -599,17 +606,20 @@ int main(
         dbName = config.dbName[0];
     DatabaseByConfig dbAny(configDatabases, &plugins);
 
-    r = plugins.init(config.protoPath, dbName, config.extraDbName, &printError, 0);
+    r = plugins.init(config.pluginParameters, &printError, 0);
     if (r) {
         std::stringstream ss;
         ss << ERR_INIT_PLUGINS_FAILED
-           << "plugins directory: \"" << config.pluginsPath << "\""
-           << ", proto directory: \"" << config.protoPath << "\""
-           << ", database name: \"" << dbName << "\"";
-        for (std::vector<std::string>::const_iterator it(config.extraDbName.begin()); it != config.extraDbName.end(); it++) {
-            ss << " extra db: " << *it;
+            << "plugins directory: \"" << config.pluginsPath << "\""
+            << ", database name: \"" << dbName << "\""
+            << ", plugin parameters: \n";
+        for (std::map<std::string, std::vector<std::string> >::const_iterator it(config.pluginParameters.begin()); it != config.pluginParameters.end(); it++) {
+            ss << it->first << "\n";
+            for (std::vector<std::string>::const_iterator itv(it->second.begin()); itv != it->second.end(); itv++) {
+                ss << "\t" << *itv << "\n";
+            }
         }
-        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
         exit(ERR_CODE_INIT_PLUGINS_FAILED);
     }
 

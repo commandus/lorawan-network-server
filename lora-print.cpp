@@ -47,11 +47,10 @@ static PayloadInsertPlugins plugins;
 class LoraPrintConfiguration {
 public:
     int outputFormat;
-	std::string protoPath;				    // proto file directory. Default 'proto'
     std::string pluginsPath;			    // plugin file directory. Default 'plugins'
 	std::string dbConfig;				    // Default dbs.json'
-	std::vector<std::string> dbName;	    // database names
-    std::vector <std::string> extraDbName;  // passport
+    std::vector<std::string> dbName;	    // database names
+    std::map<std::string, std::vector <std::string> > pluginParameters;
 	std::string payload;				    // hex-string
 	std::string messageType;
 	// identity service
@@ -90,7 +89,8 @@ int parseCmd(
 	int argc,
 	char *argv[])
 {
-	struct arg_str *a_command, *a_proto_path, *a_plugins_path, *a_dbconfig, *a_dbname, *a_extra_dbname,
+	struct arg_str *a_command, *a_plugins_path, *a_dbconfig,
+        *a_dbname, *a_plugin_params,
         *a_message_type, *a_payload_hex,
         *a_payload_base64, *a_dev_eui, *a_dev_addr, *a_identityStorageName, *a_identityStorageType;
 	struct arg_lit *a_payload_json, *a_verbosity, *a_help;
@@ -106,7 +106,6 @@ int parseCmd(
         a_dev_eui = arg_str0("e", "eui", "<hex>", "Device EUI, used to decipher Join Accept frame"),
         a_dev_addr = arg_str0("a", "addr", "<hex>", "Device address. Default 2a (decimal 42"),
 
-		a_proto_path = arg_str0("p", "proto", "<path>", "proto files directory. Default 'proto'"),
         a_plugins_path = arg_str0("l", "plugins", "<path>", "plugin directory. Default 'plugins'"),
 		a_message_type = arg_str0("m", "message", "<pkt.msg>", "force message type packet and name"),
 
@@ -114,8 +113,8 @@ int parseCmd(
 		a_identityStorageType = arg_str0("y", "id-type", "json|txt|lmdb", "default " DEF_IDENTITY_STORAGE_TYPE),
 
 		a_dbconfig = arg_str0("c", "dbConfig", "<file>", "database config file name. Default 'dbs.json'"),
-		a_dbname = arg_strn("d", "db", "<db-name>", 0, 100, "database name, Default all"),
-        a_extra_dbname = arg_strn("D", "extradb", "<path>", 0, 100, "Extra plugins options, Default none"),
+        a_dbname = arg_strn("d", "db", "<db-name>", 0, 100, "database name, Default all"),
+		a_plugin_params = arg_strn(nullptr, nullptr, "<parameter>", 0, 100, "Plugin parameter, first- name, next- value, \",\"- param separator"),
 
 		a_verbosity = arg_litn("v", "verbose", 0, 7, "Set verbosity level (-vvvvvvv: debug)"),
 		a_help = arg_lit0("?", "help", "Show this help"),
@@ -138,10 +137,6 @@ int parseCmd(
 		if (a_command->count) {
             config->outputFormat = getOutputFormatNumber(*a_command->sval);
         }
-		if (a_proto_path->count)
-			config->protoPath = *a_proto_path->sval;
-		else
-			config->protoPath = "proto";
         if (a_plugins_path->count)
             config->pluginsPath = *a_plugins_path->sval;
         else
@@ -169,11 +164,27 @@ int parseCmd(
         } else {
             config->devAddr = 42;
         }
-		for (int i = 0; i < a_dbname->count; i++) {
-			config->dbName.emplace_back(a_dbname->sval[i]);
-		}
-        for (int i = 0; i < a_extra_dbname->count; i++) {
-            config->extraDbName.emplace_back(a_extra_dbname->sval[i]);
+
+        // get database filter. Default all
+        for (int i = 0; i < a_dbname->count; i++) {
+            config->dbName.emplace_back(a_dbname->sval[i]);
+        }
+
+        // load comma separated plugin parameters: Param1Name ParamVal , Param2Name ParamVal ParamVal
+        bool expectParamName = true;
+        std::string n, v;
+		for (int i = 0; i < a_plugin_params->count; i++) {
+            v = a_plugin_params->sval[i];
+            if (expectParamName) {
+                n = v;
+                expectParamName = false;
+                continue;
+            }
+            if (v == ",") {
+                expectParamName = true;
+                continue;
+            }
+            config->pluginParameters[n].emplace_back(v);
         }
 
 		config->payload = "";
@@ -184,7 +195,7 @@ int parseCmd(
 				config->payload = base64_decode(*a_payload_base64->sval, false);
 			}
 			catch (const std::exception& e) {
-                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INVALID_BASE64, ERR_INVALID_BASE64);
+                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INVALID_BASE64, ERR_INVALID_BASE64);
 				nerrors++;
 			}
 		}
@@ -214,12 +225,12 @@ int parseCmd(
 	config->identityStorageType = string2storageType(sidentityStorageType);
 
 	if (config->outputFormat < 0) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_WRONG_PARAM, ERR_WRONG_PARAM);
+        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_WRONG_PARAM, ERR_WRONG_PARAM);
         nerrors++;
 	}
 
 	if (config->payload.empty()) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_NO_PAYLOAD, ERR_NO_PAYLOAD);
+        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_NO_PAYLOAD, ERR_NO_PAYLOAD);
 		nerrors++;
 	}
 
@@ -252,7 +263,7 @@ void doInsert(
 		if (!db) {
             std::stringstream ss;
             ss << ERR_DB_DATABASE_NOT_FOUND << *it;
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
 			exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
 		}
         std::vector<std::string> clauses;
@@ -262,26 +273,26 @@ void doInsert(
         for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
             std::stringstream ss;
             ss << "Execute " << *it << "..";
-            printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0, ss.str());
+            printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0, ss.str());
         }
         int r = db->open();
         if (r) {
             std::stringstream ss;
             ss << "Open " << db->config->type << " database  " << db->config->name <<  " error " << r;
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, ss.str());
+            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss.str());
             continue;
         }
         r = db->insert(config->messageType, INPUT_FORMAT_BINARY, binData, &validProperties);
         if (r) {
             std::stringstream ss2;
             ss2 << "Database " << db->config->type <<  " error " << r;
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, ss2.str());
+            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss2.str());
         }
         r = db->close();
         if (r) {
             std::stringstream ss;
             ss << "Close " << db->config->type << " database  " << db->config->name <<  " error " << r;
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, ss.str());
+            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss.str());
             continue;
         }
 	}
@@ -308,7 +319,7 @@ void doPrint(
         if (!db) {
             std::stringstream ss;
             ss << ERR_DB_DATABASE_NOT_FOUND << *it;
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
             exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
         }
 
@@ -321,7 +332,7 @@ void doPrint(
             << "\" type \"" << db->config->type
             << "\" dialect \"" << dialect
             << "\" payload \"" << hexString(binData);
-        printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, 0,ss.str());
+        printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0,ss.str());
 
         std::vector<std::string> clauses;
         std::map<std::string, std::string> validProperties;
@@ -365,24 +376,19 @@ int main(
 	}
     printError.verbosity = config.verbosity;
 
-    if (!config.protoPath.empty()) {
-        if (!util::fileExists(config.protoPath)) {
-            config.protoPath = getDefaultConfigFileName(argv[0], config.protoPath);;
-        }
-    }
     if (!config.pluginsPath.empty()) {
         if (!util::fileExists(config.pluginsPath)) {
             config.pluginsPath = getDefaultConfigFileName(argv[0], config.pluginsPath);;
         }
     }
     if (config.pluginsPath.empty()) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, MSG_NO_PLUGINS_LOADED);
+        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, MSG_NO_PLUGINS_LOADED);
         exit(ERR_CODE_INIT_PLUGINS_FAILED);
     }
 
     configDatabases = new ConfigDatabasesJson(config.dbConfig);
 	if (configDatabases->dbs.empty()) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_LOAD_DATABASE_CONFIG, ERR_LOAD_DATABASE_CONFIG);
+        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_LOAD_DATABASE_CONFIG, ERR_LOAD_DATABASE_CONFIG);
         done();
         exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
@@ -414,36 +420,36 @@ int main(
     if (r <= 0) {
         std::stringstream ss;
         ss << ERR_LOAD_PLUGINS_FAILED << "plugins directory: \"" << config.pluginsPath << "\"";
-        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_LOAD_PLUGINS_FAILED, ss.str());
+        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_LOAD_PLUGINS_FAILED, ss.str());
         exit(ERR_CODE_LOAD_PLUGINS_FAILED);
     }
     std::string dbName;
     if (!config.dbName.empty())
         dbName = config.dbName[0];
     dbByConfig = new DatabaseByConfig(configDatabases, &plugins);
-    r = plugins.init(config.protoPath, dbName, config.extraDbName, &printError, 0);
+    r = plugins.init(config.pluginParameters, &printError, 0);
     if (r) {
         std::stringstream ss;
         ss << ERR_INIT_PLUGINS_FAILED
             << "plugins directory: \"" << config.pluginsPath << "\""
-            << ", proto directory: \"" << config.protoPath << "\""
-            << ", database name: \"" << dbName << "\"";
-        for (std::vector<std::string>::const_iterator it(config.extraDbName.begin()); it != config.extraDbName.end(); it++) {
-            ss << " extra db: " << *it;
+            << ", database name: \"" << dbName << "\""
+            << ", plugin parameters: \n";
+
+        for (std::map<std::string, std::vector<std::string> >::const_iterator it(config.pluginParameters.begin()); it != config.pluginParameters.end(); it++) {
+            ss << it->first << "\n";
+            for (std::vector<std::string>::const_iterator itv(it->second.begin()); itv != it->second.end(); itv++) {
+                ss << "\t" << *itv << "\n";
+            }
         }
-        printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
         exit(ERR_CODE_INIT_PLUGINS_FAILED);
     }
 
     std::stringstream ss;
     ss
        << "plugins directory: \"" << config.pluginsPath << "\""
-       << ", proto directory: \"" << config.protoPath << "\""
        << ", database name: \"" << dbName << "\"";
-    for (std::vector<std::string>::const_iterator it(config.extraDbName.begin()); it != config.extraDbName.end(); it++) {
-        ss << " extra db: " << *it;
-    }
-    printError.logMessage(nullptr, LOG_DEBUG, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+    printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
 
     // parse packet
     SEMTECH_PREFIX_GW dataPrefix;
@@ -471,7 +477,7 @@ int main(
                         {
                             JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
                             if (isDEVEUIEmpty(config.devEUI)) {
-                                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, "Device EUI missed. Provide -e <EUI> option.");
+                                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, "Device EUI missed. Provide -e <EUI> option.");
                                 done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
@@ -481,7 +487,7 @@ int main(
                             if (ir) {
                                 std::stringstream ss1;
                                 ss1 << "Device EUI " << DEVEUI2string(config.devEUI) << " not found.";
-                                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss1.str());
+                                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss1.str());
                                 done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
@@ -516,7 +522,7 @@ int main(
             break;
         default:
             if (r)
-                printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, r, strerror_lorawan_ns(r));
+                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, strerror_lorawan_ns(r));
 	}
 
 	if (gatewayStat.errcode == 0) {
@@ -534,7 +540,7 @@ int main(
 
 	for (std::vector<SemtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
 		if (it->errcode) {
-            printError.logMessage(nullptr, LOG_ERR, LOG_ORA_PRINT, ERR_CODE_INVALID_PACKET, ERR_INVALID_PACKET);
+            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INVALID_PACKET, ERR_INVALID_PACKET);
             continue;
 		}
 		if (config.verbosity > 2) {

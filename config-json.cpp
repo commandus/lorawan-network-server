@@ -350,22 +350,31 @@ int Configuration::parse(
 			if (dbcfn.IsString())
 				databaseConfigFileName = dbcfn.GetString();
 		}
-        if (doc.HasMember("databaseExtraConfigFileNames")) {
-            rapidjson::Value &dbcefns =  doc["databaseExtraConfigFileNames"];
-            if (dbcefns.IsArray()) {
-                for (int i = 0; i < dbcefns.Size(); i++) {
-                    rapidjson::Value &dbcefn = dbcefns[i];
-                    if (dbcefn.IsString()) {
-                        databaseExtraConfigFileNames.push_back(dbcefn.GetString());
+        if (doc.HasMember("pluginsParams")) {
+            rapidjson::Value &pp =  doc["pluginsParams"];
+            if (pp.IsArray()) { // json array of array, first element is parameter name, next are values
+                for (int i = 0; i < pp.Size(); i++) {
+                    rapidjson::Value &pp1 = pp[i];
+                    if (pp1.IsArray()) {
+                        size_t sz = pp1.Size();
+                        if (sz < 0)
+                            continue;   // no map name
+                        rapidjson::Value &jn = pp1[0];
+                        std::string pn;
+                        if (jn.IsString()) {
+                            pn = jn.GetString();
+                        }
+                        for (int j = 1; j < sz; j++) {
+                            rapidjson::Value &jv = pp1[j];
+                            if (!jv.IsString())
+                                continue;
+                            std::string pv = jv.GetString();
+                            pluginsParams[pn].push_back(pv);
+                        }
                     }
                 }
             }
         }
-		if (doc.HasMember("protoPath")) {
-			rapidjson::Value &vpp =  doc["protoPath"];
-			if (vpp.IsString())
-				protoPath = vpp.GetString();
-		}
         if (doc.HasMember("pluginsPath")) {
             rapidjson::Value &v =  doc["pluginsPath"];
             if (v.IsString())
@@ -375,11 +384,6 @@ int Configuration::parse(
 			rapidjson::Value &gwp =  doc["gatewayPort"];
 			if (gwp.IsInt())
 				gatewayPort = gwp.GetInt();
-		}
-		if (doc.HasMember("loggerDatabaseName")) {
-			rapidjson::Value &ldn =  doc["loggerDatabaseName"];
-			if (ldn.IsString())
-				loggerDatabaseName = ldn.GetString();
 		}
 #ifdef ENABLE_LISTENER_USB
         if (doc.HasMember("embeddedGatewayConfig")) {
@@ -401,16 +405,13 @@ int Configuration::parse(
 }
 
 Configuration::Configuration() 
-	: configFileName(""), gatewaysFileName(""), 
-	databaseConfigFileName(""), protoPath(""), gatewayPort(4242),
-	loggerDatabaseName("")
+	: gatewayPort(4242)
 {
 }
 
 Configuration::Configuration(
 	const char* value
 )
-	: configFileName(""), gatewaysFileName(""), loggerDatabaseName("")
 {
 	parse(value);
 }
@@ -419,8 +420,7 @@ void Configuration::clear() {
 	configFileName = "";
 	gatewaysFileName = "";
 	databaseConfigFileName = "";
-    databaseExtraConfigFileNames.clear();
-	protoPath = "";
+    pluginsParams.clear();
     pluginsPath = "";
 	serverConfig.clear();
 }
@@ -453,19 +453,23 @@ std::string Configuration::toString() {
 	dbcfn.SetString(databaseConfigFileName.c_str(), databaseConfigFileName.size(), allocator);
 	doc.AddMember("databaseConfigFileName", dbcfn, allocator);
 
-    rapidjson::Value dbecfns;
-    dbecfns.SetArray();
-    for (std::vector<std::string>::const_iterator it(databaseExtraConfigFileNames.begin()); it != databaseExtraConfigFileNames.end(); it++) {
-        rapidjson::Value fn;
-        fn.SetString(it->c_str(), it->size(), allocator);
-        dbecfns.PushBack(fn, allocator);
+    rapidjson::Value jPluginParams;
+    jPluginParams.SetArray();
+    for (std::map<std::string, std::vector<std::string> >::const_iterator it(pluginsParams.begin()); it != pluginsParams.end(); it++) {
+        rapidjson::Value jPluginParam;
+        jPluginParam.SetArray();
+        // add name
+        rapidjson::Value jParamName;
+        jParamName.SetString(it->first.c_str(), it->first.size(), allocator);
+        jPluginParam.PushBack(jParamName, allocator);
+        for (std::vector<std::string>::const_iterator itv(it->second.begin()); itv != it->second.end(); it++) {
+            rapidjson::Value jParamValue;
+            jParamValue.SetString(itv->c_str(), itv->size(), allocator);
+            jPluginParam.PushBack(jParamValue, allocator);
+        }
+        jPluginParams.PushBack(jPluginParam, allocator);
     }
-    doc.AddMember("databaseExtraConfigFileNames", dbecfns, allocator);
-
-	rapidjson::Value pp;
-	pp.SetString(protoPath.c_str(), protoPath.size(), allocator);
-	doc.AddMember("protoPath", pp, allocator);
-
+    doc.AddMember("pluginsParams", jPluginParams, allocator);
 
     rapidjson::Value psp;
     psp.SetString(pluginsPath.c_str(), pluginsPath.size(), allocator);

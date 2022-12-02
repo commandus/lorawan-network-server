@@ -77,16 +77,14 @@ PayloadInsertPlugins::~PayloadInsertPlugins()
 }
 
 int PayloadInsertPlugins::init(
-    const std::string &protoPath,
-    const std::string &dbName,
-    const std::vector <std::string> &extras,
+    const std::map<std::string, std::vector <std::string> > &params,
     LogIntf *log,
     int rfu
 )
 {
     for (std::vector<Payload2InsertPluginInitFuncs>::iterator it(funcs.begin()); it != funcs.end(); it++) {
         if (it->init != nullptr)
-            it->env = it->init(dbByConfig, protoPath, dbName, extras, log, rfu);
+            it->env = it->init(dbByConfig, params, log, rfu);
         else
             it->env = nullptr;
     }

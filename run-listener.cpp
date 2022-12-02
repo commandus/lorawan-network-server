@@ -42,13 +42,7 @@ RunListener::RunListener()
 }
 
 RunListener::RunListener(Configuration *aConfig, int *lastSysSignal)
-    : gatewayList(nullptr), gatewayStatService(nullptr),
-    deviceStatService(nullptr), listener(nullptr),
-    identityService(nullptr), receiverQueueProcessor(nullptr),
-    processor(nullptr), dbByConfig(nullptr),
-    deviceHistoryService(nullptr), regionalParameterChannelPlans(nullptr),
-    deviceChannelPlan(nullptr), configDatabases(nullptr),
-    receiverQueueService(nullptr)
+    : RunListener()
 {
     init(aConfig, lastSysSignal);
 }
@@ -106,6 +100,8 @@ void RunListener::logMessage(
 
 void RunListener::done()
 {
+    mDone.lock();
+
     if (config && config->serverConfig.verbosity > 5)
         logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, LORA_OK, MSG_GRACEFULLY_STOPPED);
     // destroy and free all
@@ -122,7 +118,6 @@ void RunListener::done()
 
     // save changes
     flushFiles();
-
     if (receiverQueueService) {
         delete receiverQueueService;
         receiverQueueService = nullptr;
@@ -164,10 +159,9 @@ void RunListener::done()
         configDatabases = nullptr;
     }
     plugins.done();
-    if (config) {
-        delete config;
-        config = nullptr;
-    }
+
+    mDone.unlock();
+
     exit(0);
 }
 
@@ -512,8 +506,7 @@ void RunListener::init(
 
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_PLUGINS);
     // TODO pass
-    int pec = plugins.init(config->protoPath, config->loggerDatabaseName,
-        config->databaseExtraConfigFileNames, this, 0);
+    int pec = plugins.init(config->pluginsParams, this, 0);
 	if (pec) {
         logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_PLUGINS_FAILED, ERR_INIT_PLUGINS_FAILED);
 		exit(ERR_CODE_INIT_PLUGINS_FAILED);

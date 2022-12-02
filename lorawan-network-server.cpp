@@ -63,7 +63,6 @@ const std::string programName = "lorawan-network-server";
 #define DEF_REGIONAL_PARAMATERS_CONFIG_FILE_NAME "regional-parameters.json"
 #define DEF_WS_USER_LIST_FILE_NAME "passwd.json"
 #define DEF_WS_HTML_FOLDER "html"
-#define DEF_PROTO_PATH "proto"
 
 static RunListener *runListener = nullptr;
 static int lastSysSignal = 0;
@@ -175,11 +174,11 @@ int parseCmd(
 	// device path
 	struct arg_str *a_address4 = arg_strn(nullptr, nullptr, "<IPv4 address:port>", 0, 8, "listener IPv4 interface e.g. *:8003");
 	struct arg_str *a_address6 = arg_strn("6", "ipv6", "<IPv6 address:port>", 0, 8, "listener IPv6 interface e.g. :1700");
-	struct arg_str *a_config = arg_str0("c", "config", "<file>",
-                                        "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME
-	", queue storage ~/" DEF_QUEUE_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME 
-	", device history ~/" DEF_DEVICE_HISTORY_STORAGE_NAME
-	);
+	struct arg_str *a_config = arg_str0("c", "config", "<file>", 
+        "configuration file. Default ~/" DEF_CONFIG_FILE_NAME ", identity storage ~/" DEF_IDENTITY_STORAGE_NAME
+        ", queue storage ~/" DEF_QUEUE_STORAGE_NAME ", gateways ~/" DEF_GATEWAYS_STORAGE_NAME 
+        ", device history ~/" DEF_DEVICE_HISTORY_STORAGE_NAME
+        );
 	struct arg_str *a_logfilename = arg_str0("l", "logfile", "<file>", "log file");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 7, "Set verbosity level 1- alert, 2-critical error, 3- error, 4- warning, 5- siginicant info, 6- info, 7- debug");
@@ -235,36 +234,40 @@ int parseCmd(
     return LORA_OK;
 }
 
-static void wsOnLog(
-    void *env,
-    int level,
-    int moduleCode,
-    int errorCode,
-    const std::string &message
-)
-{
-    if (runListener && runListener->config && runListener->config->serverConfig.daemonize) {
-        SYSLOG(level, message.c_str());
-        return;
-    }
-    if (env) {
-        if (((WSConfig *) env)->verbosity < level)
+class StdErrLog: public LogIntf {
+public:
+    void logMessage(
+        void *env,
+        int level,
+        int moduleCode,
+        int errorCode,
+        const std::string &message
+    ) override {
+        if (runListener && runListener->config && runListener->config->serverConfig.daemonize) {
+            SYSLOG(level, message.c_str());
             return;
+        }
+        if (env) {
+            if (((WSConfig *) env)->verbosity < level)
+                return;
+        }
+        struct timeval t;
+        gettimeofday(&t, nullptr);
+        std::cerr << timeval2string(t) << " ";
+#ifdef ENABLE_TERM_COLOR
+        if (isatty(2))  // if stderr is piped to the file, do not put ANSI color to the file
+            std::cerr << "\033[" << logLevelColor(level)  << "m";
+#endif
+        std::cerr<< std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
+#ifdef ENABLE_TERM_COLOR
+        if (isatty(2))
+            std::cerr << "\033[0m";
+#endif
+        std::cerr << message << std::endl;
     }
-    struct timeval t;
-    gettimeofday(&t, nullptr);
-    std::cerr << timeval2string(t) << " ";
-#ifdef ENABLE_TERM_COLOR
-    if (isatty(2))  // if stderr is piped to the file, do not put ANSI color to the file
-        std::cerr << "\033[" << logLevelColor(level)  << "m";
-#endif
-    std::cerr<< std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
-#ifdef ENABLE_TERM_COLOR
-    if (isatty(2))
-        std::cerr << "\033[0m";
-#endif
-    std::cerr << message << std::endl;
-}
+};
+
+static StdErrLog stdErrLog;
 
 #ifdef ENABLE_WS
 #ifdef ENABLE_LOGGER_HUFFMAN
@@ -335,10 +338,17 @@ static void wsRun(char *programPath, Configuration* config) {
     if (wsSpecialPathHandler) {
         bool hasLoggerKosaPacketsLoader = false;
         // set database to load from
-        if (!config->loggerDatabaseName.empty()) {
+        std::string loggerDatabaseName;
+        std::map<std::string, std::vector <std::string> >::const_iterator pDb = config->pluginsParams.find("logger-huffman-database-name");
+        if (pDb != config->pluginsParams.end()) {
+            if (!pDb->second.empty())
+                loggerDatabaseName = pDb->second[0];
+        }
+
+        if (!loggerDatabaseName.empty()) {
             DatabaseNConfig *kldb = nullptr;
             if (runListener->dbByConfig)
-                kldb = runListener->dbByConfig->find(config->loggerDatabaseName);
+                kldb = runListener->dbByConfig->find(loggerDatabaseName);
             if (kldb) {
                 loggerHuffmanEnv.loader.setDatabase(kldb->db);
                 int r = kldb->open();
@@ -351,14 +361,14 @@ static void wsRun(char *programPath, Configuration* config) {
         }
         if (hasLoggerKosaPacketsLoader) {
             std::stringstream sskldb;
-            sskldb << MSG_INIT_LOGGER_HUFFMAN << config->loggerDatabaseName;
+            sskldb << MSG_INIT_LOGGER_HUFFMAN << loggerDatabaseName;
             runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
         } else {
             runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
         }
-        void *env = initLoggerParser(config->databaseExtraConfigFileNames,
+        void *env = initLoggerParser(config->pluginsParams["logger-huffman-passport"],
            [](void *lenv, int level, int moduleCode, int errorCode, const std::string &message) {
-               wsOnLog(runListener->listener, level, moduleCode, errorCode, message);
+               stdErrLog.logMessage(runListener->listener, level, moduleCode, errorCode, message);
             },
             &loggerHuffmanEnv.loader);
         if (!env) {
@@ -401,13 +411,12 @@ static void wsRun(char *programPath, Configuration* config) {
             runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
     } else {
         runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
-                                ERR_WS_START_FAILED);
+            ERR_WS_START_FAILED);
         exit(ERR_CODE_WS_START_FAILED);
     }
 #else
     runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
         ERR_WS_START_FAILED);
-    exit(ERR_CODE_WS_START_FAILED);
 #endif
 }
 
@@ -466,12 +475,6 @@ static void invalidatePaths(char *programPath, Configuration *config)
             config->databaseConfigFileName = DEF_DATABASE_CONFIG_FILE_NAME;
         config->databaseConfigFileName = getDefaultConfigFileName(programPath, config->databaseConfigFileName);
     }
-    if (!util::fileExists(config->protoPath)) {
-        // if proto path is not specified, try use default ./proto/ path
-        if (config->protoPath.empty())
-            config->protoPath = DEF_PROTO_PATH;
-        config->protoPath = getDefaultConfigFileName(programPath, config->protoPath);;
-    }
     if (!config->pluginsPath.empty()) {
         if (!util::fileExists(config->pluginsPath)) {
             config->pluginsPath = getDefaultConfigFileName(programPath, config->pluginsPath);;
@@ -493,33 +496,24 @@ static void invalidatePaths(char *programPath, Configuration *config)
             config->wsConfig.html = DEF_WS_HTML_FOLDER;
         config->wsConfig.html = getDefaultConfigFileName(programPath, config->wsConfig.html);;
     }
-    for (std::vector<std::string>::iterator it(config->databaseExtraConfigFileNames.begin()); it != config->databaseExtraConfigFileNames.end(); ) {
-        if (!util::fileExists(*it)) {
-            if (it->empty()) {
-                it = config->databaseExtraConfigFileNames.erase(it);
-                continue;
-            }
-            *it = getDefaultConfigFileName(programPath, *it);;
-        }
-        it++;
-    }
 }
+
+Configuration config;
 
 int main(
 	int argc,
 	char *argv[])
 {
 
-    Configuration *config = new Configuration("");
-	if (parseCmd(config, argc, argv) != 0)
+	if (parseCmd(&config, argc, argv) != 0)
 		exit(ERR_CODE_COMMAND_LINE);
 
 	// reload config if required
 	bool hasConfig = false;
-	if (!config->configFileName.empty()) {
-		std::string js = file2string(config->configFileName.c_str());
+	if (!config.configFileName.empty()) {
+		std::string js = file2string(config.configFileName.c_str());
 		if (!js.empty()) {
-			config->parse(js.c_str());
+			config.parse(js.c_str());
 			hasConfig = true;
 		}
 	}
@@ -527,40 +521,40 @@ int main(
 		std::cerr << ERR_NO_CONFIG << std::endl;
 		exit(ERR_CODE_NO_CONFIG);
 	}
-    invalidatePaths(argv[0], config);
+    invalidatePaths(argv[0], &config);
 
-    runListener = new RunListener(config, &lastSysSignal);
+    runListener = new RunListener(&config, &lastSysSignal);
 
 	// web service
-	if (config->wsConfig.enabled) {
-		wsConfig.threadCount = config->wsConfig.threadCount;
-		wsConfig.connectionLimit = config->wsConfig.connectionLimit;
-		wsConfig.flags = config->wsConfig.flags;
+	if (config.wsConfig.enabled) {
+		wsConfig.threadCount = config.wsConfig.threadCount;
+		wsConfig.connectionLimit = config.wsConfig.connectionLimit;
+		wsConfig.flags = config.wsConfig.flags;
 
 		// listener port
-		wsConfig.port = config->wsConfig.port;
+		wsConfig.port = config.wsConfig.port;
 		// html root
-		wsConfig.dirRoot = config->wsConfig.html.c_str();
+		wsConfig.dirRoot = config.wsConfig.html.c_str();
 		// log verbosity
-		wsConfig.verbosity = config->serverConfig.verbosity;
+		wsConfig.verbosity = config.serverConfig.verbosity;
 		// web service log
-		wsConfig.onLog = wsOnLog;
+		wsConfig.onLog = &stdErrLog;
         // JWT
-        wsConfig.issuer = config->wsConfig.jwtIssuer;
-        wsConfig.secret = config->wsConfig.jwtSecret;
+        wsConfig.issuer = config.wsConfig.jwtIssuer;
+        wsConfig.secret = config.wsConfig.jwtSecret;
 	}
 
-	if (config->serverConfig.daemonize)	{
+	if (config.serverConfig.daemonize)	{
         runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
 		char wd[PATH_MAX];
 		std::string progpath = getcwd(wd, PATH_MAX);
-		if (config->serverConfig.verbosity > 1) {
+		if (config.serverConfig.verbosity > 1) {
             std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
         }
 
 		OPEN_SYSLOG(programName.c_str())
         // negative verbosity forces syslog
-        runListener->config->serverConfig.verbosity = - config->serverConfig.verbosity;
+        runListener->config->serverConfig.verbosity = - config.serverConfig.verbosity;
 
 		Daemonize daemonize(programName, progpath, run, stop, done);
         std::cerr << MSG_DAEMON_STOPPED << std::endl;
