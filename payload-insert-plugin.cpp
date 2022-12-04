@@ -1,5 +1,6 @@
 #include "payload-insert-plugin.h"
 #include <sstream>
+#include <algorithm>
 #include "utilfile.h"
 #include "log-intf.h"
 

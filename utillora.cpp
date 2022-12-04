@@ -2015,7 +2015,7 @@ void setKey(
 ) {
 	if (value.size() == sizeof(KEY128)) {
 		memcpy(retval, value.c_str(), sizeof(KEY128));
-		swap16(retval)
+		swap16(retval);
 		return;
 	}
 	if (value.size() < sizeof(KEY128) * 2)

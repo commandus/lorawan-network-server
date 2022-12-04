@@ -5,6 +5,7 @@
 
 #ifdef _MSC_VER
 #include <windows.h>
+#include <io.h>
 #include <wchar.h>
 #include <stdio.h>
 #define PATH_DELIMITER "\\"
@@ -137,6 +138,8 @@ size_t util::filesInPath
 	}
 	return r;
 }
+
+#define F_OK	0
 
 bool util::fileExists(const std::string &fileName)
 {
