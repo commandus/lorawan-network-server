@@ -59,7 +59,7 @@ bool AuthUserFile::verify(
 }
 
 // return empty string if not authorized
-std::string AuthUserFile::getJWT(
+std::string AuthUserFile::getToken(
     const std::string &user,
     const std::string &password
 )
@@ -69,6 +69,7 @@ std::string AuthUserFile::getJWT(
         if (f->second == password) {
             std::map<std::string, std::string> claims;
             claims["user"] = user;
+            claims["password"] = password;
             return jwtClaims(claims);
         }
     }

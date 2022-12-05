@@ -16,8 +16,11 @@
 #include "base64/base64.h"
 
 #include "errlist.h"
+
 #include "system/crypto/aes.h"
 #include "system/crypto/cmac.h"
+
+#define KSCH_SIZE   (N_MAX_ROUNDS + 1) * N_BLOCK
 
 #include "identity-service.h"
 
@@ -101,7 +104,6 @@ static uint32_t calculateMICRev103(
 	const KEY128 &key
 )
 {
-	AES_CMAC_CTX aesCmacCtx;
 	unsigned char blockB[16];
 	// blockB
 	blockB[0] = 0x49;
@@ -127,10 +129,11 @@ static uint32_t calculateMICRev103(
 	blockB[15] = size;
 
 	aes_context aesContext;
-
-	memset(aesContext.ksch, '\0', 240);
+	memset(aesContext.ksch, '\0', KSCH_SIZE);
     aes_set_key(key, sizeof(KEY128), &aesContext);
-	AES_CMAC_Init(&aesCmacCtx);
+
+    AES_CMAC_CTX aesCmacCtx;
+    AES_CMAC_Init(&aesCmacCtx);
 	AES_CMAC_SetKey(&aesCmacCtx, key);
 	AES_CMAC_Update(&aesCmacCtx, blockB, sizeof(blockB));
 	AES_CMAC_Update(&aesCmacCtx, data, size);
@@ -190,7 +193,7 @@ uint32_t calculateMICReJoinRequest(
     const uint8_t rejoinType
 ) {
     aes_context aesContext;
-    memset(aesContext.ksch, '\0', 240);
+    memset(aesContext.ksch, '\0', KSCH_SIZE);
     aes_set_key(key, sizeof(KEY128), &aesContext);
 
     AES_CMAC_CTX aesCmacCtx;
@@ -224,7 +227,7 @@ static void deriveKeyBlock(
 )
 {
     aes_context aesContext;
-    memset(aesContext.ksch, '\0', 240);
+    memset(aesContext.ksch, '\0', KSCH_SIZE);
     aes_set_key(nwkKey, sizeof(KEY128), &aesContext);
 
     AES_CMAC_CTX aesCmacCtx;
@@ -434,7 +437,7 @@ uint32_t calculateMICJoinResponse(
         const KEY128 &key
 ) {
     aes_context aesContext;
-    memset(aesContext.ksch, '\0', 240);
+    memset(aesContext.ksch, '\0', KSCH_SIZE);
     aes_set_key(key, sizeof(KEY128), &aesContext);
 
     AES_CMAC_CTX aesCmacCtx;
@@ -475,7 +478,7 @@ uint32_t calculateOptNegMICJoinResponse(
     memmove(&(d[10]), &frame, 1 + sizeof(JOIN_ACCEPT_FRAME_HEADER));
 
     aes_context aesContext;
-    memset(aesContext.ksch, '\0', 240);
+    memset(aesContext.ksch, '\0', KSCH_SIZE);
     aes_set_key(key, sizeof(KEY128), &aesContext);
 
     AES_CMAC_CTX aesCmacCtx;

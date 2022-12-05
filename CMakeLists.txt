@@ -1,4 +1,6 @@
 # Options:
+# -DENABLE_CURL=on
+# -DENABLE_JWT=on
 # -DENABLE_PKT2=on
 # -DENABLE_LISTENER_EMBEDDED=on
 # -DENABLE_MQTT=on
@@ -15,16 +17,24 @@ set(CMAKE_CXX_STANDARD 11)
 
 option(ENABLE_PKT2 "Build with pkt2" OFF)
 option(ENABLE_MQTT "Build with MQTT" OFF)
+option(ENABLE_CURL "Build with CURL" OFF)
+option(ENABLE_JWT  "Build with JWT" OFF)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-find_package(CURL REQUIRED)
-# find_package(unofficial-sqlite3 REQUIRED)
-set(CURL_LIBRARIES curl)
-
+if(ENABLE_JWT)
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
+set(LIBJWT OpenSSL::Crypto)
+endif(ENABLE_JWT)
+
+# find_package(unofficial-sqlite3 REQUIRED)
+
+if(ENABLE_CURL)
+	find_package(CURL REQUIRED)
+	set(CURL_LIBRARIES curl)
+endif(ENABLE_CURL)
 
 if(ENABLE_PKT2)
 	find_library(LIBPKT2
@@ -126,8 +136,7 @@ add_library(lorawan STATIC
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
-	${LIBLORAGW} ${LIBTINYMT32}
-		OpenSSL::Crypto
+	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT}
 )
 target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
 

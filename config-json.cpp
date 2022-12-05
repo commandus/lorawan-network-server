@@ -508,8 +508,8 @@ std::string Configuration::toDescriptionTableString() const {
  */
 WebServiceConfig::WebServiceConfig()
 	: enabled(true), port(DEF_WS_PORT), html(""), defaultDatabase(""),
-	threadCount(2),	connectionLimit(1024), flags(0), jwtIssuer(""), jwtSecret(""),
-    jwtUserListFileName("")
+      threadCount(2), connectionLimit(1024), flags(0), jwtIssuer(""), jwtSecret(""),
+      userPasswordListFileName("")
 {
 
 }
@@ -526,7 +526,7 @@ void WebServiceConfig::clear()
 	flags = 0;
     jwtIssuer = "";
     jwtSecret = "";
-    jwtUserListFileName = "";
+    userPasswordListFileName = "";
 }
 
 int WebServiceConfig::parse(
@@ -617,11 +617,11 @@ int WebServiceConfig::parse(
         }
     }
 
-    jwtUserListFileName = "";
+    userPasswordListFileName = "";
     if (value.HasMember("userListFileName")) {
         rapidjson::Value &vjwtUserListFileName = value["userListFileName"];
         if (vjwtUserListFileName.IsString()) {
-            jwtUserListFileName = vjwtUserListFileName.GetString();
+            userPasswordListFileName = vjwtUserListFileName.GetString();
         }
     }
 
@@ -694,6 +694,6 @@ void WebServiceConfig::toJson(
     value.AddMember("secret", vSecret, allocator);
 
     rapidjson::Value vUserListFileName;
-    vUserListFileName.SetString(jwtUserListFileName.c_str(), jwtUserListFileName.size(), allocator);
+    vUserListFileName.SetString(userPasswordListFileName.c_str(), userPasswordListFileName.size(), allocator);
     value.AddMember("userListFileName", vUserListFileName, allocator);
 }

@@ -285,7 +285,7 @@ static void wsRun(char *programPath, Configuration* config) {
     wsSpecialPathHandler->config = config;
     wsSpecialPathHandler->gatewayStatService = runListener->gatewayStatService;
     wsSpecialPathHandler->deviceStatService = runListener->deviceStatService;
-    std::string userListFileName = getDefaultConfigFileName(programPath, config->wsConfig.jwtUserListFileName);
+    std::string userListFileName = getDefaultConfigFileName(programPath, config->wsConfig.userPasswordListFileName);
     if (!util::fileExists(userListFileName)) {
         runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND,
                                 ERR_LOAD_WS_PASSWD_NOT_FOUND);
@@ -293,7 +293,7 @@ static void wsRun(char *programPath, Configuration* config) {
     }
     authUserService = new AuthUserFile(config->wsConfig.jwtIssuer,
         config->wsConfig.jwtSecret, file2string(userListFileName.c_str()));
-    wsSpecialPathHandler->jwtAuthService = authUserService;
+    wsSpecialPathHandler->authUserService = authUserService;
 
     wsConfig.onSpecialPathHandler = wsSpecialPathHandler;
 #endif
@@ -486,10 +486,10 @@ static void invalidatePaths(char *programPath, Configuration *config)
             config->serverConfig.regionalSettingsStorageName = DEF_REGIONAL_PARAMATERS_CONFIG_FILE_NAME;
         config->serverConfig.regionalSettingsStorageName = getDefaultConfigFileName(programPath, config->serverConfig.regionalSettingsStorageName);;
     }
-    if (!util::fileExists(config->wsConfig.jwtUserListFileName)) {
-        if (config->wsConfig.jwtUserListFileName.empty())
-            config->wsConfig.jwtUserListFileName = DEF_WS_USER_LIST_FILE_NAME;
-        config->wsConfig.jwtUserListFileName = getDefaultConfigFileName(programPath, config->wsConfig.jwtUserListFileName);;
+    if (!util::fileExists(config->wsConfig.userPasswordListFileName)) {
+        if (config->wsConfig.userPasswordListFileName.empty())
+            config->wsConfig.userPasswordListFileName = DEF_WS_USER_LIST_FILE_NAME;
+        config->wsConfig.userPasswordListFileName = getDefaultConfigFileName(programPath, config->wsConfig.userPasswordListFileName);;
     }
     if (!util::fileExists(config->wsConfig.html)) {
         if (config->wsConfig.html.empty())

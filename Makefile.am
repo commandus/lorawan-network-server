@@ -14,6 +14,14 @@ COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 BUILT_SOURCES = $(GEN)
 CLEANFILES = $(GEN)
 
+THIRD_PARTY_LIB =
+THIRD_PARTY_DEF =
+
+if ENABLE_CURL
+THIRD_PARTY_LIB += -lcurl
+THIRD_PARTY_DEF += -DENABLE_CURL
+endif
+
 C_STORAGE = 
 C_QUEUE_STORAGE = 
 LIB_STORAGE = 
@@ -146,16 +154,6 @@ LGW_DEF = -DENABLE_LISTENER_SPI
 endif
 
 #
-# mysql_config --cflags
-# -I/usr/include/mysql
-#
-
-#
-# mysql_config --libs
-# -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -lssl -lcrypto -ldl
-#
-
-#
 # Binaries
 #
 bin_PROGRAMS = lorawan-network-server lora-print print-netid \
@@ -251,10 +249,11 @@ lorawan_network_server_SOURCES = \
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) $(LISTENER_LIB) $(LGW_LIB) \
-    $(BACKEND_DB_LIB) -lcurl $(WS_AUTH_LIB) $(WS_LIB)
+    $(BACKEND_DB_LIB) $(THIRD_PARTY_LIB) $(WS_AUTH_LIB) $(WS_LIB)
 
 lorawan_network_server_CPPFLAGS = $(commoncppflags) \
-    $(BACKEND_DB_DEF) $(LISTENER_DEF) $(LGW_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF) $(WS_DEF)
+    $(BACKEND_DB_DEF) $(LISTENER_DEF) $(LGW_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF) $(WS_DEF) \
+    $(THIRD_PARTY_DEF)
 
 #
 #	Dynamic loaded library (plugins)
@@ -299,8 +298,8 @@ mac_gw_SOURCES = \
 
 mac_gw_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
-    -lcurl $(BACKEND_DB_LIB)
-mac_gw_CPPFLAGS = $(commoncppflags)
+    $(BACKEND_DB_LIB)
+mac_gw_CPPFLAGS = $(commoncppflags) $(THIRD_PARTY_DEF)
 
 mac_ns_SOURCES = \
 	mac-ns.cpp macgw-config-json.cpp config-json.cpp \
@@ -312,7 +311,7 @@ mac_ns_SOURCES = \
 	third_party/argtable3/argtable3.c
 mac_ns_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
-    -lcurl $(BACKEND_DB_LIB)
+    $(BACKEND_DB_LIB)
 mac_ns_CPPFLAGS = $(commoncppflags)
 
 dev_payload_SOURCES = \
@@ -323,7 +322,7 @@ dev_payload_SOURCES = \
 	third_party/argtable3/argtable3.c
 dev_payload_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
-    -lcurl $(BACKEND_DB_LIB)
+    $(BACKEND_DB_LIB)
 dev_payload_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
@@ -333,7 +332,7 @@ proto_db_SOURCES = \
 	
 proto_db_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
-    -lpthread -lcurl $(BACKEND_DB_LIB)
+    -lpthread $(BACKEND_DB_LIB)
 proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 lora_print_SOURCES = \
@@ -343,7 +342,7 @@ lora_print_SOURCES = \
 	$(BACKEND_DB_SRC) $(C_STORAGE)
 lora_print_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
-    -lpthread -lcurl $(BACKEND_DB_LIB)
+    -lpthread $(BACKEND_DB_LIB)
 lora_print_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 print_netid_SOURCES = \
@@ -443,7 +442,7 @@ test_sqlite_SOURCES = \
 	tests/test-sqlite.cpp db-any.cpp  $(BACKEND_DB_SRC)
 test_sqlite_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
-    -lpthread -lcurl $(BACKEND_DB_LIB)
+    -lpthread $(BACKEND_DB_LIB)
 test_sqlite_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 test_fb_SOURCES = \
@@ -465,7 +464,7 @@ test_queue_processor_SOURCES = \
 	db-any.cpp $(BACKEND_DB_SRC) \
 test_queue_processor_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
-    -lpthread -lcurl $(BACKEND_DB_LIB)
+    -lpthread $(BACKEND_DB_LIB)
 test_queue_processor_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 test_region_band_file_json_SOURCES = \

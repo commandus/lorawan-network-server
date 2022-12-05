@@ -2,6 +2,8 @@
 
 #ifdef ENABLE_JWT
 #include "jwt-cpp/jwt.h"
+#else
+#include <sstream>
 #endif
 
 AuthUserService::AuthUserService(
@@ -23,12 +25,18 @@ std::string AuthUserService::jwtClaims(
     .set_type("JWS");
 
     for (std::map<std::string, std::string>::const_iterator it(claims.begin()); it != claims.end(); it++) {
-        token.set_payload_claim(it->first, jwt::claim(it->second));
+        // do not add password
+        if (it->first != "password")
+            token.set_payload_claim(it->first, jwt::claim(it->second));
     }
 
     return token.sign(jwt::algorithm::hs256{ secret });
 #else
-    return "";
+    std::stringstream ss;
+    for (std::map<std::string, std::string>::const_iterator it(claims.begin()); it != claims.end(); it++) {
+        ss << it->first << "=" << it->second << "&";
+    }
+    return ss.str();
 #endif
 
 }

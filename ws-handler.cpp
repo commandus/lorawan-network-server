@@ -16,10 +16,10 @@
 
 WsSpecialPathHandler::WsSpecialPathHandler()
     : versionString(LNS_VERSION_STR), config(nullptr),
-        configDatabases(nullptr), regionalParameterChannelPlans(nullptr),
-        identityService(nullptr), gatewayList(nullptr),
-        gatewayStatService(nullptr), deviceStatService(nullptr),
-        loggerParser(nullptr), jwtAuthService(nullptr)
+      configDatabases(nullptr), regionalParameterChannelPlans(nullptr),
+      identityService(nullptr), gatewayList(nullptr),
+      gatewayStatService(nullptr), deviceStatService(nullptr),
+      loggerParser(nullptr), authUserService(nullptr)
 {
 
 }
@@ -81,14 +81,13 @@ int WsSpecialPathHandler::handle(
         return 200;
     }
 
-    if (jwtAuthService) {
+    if (authUserService) {
         if (p.find("/token") == 0) {
-            content = jwtAuthService->getJWT(params["user"], params["password"]);
+            content = authUserService->getToken(params["user"], params["password"]);
             contentType = "text/plain";
             return 200;
         }
     }
-
 
     // Paths with authorization required
     if (p.find("/config") == 0) {

@@ -86,7 +86,7 @@ class WebServiceConfig {
         // JWT
         std::string jwtIssuer;
         std::string jwtSecret;
-        std::string jwtUserListFileName;
+        std::string userPasswordListFileName;
 		
 		void clear();
 		WebServiceConfig();

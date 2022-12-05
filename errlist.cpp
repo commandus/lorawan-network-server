@@ -1,7 +1,7 @@
 #include <string.h>
 #include "errlist.h"
 
-#define ERR_COUNT 169
+#define ERR_COUNT 172
 
 // used by strerror_lorawan_ns()
 static const char *errList[ERR_COUNT] = {
@@ -25,7 +25,9 @@ static const char *errList[ERR_COUNT] = {
 	ERR_SOCKET_READ,
 	ERR_SOCKET_WRITE,
 	ERR_SOCKET_NO_ONE,
-	ERR_SELECT,
+    ERR_SOCKET_CONNECT,
+    ERR_SOCKET_ADDRESS,
+    ERR_SELECT,
 	ERR_INVALID_PACKET,
 	ERR_INVALID_JSON,
 	ERR_DEVICE_ADDRESS_NOTFOUND,
