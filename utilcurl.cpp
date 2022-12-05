@@ -56,6 +56,9 @@ int postString(
 
 #ifdef _MSC_VER
 #include <WinSock2.h>
+typedef unsigned long in_addr_t;
+#include <io.h>
+
 #else
 #include <sys/socket.h>
 #include <netdb.h>
