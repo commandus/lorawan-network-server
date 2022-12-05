@@ -7,7 +7,7 @@
  * @brief POST data string 
  */
 int postString(
-    std::string &retval,
+    std::string &retVal,
     const std::string &url,
     const std::string &data,
     const std::string &authorizationHeader,  ///< e.g. "key=authToken"

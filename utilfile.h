@@ -49,7 +49,9 @@ public:
     std::string path;
     std::string query;
     URL(const std::string &url);
+    // get query parameter value (first one)
     std::string get(const std::string &name);
+    // get query parameter value as integer (first one)
     int getInt(const std::string &name);
 };
 

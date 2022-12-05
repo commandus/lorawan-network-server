@@ -15,8 +15,8 @@ public:
 
     // return true if user authorized
     virtual bool verify(const std::string &user, const std::string &password) = 0;
-    // return empty string if not authorized
-    virtual std::string getJWT(const std::string &user, const std::string &password) = 0;
+    // return empty string if not authorized, or JWT token
+    virtual std::string getToken(const std::string &user, const std::string &password) = 0;
 };
 
 #endif

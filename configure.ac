@@ -24,6 +24,15 @@ case "${host_os}" in
 esac
 AM_CONDITIONAL([OS_MACH], [test "$build_mac" = "yes"])
 
+AC_ARG_ENABLE([curl],
+[  --enable-curl    Turn on CURL library],
+[case "${enableval}" in
+  yes) curl=true ;;
+  no)  curl=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-curl]) ;;
+esac],[curl=false])
+AM_CONDITIONAL([ENABLE_CURL], [test x$curl = xtrue])
+
 AC_ARG_ENABLE([pkt2],
 [  --enable-pkt2    Turn on PKT2 packet parser],
 [case "${enableval}" in
@@ -207,6 +216,11 @@ LDFLAGS="$LDFLAGS -L/usr/local/lib"
 
 # Checks for header files. Add /usr/local/include for OS X.
 CFLAGS="$CFLAGS -I/usr/local/include"
+
+AC_MSG_NOTICE([Third party libraries:])
+if test x$curl = xtrue; then
+AC_MSG_NOTICE([  CURL on])
+fi
 
 AC_MSG_NOTICE([Databases:])
 if test x$db_postgres = xtrue; then

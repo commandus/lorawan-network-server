@@ -19,7 +19,6 @@
 #include "dev-addr.h"
 
 #include "lora-radio.h"
-#include "system/crypto/aes.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"

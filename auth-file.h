@@ -15,7 +15,7 @@ public:
     // return true if user authorized
     bool verify(const std::string &user, const std::string &password) override;
     // return empty string if not authorized
-    std::string getJWT(const std::string &user, const std::string &password) override;
+    std::string getToken(const std::string &user, const std::string &password) override;
 };
 
 #endif

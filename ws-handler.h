@@ -24,7 +24,7 @@ public:
     GatewayStatService *gatewayStatService;
     DeviceStatService *deviceStatService;
     void *loggerParser;
-    AuthUserService *jwtAuthService;
+    AuthUserService *authUserService;
 
     WsSpecialPathHandler();
     int handle(
