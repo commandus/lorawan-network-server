@@ -164,13 +164,11 @@ int PayloadInsertPlugins::push(
     const std::string &file
 )
 {
-    // HINSTANCE
-    void *handle;
+    HINSTANCE handle;
 #ifdef _MSC_VER
-    HINSTANCE handle = LoadLibraryA(file.c_str());
+    handle = LoadLibraryA(file.c_str());
     if (handle) {
         handles.push_back(handle);
-        ProcAdd = (MYPROC) GetProcAddress(hinstLib, "myPuts");
 
         Payload2InsertPluginInitFuncs fs;
         fs.init = (pluginInitFunc) GetProcAddress(handle, FUNC_NAME_INIT);
