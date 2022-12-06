@@ -22,6 +22,13 @@
  */
 #include <sstream>
 
+#ifdef _MSC_VER
+#include <Windows.h>
+#else
+#include <sys/time.h>
+#include <unistd.h>
+#endif
+
 #include "platform.h"
 #include "receiver-queue-processor.h"
 #include "udp-socket.h"
@@ -29,10 +36,6 @@
 #include "utildate.h"
 #include "errlist.h"
 
-#ifndef _MSC_VER
-#include <sys/time.h>
-#include <unistd.h>
-#endif
 
 #include "logger-huffman/logger-parse.h"
 #include "utilthread.h"

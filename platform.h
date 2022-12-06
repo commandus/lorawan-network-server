@@ -2,8 +2,6 @@
 #define PLATFORM_H 1
 
 #ifdef _MSC_VER
-#include <Windows.h>
-
 #define	SYSLOG(msg)
 #define OPEN_SYSLOG()
 #define CLOSE_SYSLOG()

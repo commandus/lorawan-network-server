@@ -1,6 +1,7 @@
 #ifdef _MSC_VER
 #pragma warning(disable : 4996)
 #define _CRT_SECURE_NO_WARNINGS
+#include <Windows.h>
 #include <io.h>
 #else
 #include <sys/time.h>
