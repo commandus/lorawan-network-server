@@ -1,6 +1,12 @@
 #ifndef PAYLOAD_INSERT_PLUGIN_H_
 #define PAYLOAD_INSERT_PLUGIN_H_	1
 
+#ifdef _MSC_VER
+#include <Windows.h>
+#else
+typedef void * HINSTANCE;
+#endif
+
 #include "payload-insert.h"
 #include "log-intf.h"
 
@@ -24,7 +30,7 @@ class DatabaseByConfig;
 class PayloadInsertPlugins
 {
 private:
-    std::vector<void *> handles;
+    std::vector<HINSTANCE> handles;
     std::vector<Payload2InsertPluginInitFuncs> funcs;
 protected:
     int push(const std::string &file);

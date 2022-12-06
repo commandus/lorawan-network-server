@@ -1,6 +1,6 @@
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
-#pragma warning(suppress : 4996)
+#pragma warning(disable : 4996)
 #endif
 
 #include "utilcurl.h"

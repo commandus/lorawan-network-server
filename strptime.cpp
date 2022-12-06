@@ -31,7 +31,7 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #ifdef _MSC_VER
-#pragma warning(suppress : 4996)
+#pragma warning(disable : 4996)
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "strptime.h"

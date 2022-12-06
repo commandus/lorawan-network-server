@@ -1,11 +1,6 @@
 #ifdef _MSC_VER
-#pragma warning(suppress : 4996)
+#pragma warning(disvale : 4996)
 #define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#include <sstream>
-#include "packet-queue.h"
-#ifdef _MSC_VER
 #include <io.h>
 #else
 #include <sys/time.h>
@@ -15,6 +10,7 @@
 
 #include <iostream>
 
+#include "packet-queue.h"
 #include "utildate.h"
 #include "utilstring.h"
 #include "utilthread.h"
