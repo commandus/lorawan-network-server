@@ -50,7 +50,7 @@ bool util::rmAllDir(const char *path)
 {
 	if (&path == NULL)
 		return false;
-	int sz = strlen(path);
+	size_t sz = strlen(path);
 	if (sz <= 1)
 		return false;	// prevent "rm -r /"
 	char fp[MAX_PATH];
@@ -68,6 +68,7 @@ bool util::rmAllDir(const char *path)
 		NULL };
 
 	SHFileOperationA(&shfo);
+    return true;
 }
 
 bool util::rmDir(const std::string &path)
@@ -80,6 +81,9 @@ bool util::rmDir(const std::string &path)
 	WIN32_FIND_DATAA fdFile;
 	HANDLE hFind;
 	char sPath[MAX_PATH];
+#ifdef _MSC_VER
+    #define _CRT_SECURE_NO_WARNINGS
+#endif
 	sprintf(sPath, "%s\\*.*", sDir);
 	if ((hFind = FindFirstFileA(sPath, &fdFile)) == INVALID_HANDLE_VALUE)
 		return false;
@@ -143,7 +147,6 @@ size_t util::filesInPath
 
 bool util::fileExists(const std::string &fileName)
 {
-    struct stat r;
     return _access(fileName.c_str(), F_OK) != -1;
 }
 
@@ -423,5 +426,5 @@ int URL::getInt(
     std::string s = get(name);
     if (s.empty())
         return 0;
-    return strtoll(s.c_str(), nullptr, 10);
+    return (int) strtoll(s.c_str(), nullptr, 10);
 }

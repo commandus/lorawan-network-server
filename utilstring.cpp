@@ -32,7 +32,10 @@ bool string2file(
 	const std::string &value
 )
 {
-	FILE* f = fopen(filename.c_str(), "w");
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+    FILE* f = fopen(filename.c_str(), "w");
 	if (!f)
 		return false;
 	fwrite(value.c_str(), value.size(), 1, f);

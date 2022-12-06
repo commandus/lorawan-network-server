@@ -175,10 +175,10 @@ time_t gps2utc(
 
 uint32_t utc2gps(time_t value) {
 	// Epoch diff adjustment.
-	uint32_t gps = value - gpsUnixEpochDiff;
+	time_t gps = value - gpsUnixEpochDiff;
 	// Account for leap seconds between 1980 epoch and gpsMS.
 	gps += countLeaps(gps, true);
-	return gps;
+	return (uint32_t) gps;
 }
 
 std::string timeval2string(
@@ -187,6 +187,9 @@ std::string timeval2string(
 {
 	char buf[64];
 	const time_t t = val.tv_sec;	// time_t 32/64 bits
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 	struct tm *tm = localtime(&t);
 	strftime(buf, sizeof(buf), dateformat0, tm);
 	std::stringstream ss;

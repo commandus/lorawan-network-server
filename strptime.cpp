@@ -102,14 +102,12 @@ static const char *ampm[] = {
 * index of the matching string (or -1 if none).  Also advance buf.
 */
 
-static int
-match_string(const char **buf, const char **strs)
+static int match_string(const char **buf, const char **strs)
 {
 	int i = 0;
 
 	for (i = 0; strs[i] != NULL; ++i) {
-		int len = strlen(strs[i]);
-
+		size_t len = strlen(strs[i]);
 		if (stricmp(*buf, strs[i]) == 0) {
 			*buf += len;
 			return i;

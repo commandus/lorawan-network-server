@@ -1,6 +1,7 @@
 #include <sstream>
 #include "packet-queue.h"
 #ifdef _MSC_VER
+#include <io.h>
 #else
 #include <sys/time.h>
 #include <sys/eventfd.h>
@@ -215,7 +216,7 @@ int PacketQueue::diffMicroSeconds(
 	int64_t r = 1000000 * ds + (t2.tv_usec - t1.tv_usec);
 	if (r < 0)
 		r = 0;
-	return r;
+	return (int) r;
 }
 
 size_t PacketQueue::count()
@@ -258,7 +259,7 @@ bool PacketQueue::getFirstExpired(
 	}
 
 	// get packet with received signal strength indicator. Worst is -85 dBm.
-	float lsnr = -3.402823466E+38;
+	float lsnr = -3.402823466E+38f;
 	uint64_t gwid;
 	std::vector<SemtechUDPPacketItem>::const_iterator pit(it->second.packets.begin());
 	if (pit == it->second.packets.end()) {
@@ -350,6 +351,10 @@ std::string PacketQueue::toString() const
 	}
 	return ss.str();
 }
+
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 
 // immediately send ACK
 int PacketQueue::ack
@@ -555,7 +560,6 @@ int PacketQueue::replyControl(
 ) {
 
 	// to reply via the closest gateway, find out gateway with best SNR
-	float snr;
 
     const RegionalParameterChannelPlan *regionalParameterChannelPlan;
     if (deviceChannelPlan)

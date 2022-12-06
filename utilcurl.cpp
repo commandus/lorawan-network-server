@@ -58,8 +58,8 @@ int postString(
 #include <WinSock2.h>
 typedef unsigned long in_addr_t;
 #include <io.h>
-
 #else
+#define SOCKET int
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -84,7 +84,7 @@ int postString(
 ) {
     URL uri(url);
 
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
         return ERR_CODE_SOCKET_CREATE;
     }
