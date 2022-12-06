@@ -515,10 +515,7 @@ void RunListener::init(
     // Set up processor
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_START_PACKET_PROCESSOR);
     processor = new LoraPacketProcessor();
-    processor->setLogger(
-    [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
-        logMessage(env, level, moduleCode, errorCode, message);
-    });
+    processor->setLogger(this);
     processor->setIdentityService(identityService);
     processor->setGatewayList(gatewayList);
     processor->setReceiverQueueService(receiverQueueService);

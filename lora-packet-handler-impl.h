@@ -33,13 +33,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
 		ReceiverQueueProcessor *receiverQueueProcessor;
 		PacketQueue packetQueue;
 
-		std::function<void(
-			void *env,
-			int level,
-			int modulecode,
-			int errorcode,
-			const std::string &message
-		)> onLog;
+		LogIntf *onLog;
 	public:
 		static void addTimeWindow1(struct timeval &value);
 		static void addTimeWindow2(struct timeval &value);
@@ -64,14 +58,7 @@ class LoraPacketProcessor: public LoraPacketHandler, PacketHandler {
                 const struct timeval &time,
                 SemtechUDPPacket &packet
 		);
-		void setLogger(
-			std::function<void(
-				void *env,
-				int level,
-				int modulecode,
-				int errorcode,
-				const std::string &message
-		) > value);
+		void setLogger(LogIntf *value);
 		int enqueuePayload(
                 const struct timeval &time,
                 SemtechUDPPacket &value

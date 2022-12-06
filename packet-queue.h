@@ -18,6 +18,7 @@
 #include "device-history-service-abstract.h"
 #include "gateway-list.h"
 #include "device-channel-plan.h"
+#include "log-intf.h"
 
 // default delay in ms
 #define DEF_DELAY_MS 500
@@ -69,13 +70,7 @@ class PacketQueue {
 		std::mutex mutexq;
 		std::thread *threadSend;
 		// void runner(PacketHandler &value);
-		std::function<void(
-			void *env,
-			int level,
-			int modulecode,
-			int errorcode,
-			const std::string &message
-		)> onLog;
+		LogIntf *onLog;
 
 		int fdWakeup;
 		IdentityService *identityService;
@@ -141,14 +136,7 @@ class PacketQueue {
 		void wakeUp();
 		int diffMicroSeconds(struct timeval &t1, struct timeval &t2);
 		std::string toString() const;
-		void setLogger(
-			std::function<void(
-				void *env,
-				int level,
-				int modulecode,
-				int errorcode,
-				const std::string &message
-		) > value);
+		void setLogger(LogIntf *value);
 
     void setDeviceChannelPlan(const DeviceChannelPlan *value);
 };
