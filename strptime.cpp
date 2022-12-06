@@ -31,6 +31,7 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
 
 #include "strptime.h"
 #include "string.h"
@@ -104,9 +105,7 @@ static const char *ampm[] = {
 
 static int match_string(const char **buf, const char **strs)
 {
-	int i = 0;
-
-	for (i = 0; strs[i] != NULL; ++i) {
+	for (size_t i = 0; strs[i] != nullptr; ++i) {
 		size_t len = strlen(strs[i]);
 		if (stricmp(*buf, strs[i]) == 0) {
 			*buf += len;

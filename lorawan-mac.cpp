@@ -2044,9 +2044,5 @@ std::string MAC_COMMANDRequest2binary(
 	MAC_COMMAND &c
 )
 {
-	switch (c.command) {
-		default:
-			return std::string((const char *) &c, 1);
-	}
-	return "";
+	return std::string((const char *) &c, 1);
 }

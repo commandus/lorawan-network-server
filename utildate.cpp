@@ -181,7 +181,7 @@ uint32_t utc2gps(time_t value) {
 	// Epoch diff adjustment.
 	time_t gps = value - gpsUnixEpochDiff;
 	// Account for leap seconds between 1980 epoch and gpsMS.
-	gps += countLeaps(gps, true);
+	gps += countLeaps((uint32_t) gps, true);
 	return (uint32_t) gps;
 }
 

@@ -1519,7 +1519,7 @@ int rfmMetaData::parseRX(
 			try {
 				// base64
 				retData = base64_decode(v.GetString());
-			} catch (const std::exception& e) {
+			} catch (const std::exception&) {
 				retData = "";
 			}
 
@@ -1562,7 +1562,7 @@ int rfmMetaData::parseTX(
     if (value.HasMember(METADATA_TX_NAMES[4])) {
         rapidjson::Value &v = value[METADATA_TX_NAMES[4]];
         if (v.IsDouble()) {
-            freq = v.GetDouble() * 1000000;
+            freq = (uint32_t) (v.GetDouble() * 1000000);
         }
     }
 
@@ -1613,7 +1613,7 @@ int rfmMetaData::parseTX(
             try {
                 // base64
                 retData = base64_decode(v.GetString());
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 retData = "";
             }
 
@@ -1911,7 +1911,7 @@ int SemtechUDPPacket::parse
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
 
-	for (int i = 0; i < rxpk.Size(); i++) {
+	for (size_t i = 0; i < rxpk.Size(); i++) {
 		rapidjson::Value &jm = rxpk[i];
 		if (!jm.IsObject())
 			return ERR_CODE_INVALID_JSON;
@@ -2191,7 +2191,9 @@ std::string SemtechUDPPacket::serialize2RfmPacket() const
 	std::string rs = ss.str();
 	// calc MIC
 	const KEY128 *key = &devId.nwkSKey;
-	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(), rs.size(), header.header.fcnt, direction, header.header.devaddr, *key);
+	uint32_t mic = calculateMIC((const unsigned char*) rs.c_str(),
+        (unsigned char ) rs.size(), header.header.fcnt,
+        direction, header.header.devaddr, *key);
 	// load MIC in package
 	// mic = NTOH4(mic);
 	ss << std::string((char *) &mic, 4);
@@ -2424,7 +2426,7 @@ int SemtechUDPPacket::parseData(
     switch (header.header.macheader.f.mtype) {
         case MTYPE_JOIN_REQUEST:
         {
-            int payloadSize = data.size() - sizeof(MHDR) - sizeof(uint32_t);
+            size_t payloadSize = data.size() - sizeof(MHDR) - sizeof(uint32_t);
             payload = data.substr(sizeof(MHDR), payloadSize);
             errcode = ERR_CODE_IS_JOIN;
             return errcode;
@@ -2450,10 +2452,12 @@ int SemtechUDPPacket::parseData(
 			unsigned char direction = downlink ? 1 : 0;
 			// calc MIC
 			uint32_t mic = getMic(data);
-			uint32_t micCalc = calculateMIC((const unsigned char*) data.c_str(), data.size() - 4, header.header.fcnt, direction, header.header.devaddr, devId.nwkSKey);
+			uint32_t micCalc = calculateMIC((const unsigned char*) data.c_str(),
+                (unsigned char ) data.size() - 4, header.header.fcnt,
+                direction, header.header.devaddr, devId.nwkSKey);
 			errcode = mic == micCalc ? LORA_OK : ERR_CODE_INVALID_MIC; 
 			if (errcode == LORA_OK) {
-				int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
+				size_t payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
 				if (payloadSize > 0) {
 					// FHDR FPort Fopts
 					std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
@@ -2503,7 +2507,7 @@ uint64_t SemtechUDPPacket::getBestGatewayAddress(
 	float *retvalLsnr
 ) const
 {
-	float f = -3.402823466E+38;
+	float f = -3.402823466E+38f;
 	uint64_t r = 0;
 	for (std::vector<rfmMetaData>::const_iterator it(metadata.begin()); it != metadata.end(); it++)
 	{
@@ -2648,7 +2652,7 @@ std::string SemtechUDPPacket::mkPullResponse(
 	RFMHeader rfmHeader(*getRfmHeader());
 
 	// encrypt frame payload
-	int direction = 1;	// downlink
+	uint8_t direction = 1;	// downlink
 	std::string frmPayload(data);
 	size_t payloadSize = frmPayload.size();
 	if (deviceId.version.minor == 1) {
@@ -2677,7 +2681,9 @@ std::string SemtechUDPPacket::mkPullResponse(
 
 	std::string msg = sMsg.str();
 	// calc mic
-	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, deviceId.nwkSKey);
+	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(),
+        (unsigned char) msg.size(), rfmHeader.header.fcnt,
+        direction, rfmHeader.header.devaddr, deviceId.nwkSKey);
 	sMsg << std::string((char *) &mic, 4);
 	return toTxJsonString(sMsg.str(), receivedTime, power);
 }
@@ -2720,7 +2726,7 @@ std::string SemtechUDPPacket::mkPushDataPacket(
     // encrypt frame payload
     std::string frmPayload(payload);
     size_t payloadSize = frmPayload.size();
-    int direction = rfmHeader.header.macheader.f.mtype & 1;    // MTYPE_UNCONFIRMED_DATA_UP -> 0, MTYPE_CONFIRMED_DATA_UP -> 0, MTYPE_UNCONFIRMED_DATA_DOWN -> 1, MTYPE_CONFIRMED_DATA_DOWN -> 1,..\    // copy macheader, addr, fCnt form received packet
+    uint8_t direction = rfmHeader.header.macheader.f.mtype & 1;    // MTYPE_UNCONFIRMED_DATA_UP -> 0, MTYPE_CONFIRMED_DATA_UP -> 0, MTYPE_UNCONFIRMED_DATA_DOWN -> 1, MTYPE_CONFIRMED_DATA_DOWN -> 1,..\    // copy macheader, addr, fCnt form received packet
     if (networkIdentity.version.minor == 1) {
         encryptPayload(frmPayload, rfmHeader.header.fcnt, direction, rfmHeader.header.devaddr, networkIdentity.nwkSKey);	// network key
     } else {
@@ -2746,7 +2752,8 @@ std::string SemtechUDPPacket::mkPushDataPacket(
 
     std::string msg = sMsg.str();
     // calc mic
-    uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt, direction,
+    uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(),
+        (unsigned char) msg.size(), rfmHeader.header.fcnt, direction,
                                 rfmHeader.header.devaddr, networkIdentity.nwkSKey);
     sMsg << std::string((char *) &mic, 4);
 
@@ -2792,7 +2799,7 @@ std::string SemtechUDPPacket::mkMACRequest(
 	RFMHeader rfmHeader;
 
 	// encrypt frame payload
-	int direction = 0;	// uplink
+	uint8_t direction = 0;	// uplink
 	std::string frmPayload(data);
 	size_t pSize = frmPayload.size();
 
@@ -2822,7 +2829,8 @@ std::string SemtechUDPPacket::mkMACRequest(
 
 	std::string msg = ssMsg.str();
 	// calc mic
-	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(), msg.size(), rfmHeader.header.fcnt,
+	uint32_t mic = calculateMIC((const unsigned char*) msg.c_str(),
+        (unsigned char) msg.size(), (unsigned int) rfmHeader.header.fcnt,
 		direction, rfmHeader.header.devaddr, networkId.nwkSKey);
 	ssMsg << std::string((char *) &mic, 4);
 	return toTxJsonString(ssMsg.str(), 0, power);
@@ -3012,7 +3020,7 @@ void string2NETID(
 	const char *value
 ) {
 	std::string str = hex2string(value);
-	int len = str.size();
+	size_t len = str.size();
 	if (len > sizeof(NETID))
 		len = sizeof(NETID);
 	memmove(&retval, str.c_str(), len);
@@ -3025,7 +3033,7 @@ void string2FREQUENCY(
 	const char *value
 ) {
 	std::string str = hex2string(value);
-	int len = str.size();
+	size_t len = str.size();
 	if (len > sizeof(FREQUENCY))
 		len = sizeof(FREQUENCY);
 	memmove(&retval, str.c_str(), len);
@@ -3038,7 +3046,7 @@ void string2JOINNONCE(
 	const char *value
 ) {
 	std::string str = hex2string(value);
-	int len = str.size();
+	size_t len = str.size();
 	if (len > sizeof(JOINNONCE))
 		len = sizeof(JOINNONCE);
 	memmove(&retval, str.c_str(), len);
@@ -3099,7 +3107,7 @@ uint8_t loraMargin(
 {
 	if (spreadingFactor >= 12)
 		spreadingFactor = 11;
-	int r = (loraSNR - SpreadFactorToRequiredSNR[spreadingFactor] + 0.5);	// round
+	int r = (int) (loraSNR - SpreadFactorToRequiredSNR[spreadingFactor] + 0.5);	// round
 	if (r < 0)
 		r = 0;
 	if (r > 254)
