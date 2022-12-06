@@ -20,6 +20,10 @@ option(ENABLE_MQTT "Build with MQTT" OFF)
 option(ENABLE_CURL "Build with CURL" OFF)
 option(ENABLE_JWT  "Build with JWT" OFF)
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	set(LIB_OS_SPECIFIC_SOURCE usleep.cpp)
+endif ()
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
@@ -103,7 +107,7 @@ set(LIBLORAWANSRC
 	gateway-stat-service-abstract.cpp semtech-pull-resp-packet.cpp receiver-queue-service.cpp
 	semtech-metadata-tx.cpp auth-file.cpp auth-user.cpp payload-insert-plugin.cpp
     utilthread.cpp
-	${SRC_AES}
+	${SRC_AES} ${LIB_OS_SPECIFIC_SOURCE}
 	third_party/base64/base64.cpp
 )
 

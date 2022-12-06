@@ -181,6 +181,10 @@ LIBLORAWANSRC = \
 	semtech-metadata-tx.cpp database-config-json.cpp auth-user.cpp payload-insert-plugin.cpp \
 	$(SRC_AES) third_party/base64/base64.cpp
 
+if OS_WINDOWS
+    LIBLORAWANSRC += usleep.cpp
+endif
+
 #
 #	Static library
 #
@@ -217,7 +221,7 @@ nobase_dist_include_HEADERS = \
 	db-identity.h identity-service-lmdb.h identity-service-dir-txt.h \
 	gateway-stat-service-abstract.h gateway-stat-service-file.h gateway-stat-service-post.h \
 	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h gateway-settings.h \
-	payload-insert.h payload-insert-plugin.h log-intf.h \
+	payload-insert.h payload-insert-plugin.h log-intf.h usleep.h \
 	auth-user.h auth-file.h \
 	third_party/filewatch.hpp \
 	third_party/argtable3/argtable3.h \

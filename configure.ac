@@ -14,6 +14,29 @@ AC_PROG_INSTALL
 
 LT_INIT
 
+# determine target OS
+build_linux=no
+build_windows=no
+build_mac=no
+case "${host_os}" in
+    linux*)
+        build_linux=yes
+        ;;
+    cygwin*|mingw*)
+        build_windows=yes
+        ;;
+    darwin*)
+        build_mac=yes
+        ;;
+    *)
+        AC_MSG_ERROR(["OS $host_os is not supported"])
+        ;;
+esac
+# Pass the conditionals to automake
+AM_CONDITIONAL([OS_LINUX], [test "$build_linux" = "yes"])
+AM_CONDITIONAL([OS_WINDOWS], [test "$build_windows" = "yes"])
+AM_CONDITIONAL([OS_MAC], [test "$build_mac" = "yes"])
+
 AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
 build_mac=no
 # Detect the target system
