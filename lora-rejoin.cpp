@@ -205,7 +205,7 @@ uint32_t calcJoinAcceptMIC(
 	}
 	std::cerr << "size of " << sz << std::endl;
 
-	AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) p, sz);
+	AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) p, (uint32_t) sz);
 	uint8_t mic[16];
 	AES_CMAC_Final(mic, &aesCmacCtx);
     r = (uint32_t) ((uint32_t)mic[3] << 24 | (uint32_t)mic[2] << 16 | (uint32_t)mic[1] << 8 | (uint32_t)mic[0] );
