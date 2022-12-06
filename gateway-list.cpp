@@ -119,7 +119,7 @@ int GatewayList::parse(
 {
 	if (!value.IsArray())
 		return ERR_CODE_INVALID_JSON;
-	for (size_t i = 0; i < value.Size(); i++) {
+	for (rapidjson::SizeType i = 0; i < value.Size(); i++) {
 		GatewayStat stat;
 		if (int r = stat.parse(value[i])) {
 			errmessage = strerror_lorawan_ns(r);

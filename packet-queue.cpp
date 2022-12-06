@@ -11,6 +11,7 @@
 #include <sstream>
 #include <iostream>
 
+#include "platform.h"
 #include "packet-queue.h"
 #include "utildate.h"
 #include "utilstring.h"

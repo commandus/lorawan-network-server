@@ -43,7 +43,9 @@ void setThreadName(
     const char* threadName
 )
 {
-    DWORD threadId = ::GetThreadId( static_cast<HANDLE>(thread.native_handle() ) );
+    if (!thread)
+        return;
+    DWORD threadId = ::GetThreadId( static_cast<HANDLE>(thread->native_handle() ) );
     setThreadNameById(threadId, threadName);
 }
 
