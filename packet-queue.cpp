@@ -118,13 +118,8 @@ void PacketQueue::setGatewayList
 }
 
 void PacketQueue::setLogger(
-	std::function<void(
-		void *env,
-		int level,
-		int modulecode,
-		int errorcode,
-		const std::string &message
-)> value) {
+    LogIntf *value
+) {
 	onLog = value;
 }
 
@@ -196,7 +191,7 @@ void PacketQueue::push(
     if (onLog) {
         std::stringstream ss;
         ss << MSG_PUSH_PACKET_QUEUE << timeval2string(time2send);
-        onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
+        onLog->logMessage(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
     }
 }
 
@@ -387,7 +382,7 @@ int PacketQueue::ack
 				<< UDPSocket::addrString((const struct sockaddr *) gwAddress)
 				<< " " << rr << ": " << strerror_lorawan_ns(rr)
 				<< ", errno: " << errno << ": " << strerror(errno);
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
 		} else {
 			std::stringstream ss;
 			ss << MSG_SENT_ACK_TO
@@ -395,7 +390,7 @@ int PacketQueue::ack
 				<< ", tag: " << (int) response.tag
 				<< ", token: " << std::hex << dataprefix.token
 				<< ", data: " <<  hexString(std::string((const char *) &response, sizeof(SEMTECH_ACK)));
-			onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+			onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	return rr;
@@ -425,7 +420,7 @@ int PacketQueue::replyMAC(
 		std::stringstream ss;
 		ss << ERR_BEST_GATEWAY_NOT_FOUND;
 		if (onLog)
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
 		return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
 	}
 
@@ -438,7 +433,7 @@ int PacketQueue::replyMAC(
 		std::stringstream ss;
 		ss << ERR_NO_MAC << ", packet: " << item.packet.toJsonString();
 		if (onLog)
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 		return ERR_CODE_NO_MAC;
 	}
 	
@@ -448,7 +443,7 @@ int PacketQueue::replyMAC(
 		std::stringstream ss;
 		ss << ERR_GATEWAY_NOT_FOUND << gatewayId2str(gwa);
 		if (onLog)
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
 		return ERR_CODE_GATEWAY_NOT_FOUND;
 	}
 
@@ -457,7 +452,7 @@ int PacketQueue::replyMAC(
         std::stringstream ss;
         ss << ERR_GATEWAY_NO_YET_PULL_DATA << gatewayId2str(gwa);
         if (onLog)
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NO_YET_PULL_DATA, ss.str());
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NO_YET_PULL_DATA, ss.str());
         return ERR_CODE_GATEWAY_NO_YET_PULL_DATA;
     }
 
@@ -479,7 +474,7 @@ int PacketQueue::replyMAC(
             ss << ", \"mac_error_code\": " << macPtr.errorcode
                << ", \"mac_error\": \"" << strerror_lorawan_ns(macPtr.errorcode) << "\"";
         }
-        onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+        onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
     }
 
     // make response
@@ -497,7 +492,7 @@ int PacketQueue::replyMAC(
 		} else {
 			if (onLog) {
 				ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
-				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
+				onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
 			}
 		}
 	}
@@ -535,14 +530,14 @@ int PacketQueue::replyMAC(
 				ss << ", sent " << r << " of " << response.size();
 			ss << ", errno: " << errno << ": " << strerror(errno);
 			if (onLog)
-				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
+				onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
 		} else {
 			std::stringstream ss;
 			ss << MSG_SENT_REPLY_TO
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
 				<< " " << MSG_PAYLOAD << ": " << hexString(response) << ", size: " << response.size();
 			if (onLog)
-				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+				onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	return LORA_OK;
@@ -577,7 +572,7 @@ int PacketQueue::replyControl(
 		if (onLog) {
 			std::stringstream ss;
 			ss << ERR_INVALID_CONTROL_PACKET << ", " << MSG_SIZE << ": " << sz << MSG_IS_TOO_SMALL;
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 		}
 		return ERR_CODE_INVALID_CONTROL_PACKET;
 	}
@@ -596,14 +591,14 @@ int PacketQueue::replyControl(
             if (onLog) {
                 std::stringstream ss;
                 ss << ERR_BEST_GATEWAY_NOT_FOUND;
-                onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
+                onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
             }
             return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
         } else {
             if (onLog) {
                 std::stringstream ss;
                 ss << MSG_GATEWAY_SNR << snr << ", gateway: " << uint64_t2string(controlPacket->header.gwid);
-                onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
+                onLog->logMessage(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
             }
         }
     }
@@ -615,7 +610,7 @@ int PacketQueue::replyControl(
             << ", tag: " << (int) controlPacket->header.tag
             << ", MAC " << MSG_PAYLOAD << " size: " << macPayloadSize
             << ", MAC " << MSG_PAYLOAD << ": " << hexString(macPayload);
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_GATEWAY_STAT, ss.str());
 	}
 
 	// find out gateway statistics, required for last gateway port number to send reply
@@ -624,7 +619,7 @@ int PacketQueue::replyControl(
 		std::stringstream ss;
 		ss << ERR_GATEWAY_NOT_FOUND << gatewayId2str(controlPacket->header.gwid);
 		if (onLog)
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
 		return ERR_CODE_GATEWAY_NOT_FOUND;
 	}
 	
@@ -644,7 +639,7 @@ int PacketQueue::replyControl(
 			<< ", \"mac_error\": \"" << strerror_lorawan_ns(macPtr.errorcode) << "\"";
 	}
 	if (onLog)
-		onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+		onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 	// make response
 
 	// get identity for NwkS
@@ -661,7 +656,7 @@ int PacketQueue::replyControl(
 		} else {
 			if (onLog) {
 				ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
-				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
+				onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
 			}
 		}
 	}
@@ -683,7 +678,7 @@ int PacketQueue::replyControl(
             ss << "Successfully sent " << hexString(response)
                 << ", size: " << response.size()
                 << " to " << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr);
-            onLog(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
+            onLog->logMessage(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
         }
     }
 
@@ -696,14 +691,14 @@ int PacketQueue::replyControl(
 				ss << ", sent " << r << " of " << response.size()
 					<< ", errno: " << errno << ": " << strerror(errno)
 					<< ", " << MSG_PAYLOAD << ": " << hexString(response);
-			onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
+			onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
 		} else {
 			std::stringstream ss;
 			ss << MSG_SENT_REPLY_TO
 				<< UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
 				<< " " << MSG_PAYLOAD << ": " << hexString(response) << ", size: " << response.size();
 			if (onLog)
-				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+				onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	return LORA_OK;
@@ -731,7 +726,7 @@ void PacketQueue::runner()
 				std::stringstream ss;
 				ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << errno << ": " << strerror(errno) 
 					<< ", handler " << fdWakeup << ", timeout: " << timeoutMicroSeconds;
-				onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
+				onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
 			}
 			abort();
 		}
@@ -739,7 +734,7 @@ void PacketQueue::runner()
 			if (onLog) {
 				std::stringstream ss;
 				ss << "wakeup is set, reset";
-				onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+				onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 			}
 			uint8_t u = 1;
 			while (read(fdWakeup, &u, sizeof(u)) == sizeof(u));
@@ -768,7 +763,7 @@ void PacketQueue::runner()
                         if (onLog) {
                             std::stringstream ss;
                             ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r);
-                            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, r, ss.str());
+                            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, r, ss.str());
                         }
                     }
                 }
@@ -780,7 +775,7 @@ void PacketQueue::runner()
 					ss << "Control message processing, " << MSG_PAYLOAD << ": "
 						<< hexString(item.packet.payload)
 						<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
-					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+					onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 				}
 				replyControl(item, t);
 				break;
@@ -789,7 +784,7 @@ void PacketQueue::runner()
 					std::stringstream ss;
 					ss << ERR_MESSAGE << ERR_CODE_WRONG_PARAM << ": " << ERR_WRONG_PARAM << " mode: " << (int) mode
 						<< ", socket " << UDPSocket::addrString((const sockaddr *) &item.packet.gatewayAddress);
-					onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+					onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 				}
 				break;
 			}
@@ -801,7 +796,7 @@ void PacketQueue::runner()
 		if (onLog) {
 			std::stringstream ss;
 			ss << "next timeout: " << timeoutMicroSeconds << " microseconds, retval " << retval << std::endl;
-			onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+			onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	mode = 0;	// mode 0- stopped, 1- running, -1- stop request
@@ -893,7 +888,7 @@ int PacketQueue::replyJoinRequest(
             ss << ERR_JOIN_EUI_NOT_MATCHED
                 << " received Join EUI " << DEVEUI2string(joinRequestFrame->joinEUI)
                 << ", expected Join (App) EUI " << DEVEUI2string(nid.appEUI);
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_JOIN_EUI_NOT_MATCHED, ss.str());
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_JOIN_EUI_NOT_MATCHED, ss.str());
         }
         return ERR_CODE_JOIN_EUI_NOT_MATCHED;
     }
@@ -906,7 +901,7 @@ int PacketQueue::replyJoinRequest(
         regionalParameterChannelPlan = deviceChannelPlan->get();
     if (!regionalParameterChannelPlan) {
         if (onLog)
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_REGION_BAND, ERR_NO_REGION_BAND);
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_REGION_BAND, ERR_NO_REGION_BAND);
         return ERR_CODE_NO_REGION_BAND;
     }
 
@@ -918,7 +913,7 @@ int PacketQueue::replyJoinRequest(
         std::stringstream ss;
         ss << ERR_BEST_GATEWAY_NOT_FOUND;
         if (onLog)
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_BEST_GATEWAY_NOT_FOUND, ss.str());
         return ERR_CODE_BEST_GATEWAY_NOT_FOUND;
     }
 
@@ -928,7 +923,7 @@ int PacketQueue::replyJoinRequest(
         std::stringstream ss;
         ss << ERR_GATEWAY_NOT_FOUND << gatewayId2str(gwa);
         if (onLog)
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NOT_FOUND, ss.str());
         return ERR_CODE_GATEWAY_NOT_FOUND;
     }
 
@@ -937,7 +932,7 @@ int PacketQueue::replyJoinRequest(
         std::stringstream ss;
         ss << ERR_GATEWAY_NO_YET_PULL_DATA << gatewayId2str(gwa);
         if (onLog)
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NO_YET_PULL_DATA, ss.str());
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_GATEWAY_NO_YET_PULL_DATA, ss.str());
         return ERR_CODE_GATEWAY_NO_YET_PULL_DATA;
     }
 
@@ -957,7 +952,7 @@ int PacketQueue::replyJoinRequest(
     if (rj) {
         if (onLog) {
             ss << ERR_MESSAGE << rj << ": " << strerror_lorawan_ns(rj);
-            onLog(this, LOG_ERR, LOG_PACKET_QUEUE, rj, ss.str());
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, rj, ss.str());
         }
         // do not reply to the device
         return rj;
@@ -1006,7 +1001,7 @@ int PacketQueue::replyJoinRequest(
         } else {
             if (onLog) {
                 ss << ERR_MESSAGE << ERR_CODE_NO_FCNT_DOWN << ": " << ERR_NO_FCNT_DOWN;
-                onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
+                onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_NO_FCNT_DOWN, ss.str());
             }
             return ERR_CODE_NO_FCNT_DOWN;
         }
@@ -1048,7 +1043,7 @@ int PacketQueue::replyJoinRequest(
             if (errno)
                 ss << ", system errno: " << errno << ": " << strerror(errno);
             if (onLog)
-                onLog(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
+                onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SEND_ACK, ss.str());
         } else {
             std::stringstream ss;
             // log assigned network address
@@ -1062,7 +1057,7 @@ int PacketQueue::replyJoinRequest(
                    << UDPSocket::addrString((const struct sockaddr *) &gwit->second.sockaddr)
                    << ", device address: " << DEVADDR2string(item.packet.header.header.devaddr)
                    << ", " << MSG_PAYLOAD << ": " << hexString(response) << ", size: " << response.size();
-                onLog(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+                onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
             }
         }
     }
