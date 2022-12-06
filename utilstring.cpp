@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "utilstring.h"
 
 #include <stdlib.h>
@@ -32,9 +36,6 @@ bool string2file(
 	const std::string &value
 )
 {
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
     FILE* f = fopen(filename.c_str(), "w");
 	if (!f)
 		return false;

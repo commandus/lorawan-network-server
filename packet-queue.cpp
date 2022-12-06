@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <sstream>
 #include "packet-queue.h"
 #ifdef _MSC_VER
@@ -351,10 +355,6 @@ std::string PacketQueue::toString() const
 	}
 	return ss.str();
 }
-
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
 
 // immediately send ACK
 int PacketQueue::ack

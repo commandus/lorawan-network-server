@@ -1,6 +1,7 @@
-/*
- * @file utilfile.cpp
- */
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <iostream>
 
 #ifdef _MSC_VER
@@ -81,9 +82,6 @@ bool util::rmDir(const std::string &path)
 	WIN32_FIND_DATAA fdFile;
 	HANDLE hFind;
 	char sPath[MAX_PATH];
-#ifdef _MSC_VER
-    #define _CRT_SECURE_NO_WARNINGS
-#endif
 	sprintf(sPath, "%s\\*.*", sDir);
 	if ((hFind = FindFirstFileA(sPath, &fdFile)) == INVALID_HANDLE_VALUE)
 		return false;

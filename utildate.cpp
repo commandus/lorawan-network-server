@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "utildate.h"
 #include <time.h>
 #include <cstdlib>
@@ -187,9 +191,6 @@ std::string timeval2string(
 {
 	char buf[64];
 	const time_t t = val.tv_sec;	// time_t 32/64 bits
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
 	struct tm *tm = localtime(&t);
 	strftime(buf, sizeof(buf), dateformat0, tm);
 	std::stringstream ss;

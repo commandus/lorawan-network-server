@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <iomanip>
 #include <cstring>
 #include <iostream>
@@ -895,7 +899,7 @@ void NetworkIdentity::set(
 #define DEF_CODING_RATE CRLORA_4_6
 
 #define DEF_RSSI	-35
-#define DEF_LSNR	5.1
+#define DEF_LSNR	5.1f
 
 rfmMetaData::rfmMetaData() 
 	: gatewayId(0), chan(0), rfch(0), freq(868900000), stat(0), 
@@ -1156,8 +1160,8 @@ std::string rfmMetaData::frequency() const
 std::string rfmMetaData::snrratio() const
 {
 	std::stringstream ss;
-	int n = lsnr; 
-	int m = lsnr * 10.0 - n * 10;
+	int n = (int) lsnr;
+	int m = (int) (lsnr * 10.0 - n * 10);
 	ss << n << "." << m;
 	return ss.str();
 }
@@ -1223,7 +1227,7 @@ void string2DEVADDR(
 )
 {
 	std::string str = hex2string(value);
-	int len = str.size();
+	size_t len = str.size();
 	if (len > sizeof(DEVADDR))
 		len = sizeof(DEVADDR);
 	memmove(&retval, str.c_str(), len);
@@ -1238,7 +1242,7 @@ void string2DEVEUI(
 )
 {
 	std::string str = hex2string(value);
-	int len = str.size();
+	size_t len = str.size();
 	if (len > sizeof(DEVEUI))
 		len = sizeof(DEVEUI);
 	memmove(&retval, str.c_str(), len);
@@ -1252,7 +1256,7 @@ void string2KEY(
 	const std::string &str
 )
 {
-	int len = str.size();
+	size_t len = str.size();
 	std::string v;
 	if (len > sizeof(KEY128))
 		v = hex2string(str);
@@ -1361,7 +1365,7 @@ void rfmMetaData::toJSON(
 	int ms = -1;
 	std::string dt = ltimeString(t, ms, "%FT%T") + "Z";	// "2020-12-16T12:17:00.12345Z";
 	rapidjson::Value v1(rapidjson::kStringType);
-	v1.SetString(dt.c_str(), dt.length());
+	v1.SetString(dt.c_str(), (rapidjson::SizeType) dt.size());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[1])), v1, allocator);
 
 	rapidjson::Value v2(tmms());
@@ -1384,17 +1388,17 @@ void rfmMetaData::toJSON(
 
 	rapidjson::Value v8(rapidjson::kStringType);
 	std::string s8(modulation());
-	v8.SetString(s8.c_str(), s8.length());
+	v8.SetString(s8.c_str(), (rapidjson::SizeType) s8.size());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[8])), v8, allocator);
 
 	rapidjson::Value v9(rapidjson::kStringType);
 	std::string dr = datr();
-	v9.SetString(dr.c_str(), dr.length());
+	v9.SetString(dr.c_str(), (rapidjson::SizeType) dr.size());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[9])), v9, allocator);
 
 	rapidjson::Value v10(rapidjson::kStringType);
 	std::string cr = codr();
-	v10.SetString(cr.c_str(), cr.length());
+	v10.SetString(cr.c_str(), (rapidjson::SizeType) cr.size());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[10])), v10, allocator);
 
 	rapidjson::Value v11(rssi);
@@ -1409,7 +1413,7 @@ void rfmMetaData::toJSON(
 	rapidjson::Value v14(rapidjson::kStringType);
 	std::string d(base64_encode(data));	// base64
 
-	v14.SetString(d.c_str(), d.size());
+	v14.SetString(d.c_str(), (rapidjson::SizeType) d.size());
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(METADATA_RX_NAMES[14])), v14, allocator);
 }
 
@@ -1442,14 +1446,14 @@ int rfmMetaData::parseRX(
 	if (value.HasMember(METADATA_RX_NAMES[4])) {    // freq RX central frequency in MHz (unsigned float, Hz precision)
         rapidjson::Value &v = value[METADATA_RX_NAMES[4]];
 		if (v.IsDouble()) {
-			freq = v.GetDouble() * 1000000;
+			freq = (uint32_t) v.GetDouble() * 1000000;
 		}
 	}
 
 	if (value.HasMember(METADATA_RX_NAMES[5])) {    // chan Concentrator "IF" channel used for RX (unsigned integer
         rapidjson::Value &v = value[METADATA_RX_NAMES[5]];
 		if (v.IsInt()) {
-			chan = v.GetInt();
+			chan = (uint8_t) v.GetInt();
 		}
 	}
 
