@@ -18,7 +18,7 @@ typedef struct tagTHREADNAME_INFO {
 } THREADNAME_INFO;
 #pragma pack(pop)
 
-ststic void setThreadNameById(
+static void setThreadNameById(
     uint32_t dwThreadID,
     const char* threadName
 )
