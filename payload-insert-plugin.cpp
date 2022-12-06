@@ -213,7 +213,7 @@ int PayloadInsertPlugins::load(
     util::filesInPath(pluginDirectory, suffix, 1, &files);
     // sort alphabetically by file name
     std::sort(files.begin(), files.end());
-    size_t count = 0;
+    int count = 0;
     for (std::vector<std::string>::const_iterator it(files.begin()); it != files.end(); it++) {
         if (push(*it) == 0)
             count++;
@@ -223,9 +223,9 @@ int PayloadInsertPlugins::load(
 }
 
 void PayloadInsertPlugins::unload() {
-    for (std::vector<void *>::iterator it(handles.begin()); it != handles.end(); it++) {
+    for (std::vector<HINSTANCE>::iterator it(handles.begin()); it != handles.end(); it++) {
 #ifdef _MSC_VER
-        FreeLibrary((HINSTANCE) *it);
+        FreeLibrary(*it);
 #else
         dlclose(*it);
 #endif

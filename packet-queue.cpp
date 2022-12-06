@@ -564,7 +564,7 @@ int PacketQueue::replyControl(
         regionalParameterChannelPlan = deviceChannelPlan->get(item.getAddr());
     if (!regionalParameterChannelPlan)
         return ERR_CODE_NO_REGION_BAND;
-    int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
+    int power = (int) regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
 
 	// check just in case
 	// .. gateway
@@ -943,7 +943,7 @@ int PacketQueue::replyJoinRequest(
     // get RX1 delay in secs from regional settings
 
     // get default power from regional settings
-    int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
+    int power = (int) regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
 
     // log end-device internal time and elected gateway
     std::stringstream ss;

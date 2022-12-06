@@ -119,7 +119,7 @@ int GatewayList::parse(
 {
 	if (!value.IsArray())
 		return ERR_CODE_INVALID_JSON;
-	for (int i = 0; i < value.Size(); i++) {
+	for (size_t i = 0; i < value.Size(); i++) {
 		GatewayStat stat;
 		if (int r = stat.parse(value[i])) {
 			errmessage = strerror_lorawan_ns(r);
@@ -169,7 +169,7 @@ int GatewayList::parseIdentifiers(
 						retval.push_back(itg->first);
 				}
 		    }
-    		catch (const std::regex_error& e) {
+    		catch (const std::regex_error&) {
 				return ERR_CODE_INVALID_REGEX;
 			}
 		}
@@ -213,7 +213,7 @@ int GatewayList::parseNames(
 						retval.push_back(itg->first);
 				}
 		    }
-    		catch (const std::regex_error& e) {
+    		catch (const std::regex_error&) {
 				return ERR_CODE_INVALID_REGEX;
 			}
 		}
