@@ -1,5 +1,5 @@
 #ifdef _MSC_VER
-#pragma warning(disvale : 4996)
+#pragma warning(disable : 4996)
 #define _CRT_SECURE_NO_WARNINGS
 #include <io.h>
 #else
@@ -8,6 +8,7 @@
 #include <unistd.h>
 #endif
 
+#include <sstream>
 #include <iostream>
 
 #include "packet-queue.h"
