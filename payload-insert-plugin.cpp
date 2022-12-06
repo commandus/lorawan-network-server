@@ -164,8 +164,26 @@ int PayloadInsertPlugins::push(
     const std::string &file
 )
 {
+    // HINSTANCE
     void *handle;
 #ifdef _MSC_VER
+    HINSTANCE handle = LoadLibraryA(file.c_str());
+    if (handle) {
+        handles.push_back(handle);
+        ProcAdd = (MYPROC) GetProcAddress(hinstLib, "myPuts");
+
+        Payload2InsertPluginInitFuncs fs;
+        fs.init = (pluginInitFunc) GetProcAddress(handle, FUNC_NAME_INIT);
+        fs.done = (pluginDoneFunc) GetProcAddress(handle, FUNC_NAME_DONE);
+        fs.prepare = (payloadPrepareFunc) GetProcAddress(handle, FUNC_NAME_PREPARE);
+        fs.insert = (payload2InsertClausesFunc) GetProcAddress(handle, FUNC_NAME_INSERT);
+        fs.afterInsert = (payloadAfterInsertFunc) GetProcAddress(handle, FUNC_NAME_AFTER_INSERT);
+        fs.create = (payloadCreateFunc) GetProcAddress(handle, FUNC_NAME_CREATE);
+        if (fs.insert) {
+            funcs.push_back(fs);
+            return 0;
+        }
+    }
 #else
     handle = dlopen(file.c_str(), RTLD_LAZY);
     if (handle) {
@@ -209,6 +227,7 @@ int PayloadInsertPlugins::load(
 void PayloadInsertPlugins::unload() {
     for (std::vector<void *>::iterator it(handles.begin()); it != handles.end(); it++) {
 #ifdef _MSC_VER
+        FreeLibrary((HINSTANCE) *it);
 #else
         dlclose(*it);
 #endif

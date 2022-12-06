@@ -75,7 +75,7 @@ bool ReceiverQueueValue::setJsonPayload
 		payload = base64_decode(jsonValue, true);
 		return true;
 	}
-	catch (const std::exception& e) {
+	catch (const std::exception&) {
 		return false;
 	}
 }
@@ -99,7 +99,7 @@ int ReceiverQueueValue::popDbId
 	{
 		if (*it == dbId) {
         	dbids.erase(it);
-			return dbids.size();
+			return (int) dbids.size();
 		}
     }
 	return ERR_CODE_NO_DATABASE;

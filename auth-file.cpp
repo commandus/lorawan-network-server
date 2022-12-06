@@ -1,10 +1,14 @@
 #include "auth-file.h"
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 AuthUserFile::AuthUserFile(
     const std::string &issuer,
@@ -23,7 +27,7 @@ void AuthUserFile::load(
     rapidjson::Document doc;
     doc.Parse<rapidjson::kParseCommentsFlag>(json.c_str());
     if (doc.IsArray()) {
-        for (int i = 0; i < doc.Size(); i++) {
+        for (rapidjson::SizeType i = 0; i < doc.Size(); i++) {
             std::string userName;
             std::string password;
             rapidjson::Value &cred = doc[i];
