@@ -3,6 +3,16 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
 #include <io.h>
+void usleep(__int64 usec)
+{
+    HANDLE timer;
+    LARGE_INTEGER ft;
+    ft.QuadPart = -(10*usec); // Convert to 100 nanosecond interval, negative value indicates relative time
+    timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
+    SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
+}
 #else
 #include <sys/time.h>
 #include <sys/eventfd.h>
@@ -12,7 +22,6 @@
 #include <sstream>
 #include <iostream>
 
-#include "platform.h"
 #include "packet-queue.h"
 #include "utildate.h"
 #include "utilstring.h"
