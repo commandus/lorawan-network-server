@@ -20,10 +20,14 @@
 
 #include "lora-radio.h"
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/document.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #include "gateway-stat.h"
 
@@ -112,13 +116,13 @@ int getMetadataName(
 // gateway inform network server about does PULL_RESP data transmission was successful or not
 #define SEMTECH_GW_TX_ACK		5
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02
-} PACKED SEMTECH_PREFIX;		// 4 bytes
+} ) SEMTECH_PREFIX;		// 4 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
     uint64_t gatewayId;
     time_t t;					// UTC time of pkt RX, us precision, ISO 8601 'compact' format
     uint32_t tmst;				// Internal timestamp of "RX finished" event (32b unsigned). In microseconds
@@ -133,7 +137,7 @@ typedef ALIGN struct {
     uint32_t bps;				// FSK bits per second
     int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
     float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
-} PACKED SEMTECH_PROTOCOL_METADATA;
+} ) SEMTECH_PROTOCOL_METADATA;
 
 /**
  * Semtech PUSH DATA packet described in section 3.2
@@ -141,12 +145,12 @@ typedef ALIGN struct {
  * PUSH_DATA, PULL_DATA packets prefix.
  * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT sections 3.2, 5,2
  */
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
-} PACKED SEMTECH_PREFIX_GW;	    // 12 bytes
+} ) SEMTECH_PREFIX_GW;	    // 12 bytes
 // After prefix "JSON object", starting with {, ending with }, see section 4
 
 // After prefix "JSON object", starting with {, ending with }, see section 4
@@ -155,11 +159,11 @@ typedef ALIGN struct {
  * PUSH_ACK packet
  * @see https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT section 3.3
  */
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// same random token as SEMTECH_PREFIX_GW
 	uint8_t tag;				// PUSH_ACK 1 PULL_ACK 4
-} PACKED SEMTECH_ACK;			// 4 bytes
+} ) SEMTECH_ACK;			// 4 bytes
 
 /**
  * 
@@ -194,7 +198,7 @@ typedef enum {
 	REJOINREQUEST2 = 2
  } JOINREQUESTTYPE;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	union {
 		uint8_t i;
 		struct {
@@ -203,12 +207,12 @@ typedef ALIGN struct {
 			uint8_t mtype: 3;
 		} f;
 	};
-} PACKED MHDR;			// 1 byte
+} ) MHDR;			// 1 byte
 
 /**
  * MHDR + FHDR
  */ 
-typedef ALIGN struct {
+typedef PACK( struct {
 	// MAC header byte: message type, RFU, Major
 	MHDR macheader;			// 0x40 unconfirmed uplink
 	// Frame header (FHDR)
@@ -234,60 +238,60 @@ typedef ALIGN struct {
 	} fctrl;	// frame control
 	uint16_t fcnt;	// frame counter 0..65535
 	// FOpts 0..15
-} PACKED RFM_HEADER;			// 8 bytes, +1
+} ) RFM_HEADER;			// 8 bytes, +1
 
- typedef ALIGN struct {
+ typedef PACK( struct {
 	DEVEUI joinEUI;			    // JoinEUI
 	DEVEUI devEUI;			    // DevEUI
 	DEVNONCE devNonce;
-} PACKED JOIN_REQUEST_FRAME;	// 8 + 8 + 2 = 18 bytes
+} ) JOIN_REQUEST_FRAME;	// 8 + 8 + 2 = 18 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
     MHDR mhdr;  			    // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_REQUEST_FRAME frame;
     uint32_t mic;			    // MIC
-} PACKED JOIN_REQUEST_HEADER;	// 1 + 18 + 4 = 23 bytes
+} ) JOIN_REQUEST_HEADER;	// 1 + 18 + 4 = 23 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
     uint8_t RX2DataRate: 4;	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
     uint8_t RX1DROffset: 3;	    ///< offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
     uint8_t optNeg: 1;     	    ///< 1.0- RFU, 1.1- optNeg
-} PACKED DLSETTINGS;	        // 1 byte
+} ) DLSETTINGS;	        // 1 byte
 
 /**
  * Join-Accept
   NetID DevAddr DLSettings RXDelay CFList
  */
-typedef ALIGN struct {
+typedef PACK( struct {
     JOINNONCE joinNonce;   	        //
     NETID netId;   	                //
     DEVADDR devAddr;   	            //
     DLSETTINGS dlSettings;		    // downlink configuration settings
     uint8_t rxDelay;                //
-} PACKED JOIN_ACCEPT_FRAME_HEADER;	    // 3 3 4 1 1 = 12 bytes
+} ) JOIN_ACCEPT_FRAME_HEADER;	    // 3 3 4 1 1 = 12 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
     MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_ACCEPT_FRAME_HEADER hdr;   //
     uint32_t mic;			        // MIC
-} PACKED JOIN_ACCEPT_FRAME;	        // 1 12 4 = 17 bytes
+} ) JOIN_ACCEPT_FRAME;	        // 1 12 4 = 17 bytes
 
 // Channel frequency list
-typedef ALIGN struct {
+typedef PACK( struct {
     FREQUENCY frequency[5];	        // frequency, 100 * Hz ch 4..8
     uint8_t cflisttype;		        // always 0
-} PACKED CFLIST;			        // 16 bytes
+} ) CFLIST;			        // 16 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
     MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_ACCEPT_FRAME_HEADER hdr;   // 12
     CFLIST cflist;
     uint32_t mic;			        // MIC
-} PACKED JOIN_ACCEPT_FRAME_CFLIST;	// 1 12 16 4 = 33 bytes
+} ) JOIN_ACCEPT_FRAME_CFLIST;	// 1 12 16 4 = 33 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t fopts[15];
-} PACKED FOPTS;					    // 0..15 bytes
+} ) FOPTS;					    // 0..15 bytes
 
 typedef enum {
 	ABP = 0,
@@ -300,18 +304,18 @@ typedef enum {
 	CLASS_C = 2
 } DEVICECLASS;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t major: 2;		// always 1
 	uint8_t minor: 2;		// 0 or 1
 	uint8_t release: 4;		// no matter
-} PACKED LORAWAN_VERSION;	// 1 byte
+} ) LORAWAN_VERSION;	// 1 byte
 
 // Regional paramaters version e.g. RP002-1.0.0, RP002-1.0.1
-typedef ALIGN struct {
+typedef PACK( struct {
     uint8_t major: 2;		// always 1
     uint8_t minor: 2;		// 0 or 1
     uint8_t release: 4;		// no matter
-} PACKED REGIONAL_PARAMETERS_VERSION;	// 1 byte
+} ) REGIONAL_PARAMETERS_VERSION;	// 1 byte
 
 std::string LORAWAN_VERSION2string
 (

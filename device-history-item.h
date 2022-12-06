@@ -9,20 +9,24 @@
 #include <netinet/in.h>
 #endif
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/document.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #include "platform.h"
 #include "utillora.h"
 
-typedef ALIGN struct {
+typedef PACK (struct {
 	// uint32_t addr;		///< network address
 	time_t t;				///< last session time
 	uint32_t fcntup;		///< Last frame count sent by end device
 	uint32_t fcntdown;		///< Last frame count sent by network service
-} PACKED DEVICE_HISTORY_ITEM;		// 4 bytes
+} ) DEVICE_HISTORY_ITEM;		// 4 bytes
 
 /** 
  * Device stat keep FCntUp and FCntDown counter bands.

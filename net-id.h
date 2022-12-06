@@ -10,12 +10,12 @@
 
 typedef unsigned char NETID[3];
 
-typedef ALIGN struct {
+typedef PACK( struct {
     uint8_t v0;
     uint8_t v1;
     uint8_t v2: 5;
     uint8_t networkType: 3;	// MSB network type 0..7
-} PACKED NETID_TYPE;		// 3 bytes
+} ) NETID_TYPE;		// 3 bytes
 
 class NetId {
 private:

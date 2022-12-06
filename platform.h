@@ -13,13 +13,16 @@
 #define CLOSE_SYSLOG() closelog();
 #endif
 
-#ifdef _MSC_VER
-#define ALIGN	__declspec(align(1))
-#define PACKED	
+#ifdef __GNUC__
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
 #else
-#define ALIGN	
-#define PACKED	__attribute__((aligned(1), packed))
+#ifdef _MSC_VER
+#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#else
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
 #endif
+#endif
+
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define NTOH2(x) (x)

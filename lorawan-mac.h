@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+
 #include "platform.h"
 #include "utillora.h"
 
@@ -78,22 +79,22 @@ static const MAC_PAYLOAD_SIZE macPayloadRegistry[] {
 
 // 1) Reset ABP-activated device
 // ABP activated devices only
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t minor: 4;
 	uint8_t rfu: 4;
-} PACKED MAC_RESET;				// 1 byte
+} ) MAC_RESET;				// 1 byte
 
 // 2) Link check request
-typedef ALIGN struct {
-} PACKED MAC_EMPTY;					// zero bytes
+typedef PACK( struct {
+} ) MAC_EMPTY;					// zero bytes
 
 // 2) Link check answer
 // @param margin 0..254- dB of the last successfully received LinkCheckReq command, e.g. 20- 20dB. 255 is reserved.
 // @param gwcnt  number of gateways that successfully received the last LinkCheckReq command
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t margin;
 	uint8_t gwcnt;
-} PACKED MAC_LINK_CHECK;
+} ) MAC_LINK_CHECK;
 
 // 3) Link addr request
 // @param datarate 15- keep current data rate, 0- min, 14- max
@@ -101,14 +102,14 @@ typedef ALIGN struct {
 // @param chmask frequency (channel) mask. LSB 0- channel 1, msb bit 7 (bit 15)- channel 16
 // @param nbtans 1..15 number of transmissions for each uplink message. 1- single transmission of each frame.
 // @param chmaskcntl 0- channels 1..16. 1-5, 7- RFU, 6- All channels ON The device should enable all currently defined channels independently of the ChMask field value. 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t txpower : 4;
 	uint8_t datarate : 4;
 	uint16_t chmask;				// LSB 0- channel 1, msb bit 7 (bit 15)- channel 16
 	uint8_t nbtans: 4;				// 
 	uint8_t chmaskcntl: 3;			// 
 	uint8_t rfu: 1;					// not used
-} PACKED MAC_LINK_ADR_REQ;			// 4 bytes
+} ) MAC_LINK_ADR_REQ;			// 4 bytes
 
 // 3) Link addr request
 // @param datarate 15- keep current data rate, 0- min, 14- max
@@ -116,78 +117,78 @@ typedef ALIGN struct {
 // @param chmask frequency (channel) mask. LSB 0- channel 1, msb bit 7 (bit 15)- channel 16
 // @param nbtans 1..15 number of transmissions for each uplink message. 1- single transmission of each frame.
 // @param chmaskcntl 0- channels 1..16. 1-5, 7- RFU, 6- All channels ON The device should enable all currently defined channels independently of the ChMask field value. 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t channelmaskack: 1;
 	uint8_t datarateack: 1;
 	uint8_t powerack: 1;
 	uint8_t rfu: 5;
-} PACKED MAC_LINK_ADR_RESP;			// 1 bуte
+} ) MAC_LINK_ADR_RESP;			// 1 bуte
 
 // 4) Transmit duty cycle
 // @param maxdccycle 0- no limit 1..15- limit
 // @param rfu no description in the spec
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t maxdccycle: 4;
 	uint8_t rfu: 4;
-} PACKED MAC_DUTY_CYCLE;
+} ) MAC_DUTY_CYCLE;
 
 // 5) Receive Windows Parameters
 // @param rx2datatrate data rate of a downlink using the second receive window following the same convention as the LinkADRReq command (0 - DR0,..)
 // @param rx1droffset
 // @param rfu no description in the s LoRaWAN1.0pec
 // @param frequency 24 bits 100 * Hz
-typedef ALIGN struct {
+typedef PACK( struct {
 
 	uint8_t rx2datatrate: 4;
 	uint8_t rx1droffset: 3;
 	uint8_t rfu: 1;
 	uint8_t frequency[3];			// 24 bit uyint, 100*Hz
-} PACKED MAC_RXRARAMSETUP_REQ;		// 4 bytes
+} ) MAC_RXRARAMSETUP_REQ;		// 4 bytes
 
 // @param channelack
 // @param rx2datatrateack
 // @param rx1droffsetack
 // @param rfu no description
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t channelack: 1;
 	uint8_t rx2datatrateack: 1;
 	uint8_t rx1droffsetack: 1;
 	uint8_t rfu: 5;
-} PACKED MAC_RXRARAMSETUP_RESP;		// 1 byte
+} ) MAC_RXRARAMSETUP_RESP;		// 1 byte
 
 // 6) End-Device Status response
 // @param battery 0- external power source, 1- min, 254- max, 255- end-device was not able to mearure battery level
 // @param margin demodulation signal-to-noise ratio -32..31
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t battery;
 	int8_t margin;
-} PACKED MAC_DEVSTATUS;		// 2 bytes
+} ) MAC_DEVSTATUS;		// 2 bytes
 
 // 7) Creation / Modification of a Channel
 // @param chindex N,,15 where N- channels count. e.g. Russia N = 2, additioonal channels 2..15
 // @param freq
 // @param mindr 0 -  0 DR0/125kHz
 // @param mandr 0 -  0 DR0/125kHz
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t chindex;
 	uint8_t frequency[3];
 	uint8_t mindr: 4;
 	uint8_t maxdr: 4;
-} PACKED MAC_NEWCHANNEL_REQ;		// 5 bytes
+} ) MAC_NEWCHANNEL_REQ;		// 5 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t channelfrequencyack: 1;
 	uint8_t datarateack: 1;
 	uint8_t rfu: 6;
-} PACKED MAC_NEWCHANNEL_RESP;		// 1 byte
+} ) MAC_NEWCHANNEL_RESP;		// 1 byte
 
 // 8) Setting delay between TX and RX
 // @param delay 0- 1s(default), 1- 1s, 2- 2s.. 15- 15s
 // @param rfu not used
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t delay: 4;
 	uint8_t rfu: 4;
-} PACKED MAC_TIMINGSETUP;			// 1 byte
+} ) MAC_TIMINGSETUP;			// 1 byte
 
 // 9) Setting maximum continuous transmission time of a packet over the air (EIRP)
 // @param maxeirp
@@ -196,57 +197,57 @@ typedef ALIGN struct {
 // @param uplinkdwelltime 0- no limit, 1- 400ms
 // @param downlinkdwelltime 0- no limit, 1- 400ms
 // @param rfu not used
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t maxeirp: 4;
 	uint8_t uplinkdwelltime: 1;
 	uint8_t downlinkdwelltime: 1;
 	uint8_t rfu: 2;
-} PACKED MAC_TXPARAMSETUP;			// 1 byte
+} ) MAC_TXPARAMSETUP;			// 1 byte
 
 // A) DlChannelReq Associate a different downlink frequency to the RX1 slot. 
 // Available for EU and China but not for US or Australia
 // @param chindex 0..15
 // @param freq 24 bin integer frequncy in 100 * Hz
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t chindex;
 	uint8_t frequency[3];
-} PACKED MAC_DLCHANNEL_REQ;			// 4 bytes
+} ) MAC_DLCHANNEL_REQ;			// 4 bytes
 
 // @param channelfrequencyack 1- ok
 // @param uplinkfrequencyexistsack	1- ok
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t channelfrequencyack: 1;
 	uint8_t uplinkfrequencyexistsack: 1;
 	uint8_t rfu: 6;
-} PACKED MAC_DLCHANNEL_RESP;		// 1 byte
+} ) MAC_DLCHANNEL_RESP;		// 1 byte
 
 // B) Rekey indication for OTAA only LoRaWAN1.1 servers (LoRaWAN1.0 does notr provide it)
 // @param minor 
 // @param rfu not used
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t minor: 4;				// LoRaWAN minor version, e.g. 1 for LoRaWAN 1.1
 	uint8_t rfu: 4;
-} PACKED MAC_REKEY_REQ;				// 1 byte
+} ) MAC_REKEY_REQ;				// 1 byte
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t version;				// 1 for LoRaWAN 1.1 version
-} PACKED MAC_REKEY_RESP;			// 1 byte
+} ) MAC_REKEY_RESP;			// 1 byte
 
 // C) Setup ADR_ACK_LIMIT and ADR_ACK_DELAY
 // @param delayexp 0..15 ADR_ACK_DELAY power of 2: 0- 1, 1- 2, 2- 4, .. 15- 32768
 // @param delayexp 0..15 ADR_ACK_LIMIT power of 2: 0- 1, 1- 2, 2- 4, .. 15- 32768
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t delayexp: 4;			// ADR_ACK_DELAY power of 2: 0- 1, 1- 2, 2- 4, .. 15- 32768
 	uint8_t limitexp: 4;			// ADR_ACK_LIMIT power of 2: 0- 1, 1- 2, 2- 4, .. 15- 32768
-} PACKED MAC_ADRPARAMSETUP;			// 1 byte
+} ) MAC_ADRPARAMSETUP;			// 1 byte
 
 // D) request from the network the current network date and time
 // @param minor 
 // @param 10.2.216.32fu not used
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint32_t gpstime;				// GPS epoch seconds
 	uint8_t frac;					// 1/256 seconds
-} PACKED MAC_DEVICETIME;			// 3 byteы
+} ) MAC_DEVICETIME;			// 3 byteы
 
 // E) network asks a device to immediately transmit a Rejoin-Request
 // The command has no answer,
@@ -255,7 +256,7 @@ typedef ALIGN struct {
 // @param maxretries device will retry the Rejoin-request.0- only once, no retry) 1..7
 // @param rfu not used
 // @param rfu2 not used
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t dr: 4;					// rejoin-request frame SHALL be transmitted using the data rate DR. 
 	uint8_t rejointype: 3;			// 0, 1- rejoin-request type 0 shall be transmitted 2- type 2, 3..7- RFU
 	uint8_t rfu: 1;					// not used
@@ -263,72 +264,72 @@ typedef ALIGN struct {
 	uint8_t maxretries: 3;			// device will retry the Rejoin-request.0- only once, no retry) 1..7
 	uint8_t period: 3;				// The delay between retransmissions 32 seconds x 2** Period where Rand32 is a pseudo-random number in the [0:32] range. 
 	uint8_t rfu2: 2;				// not used
-} PACKED MAC_FORCEREJOIN;			// 2 bytes
+} ) MAC_FORCEREJOIN;			// 2 bytes
 
 // F) network request end-device to periodically send a RejoinReq Type 0 message
 // The command has no answer,
 // @param maxcount MUST send a Rejoin-request type 0 at least every 2^C+4 uplink messages. 0- 16, 1- 32...
 // @param ma10.2.216.32ime 2^T+10: 0- 17 minutes, 15- 1 year
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t maxccount: 4;			// MUST send a Rejoin-request type 0 at least every 2^C+4 uplink messages. 0- 16, 1- 32...
 	uint8_t maxtime: 4;				//  2^T+10: 0- 17 minutes, 15- 1 year
-} PACKED MAC_REJOINPARAMSETUP_REQ;	// 1 byte
+} ) MAC_REJOINPARAMSETUP_REQ;	// 1 byte
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t timeack: 1;				// 1- ok (end-device may not set time periodicity)
 	uint8_t rfu: 7;					// not used
-} PACKED MAC_REJOINPARAMSETUP_RESP;	// 1 byte
+} ) MAC_REJOINPARAMSETUP_RESP;	// 1 byte
 
 // 10) end-device informs the server of its unicast ping slot periodicity
 // @param periodicity power of 2, 0- opens a ping slot every ~1 second during the beacon_window interval, 7- 128 seconds
 // @param rfu not used
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t periodicity: 3;			// power of 2, 0- opens a ping slot every ~1 second during the beacon_window interval, 7- 128 seconds
 	uint8_t rfu: 5;					// 
-} PACKED MAC_PINGSLOTINFO;			// 1 byte
+} ) MAC_PINGSLOTINFO;			// 1 byte
 
 // 11) end-device informs the server of its unicast ping slot periodicity
 // @param dr data rate
 // @param frequency 24bit integer 100*Hz
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t dr: 4;					// data rate
 	uint8_t rfu: 4;					// not used
 	uint8_t frequency[3];			// 24bit integer 100*Hz
-} PACKED MAC_PINGSLOTCHANNEL_REQ;	// 4 bytes
+} ) MAC_PINGSLOTCHANNEL_REQ;	// 4 bytes
 
 // @param dr data rate
 // @param frequency 24bit integer 100*Hz
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t frequencyack: 1;		// channel frequency ok
 	uint8_t drack: 1;				// data rate ok
 	uint8_t rfu: 6;					// not used
-} PACKED MAC_PINGSLOTCHANNEL_RESP;	// 1 byte
+} ) MAC_PINGSLOTCHANNEL_RESP;	// 1 byte
 
 // 12) Deprecated.
 // @param channel index of the beaconing channel on which the next beacon will be broadcasted.
 // @param delay 30 ms x (Delay+1) > RTime >= 30 ms x Delay
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t channel;				// index of the beaconing channel on which the next beacon will be broadcasted.
 	uint16_t delay;					// delay 30 ms x (Delay+1) > RTime >= 30 ms x Delay
-} PACKED MAC_BEACONTIMING;			// 3 bytes
+} ) MAC_BEACONTIMING;			// 3 bytes
 
 // 13) server request modify the frequency on which this end-device expects the beacon.
 // @param frequency 24 bit integer 100 * Hz
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t frequency[3];			// frequency 24 bit integer 100 * Hz
-} PACKED MAC_BEACONFREQUENCY_REQ;	// 3 bytes
+} ) MAC_BEACONFREQUENCY_REQ;	// 3 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t frequencyack: 1;		// 1- frequency ok
 	uint8_t rfu: 7;					// not used
-} PACKED MAC_BEACONFREQUENCY_RESP;	// 1 byte
+} ) MAC_BEACONFREQUENCY_RESP;	// 1 byte
 
 // 20)  end-device indicates that it wants to  operate either in class A or C.
 // @param frequency 24 bit integer 100 * Hz
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t cl;						// class: 0- A, 1- RFU, 2- C
-} PACKED MAC_DEVICEMODE;			// 1 byte
+} ) MAC_DEVICEMODE;			// 1 byte
 
 union MAC_DATA
 {
@@ -391,155 +392,157 @@ enum MC_COMMAND {
 	// 0x80 to 0xff reserved for proprietary network command extensions
 };
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_DATA data;
-} PACKED MAC_COMMAND;					// 1-6 byte(s)
+} ) MAC_COMMAND;					// 1-6 byte(s)
 
 // --- for casting ---
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_EMPTY data;
-} PACKED MAC_COMMAND_EMPTY;
+} ) MAC_COMMAND_EMPTY;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_RESET data;
-} PACKED MAC_COMMAND_RESET;
+} ) MAC_COMMAND_RESET;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_LINK_CHECK data;
-} PACKED MAC_COMMAND_LINK_CHECK;
+} ) MAC_COMMAND_LINK_CHECK;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_LINK_ADR_REQ data;
-} PACKED MAC_COMMAND_LINK_ADR_REQ;
-typedef ALIGN struct {
+} ) MAC_COMMAND_LINK_ADR_REQ;
+
+typedef PACK( struct {
 	uint8_t command;
 	MAC_LINK_ADR_RESP data;
-} PACKED MAC_COMMAND_LINK_ADR_RESP;
+} ) MAC_COMMAND_LINK_ADR_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_DUTY_CYCLE data;
-} PACKED MAC_COMMAND_DUTY_CYCLE;
-typedef ALIGN struct {
+} ) MAC_COMMAND_DUTY_CYCLE;
+
+typedef PACK( struct {
 	uint8_t command;
 	MAC_RXRARAMSETUP_REQ data;
-} PACKED MAC_COMMAND_RXRARAMSETUP_REQ;
+} ) MAC_COMMAND_RXRARAMSETUP_REQ;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_RXRARAMSETUP_RESP data;
-} PACKED MAC_COMMAND_RXRARAMSETUP_RESP;
+} ) MAC_COMMAND_RXRARAMSETUP_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_DEVSTATUS data;
-} PACKED MAC_COMMAND_DEVSTATUS;
+} ) MAC_COMMAND_DEVSTATUS;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_NEWCHANNEL_REQ data;
-} PACKED MAC_COMMAND_NEWCHANNEL_REQ;
+} ) MAC_COMMAND_NEWCHANNEL_REQ;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_NEWCHANNEL_RESP data;
-} PACKED MAC_COMMAND_NEWCHANNEL_RESP;
+} ) MAC_COMMAND_NEWCHANNEL_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_TIMINGSETUP data;
-} PACKED MAC_COMMAND_TIMINGSETUP;
+} ) MAC_COMMAND_TIMINGSETUP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_TXPARAMSETUP data;
-} PACKED MAC_COMMAND_TXPARAMSETUP;
+} ) MAC_COMMAND_TXPARAMSETUP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_DLCHANNEL_REQ data;
-} PACKED MAC_COMMAND_DLCHANNEL_REQ;
+} ) MAC_COMMAND_DLCHANNEL_REQ;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_DLCHANNEL_RESP data;
-} PACKED MAC_COMMAND_DLCHANNEL_RESP;
+} ) MAC_COMMAND_DLCHANNEL_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_REKEY_REQ data;
-} PACKED MAC_COMMAND_REKEY_REQ;
+} ) MAC_COMMAND_REKEY_REQ;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_REKEY_RESP data;
-} PACKED MAC_COMMAND_REKEY_RESP;
+} ) MAC_COMMAND_REKEY_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_ADRPARAMSETUP data;
-} PACKED MAC_COMMAND_ADRPARAMSETUP;
+} ) MAC_COMMAND_ADRPARAMSETUP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_DEVICETIME data;
-} PACKED MAC_COMMAND_DEVICETIME;
+} ) MAC_COMMAND_DEVICETIME;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_FORCEREJOIN data;
-} PACKED MAC_COMMAND_FORCEREJOIN;
+} ) MAC_COMMAND_FORCEREJOIN;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_REJOINPARAMSETUP_REQ data;
-} PACKED MAC_COMMAND_REJOINPARAMSETUP_REQ;
+} ) MAC_COMMAND_REJOINPARAMSETUP_REQ;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_REJOINPARAMSETUP_RESP data;
-} PACKED MAC_COMMAND_REJOINPARAMSETUP_RESP;
+} ) MAC_COMMAND_REJOINPARAMSETUP_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_PINGSLOTINFO data;
-} PACKED MAC_COMMAND_PINGSLOTINFO;
+} ) MAC_COMMAND_PINGSLOTINFO;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_PINGSLOTCHANNEL_REQ data;
-} PACKED MAC_COMMAND_PINGSLOTCHANNEL_REQ;
+} ) MAC_COMMAND_PINGSLOTCHANNEL_REQ;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_PINGSLOTCHANNEL_RESP data;
-} PACKED MAC_COMMAND_PINGSLOTCHANNEL_RESP;
+} ) MAC_COMMAND_PINGSLOTCHANNEL_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_BEACONTIMING data;
-} PACKED MAC_COMMAND_BEACONTIMING;
+} ) MAC_COMMAND_BEACONTIMING;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_BEACONFREQUENCY_REQ data;
-} PACKED MAC_COMMAND_BEACONFREQUENCY_REQ;
+} ) MAC_COMMAND_BEACONFREQUENCY_REQ;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_BEACONFREQUENCY_RESP data;
-} PACKED MAC_COMMAND_BEACONFREQUENCY_RESP;
+} ) MAC_COMMAND_BEACONFREQUENCY_RESP;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t command;
 	MAC_DEVICEMODE data;
-} PACKED MAC_COMMAND_DEVICEMODE;
+} ) MAC_COMMAND_DEVICEMODE;
 
 #define MAC_EMPTY_SIZE 1
 #define MAC_RESET_SIZE sizeof(MAC_COMMAND_RESET)

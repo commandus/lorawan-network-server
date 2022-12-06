@@ -142,13 +142,13 @@ std::string LoraWANJoinAccept::toJSONString(
 	return ss.str();
 }
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t joinType;					// 1
 	DEVEUI eui;							// 8
-	JOINNONCE devnonce;				// 3
-} PACKED JOINACCEPT4MIC_NEG1_HEADER;	// 12 bytes
+	JOINNONCE devnonce;				    // 3
+} ) JOINACCEPT4MIC_NEG1_HEADER;	// 12 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	MHDR macheader;
 	JOINNONCE joinnonce;
 	NETID netid;
@@ -156,12 +156,12 @@ typedef ALIGN struct {
 	uint8_t dlSettings;
 	uint8_t rxDelay;
 	CFLIST cfList;
-} PACKED JOINACCEPT4MIC_NEG0;
+} ) JOINACCEPT4MIC_NEG0;
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	JOINACCEPT4MIC_NEG1_HEADER n;
 	JOINACCEPT4MIC_NEG0 v;
-} PACKED JOINACCEPT4MIC_NEG1;
+} ) JOINACCEPT4MIC_NEG1;
 
 uint32_t calcJoinAcceptMIC(
 	const DEVEUI &joinEUI,

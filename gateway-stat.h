@@ -11,10 +11,14 @@
 #include <netinet/in.h>
 #endif
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/document.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 /** 
  * Gateway stat keep current gateway address got from the last PULL request.

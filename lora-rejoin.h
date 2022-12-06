@@ -3,7 +3,7 @@
 
 #include "utillora.h"
 
-typedef ALIGN struct {					// Bytes
+typedef PACK(struct {					// Bytes
 	MHDR macheader;						// 1 MAC header 
 	uint8_t rrtype;						// 1 0- reset a device context including all radio parameters, 2- rekey a device or change its DevAdd
 	// 0- reset a device context including all radio parameters
@@ -11,17 +11,17 @@ typedef ALIGN struct {					// Bytes
 	NETID netid;						// 3
 	DEVEUI deveui;						// 8
 	uint16_t rjcount0;					// 2
-} PACKED LORAWAN_REJOIN_REQUEST_0_2;	// 15 bytes
+} ) LORAWAN_REJOIN_REQUEST_0_2;	// 15 bytes
 
-typedef ALIGN struct {					// Bytes
+typedef PACK( struct {					// Bytes
 	MHDR macheader;						// 1 MAC header message type 6
 	uint8_t rrtype;						// 1 1- restore a lost session context (
 	DEVEUI joineui;						// 8
 	DEVEUI deveui;						// 8
 	uint16_t rjcount1;					// 2
-} PACKED LORAWAN_REJOIN_REQUEST_1;			// 20 bytes
+} ) LORAWAN_REJOIN_REQUEST_1;			// 20 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	MHDR macheader;				// MAC header message type 6
 	// rejoin 
 	uint8_t rejointype;			// 0- reset a device context including all radio parameters,  1- same, 2- rekey a device or change its DevAdd
@@ -40,7 +40,7 @@ typedef ALIGN struct {
 			uint16_t rjcount1;	// 2
 		} restore;
 	} request;
-} PACKED LORAWAN_REJOIN_REQUEST;			// 15 or 20 bytes
+} ) LORAWAN_REJOIN_REQUEST;			// 15 or 20 bytes
 
 class LoraWANRejoinRequest {
 private:
@@ -52,7 +52,8 @@ public:
 };
 
 //  MHDR | JoinNonce | NetID | DevAddr | DLSettings | RxDelay | CFList
-typedef ALIGN struct {
+
+typedef PACK( struct {
 	MHDR macheader;						// 1 MAC header message type 6
 	JOINNONCE joinNonce;				// 3
 	NETID netid;						// 3
@@ -63,25 +64,25 @@ typedef ALIGN struct {
 	uint8_t rx2datarate: 4;				// dlsettings RX2 Data rate bits 0..3
 
 	uint8_t rxdelay;					// 1
-} PACKED LORAWAN_JOIN_ACCEPT_HEADER;	// 13 bytes
+} ) LORAWAN_JOIN_ACCEPT_HEADER;	// 13 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	LORAWAN_JOIN_ACCEPT_HEADER header;	// 13
 	CFLIST cflist;						// 16
 	uint32_t mic;						// 4
-} PACKED LORAWAN_JOIN_ACCEPT_LONG;		// 33 bytes
+} ) LORAWAN_JOIN_ACCEPT_LONG;		// 33 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	LORAWAN_JOIN_ACCEPT_HEADER header;	// 13
 	uint32_t mic;						// 4
-} PACKED LORAWAN_JOIN_ACCEPT_SHORT;		// 17 bytes
+} ) LORAWAN_JOIN_ACCEPT_SHORT;		// 17 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	union {
 		LORAWAN_JOIN_ACCEPT_SHORT s;	// 13
 		LORAWAN_JOIN_ACCEPT_LONG l;		// 17
 	};
-} PACKED LORAWAN_JOIN_ACCEPT;			// 17 bytes
+} ) LORAWAN_JOIN_ACCEPT;			// 17 bytes
 
 class LoraWANJoinAccept {
 private:
