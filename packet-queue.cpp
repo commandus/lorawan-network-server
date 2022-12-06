@@ -723,7 +723,7 @@ void PacketQueue::runner()
 		struct timeval timeout;
 		timeout.tv_sec = 0;
 		timeout.tv_usec = timeoutMicroSeconds;
-		int retval = select(fdWakeup + 1, &fh, NULL, NULL, &timeout);
+		int retval = select(fdWakeup + 1, &fh, nullptr, nullptr, &timeout);
 		if (retval == -1) {
 			// select error
 			if (onLog) {
@@ -749,7 +749,7 @@ void PacketQueue::runner()
 
 		SemtechUDPPacketItem item;
 		struct timeval t;
-		gettimeofday(&t, NULL);
+		gettimeofday(&t, nullptr);
 		while (getFirstExpired(item, t))
         {
 			switch (item.processMode)

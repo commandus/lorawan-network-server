@@ -19,7 +19,7 @@ SemtechPullResponsePacket::SemtechPullResponsePacket(
  * @return
  */
 std::string SemtechPullResponsePacket::toString() {
-    uint16_t token;
+    uint16_t token = 42;    // random number
     // radio prefix
     prefix = { 2, token, 2 };
     memmove(&prefix.mac, identity.devEUI, sizeof(DEVEUI));
