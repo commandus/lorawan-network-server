@@ -1,5 +1,6 @@
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
+#pragma warning(suppress : 4996)
 #endif
 
 #include "utilcurl.h"
@@ -119,11 +120,11 @@ int postString(
 
     /// Write the request
     std::string s = ss.str();
-    if (write(sock, s.c_str(), s.size()) >= 0) {
+    if (write((int) sock, s.c_str(), s.size()) >= 0) {
         /// Read the response
         std::stringstream rss;
         char ch;
-        while (read(sock, &ch, sizeof(ch)) > 0) {
+        while (read((int) sock, &ch, sizeof(ch)) > 0) {
             rss << ch;
         }
         retVal = ss.str();
@@ -134,7 +135,7 @@ int postString(
             }
         }
     }
-    close(sock);
+    close((int) sock);
     return 0;
 }
 

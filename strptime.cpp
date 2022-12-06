@@ -31,6 +31,7 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #ifdef _MSC_VER
+#pragma warning(suppress : 4996)
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "strptime.h"
@@ -109,7 +110,7 @@ static int match_string(const char **buf, const char **strs)
 		size_t len = strlen(strs[i]);
 		if (stricmp(*buf, strs[i]) == 0) {
 			*buf += len;
-			return i;
+			return (int) i;
 		}
 	}
 	return -1;

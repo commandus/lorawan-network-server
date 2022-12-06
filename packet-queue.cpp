@@ -1,4 +1,5 @@
 #ifdef _MSC_VER
+#pragma warning(suppress : 4996)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
@@ -418,7 +419,7 @@ int PacketQueue::replyMAC(
         regionalParameterChannelPlan = deviceChannelPlan->get(item.getAddr());
     if (!regionalParameterChannelPlan)
         return ERR_CODE_NO_REGION_BAND;
-    int power = regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
+    int power = (int) regionalParameterChannelPlan->maxUplinkEIRP; //defaultDownlinkTXPower;
 
     // to reply via the closest gateway, find out gateway with best SNR
     uint64_t gwa = item.packet.getBestGatewayAddress(&snr);
@@ -1022,7 +1023,7 @@ int PacketQueue::replyJoinRequest(
     item.packet.header.header.fcnt = fcntDown;
     // item.packet.header.header.macheader.f.mtype = MTYPE_JOIN_ACCEPT;
     std::string response = item.packet.mkJoinAcceptResponse(frame, internalTime, power);
-    ssize_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
+    size_t sz = sendto(gwit->second.socket, response.c_str(), response.size(), 0,
           (const struct sockaddr*) &gwit->second.sockaddr,
           ((gwit->second.sockaddr.sin6_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 

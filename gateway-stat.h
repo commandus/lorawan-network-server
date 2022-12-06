@@ -8,6 +8,7 @@
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 #else
+#define SOCKET int
 #include <netinet/in.h>
 #endif
 
@@ -35,7 +36,7 @@ public:
 	// host name or address of the gateway
 	std::string addr;
 	// socket
-	int socket;
+	SOCKET socket;
 	// Gateway send PULL_DATA packet to inform network server what gateway current address and port are (possibly over NAT)
 	struct sockaddr_in6 sockaddr;
 	int errcode;

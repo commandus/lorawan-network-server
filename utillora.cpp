@@ -1911,7 +1911,7 @@ int SemtechUDPPacket::parse
 	if (!rxpk.IsArray())
 		return ERR_CODE_INVALID_JSON;
 
-	for (size_t i = 0; i < rxpk.Size(); i++) {
+	for (rapidjson::SizeType i = 0; i < rxpk.Size(); i++) {
 		rapidjson::Value &jm = rxpk[i];
 		if (!jm.IsObject())
 			return ERR_CODE_INVALID_JSON;
