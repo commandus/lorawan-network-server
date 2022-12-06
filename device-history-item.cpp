@@ -91,12 +91,12 @@ void DeviceHistoryItem::toJSON(
 
 	std::string haddr = DEVADDR2string(*(DEVADDR*) &addr);
 	rapidjson::Value v1(rapidjson::kStringType);
-	v1.SetString(haddr.c_str(), haddr.length(), allocator);
+	v1.SetString(haddr.c_str(), (rapidjson::SizeType) haddr.size(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(DEVICE_HISTORY_ITEM_NAMES[1])), v1, allocator);
 
 	std::string dt = ltimeString(t, -1, "%F %T %Z");
 	rapidjson::Value v2(rapidjson::kStringType);
-	v1.SetString(dt.c_str(), dt.length(), allocator);
+	v1.SetString(dt.c_str(), (rapidjson::SizeType) dt.size(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(DEVICE_HISTORY_ITEM_NAMES[2])), v2, allocator);
 
 	rapidjson::Value v3(fcntup);

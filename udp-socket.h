@@ -6,6 +6,7 @@
 #ifdef _MSC_VER
 #include <WinSock2.h>
 #else
+#define SOCKET int
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -26,7 +27,7 @@ enum MODE_FAMILY {
 
 class UDPSocket {
   public:
-    int sock;       // socket handle
+    SOCKET sock;       // socket handle
     int errcode;    // internal error code
     int lasterrno;  // last system errno
     struct addrinfo addr;

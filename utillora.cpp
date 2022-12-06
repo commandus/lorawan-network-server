@@ -3,11 +3,15 @@
 #include <iostream>
 #include <sstream>
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #include "platform.h"
 #include "utillora.h"
@@ -233,7 +237,7 @@ static void deriveKeyBlock(
     AES_CMAC_CTX aesCmacCtx;
     AES_CMAC_Init(&aesCmacCtx);
     AES_CMAC_SetKey(&aesCmacCtx, nwkKey);
-    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &value, size);
+    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &value, (std::uint32_t) size);
     AES_CMAC_Final(retval, &aesCmacCtx);
 }
 
@@ -547,7 +551,7 @@ DEVNONCE string2DEVNONCE(
     const std::string &value
 )
 {
-    return strtol(value.c_str(), NULL, 16);
+    return (DEVNONCE) strtol(value.c_str(), NULL, 16);
 }
 
 void string2JOINNONCE(JOINNONCE &retval, const std::string &value)

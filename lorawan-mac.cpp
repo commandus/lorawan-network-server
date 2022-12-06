@@ -596,7 +596,7 @@ bool MacData::set(
 					struct timeval t;
 					gettimeofday(&t, NULL);
 					command.data.devicetime.gpstime = utc2gps(t.tv_sec);
-					command.data.devicetime.frac = t.tv_usec;
+					command.data.devicetime.frac = (uint8_t) t.tv_usec;
 				}
 				break;
 			case ForceRejoin:
@@ -1611,7 +1611,7 @@ MacDataDeviceTime::MacDataDeviceTime()
 	struct timeval t;
 	gettimeofday(&t, NULL);
 	v->data.gpstime = utc2gps(t.tv_sec);
-	v->data.frac = t.tv_usec;
+	v->data.frac = (uint8_t) t.tv_usec;
 }
 
 /**
@@ -1853,7 +1853,7 @@ std::string MacPtr::toHexString() const
 	std::stringstream ss;
 	for (std::vector<MAC_COMMAND* >::const_iterator it(mac.begin()); it != mac.end(); it++ ) {
 		ss << std::hex << (int) (*it)->command;
-		int sz = commandSize(*(*it), clientSide);
+		size_t sz = commandSize(*(*it), clientSide);
 		ss << hexString((const char *) &(*it)->data, sz);
 	}
 	return ss.str();
@@ -1896,8 +1896,8 @@ bool MacPtr::mkResponseMAC(
 			float lorasnr;
 			uint64_t gwa = packet.getBestGatewayAddress(&lorasnr);
 			// gateways received packet
-			outMacCommand.data.linkcheck.gwcnt = packet.metadata.size();
-			outMacCommand.data.linkcheck.margin = loraMargin(6, lorasnr);
+			outMacCommand.data.linkcheck.gwcnt = (uint8_t) packet.metadata.size();
+			outMacCommand.data.linkcheck.margin = (uint8_t) loraMargin(6, lorasnr);
 		}
 		break;
 	default:
@@ -1952,7 +1952,7 @@ int MacPtr::mkResponseMACs(
 				retval << m;
 		}
 	}
-	return mac.size();
+	return (int) mac.size();
 }
 
 /**
@@ -1982,7 +1982,7 @@ int MacPtr::mkRequestMACs(
 				retval << m;
 		}
 	}
-	return mac.size();
+	return (int) mac.size();
 }
 
 std::string MAC_COMMANDResponse2binary(
