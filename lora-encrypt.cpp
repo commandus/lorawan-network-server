@@ -91,10 +91,13 @@ std::string decryptJoinAccept(
 	uint8_t s[16];
 	memset(s, 0, sizeof(s));
 
-	int size = payload.size() - 1;
+    std::string encBuffer(payload);
+    size_t size = payload.size();
+    if (size == 0)
+        return encBuffer;
+    size--;
 	uint8_t bufferIndex = 1;
-	std::string encBuffer(payload);
-	
+
 	while (size >= 16) {
 		aes_encrypt((const uint8_t*) payload.c_str() + bufferIndex,
 			(uint8_t*) encBuffer.c_str() + bufferIndex, &aesContext);

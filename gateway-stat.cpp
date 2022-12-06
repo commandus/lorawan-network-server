@@ -90,20 +90,20 @@ void GatewayStat::toJSON(
 	std::stringstream ss;
 	ss << std::hex << gatewayId;
 	std::string ssr = ss.str();
-	vId.SetString(ssr.c_str(), ssr.length(), allocator);
+	vId.SetString(ssr.c_str(), (rapidjson::SizeType) ssr.size(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[0])), vId, allocator);
 
 	rapidjson::Value vaddr(rapidjson::kStringType);
-	vaddr.SetString(addr.c_str(), addr.length(), allocator);
+	vaddr.SetString(addr.c_str(), (rapidjson::SizeType) addr.size(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[1])), vaddr, allocator);
 
 	rapidjson::Value vname(rapidjson::kStringType);
-	vname.SetString(name.c_str(), name.length(), allocator);
+	vname.SetString(name.c_str(), (rapidjson::SizeType) name.size(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[2])), vname, allocator);
 
 	std::string dt = ltimeString(t, -1, "%FT%T%Z");
 	rapidjson::Value v1(rapidjson::kStringType);
-	v1.SetString(dt.c_str(), dt.length(), allocator);
+	v1.SetString(dt.c_str(), (rapidjson::SizeType) dt.size(), allocator);
 	value.AddMember(rapidjson::Value(rapidjson::StringRef(STAT_NAMES[3])), v1, allocator);
 
 	rapidjson::Value v2(lat);
