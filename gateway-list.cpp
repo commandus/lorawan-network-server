@@ -5,11 +5,15 @@
 #include "errlist.h"
 #include "utillora.h"
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/writer.h"
 #include "rapidjson/prettywriter.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #include "utilstring.h"
 #include "platform.h"
