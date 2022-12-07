@@ -5,9 +5,7 @@
 #include <inttypes.h>
 
 #ifdef _MSC_VER
-// #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <stdint.h> // portable: uint64_t   MSVC: __int64 
+#include <stdint.h> // portable: uint64_t   MSVC: __int64
 #endif
 
 /**
@@ -27,9 +25,9 @@ std::string ltimeString(
  * @param usec -1: do not add to the tail of formatted date
  */
 std::string gtimeString(
-        time_t value,
-        int usec,
-        const std::string &format
+    time_t value,
+    int usec,
+    const std::string &format
 );
 
 /**
