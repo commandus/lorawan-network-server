@@ -36,7 +36,6 @@ DirTxtReceiverQueueService::DirTxtReceiverQueueService()
  */
 int DirTxtReceiverQueueService::loadFile(
 	std::string &payload,
-	time_t &retTime, 
 	DIRTXT_FORMAT format,
 	const std::string &path
 )
@@ -60,10 +59,8 @@ int DirTxtReceiverQueueService::loadFile(
 			// as-is binary file
 			break;
 	}
-	if (payload.size()) {
-		retTime = fileModificationTime(path);
+	if (payload.size())
 		return 0;
-	}
 	return ERR_CODE_INVALID_PACKET;
 }
 
@@ -104,7 +101,7 @@ int DirTxtReceiverQueueService::storeFile
 
 int DirTxtReceiverQueueService::count()
 {
-	int r = 0;
+	size_t r = 0;
 	std::vector<std::string> files;
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
@@ -112,7 +109,7 @@ int DirTxtReceiverQueueService::count()
 		r += files.size();
 		files.clear();
 	}
-	return r;
+	return (int) r;
 }
 
 /**
@@ -129,15 +126,15 @@ int DirTxtReceiverQueueService::get(
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
 		util::filesInPath(path, dataFileExtensions[fmt], 0, &files);
-		r += files.size();
+		r += (int) files.size();
 		if (r > onum)
 		{
-			if (loadFile(retval.value.payload, retval.key.time.tv_sec, (DIRTXT_FORMAT) fmt, files[onum])) {
+			if (loadFile(retval.value.payload, (DIRTXT_FORMAT) fmt, files[onum])) {
 				// error
 				return ERR_CODE_INVALID_PACKET;
 			} else {
 				retval.key.id = onum;
-				retval.key.time.tv_sec = fileModificationTime(files[onum]);
+				retval.key.time.tv_sec = (time_t) fileModificationTime(files[onum]);
 				retval.key.time.tv_usec = 0;
 			}
 			break;
@@ -233,7 +230,7 @@ int DirTxtReceiverQueueService::pop(
 		std::vector<std::string>::const_iterator it(f.begin());
 		if (it != f.end())
 		{
-			if (loadFile(retval.value.payload, retval.key.time.tv_sec, (DIRTXT_FORMAT) fmt, *it)) {
+			if (loadFile(retval.value.payload, (DIRTXT_FORMAT) fmt, *it)) {
 				// error
 				continue;
 			} else {
@@ -266,7 +263,7 @@ int DirTxtReceiverQueueService::peek(
 		std::vector<std::string>::const_iterator it(f.begin());
 		if (it != f.end())
 		{
-			if (loadFile(retval.value.payload, retval.key.time.tv_sec, (DIRTXT_FORMAT) fmt, *it)) {
+			if (loadFile(retval.value.payload, (DIRTXT_FORMAT) fmt, *it)) {
 				// error
 				continue;
 			} else {
@@ -297,7 +294,7 @@ void DirTxtReceiverQueueService::list(
 		util::filesInPath(path, dataFileExtensions[fmt], 0, &f);
 		for (std::vector<std::string>::const_iterator it(f.begin()); it != f.end(); it++)
 		{
-			if (loadFile(e.value.payload, e.key.time.tv_sec, (DIRTXT_FORMAT) fmt, *it)) {
+			if (loadFile(e.value.payload, (DIRTXT_FORMAT) fmt, *it)) {
 				// error
 			} else {
 				e.key.id = c;
