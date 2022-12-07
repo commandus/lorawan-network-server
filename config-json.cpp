@@ -2,11 +2,15 @@
 
 #include <iostream>
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #include "errlist.h"
 #include "utilstring.h"
@@ -75,7 +79,7 @@ int ServerConfig::parse(
 	if (value.HasMember("listenAddressIPv4")) {
 		rapidjson::Value &addresses = value["listenAddressIPv4"];
 		if (addresses.IsArray()) {
-			for (int i = 0; i < addresses.Size(); i++) {
+			for (rapidjson::SizeType i = 0; i < addresses.Size(); i++) {
 				rapidjson::Value &address = addresses[i];
 				if (address.IsString())
 					listenAddressIPv4.push_back(address.GetString());
@@ -85,7 +89,7 @@ int ServerConfig::parse(
 	if (value.HasMember("listenAddressIPv6")) {
 		rapidjson::Value &addresses = value["listenAddressIPv6"];
 		if (addresses.IsArray()) {
-			for (int i = 0; i < addresses.Size(); i++) {
+			for (rapidjson::SizeType i = 0; i < addresses.Size(); i++) {
 				rapidjson::Value &address = addresses[i];
 				if (address.IsString())
 					listenAddressIPv6.push_back(address.GetString());
@@ -216,7 +220,7 @@ void ServerConfig::toJson(
 	addressesIPv4.SetArray();
 	for (std::vector<std::string>::const_iterator it(listenAddressIPv4.begin()); it != listenAddressIPv4.end(); it++) {
 		rapidjson::Value address;
-		address.SetString(it->c_str(), it->size(), allocator);
+		address.SetString(it->c_str(), (rapidjson::SizeType) it->size(), allocator);
 		addressesIPv4.PushBack(address, allocator);
 	}
 	value.AddMember("listenAddressIPv4", addressesIPv4, allocator);
@@ -225,29 +229,29 @@ void ServerConfig::toJson(
 	addressesIPv6.SetArray();
 	for (std::vector<std::string>::const_iterator it(listenAddressIPv6.begin()); it != listenAddressIPv6.end(); it++) {
 		rapidjson::Value address;
-		address.SetString(it->c_str(), it->size(), allocator);
+		address.SetString(it->c_str(), (rapidjson::SizeType) it->size(), allocator);
 		addressesIPv6.PushBack(address, allocator);
 	}
 	value.AddMember("listenAddressIPv6", addressesIPv6, allocator);
 
 	rapidjson::Value n;
-	n.SetString(identityStorageName.c_str(), identityStorageName.size(), allocator);
+	n.SetString(identityStorageName.c_str(), (rapidjson::SizeType) identityStorageName.size(), allocator);
 	value.AddMember("identityStorageName", n, allocator);
 
 	rapidjson::Value nds;
-	nds.SetString(deviceHistoryStorageName.c_str(), deviceHistoryStorageName.size(), allocator);
+	nds.SetString(deviceHistoryStorageName.c_str(), (rapidjson::SizeType) deviceHistoryStorageName.size(), allocator);
 	value.AddMember("deviceHistoryStorageName", nds, allocator);
 
     rapidjson::Value nrs;
-    nrs.SetString(regionalSettingsStorageName.c_str(), regionalSettingsStorageName.size(), allocator);
+    nrs.SetString(regionalSettingsStorageName.c_str(), (rapidjson::SizeType) regionalSettingsStorageName.size(), allocator);
     value.AddMember("regionalSettingsStorageName", nrs, allocator);
 
     rapidjson::Value nrscp;
-    nrs.SetString(regionalSettingsChannelPlanName.c_str(), regionalSettingsChannelPlanName.size(), allocator);
+    nrs.SetString(regionalSettingsChannelPlanName.c_str(), (rapidjson::SizeType) regionalSettingsChannelPlanName.size(), allocator);
     value.AddMember("regionalSettingsChannelPlanName", nrscp, allocator);
 
 	rapidjson::Value nq;
-	nq.SetString(queueStorageName.c_str(), queueStorageName.size(), allocator);
+	nq.SetString(queueStorageName.c_str(), (rapidjson::SizeType) queueStorageName.size(), allocator);
 	value.AddMember("queueStorageName", nq, allocator);
 
 	rapidjson::Value rbs;
@@ -268,30 +272,30 @@ void ServerConfig::toJson(
 
 	rapidjson::Value vstorageType;
 	std::string s(storageType2String(storageType));
-	vstorageType.SetString(s.c_str(), s.size(), allocator);
+	vstorageType.SetString(s.c_str(),(rapidjson::SizeType) s.size(), allocator);
 	value.AddMember("storageType", vstorageType, allocator);
 
     rapidjson::Value vgwStatStorageType;
     std::string s0(gwStatStorageType2String(gwStatStorageType));
-    vgwStatStorageType.SetString(s0.c_str(), s0.size(), allocator);
+    vgwStatStorageType.SetString(s0.c_str(), (rapidjson::SizeType) s0.size(), allocator);
     value.AddMember("gwStatStorageType", vgwStatStorageType, allocator);
 
     rapidjson::Value vlogGWStatisticsFileName;
-    vlogGWStatisticsFileName.SetString(logGWStatisticsFileName.c_str(), logGWStatisticsFileName.size());
+    vlogGWStatisticsFileName.SetString(logGWStatisticsFileName.c_str(), (rapidjson::SizeType) logGWStatisticsFileName.size());
     value.AddMember("logGWStatisticsFileName", vlogGWStatisticsFileName, allocator);
 
 	rapidjson::Value vdeviceStatStorageType;
 	std::string s1(deviceStatStorageType2String(deviceStatStorageType));
-	vdeviceStatStorageType.SetString(s1.c_str(), s1.size(), allocator);
+	vdeviceStatStorageType.SetString(s1.c_str(), (rapidjson::SizeType) s1.size(), allocator);
 	value.AddMember("deviceStatStorageType", vdeviceStatStorageType, allocator);
 
     rapidjson::Value vlogDeviceStatisticsFileName;
-    vlogDeviceStatisticsFileName.SetString(logDeviceStatisticsFileName.c_str(), logDeviceStatisticsFileName.size());
+    vlogDeviceStatisticsFileName.SetString(logDeviceStatisticsFileName.c_str(), (rapidjson::SizeType) logDeviceStatisticsFileName.size());
     value.AddMember("logDeviceStatisticsFileName", vlogDeviceStatisticsFileName, allocator);
 
 	rapidjson::Value vMessageQueuestorageType;
 	std::string s2(messageQueueStorageType2String(messageQueueType));
-	vMessageQueuestorageType.SetString(s2.c_str(), s2.size(), allocator);
+	vMessageQueuestorageType.SetString(s2.c_str(), (rapidjson::SizeType) s2.size(), allocator);
 	value.AddMember("messageQueueStorageType", vMessageQueuestorageType, allocator);
 
     rapidjson::Value vmessageQueueDirFormat;
@@ -306,12 +310,12 @@ void ServerConfig::toJson(
         default:
             s = "bin";
     }
-    vmessageQueueDirFormat.SetString(s.c_str(), s.size(), allocator);
+    vmessageQueueDirFormat.SetString(s.c_str(), (rapidjson::SizeType) s.size(), allocator);
     value.AddMember("messageQueueDirFormat", vmessageQueueDirFormat, allocator);
 
     rapidjson::Value vnetid;
 	std::string sni = netid.toString();
-	vnetid.SetString(sni.c_str(), sni.size(), allocator);
+	vnetid.SetString(sni.c_str(), (rapidjson::SizeType) sni.size(), allocator);
 	value.AddMember("netId", vnetid, allocator);
 }
 
@@ -434,11 +438,11 @@ std::string Configuration::toString() {
 	rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
 
 	rapidjson::Value cfn;
-	cfn.SetString(configFileName.c_str(), configFileName.length(), allocator);
+	cfn.SetString(configFileName.c_str(), (rapidjson::SizeType) configFileName.size(), allocator);
 	doc.AddMember("configFileName", cfn, allocator);
 
 	rapidjson::Value gfn;
-	gfn.SetString(gatewaysFileName.c_str(), gatewaysFileName.length(), allocator);
+	gfn.SetString(gatewaysFileName.c_str(), (rapidjson::SizeType) gatewaysFileName.size(), allocator);
 	doc.AddMember("gatewaysFileName", gfn, allocator);
 
 	rapidjson::Value server;
@@ -450,7 +454,7 @@ std::string Configuration::toString() {
 	doc.AddMember("ws", ws, allocator);
 
 	rapidjson::Value dbcfn;
-	dbcfn.SetString(databaseConfigFileName.c_str(), databaseConfigFileName.size(), allocator);
+	dbcfn.SetString(databaseConfigFileName.c_str(), (rapidjson::SizeType) databaseConfigFileName.size(), allocator);
 	doc.AddMember("databaseConfigFileName", dbcfn, allocator);
 
     rapidjson::Value jPluginParams;
@@ -460,11 +464,11 @@ std::string Configuration::toString() {
         jPluginParam.SetArray();
         // add name
         rapidjson::Value jParamName;
-        jParamName.SetString(it->first.c_str(), it->first.size(), allocator);
+        jParamName.SetString(it->first.c_str(), (rapidjson::SizeType) it->first.size(), allocator);
         jPluginParam.PushBack(jParamName, allocator);
         for (std::vector<std::string>::const_iterator itv(it->second.begin()); itv != it->second.end(); it++) {
             rapidjson::Value jParamValue;
-            jParamValue.SetString(itv->c_str(), itv->size(), allocator);
+            jParamValue.SetString(itv->c_str(), (rapidjson::SizeType) itv->size(), allocator);
             jPluginParam.PushBack(jParamValue, allocator);
         }
         jPluginParams.PushBack(jPluginParam, allocator);
@@ -472,7 +476,7 @@ std::string Configuration::toString() {
     doc.AddMember("pluginsParams", jPluginParams, allocator);
 
     rapidjson::Value psp;
-    psp.SetString(pluginsPath.c_str(), pluginsPath.size(), allocator);
+    psp.SetString(pluginsPath.c_str(), (rapidjson::SizeType) pluginsPath.size(), allocator);
     doc.AddMember("pluginsPath", psp, allocator);
 
 	rapidjson::Value gwp;
@@ -657,18 +661,18 @@ void WebServiceConfig::toJson(
 	value.AddMember("port", vPort, allocator);
 
 	rapidjson::Value vHtml;
-	vHtml.SetString(html.c_str(), html.size(), allocator);
+	vHtml.SetString(html.c_str(), (rapidjson::SizeType) html.size(), allocator);
 	value.AddMember("html", vHtml, allocator);
 
 	rapidjson::Value vDefaultDatabase;
-	vDefaultDatabase.SetString(defaultDatabase.c_str(), defaultDatabase.size(), allocator);
+	vDefaultDatabase.SetString(defaultDatabase.c_str(), (rapidjson::SizeType) defaultDatabase.size(), allocator);
 	value.AddMember("defaultDatabase", vDefaultDatabase, allocator);
 
 	rapidjson::Value vdatabases;
 	vdatabases.SetArray();
 	for (std::vector<std::string>::const_iterator it(databases.begin()); it != databases.end(); it++) {
 		rapidjson::Value name;
-		name.SetString(it->c_str(), it->size(), allocator);
+		name.SetString(it->c_str(), (rapidjson::SizeType) it->size(), allocator);
 		vdatabases.PushBack(name, allocator);
 	}
 	value.AddMember("databases", vdatabases, allocator);
@@ -686,14 +690,14 @@ void WebServiceConfig::toJson(
     value.AddMember("flags", vFlags, allocator);
 
     rapidjson::Value vIssuer;
-    vIssuer.SetString(jwtIssuer.c_str(), jwtIssuer.size(), allocator);
+    vIssuer.SetString(jwtIssuer.c_str(), (rapidjson::SizeType) jwtIssuer.size(), allocator);
     value.AddMember("issuer", vIssuer, allocator);
 
     rapidjson::Value vSecret;
-    vSecret.SetString(jwtSecret.c_str(), jwtSecret.size(), allocator);
+    vSecret.SetString(jwtSecret.c_str(), (rapidjson::SizeType) jwtSecret.size(), allocator);
     value.AddMember("secret", vSecret, allocator);
 
     rapidjson::Value vUserListFileName;
-    vUserListFileName.SetString(userPasswordListFileName.c_str(), userPasswordListFileName.size(), allocator);
+    vUserListFileName.SetString(userPasswordListFileName.c_str(), (rapidjson::SizeType) userPasswordListFileName.size(), allocator);
     value.AddMember("userListFileName", vUserListFileName, allocator);
 }

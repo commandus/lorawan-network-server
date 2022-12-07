@@ -368,9 +368,9 @@ static int64_t paramValNum(
 ) {
 	const COMMAND_PARAM *p = cmd.param[paramIndex];
 	int choiceCount = p->count;
-	for (int c = 0; c < choiceCount; c++) {
+	for (uint32_t c = 0; c < choiceCount; c++) {
 		const COMMAND_PARAM_CHOICE *choice = p->list[c];
-		if ((v >= choice->minvalue) && (c <= choice->maxvalue)) {
+		if (((uint32_t) v >= choice->minvalue) && (c <= choice->maxvalue)) {
 			return v;
 		}
 	}

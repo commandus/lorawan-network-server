@@ -9,7 +9,6 @@
 #include <fstream>
 
 #include <signal.h>
-#include <unistd.h>
 
 #include "argtable3/argtable3.h"
 #include "utilstring.h"

@@ -22,6 +22,13 @@ option(ENABLE_JWT  "Build with JWT" OFF)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set(LIB_OS_SPECIFIC_SOURCE usleep.cpp)
+
+	find_package(unofficial-sqlite3 CONFIG REQUIRED)
+	set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
+else ()
+	find_package(SQLite3 REQUIRED)
+	set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
+	set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
 endif ()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -33,12 +40,6 @@ find_package(OpenSSL REQUIRED)
 set(LIBJWT OpenSSL::Crypto)
 endif(ENABLE_JWT)
 
-#find_package(SQLite3 REQUIRED)
-#set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
-#set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
-
-find_package(unofficial-sqlite3 CONFIG REQUIRED)
-set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
 
 if(ENABLE_CURL)
 	find_package(CURL REQUIRED)

@@ -1,4 +1,5 @@
 #include <fstream>
+#include <sstream>
 #include <regex>
 #include <base64/base64.h>
 
