@@ -143,7 +143,7 @@ endif()
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
+	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
 	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
 target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
@@ -157,7 +157,7 @@ set(SRC_MAC_GW
 )
 add_executable(mac-gw ${SRC_MAC_GW})
 target_link_libraries(mac-gw PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 
 set(SRC_PRINT_NETID
@@ -178,7 +178,7 @@ set(LORA_PRINT_SOURCES
 )
 add_executable(lora-print ${LORA_PRINT_SOURCES})
 target_link_libraries(lora-print PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
+	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
 )
 
 set(PROTO_DB_SOURCES
@@ -189,12 +189,12 @@ set(PROTO_DB_SOURCES
 )
 add_executable(proto-db ${PROTO_DB_SOURCES})
 target_link_libraries(proto-db PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 
 add_executable(dev-payload ${DEV_PAYLOAD_SOURCES})
 target_link_libraries(dev-payload PRIVATE Threads::Threads
-	lorawan protobuf
+	lorawan
 	${LIBPKT2} ${CURL_LIBRARIES} ${OS_SPECIFIC_LIBS}
 )
 
