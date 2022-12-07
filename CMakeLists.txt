@@ -33,7 +33,7 @@ find_package(OpenSSL REQUIRED)
 set(LIBJWT OpenSSL::Crypto)
 endif(ENABLE_JWT)
 
-# find_package(unofficial-sqlite3 REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 if(ENABLE_CURL)
 	find_package(CURL REQUIRED)
@@ -157,7 +157,7 @@ set(SRC_MAC_GW
 )
 add_executable(mac-gw ${SRC_MAC_GW})
 target_link_libraries(mac-gw PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 
 set(SRC_PRINT_NETID
@@ -178,7 +178,7 @@ set(LORA_PRINT_SOURCES
 )
 add_executable(lora-print ${LORA_PRINT_SOURCES})
 target_link_libraries(lora-print PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
+	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 
 set(PROTO_DB_SOURCES
@@ -189,13 +189,13 @@ set(PROTO_DB_SOURCES
 )
 add_executable(proto-db ${PROTO_DB_SOURCES})
 target_link_libraries(proto-db PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 
 add_executable(dev-payload ${DEV_PAYLOAD_SOURCES})
 target_link_libraries(dev-payload PRIVATE Threads::Threads
 	lorawan
-	${LIBPKT2} ${CURL_LIBRARIES} ${OS_SPECIFIC_LIBS}
+	${LIBPKT2} ${OS_SPECIFIC_LIBS}
 )
 
 # Strip binary for release builds
