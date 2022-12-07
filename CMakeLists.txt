@@ -92,7 +92,8 @@ set(C_QUEUE_STORAGE
 	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp
 )
 
-set(BACKEND_DB_LIB sqlite3)
+set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
+set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
 
 set(BACKEND_DB_SRC
 	db-json.cpp
@@ -146,6 +147,7 @@ target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
 	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
+target_include_directories(lorawan-network-server PRIVATE ${BACKEND_DB_INC} )
 target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
 
 set(SRC_MAC_GW
@@ -159,6 +161,7 @@ add_executable(mac-gw ${SRC_MAC_GW})
 target_link_libraries(mac-gw PRIVATE Threads::Threads
 	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
+target_include_directories(mac-gw PRIVATE ${BACKEND_DB_INC} )
 
 set(SRC_PRINT_NETID
 	print-netid.cpp
@@ -180,6 +183,7 @@ add_executable(lora-print ${LORA_PRINT_SOURCES})
 target_link_libraries(lora-print PRIVATE Threads::Threads
 	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
+target_include_directories(lora-print PRIVATE ${BACKEND_DB_INC} )
 
 set(PROTO_DB_SOURCES
 	proto-db.cpp identity-service-dir-txt.cpp
@@ -191,6 +195,7 @@ add_executable(proto-db ${PROTO_DB_SOURCES})
 target_link_libraries(proto-db PRIVATE Threads::Threads
 	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
+target_include_directories(proto-db PRIVATE ${BACKEND_DB_INC} )
 
 add_executable(dev-payload ${DEV_PAYLOAD_SOURCES})
 target_link_libraries(dev-payload PRIVATE Threads::Threads
