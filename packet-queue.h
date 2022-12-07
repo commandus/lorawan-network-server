@@ -28,6 +28,12 @@
 // queue default timeout
 #define DEF_TIMEOUT_MS 200
 
+#ifdef _MSC_VER
+#include <Windows.h>
+#else
+#define HANDLE int
+#endif
+
 typedef enum {
 	MODE_NONE = 0,
 	MODE_ACK = 1,
@@ -71,8 +77,8 @@ class PacketQueue {
 		std::thread *threadSend;
 		// void runner(PacketHandler &value);
 		LogIntf *onLog;
-
-		int fdWakeup;
+        // sync object, Linux: eventfd(), Windows: WaitForSingleObject()
+		HANDLE fdWakeup;
 		IdentityService *identityService;
 		DeviceHistoryService *deviceHistoryService;
 		GatewayList *gatewayList;

@@ -3,7 +3,9 @@
 
 #include <string>
 #include <functional>
+
 #include "udp-socket.h"
+#include "log-intf.h"
 
 class UDPEmitter
 {
@@ -14,12 +16,7 @@ public:
 	bool stopped;
 	struct sockaddr_in remotePeerAddress;
 
-	std::function<void(
-		int level,
-		int modulecode,
-		int errorcode,
-		const std::string &message
-	)> *onLog;
+    LogIntf *onLog;
 
 	UDPEmitter();
 	~UDPEmitter();
@@ -60,13 +57,7 @@ public:
 		struct sockaddr_in *value);
 
 	void clearLogger();
-	void setLogger(
-		std::function<void(
-			int level,
-			int modulecode,
-			int errorcode,
-			const std::string &message
-	)> *onLog);
+	void setLogger(LogIntf *onLog);
 	
 };
 

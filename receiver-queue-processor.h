@@ -32,13 +32,7 @@ class ReceiverQueueProcessor {
 		DatabaseByConfig *databaseByConfig;
 		ReceiverQueueService *receiverQueueService;
 
-		std::function<void(
-			void *env,
-			int level,
-			int modulecode,
-			int errorcode,
-			const std::string &message
-		)> onLog;
+        LogIntf *onLog;
 		void runner();
         void put2databases();
         void processQueue();
@@ -50,14 +44,7 @@ class ReceiverQueueProcessor {
                 DeviceId id,
                 SemtechUDPPacket &value
 		);
-		void setLogger(
-			std::function<void(
-				void *env,
-				int level,
-				int modulecode,
-				int errorcode,
-				const std::string &message
-		)> value);
+		void setLogger(LogIntf *value);
 		void setDatabaseByConfig(DatabaseByConfig *value);
 
 		void start(ReceiverQueueService *queueService);
