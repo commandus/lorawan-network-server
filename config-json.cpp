@@ -1,6 +1,7 @@
 #include "config-json.h"
 
 #include <iostream>
+#include <sstream>
 
 #ifdef __clang__
 #pragma clang diagnostic push
