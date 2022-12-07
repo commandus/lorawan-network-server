@@ -7,6 +7,7 @@
 #include <sys/select.h>
 
 #include "third_party/get_rss/get_rss.h"
+#include "utildate.h"
 #include "utilstring.h"
 #include "errlist.h"
 

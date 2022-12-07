@@ -1,7 +1,6 @@
 #ifndef LORA_PACKET_HANDLER_ABSTRACT_H
 #define LORA_PACKET_HANDLER_ABSTRACT_H 1
 
-#include <sys/time.h>
 #include "utillora.h"
 
 /**

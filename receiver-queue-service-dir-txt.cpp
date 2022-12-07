@@ -1,4 +1,5 @@
 #include <fstream>
+#include <sstream>
 #include <base64/base64.h>
 
 #include "receiver-queue-service-dir-txt.h"
@@ -51,7 +52,7 @@ int DirTxtReceiverQueueService::loadFile(
 				// base64
 				payload = base64_decode(payload, false);
 			}
-			catch (const std::exception& e) {
+			catch (const std::exception&) {
 				return ERR_CODE_INVALID_BASE64;
 			}
 			break;

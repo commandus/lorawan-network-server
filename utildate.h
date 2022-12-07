@@ -6,6 +6,8 @@
 
 #ifdef _MSC_VER
 #include <stdint.h> // portable: uint64_t   MSVC: __int64
+#else
+#include <sys/time.h>
 #endif
 
 /**
