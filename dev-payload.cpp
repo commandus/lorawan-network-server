@@ -32,6 +32,12 @@ const std::string PROG_NAME_DEV_PAYLOAD = "Simulate sending a packet from the en
 
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
 
+#ifdef _MSC_VER
+#define RECV_TYPE char*
+#else
+#define RECV_TYPE void*
+#endif
+
 static void done()
 {
 	// destroy and free all
@@ -211,7 +217,7 @@ static int recvACK
 	recvBuffer.resize(MAX_RECV_BUFFER_SIZE + 1);
 	struct sockaddr_in6 cliAddr;
 	socklen_t cliAddrLen = sizeof(cliAddr);
-	int rr = (int) recvfrom(socket.sock, (void*) recvBuffer.c_str(), MAX_RECV_BUFFER_SIZE, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
+	int rr = (int) recvfrom(socket.sock, (RECV_TYPE) recvBuffer.c_str(), MAX_RECV_BUFFER_SIZE, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
 	if (rr < 0) { 
 		std::cerr << ERR_SOCKET_READ
 			<< " " << UDPSocket::addrString(&socket.addrStorage)
