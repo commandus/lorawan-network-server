@@ -1,5 +1,6 @@
 #include <fstream>
 #include <regex>
+#include <sstream>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
