@@ -12,7 +12,7 @@
 #define DEF_BUFFER_SIZE     4096
 
 UDPEmitter::UDPEmitter() :
-	stopped(false), onLog(NULL)
+	stopped(false), onLog(nullptr)
 {
 	memset(&remotePeerAddress, 0, sizeof(struct sockaddr_in));
 	setBufferSize(DEF_BUFFER_SIZE);
@@ -26,16 +26,13 @@ void UDPEmitter::setBufferSize(size_t value) {
 }
 
 void UDPEmitter::clearLogger() {
-	onLog = NULL;
+	onLog = nullptr;
 }
 
 void UDPEmitter::setLogger(
-	std::function<void(
-		int level,
-		int modulecode,
-		int errorcode,
-		const std::string &message
-)> *value) {
+    LogIntf *value
+)
+{
 	onLog = value;
 }
 
@@ -63,7 +60,7 @@ int UDPEmitter::openSocket(
 	if (r != 0 || addr == NULL) {
 		std::stringstream ss;
 		ss << ERR_GET_ADDRESS << errno << ": " << strerror(errno);
-		(*onLog)(LOG_ERR, errno, LOG_UDP_EMITTER, ss.str());
+		onLog->logMessage(nullptr, LOG_ERR, errno, LOG_UDP_EMITTER, ss.str());
 		return -1;
 	}
 	retval.sock = socket(addr->ai_family, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
@@ -73,7 +70,7 @@ int UDPEmitter::openSocket(
 	if (retval.sock == -1) {
 		std::stringstream ss;
 		ss << ERR_OPEN_DEVICE << errno << ": " << strerror(errno);
-		(*onLog)(LOG_ERR, errno, LOG_UDP_EMITTER, ss.str());
+        onLog->logMessage(nullptr, LOG_ERR, errno, LOG_UDP_EMITTER, ss.str());
 
 		return -1;
 	}
@@ -91,7 +88,7 @@ int UDPEmitter::listenSocket(
 		if (r < 0) {
 			std::stringstream ss;
 			std::cerr << ERR_BIND << errno << ": "<< strerror(errno);
-			(*onLog)(LOG_ERR, errno, LOG_UDP_EMITTER, ss.str());
+            onLog->logMessage(nullptr, LOG_ERR, errno, LOG_UDP_EMITTER, ss.str());
 			close(sock);
 			return r;
 		}
@@ -160,7 +157,7 @@ int UDPEmitter::sendDown(
 		struct sockaddr_in *s = (struct sockaddr_in *) mSocket.addr.ai_addr;
 		ss << hexString(buffer.c_str(), size) 
 			<< " -> " << inet_ntoa(s->sin_addr) << ":" << ntohs(s->sin_port) << std::endl;
-		(*onLog)(LOG_INFO, 0, LOG_UDP_EMITTER, ss.str());
+        onLog->logMessage(nullptr, LOG_INFO, 0, LOG_UDP_EMITTER, ss.str());
 	}
 
 	size_t r = sendto(mSocket.sock, buffer.c_str(), size, 0, mSocket.addr.ai_addr, mSocket.addr.ai_addrlen);
@@ -178,7 +175,7 @@ int UDPEmitter::sendUp(
 		std::stringstream ss;
 		ss << hexString(buffer.c_str(), size) 
 			<< " <- " << inet_ntoa(remotePeerAddress.sin_addr) << ":" << ntohs(remotePeerAddress.sin_port) << std::endl;
-		(*onLog)(LOG_INFO, 0, LOG_UDP_EMITTER, ss.str());
+        onLog->logMessage(nullptr, LOG_INFO, 0, LOG_UDP_EMITTER, ss.str());
 	}
 	size_t r = sendto(mSocket.sock, buffer.c_str(), size, 0, (struct sockaddr *) &remotePeerAddress, sizeof(remotePeerAddress));
 	return r;

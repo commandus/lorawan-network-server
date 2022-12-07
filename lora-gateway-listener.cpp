@@ -1550,7 +1550,7 @@ void LoraGatewayListener::log(
     if (level > logVerbosity)
         return;
     mLog.lock();
-    onLog((void *) this, LOG_EMBEDDED_GATEWAY, level, errorcode, message);
+    onLog->logMessage((void *) this, LOG_EMBEDDED_GATEWAY, level, errorcode, message);
     mLog.unlock();
 }
 
@@ -1567,13 +1567,7 @@ void LoraGatewayListener::setOnSpectralScan(
 }
 
 void LoraGatewayListener::setOnLog(
-    std::function<void(
-        void *listener,
-        int level,
-        int modulecode,
-        int errorcode,
-        const std::string &message
-    )> value
+    LogIntf *value
 )
 {
     mLog.lock();

@@ -24,16 +24,11 @@ PacketListener::~PacketListener() {
 }
 
 void PacketListener::setLogger(
-	int averbosity,
-	std::function<void(
-		void *env,
-		int level,
-		int modulecode,
-		int errorcode,
-		const std::string &message
-)> value) 
+    int aVerbosity,
+    LogIntf *value
+)
 {
-	verbosity = averbosity;
+	verbosity = aVerbosity;
 	onLog = value;
 }
 
@@ -116,7 +111,7 @@ int PacketListener::add(
         if (!add(*it, hint)) {
             std::stringstream ss;
             ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
-            onLog(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
+            onLog->logMessage(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
             exit(ERR_CODE_SOCKET_BIND);
         }
         r++;

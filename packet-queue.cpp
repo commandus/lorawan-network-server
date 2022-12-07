@@ -80,15 +80,20 @@ std::string SemtechUDPPacketItems::toString() const
 }
 
 PacketQueue::PacketQueue()
-	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), mode(0), fdWakeup(0), onLog(NULL), identityService(NULL), gatewayList(NULL)
+	: packetsRead(0), delayMicroSeconds(DEF_DELAY_MS * 1000), mode(0), onLog(nullptr),
+    identityService(nullptr), gatewayList(nullptr)
 {
+#ifdef _MSC_VER
+    fdWakeup = nullptr;
+#else
+    fdWakeup = 0;
+#endif
 }
 
 PacketQueue::PacketQueue(
 	int delayMillisSeconds
 )
-	: packetsRead(0), mode(0), threadSend(NULL), fdWakeup(0), onLog(NULL),
-      identityService(NULL), deviceHistoryService(NULL), gatewayList(NULL)
+	: PacketQueue()
 {
 	setDelay(delayMillisSeconds);
 }
@@ -714,7 +719,33 @@ void PacketQueue::runner()
 	mode = 1;
 	fd_set fh;
 	while (mode == 1) {
-		FD_ZERO(&fh);
+#ifdef _MSC_VER
+        if (!fdWakeup) {
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << " CreateEvent() failed";
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
+            abort();
+        }
+        DWORD waitResult = WaitForSingleObject(fdWakeup, timeoutMicroSeconds);
+        switch (waitResult) {
+            case WAIT_OBJECT_0:
+            case WAIT_TIMEOUT:
+            case WAIT_ABANDONED:
+                break;
+            default:
+                {
+                inr r = GetLastError();
+                if (onLog) {
+                    std::stringstream ss;
+                    ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << r
+                        << ", timeout: " << timeoutMicroSeconds;
+                    onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
+                }
+                abort();
+                }
+        }
+#else
+    	FD_ZERO(&fh);
 		FD_SET(fdWakeup, &fh);
 		struct timeval timeout;
 		timeout.tv_sec = 0;
@@ -734,12 +765,12 @@ void PacketQueue::runner()
 			if (onLog) {
 				std::stringstream ss;
 				ss << "wakeup is set, reset";
-				onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+				onLog->logMessage(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
 			}
 			uint8_t u = 1;
 			while (read(fdWakeup, &u, sizeof(u)) == sizeof(u));
 		}
-
+#endif
 		if (!count())
 			continue;
 
@@ -807,10 +838,19 @@ void PacketQueue::wakeUp()
 	// mode 0- stopped, 1- running, -1- stop request
 	if (mode != 1)
 		return;
+#ifdef _MSC_VER
+    if ((!fdWakeup) || (!SetEvent(fdWakeup))) {
+        if (onLog) {
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << r
+                << ", timeout: " << timeoutMicroSeconds;
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
+        }
+    }
+#else
 	uint8_t u = 1;
-	if (write(fdWakeup, &u, sizeof(u)) != sizeof(u)) {
-		// nothing to do
-	}
+	write(fdWakeup, &u, sizeof(u)) != sizeof(u);
+#endif
 }
 
 void PacketQueue::start(
@@ -820,9 +860,11 @@ void PacketQueue::start(
 	// mode 0- stopped, 1- running, -1- stop request
 	if (mode == 1)
 		return;
-
-	fdWakeup = eventfd(0, EFD_CLOEXEC);
-
+#ifdef _MSC_VER
+    fdWakeup = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+#else
+    fdWakeup = eventfd(0, EFD_CLOEXEC);
+#endif
 	threadSend = new std::thread(&PacketQueue::runner, this);
     setThreadName(threadSend, MODULE_NAME_PACKET_QUEUE_SEND);
     threadSend->detach();
@@ -842,8 +884,17 @@ void PacketQueue::stop()
 		usleep(100);
 	}
 
-	close(fdWakeup);
-	fdWakeup = 0;
+#ifdef _MSC_VER
+    if (fdWakeup) {
+        CloseHandle(fdWakeup);
+        fdWakeup = nullptr;
+    }
+#else
+    if (fdWakeup) {
+        close(fdWakeup);
+        fdWakeup = 0;
+    }
+#endif
 }
 
 void PacketQueue::setDeviceChannelPlan(const DeviceChannelPlan *value) {

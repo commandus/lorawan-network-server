@@ -203,10 +203,7 @@ void RunListener::init(
     logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_INIT_UDP_LISTENER);
     // check signal number when select() has been interrupted
     listener->setSysSignalPtr(lastSysSignal);
-    listener->setLogger(config->serverConfig.verbosity,
-        [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
-            logMessage(env, level, moduleCode, errorCode, message);
-    });
+    listener->setLogger(config->serverConfig.verbosity, this);
     listener->setGatewayStatDumper(config, [this](void *env, GatewayStat *stat) { return onGatewayStatDump(env, stat); } );
 
     if (config->serverConfig.verbosity > 5) {
@@ -525,11 +522,7 @@ void RunListener::init(
     processor->setDeviceChannelPlan(deviceChannelPlan);
 
     receiverQueueProcessor = new ReceiverQueueProcessor();
-    receiverQueueProcessor->setLogger(
-        [this](void *env, int level, int moduleCode, int errorCode, const std::string &message) {
-            logMessage(env, level, moduleCode, errorCode, message);
-        }
-    );
+    receiverQueueProcessor->setLogger(this);
 
     // Set databases
     receiverQueueProcessor->setDatabaseByConfig(dbByConfig);
