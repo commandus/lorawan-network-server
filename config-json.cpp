@@ -574,7 +574,7 @@ int WebServiceConfig::parse(
 	if (value.HasMember("databases")) {
 		rapidjson::Value &vdatabases = value["databases"];
 		if (vdatabases.IsArray()) {
-			for (int i = 0; i < vdatabases.Size(); i++) {
+			for (rapidjson::SizeType i = 0; i < vdatabases.Size(); i++) {
 				rapidjson::Value &n = vdatabases[i];
 				if (n.IsString())
 					databases.push_back(n.GetString());

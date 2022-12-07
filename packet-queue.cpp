@@ -717,7 +717,6 @@ void PacketQueue::runner()
 
 	// mode 0- stopped, 1- running, -1- stop request
 	mode = 1;
-	fd_set fh;
 	while (mode == 1) {
 #ifdef _MSC_VER
         if (!fdWakeup) {
@@ -745,6 +744,7 @@ void PacketQueue::runner()
                 }
         }
 #else
+        fd_set fh;
     	FD_ZERO(&fh);
 		FD_SET(fdWakeup, &fh);
 		struct timeval timeout;

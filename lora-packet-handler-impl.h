@@ -2,6 +2,7 @@
 #define LORA_PACKET_PROCESSOR_H 1
 
 #include <map>
+#include <sstream>
 #include <functional>
 
 #include "lora-packet-handler-abstract.h"
