@@ -137,10 +137,14 @@ add_library(lorawan STATIC
 	${LIBLORAWANSRC}
 )
 
+if(WIN32)
+	set (OS_SPECIFIC_LIBS wsock32 ws2_32)
+endif()
+
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
-	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT}
+	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
 target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
 

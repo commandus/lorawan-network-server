@@ -558,7 +558,10 @@ DEVNONCE string2DEVNONCE(
     return (DEVNONCE) strtol(value.c_str(), NULL, 16);
 }
 
-void string2JOINNONCE(JOINNONCE &retval, const std::string &value)
+void string2JOINNONCE(
+    JOINNONCE &retval,
+    const std::string &value
+)
 {
     uint32_t r = ntohl(strtol(value.c_str(), NULL, 16));
     retval[0] = r & 0xff;
@@ -3053,7 +3056,6 @@ void string2JOINNONCE(
 	if (len < sizeof(JOINNONCE))
 		memset(&retval + len, 0, sizeof(JOINNONCE) - len);
 }
-
 
 std::string semtechDataPrefix2JsonString(
 	const SEMTECH_PREFIX_GW &prefix
