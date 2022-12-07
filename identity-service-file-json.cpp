@@ -2,12 +2,16 @@
 #include <regex>
 #include <sstream>
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/reader.h"
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/error/en.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #include "identity-service-file-json.h"
 #include "utilstring.h"

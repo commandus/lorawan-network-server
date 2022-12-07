@@ -1,12 +1,16 @@
 #include <sstream>
 #include "database-config-json.h"
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #include "errlist.h"
 #include "utilstring.h"
