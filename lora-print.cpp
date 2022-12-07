@@ -459,7 +459,7 @@ int main(
 	std::vector<SemtechUDPPacket> packets;
 
 	r = SemtechUDPPacket::parse(nullptr, dataPrefix,
-        gatewayStat, packets, config.payload.c_str(), config.payload.size(), identityService);
+        gatewayStat, packets, config.payload.c_str(), (int) config.payload.size(), identityService);
 
     switch (r) {
         case ERR_CODE_IS_JOIN:
