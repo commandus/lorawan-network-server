@@ -734,10 +734,10 @@ void PacketQueue::runner()
                 break;
             default:
                 {
-                inr r = GetLastError();
+                int r = GetLastError();
                 if (onLog) {
                     std::stringstream ss;
-                    ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << r
+                    ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", r " << r
                         << ", timeout: " << timeoutMicroSeconds;
                     onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
                 }
@@ -822,12 +822,12 @@ void PacketQueue::runner()
 			packetsRead++;
 		}
 
-		gettimeofday(&t, NULL);
+		gettimeofday(&t, nullptr);
 		timeoutMicroSeconds = getNextTimeout(t);
 		if (onLog) {
 			std::stringstream ss;
-			ss << "next timeout: " << timeoutMicroSeconds << " microseconds, retval " << retval << std::endl;
-			onLog->logMessage(this, LOG_INFO, LOG_PACKET_QUEUE, 0, ss.str());
+			ss << "next timeout: " << timeoutMicroSeconds << " microseconds " << std::endl;
+			onLog->logMessage(this, LOG_DEBUG, LOG_PACKET_QUEUE, 0, ss.str());
 		}
 	}
 	mode = 0;	// mode 0- stopped, 1- running, -1- stop request
@@ -842,8 +842,7 @@ void PacketQueue::wakeUp()
     if ((!fdWakeup) || (!SetEvent(fdWakeup))) {
         if (onLog) {
             std::stringstream ss;
-            ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << ", errno " << r
-                << ", timeout: " << timeoutMicroSeconds;
+            ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << " SetEvent() failed";
             onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
         }
     }
