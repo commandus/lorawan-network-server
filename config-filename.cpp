@@ -13,7 +13,10 @@
 #include "utilfile.h"
 
 #ifdef _MSC_VER
-std::string getDefaultConfigFileName(const std::string &filename)
+std::string getDefaultConfigFileName(
+    char *programPath,
+    const std::string &filename
+)
 {
 	std::string r = filename;
 	// Need a process with query permission set
@@ -23,8 +26,7 @@ std::string getDefaultConfigFileName(const std::string &filename)
 		// Returns a path like C:/Documents and Settings/nibu if my user name is nibu
 		char homedir[MAX_PATH];
 		DWORD size = sizeof(homedir);
-		if (GetUserProfileDirectoryA(hToken, homedir, &size) && (size > 0))
-		{
+		if (GetUserProfileDirectoryA(hToken, homedir, &size) && (size > 0)) {
 			r = std::string(homedir, size - 1).append("\\").append(filename);
 		}
 		CloseHandle(hToken);
