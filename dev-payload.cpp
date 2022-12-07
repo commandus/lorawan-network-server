@@ -269,7 +269,7 @@ static int sendPacket(
 )
 {
     int operationResult = 0;
-    ssize_t r = sendto(socket.sock, semtechPacket.c_str(), semtechPacket.size(), 0,
+    size_t r = sendto(socket.sock, semtechPacket.c_str(), semtechPacket.size(), 0,
        &socket.addrStorage,
        ((socket.addrStorage.sa_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 
