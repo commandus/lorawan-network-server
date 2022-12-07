@@ -9,9 +9,7 @@
 #include <fstream>
 
 #include <csignal>
-#include <sys/types.h>
 #include <cerrno>
-#include <sys/select.h>
 
 #include "argtable3/argtable3.h"
 
