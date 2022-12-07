@@ -23,7 +23,6 @@ class DirTxtReceiverQueueService: public ReceiverQueueService {
 		DIRTXT_FORMAT writeFormat;
 		static int loadFile(
 			std::string &payload,
-			time_t &retTime, 
 			DIRTXT_FORMAT format,
 			const std::string &path
 		);
