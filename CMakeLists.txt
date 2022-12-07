@@ -33,7 +33,12 @@ find_package(OpenSSL REQUIRED)
 set(LIBJWT OpenSSL::Crypto)
 endif(ENABLE_JWT)
 
-find_package(SQLite3 REQUIRED)
+#find_package(SQLite3 REQUIRED)
+#set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
+#set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
+
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
+set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
 
 if(ENABLE_CURL)
 	find_package(CURL REQUIRED)
@@ -91,9 +96,6 @@ set(C_STORAGE
 set(C_QUEUE_STORAGE
 	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp
 )
-
-set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
-set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
 
 set(BACKEND_DB_SRC
 	db-json.cpp

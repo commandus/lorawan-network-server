@@ -31,28 +31,28 @@ DatabaseNConfig::DatabaseNConfig(
 #ifdef ENABLE_DB_SQLITE	
 		db = new DatabaseSQLite();
 #else
-	;		
+	;
 #endif
 	else
 		if (config->type == "postgresql")
 #ifdef ENABLE_DB_POSTGRES			
 			db = new DatabasePostgreSQL();
 #else
-	;		
+	;
 #endif
 		else
 			if (config->type == "mysql")
 #ifdef ENABLE_DB_MYSQL				
 				db = new DatabaseMySQL();
 #else
-	;		
+	;
 #endif
 			else
 				if (config->type == "firebird")
 #ifdef ENABLE_DB_FIREBIRD					
 					db = new DatabaseFirebird();
 #else
-	;		
+	;
 #endif
 
                 else
@@ -60,9 +60,8 @@ DatabaseNConfig::DatabaseNConfig(
 #ifdef ENABLE_DB_JSON
                         db = new DatabaseJSON();
 #else
-                    ;
+    ;
 #endif
-
 }
 
 DatabaseNConfig::~DatabaseNConfig()
@@ -271,28 +270,28 @@ DatabaseIntf* DatabaseByConfig::open
 #ifdef ENABLE_DB_POSTGRES			
 			return new DatabasePostgreSQL();
 #else
-	;		
+	;
 #endif
 		else
 			if (dbc->type == "mysql")
 #ifdef ENABLE_DB_MYSQL				
 				return new DatabaseMySQL();
 #else
-	;		
+	;
 #endif
 			else
 				if (dbc->type == "firebird")
 #ifdef ENABLE_DB_FIREBIRD					
 					return new DatabaseFirebird();
 #else
-	;		
+	;
 #endif
 #ifdef ENABLE_DB_JSON
     return new DatabaseJSON();
 #else
     ;
 #endif
-    return NULL;
+    return nullptr;
 }
 
 size_t DatabaseByConfig::count() const

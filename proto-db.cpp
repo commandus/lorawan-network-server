@@ -227,7 +227,7 @@ int parseCmd(
 				config->payload = base64_decode(*a_payload_base64->sval, false);
 			}
 			catch (const std::exception& e) {
-				std::cerr << ERR_INVALID_BASE64 << std::endl;
+				std::cerr << ERR_INVALID_BASE64 << e.what() << std::endl;
 				nerrors++;
 			}
 		if (a_offset->count)

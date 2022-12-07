@@ -353,11 +353,11 @@ int JsonFileIdentityService::getNetworkIdentity(
 
 // List entries
 void JsonFileIdentityService::list(
-        std::vector<NetworkIdentity> &retval,
-        size_t offset,
-        size_t size
+    std::vector<NetworkIdentity> &retval,
+    size_t offset,
+    size_t size
 ) {
-    int64_t c = -1;
+    size_t c = -1;
     if (size == 0)
         size = SIZE_MAX;
     for (std::map<DEVADDRINT, DEVICEID>::const_iterator it(storage.begin()); it != storage.end(); it++) {
@@ -451,7 +451,7 @@ int JsonFileIdentityService::parseIdentifiers(
                         retval.push_back(TDEVEUI(dit->second.devEUI));
                 }
             }
-            catch (const std::regex_error& e) {
+            catch (const std::regex_error&) {
                 return ERR_CODE_INVALID_REGEX;
             }
         }
@@ -478,7 +478,7 @@ int JsonFileIdentityService::parseNames(
                     retval.push_back(TDEVEUI(dit->second.devEUI));
             }
         }
-        catch (const std::regex_error& e) {
+        catch (const std::regex_error&) {
             return ERR_CODE_INVALID_REGEX;
         }
     }

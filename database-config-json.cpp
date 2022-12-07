@@ -57,7 +57,7 @@ int ConfigDatabasesJson::load(
     doc.Parse<rapidjson::kParseCommentsFlag>(value.c_str());
     if (!doc.IsArray())
         return ERR_CODE_INVALID_JSON;
-    for (int i = 0; i < doc.Size(); i++) {
+    for (rapidjson::SizeType i = 0; i < doc.Size(); i++) {
         rapidjson::Value &db = doc[i];
         if (!db.IsObject())
             continue;
@@ -113,7 +113,7 @@ int ConfigDatabasesJson::load(
         if (db.HasMember(JSON_FLD_NAME[7])) {
             rapidjson::Value &v = db[JSON_FLD_NAME[7]];
             if (v.IsArray()) {
-                for (int c = 0; c < v.Size(); c++) {
+                for (rapidjson::SizeType c = 0; c < v.Size(); c++) {
                     rapidjson::Value &e = v[c];
                     if (!e.IsArray())
                         continue;
@@ -137,7 +137,7 @@ int ConfigDatabasesJson::load(
         if (db.HasMember(JSON_FLD_NAME[8])) {
             rapidjson::Value &v = db[JSON_FLD_NAME[8]];
             if (v.IsArray()) {
-                for (int c = 0; c < v.Size(); c++) {
+                for (rapidjson::SizeType c = 0; c < v.Size(); c++) {
                     rapidjson::Value &e = v[c];
                     if (!e.IsArray())
                         continue;
@@ -161,7 +161,7 @@ int ConfigDatabasesJson::load(
         if (db.HasMember(JSON_FLD_NAME[9])) {
             rapidjson::Value &v = db[JSON_FLD_NAME[9]];
             if (v.IsArray()) {
-                for (int c = 0; c < v.Size(); c++) {
+                for (rapidjson::SizeType c = 0; c < v.Size(); c++) {
                     rapidjson::Value &e = v[c];
                     if (!e.IsArray())
                         continue;
