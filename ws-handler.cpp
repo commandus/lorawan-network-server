@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include "ws-handler.h"
 #include "utillora.h"
 #ifdef ENABLE_LOGGER_HUFFMAN

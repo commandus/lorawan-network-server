@@ -1,4 +1,5 @@
 #include <fstream>
+#include <sstream>
 #include <regex>
 
 #ifdef __clang__
@@ -334,7 +335,7 @@ void JsonFileDeviceHistoryService::done()
 std::string JsonFileDeviceHistoryService::toJsonString()
 {
 	std::stringstream ss;
-	ss << "[" << std::endl;;
+	ss << "[" << std::endl;
 	bool needComma = false;
 	for (std::map<DEVADDRINT, DEVICE_HISTORY_ITEM, DEVADDRINTCompare>::const_iterator dit(storage.begin()); dit != storage.end(); dit++) {
 		if (needComma)
