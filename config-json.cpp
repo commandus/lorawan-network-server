@@ -358,7 +358,7 @@ int Configuration::parse(
         if (doc.HasMember("pluginsParams")) {
             rapidjson::Value &pp =  doc["pluginsParams"];
             if (pp.IsArray()) { // json array of array, first element is parameter name, next are values
-                for (int i = 0; i < pp.Size(); i++) {
+                for (rapidjson::SizeType i = 0; i < pp.Size(); i++) {
                     rapidjson::Value &pp1 = pp[i];
                     if (pp1.IsArray()) {
                         size_t sz = pp1.Size();
