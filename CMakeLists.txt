@@ -142,7 +142,7 @@ add_library(lorawan STATIC
 )
 
 if(WIN32)
-	set (OS_SPECIFIC_LIBS wsock32 ws2_32)
+	set (OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv)
 endif()
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})

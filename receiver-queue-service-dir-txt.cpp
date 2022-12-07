@@ -134,7 +134,7 @@ int DirTxtReceiverQueueService::get(
 				return ERR_CODE_INVALID_PACKET;
 			} else {
 				retval.key.id = onum;
-				retval.key.time.tv_sec = (time_t) fileModificationTime(files[onum]);
+				retval.key.time.tv_sec = fileModificationTime(files[onum]);
 				retval.key.time.tv_usec = 0;
 			}
 			break;
@@ -153,7 +153,7 @@ void DirTxtReceiverQueueService::remove(
 	for (int fmt = 0; fmt < CNT_FILE_EXT; fmt++) 
 	{
 		util::filesInPath(path, dataFileExtensions[fmt], 0, &files);
-		r += files.size();
+		r += (int) files.size();
 		if (r > onum)
 		{
 			if (!util::rmFile(files[onum])) {
