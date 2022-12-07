@@ -157,7 +157,7 @@ set(SRC_MAC_GW
 )
 add_executable(mac-gw ${SRC_MAC_GW})
 target_link_libraries(mac-gw PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
+	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 
 set(SRC_PRINT_NETID
@@ -166,7 +166,7 @@ set(SRC_PRINT_NETID
 )
 add_executable(print-netid ${SRC_PRINT_NETID})
 target_link_libraries(print-netid
-	lorawan
+	lorawan ${OS_SPECIFIC_LIBS}
 )
 
 set(LORA_PRINT_SOURCES
@@ -189,13 +189,13 @@ set(PROTO_DB_SOURCES
 )
 add_executable(proto-db ${PROTO_DB_SOURCES})
 target_link_libraries(proto-db PRIVATE Threads::Threads
-	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
+	${LIBPKT2} lorawan protobuf ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 
 add_executable(dev-payload ${DEV_PAYLOAD_SOURCES})
 target_link_libraries(dev-payload PRIVATE Threads::Threads
 	lorawan protobuf
-	${LIBPKT2} ${CURL_LIBRARIES}
+	${LIBPKT2} ${CURL_LIBRARIES} ${OS_SPECIFIC_LIBS}
 )
 
 # Strip binary for release builds
