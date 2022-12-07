@@ -6,6 +6,7 @@
  * MIT license
  */
 #include <iostream>
+#include <sstream>
 #include <cstring>
 #include <vector>
 #include <map>
@@ -194,8 +195,9 @@ int parseCmd(
 			try {
 				config->payload = base64_decode(*a_payload_base64->sval, false);
 			}
-			catch (const std::exception& e) {
-                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INVALID_BASE64, ERR_INVALID_BASE64);
+			catch (const std::exception&) {
+                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT,
+                                      ERR_CODE_INVALID_BASE64, ERR_INVALID_BASE64);
 				nerrors++;
 			}
 		}
