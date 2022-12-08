@@ -164,7 +164,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 					break;
 				default:
 					{
-					unsigned long value = ((unsigned int)) atoll(s.c_str());
+					unsigned long value = (unsigned int) atoll(s.c_str());
 					putUInt(value);
 					}
 					break;
