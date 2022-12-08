@@ -72,7 +72,9 @@ if(ENABLE_PKT2)
 		HINTS "." ".." "../../pkt2" "~/src/pkt2"
 			"../pkt2/build/Release"
 	)
-	find_package(protobuf CONFIG REQUIRED)
+
+	set(Protobuf_USE_STATIC_LIBS ON )
+	find_package(Protobuf REQUIRED)
 	# protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite
 endif(ENABLE_PKT2)
 

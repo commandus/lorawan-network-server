@@ -459,7 +459,10 @@ const host = window.location.origin + '/';
 
 Options:
 
-- -DENABLE_PKT2=on enable PKT2 parser
+- -DENABLE_JWT=on enable JWT web user authorization (OpenSSL lib required)
+- -DENABLE_PKT2=on enable PKT2 plugin (pkt2, protobuf libs required)
+- -DENABLE_MQTT=on enable MQTT plugin (paho libs required)
+- -DENABLE_LOGGER_HUFFMAN=on enable logger-huffman plugin (logger-huffman, logger-passport libs required)
 - -DENABLE_LISTENER_EMBEDDED=on enable Lora gateway
 
 ```
@@ -467,8 +470,12 @@ mkdir build
 cd build
 cmake -D ENABLE_LGW_EMBEDDED=on ..
 make
+```
 
 ```
+cmake -DENABLE_JWT=on -DENABLE_PKT2=on -DENABLE_MQTT=on -DENABLE_LOGGER_HUFFMAN=on ..
+```
+
 #### clang instead of gcc
 
 For instance, you can use Clang instead of gcc:
