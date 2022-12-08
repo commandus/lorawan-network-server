@@ -9,14 +9,18 @@ extern "C" {
 #include <inttypes.h>
 #include <time.h>
 
-#ifdef _MSC_VER
-#define ALIGN	__declspec(align(1))
-#define PACKED
-#else
+#ifdef __GNUC__
 #include <endian.h>
-#define ALIGN
-#define PACKED	__attribute__((aligned(1), packed))
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#else
+#ifdef _MSC_VER
+#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#else
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
 #endif
+#endif
+
+
 
 #define MAX_SENSOR_COUNT			28
 #define MAX_HDR_DATA_SIZE			24	// bytes
@@ -49,7 +53,7 @@ typedef enum {
  *   LOGGER_PACKET_PKT_DIFF_2(24) := LOGGER_PACKET_SECOND_HDR(4) LOGGER_DATA_TEMPERATURE_DIFF(1..2)*
  */
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t memblockoccupation;				// 0 0- memory block occupied
 	uint8_t seconds;						// 1 0..59
 	uint8_t minutes;						// 2 0..59
@@ -65,13 +69,13 @@ typedef ALIGN struct {
 	uint8_t vbat;							// 12 V battery, V
 	uint8_t pcnt;							// 13 pages count, Pcnt = ((ds1820_devices << 2) | pages_to_recods)
 	uint16_t used;							// 14 record number, 1..65535
-} PACKED LOGGER_MEASUREMENT_HDR;			// 16 bytes
+} ) LOGGER_MEASUREMENT_HDR;			// 16 bytes
 
 /**
  * short (diff) version of LOGGER_MEASUREMENT_HDR(15 bytes)
  * 10 bytes long
  */
-typedef ALIGN struct {
+typedef PACK( struct {
     int16_t used;							// 0 record number diff
     int8_t delta_sec;				        // 2 seconds
     int8_t kosa;							// 3 номер косы в году
@@ -81,7 +85,7 @@ typedef ALIGN struct {
     int8_t vcc; 							// 7 V cc bus voltage, V
     int8_t vbat;							// 8 V battery, V
     int8_t pcnt;							// 9 pages count, Pcnt = ((ds1820_devices << 2) | pages_to_recods)
-} PACKED LOGGER_MEASUREMENT_HDR_DIFF;		// 10 bytes
+} ) LOGGER_MEASUREMENT_HDR_DIFF;		// 10 bytes
 
 // first packet types: 4a- plain 48- delta 4c- huffman
 /**
@@ -91,7 +95,7 @@ typedef ALIGN struct {
  *		LOGGER_PACKET_DELTA_1	0х48 просто сжатие дельта, 49 последующие пакет
  *		LOGGER_PACKET_HUFF_1	0x4c хафман, 4D последующие пакеты
  */
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t typ;						    // 	LOGGER_PACKET_RAW, LOGGER_PACKET_PKT_1, LOGGER_PACKET_DELTA_1, LOGGER_PACKET_HUFF_1
 	struct {
 		uint8_t data_bits: 4;
@@ -103,47 +107,47 @@ typedef ALIGN struct {
 	uint8_t packets;						// количество пакетов в замере! (лора по 24 байта с шапками пакетов)
 	uint8_t kosa;							// plume serial number
 	uint8_t kosa_year;						// plume producation year - 2000
-} PACKED LOGGER_PACKET_FIRST_HDR;			// 8 bytes
+} ) LOGGER_PACKET_FIRST_HDR;			// 8 bytes
 
 // следующий пакет typ 4b- plain 49- delta 4d- huffman
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t typ;						    // 49 просто сжатие дельта, 0х4b 4d хафман
 	uint8_t kosa;							// plume serial number
 	uint8_t measure;						// мл. Байт номера замера, lsb used (или addr_used?)
 	uint8_t packet;							// номер пакета в замере
-} PACKED LOGGER_PACKET_SECOND_HDR;			// 4 bytes
+} ) LOGGER_PACKET_SECOND_HDR;			// 4 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t lo;						    	// Temperature * 0.625, lo byte
 	int8_t hi;								// Temperature * 0.625, hi byte
-} PACKED LO_HI_2_BYTES;		        		// 2 bytes
+} ) LO_HI_2_BYTES;		        		// 2 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
     int8_t h;
     int8_t l: 4;
     int8_t f: 4;
-} PACKED TEMPERATURE_12_BITS;				// 2 bytes
+} ) TEMPERATURE_12_BITS;				// 2 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	union {
 		int16_t t00625;						// temperature
 		LO_HI_2_BYTES f;
         TEMPERATURE_12_BITS t12;
 	} t;
-} PACKED TEMPERATURE_2_BYTES;				// 2 bytes
+} ) TEMPERATURE_2_BYTES;				// 2 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	uint8_t sensor;						    // номер датчика 0..255
 	TEMPERATURE_2_BYTES value;
 	uint8_t rfu1;							// angle,. not used
-} PACKED LOGGER_DATA_TEMPERATURE_RAW;		// 4 bytes
+} ) LOGGER_DATA_TEMPERATURE_RAW;		// 4 bytes
 
-typedef ALIGN struct {
+typedef PACK( struct {
 	union {
 		int16_t t;							// temperature, C. 12 bits
 		LO_HI_2_BYTES f;
 	} value;
-} PACKED LOGGER_DATA_TEMPERATURE;			// 2 bytes
+} ) LOGGER_DATA_TEMPERATURE;			// 2 bytes
 
 /**
  * Return LOGGER_PACKET_UNKNOWN if buffer is NULL or size = 0

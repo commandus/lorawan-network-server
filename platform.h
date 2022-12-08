@@ -23,7 +23,6 @@
 #endif
 #endif
 
-
 #if BYTE_ORDER == BIG_ENDIAN
 #define NTOH2(x) (x)
 #define NTOH4(x) (x)
