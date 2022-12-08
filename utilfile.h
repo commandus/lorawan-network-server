@@ -55,4 +55,6 @@ public:
     int getInt(const std::string &name);
 };
 
+std::string getCurrentDir();
+
 #endif
