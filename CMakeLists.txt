@@ -89,13 +89,14 @@ if(ENABLE_LOGGER_HUFFMAN)
 endif(ENABLE_LOGGER_HUFFMAN)
 
 if(ENABLE_MQTT)
-
+	find_package(OpenSSL REQUIRED)
 	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		find_package(eclipse-paho-mqtt-c CONFIG REQUIRED)
 		# target_link_libraries(main PRIVATE eclipse-paho-mqtt-c::paho-mqtt3a-static eclipse-paho-mqtt-c::paho-mqtt3c-static
 		# eclipse-paho-mqtt-c::paho-mqtt3as-static eclipse-paho-mqtt-c::paho-mqtt3cs-static)
 		find_package(PahoMqttCpp CONFIG REQUIRED)
 		set(LIB_PAHO_MQTT
+			OpenSSL::Crypto
 			eclipse-paho-mqtt-c::paho-mqtt3as-static
 			PahoMqttCpp::paho-mqttpp3-static
 		)
@@ -109,7 +110,7 @@ if(ENABLE_MQTT)
 		if(NOT Paho-C++_FOUND)
 			message(SEND_ERROR "Failed to find Paho C++ library")
 		endif()
-		set(LIB_PAHO_MQTT paho-mqtt3as paho-mqttpp3)
+		set(LIB_PAHO_MQTT OpenSSL::Crypto paho-mqtt3as paho-mqttpp3)
 	endif()
 endif(ENABLE_MQTT)
 
