@@ -89,14 +89,27 @@ if(ENABLE_LOGGER_HUFFMAN)
 endif(ENABLE_LOGGER_HUFFMAN)
 
 if(ENABLE_MQTT)
-	find_package(Paho REQUIRED)
-	if(NOT Paho_FOUND)
-		message(SEND_ERROR "Failed to find Paho C library")
-	endif()
 
-	find_package(Paho-C++ REQUIRED)
-	if(NOT Paho-C++_FOUND)
-		message(SEND_ERROR "Failed to find Paho C++ library")
+	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		find_package(eclipse-paho-mqtt-c CONFIG REQUIRED)
+		# target_link_libraries(main PRIVATE eclipse-paho-mqtt-c::paho-mqtt3a-static eclipse-paho-mqtt-c::paho-mqtt3c-static
+		# eclipse-paho-mqtt-c::paho-mqtt3as-static eclipse-paho-mqtt-c::paho-mqtt3cs-static)
+		find_package(PahoMqttCpp CONFIG REQUIRED)
+		set(LIB_PAHO_MQTT
+			eclipse-paho-mqtt-c::paho-mqtt3as-static
+			PahoMqttCpp::paho-mqttpp3-static
+		)
+	else()
+		find_package(Paho REQUIRED)
+		if(NOT Paho_FOUND)
+			message(SEND_ERROR "Failed to find Paho C library")
+		endif()
+
+		find_package(Paho-C++ REQUIRED)
+		if(NOT Paho-C++_FOUND)
+			message(SEND_ERROR "Failed to find Paho C++ library")
+		endif()
+		set(LIB_PAHO_MQTT paho-mqtt3as paho-mqttpp3)
 	endif()
 endif(ENABLE_MQTT)
 
@@ -281,7 +294,7 @@ if(ENABLE_MQTT)
 		mqtt-client-id.cpp utilstring.cpp
 	)
 	add_library(plugin-mqtt-wss SHARED ${SRC_PLUGIN_MQTT_WSS})
-	target_link_libraries(plugin-mqtt-wss paho-mqtt3as paho-mqttpp3)
+	target_link_libraries(plugin-mqtt-wss ${LIB_PAHO_MQTT})
 endif(ENABLE_MQTT)
 
 if(ENABLE_PKT2)
