@@ -1,5 +1,6 @@
 #include "udp-listener.h"
 #include <iostream>
+#include <sstream>
 #include <cstring>
 #include <csignal>
 #include <cerrno>

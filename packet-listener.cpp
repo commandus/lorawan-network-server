@@ -1,5 +1,6 @@
 #include "packet-listener.h"
 #include <iostream>
+#include <sstream>
 
 #include "utilstring.h"
 #include "errlist.h"
