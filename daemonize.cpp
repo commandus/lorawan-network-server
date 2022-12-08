@@ -142,7 +142,7 @@ VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode)
 VOID WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 {
 	// Register our service control handler with the SCM
-	g_StatusHandle = RegisterServiceCtrlHandler((LPWSTR) serviceName.c_str(), ServiceCtrlHandler);
+	g_StatusHandle = RegisterServiceCtrlHandlerA((LPWSTR) serviceName.c_str(), ServiceCtrlHandler);
 	if (g_StatusHandle == NULL)
 		goto EXIT;
 	// Tell the service controller we are starting

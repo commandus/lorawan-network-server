@@ -192,9 +192,9 @@ std::string replaceAll(std::string str, const std::string& from, const std::stri
 std::string getCurrentDir()
 {
 #ifdef _MSC_VER
-    GetCurrentDirectory(
-  [in]  DWORD  nBufferLength,
-  [out] LPTSTR lpBuffer
+    LPTSTR buffer[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH - 1, buffer);
+    return std::string((char *) buffer);
 );
 #else
     char wd[PATH_MAX];
