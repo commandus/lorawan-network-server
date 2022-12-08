@@ -11,39 +11,31 @@
 #include <csignal>
 #include <climits>
 
-#include "run-listener.h"
-
-#ifdef WIN32
+#ifdef _MSC_VER
 #else
 #include <execinfo.h>
 #endif
 
 #include "argtable3/argtable3.h"
+
+#include "run-listener.h"
 #include "platform.h"
 #include "utilstring.h"
-#include "daemonize.h"
-
-#include "errlist.h"
 #include "utildate.h"
-
+#include "daemonize.h"
+#include "errlist.h"
 #include "config-json.h"
+#include "config-filename.h"
+#include "utilfile.h"
+#include "db-any.h"
+#include "lorawan-ws/lorawan-ws.h"
+#include "auth-file.h"
+#include "ws-handler.h"
 
 #ifdef ENABLE_LMDB
 #include "identity-service-lmdb.h"
 #include "receiver-queue-service-lmdb.h"
 #endif
-
-
-#include "config-filename.h"
-#include "utilfile.h"
-
-#include "db-any.h"
-
-#include "lorawan-ws/lorawan-ws.h"
-// Authorize web service users
-#include "auth-file.h"
-
-#include "ws-handler.h"
 
 #ifdef ENABLE_LOGGER_HUFFMAN
 #include "logger-huffman/logger-parse.h"
@@ -81,9 +73,12 @@ static AuthUserService *authUserService = nullptr;
 #define TRACE_BUFFER_SIZE   256
 
 static void printTrace() {
+#ifdef _MSC_VER
+#else
     void *t[TRACE_BUFFER_SIZE];
     size_t size = backtrace(t, TRACE_BUFFER_SIZE);
     backtrace_symbols_fd(t, size, STDERR_FILENO);
+#endif
 }
 
 void stop()
@@ -126,6 +121,7 @@ void signalHandler(int signal)
 		std::cerr << ERR_ABRT << std::endl;
         printTrace();
 		exit(ERR_CODE_ABRT);
+#ifndef _MSC_VER
 	case SIGHUP:
 		std::cerr << ERR_HANGUP_DETECTED << std::endl;
 		break;
@@ -133,6 +129,7 @@ void signalHandler(int signal)
 		std::cerr << MSG_SIG_FLUSH_FILES << std::endl;
 		// flushFiles();
 		break;
+#endif
 	default:
 		break;
 	}
@@ -543,8 +540,7 @@ int main(
 
 	if (config.serverConfig.daemonize)	{
         runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
-		char wd[PATH_MAX];
-		std::string progpath = getcwd(wd, PATH_MAX);
+        std::string progpath = getCurrentDir();
 		if (config.serverConfig.verbosity > 1) {
             std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
         }

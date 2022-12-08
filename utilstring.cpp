@@ -1,5 +1,7 @@
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
+#else
+#include <unistd.h>
 #endif
 
 #include "utilstring.h"
@@ -11,6 +13,7 @@
 #include <streambuf>
 #include <iomanip>
 #include <fstream>
+#include <climits>
 
 static std::string file2string(
 	std::istream &strm
@@ -184,4 +187,17 @@ std::string replaceAll(std::string str, const std::string& from, const std::stri
 		start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
 	}
 	return str;
+}
+
+std::string getCurrentDir()
+{
+#ifdef _MSC_VER
+    GetCurrentDirectory(
+  [in]  DWORD  nBufferLength,
+  [out] LPTSTR lpBuffer
+);
+#else
+    char wd[PATH_MAX];
+    return getcwd(wd, PATH_MAX);
+#endif
 }

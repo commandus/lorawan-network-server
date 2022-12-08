@@ -1,6 +1,7 @@
 #include <fstream>
-#include <regex>
 #include <iostream>
+#include <sstream>
+#include <regex>
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -297,10 +298,10 @@ private:
                         channel->frequency = (int) val;
                         return true;
                     case JK_MINDR:
-                        channel->minDR = val;
+                        channel->minDR = (int) val;
                         return true;
                     case JK_MAXDR:
-                        channel->maxDR = val;
+                        channel->maxDR = (int) val;
                         return true;
                     default:
                         break;
@@ -339,10 +340,10 @@ private:
                 }
                 switch (keyIndex) {
                     case JK_M:
-                        value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].m = val;
+                        value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].m = (uint8_t) val;
                         return true;
                     case JK_N:
-                        value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].n = val;
+                        value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].n = (uint8_t) val;
                         return true;
                 }
                 applyErrorDescription(ERR_REGION_BAND_EMPTY);
@@ -359,7 +360,7 @@ private:
                             applyErrorDescription("dataRates array size bigger than 8 elements");
                             return false;
                         }
-                        value->storage.bands.back().dataRates[dataRateCount - 1].bandwidth = int2BANDWIDTH(val);
+                        value->storage.bands.back().dataRates[dataRateCount - 1].bandwidth = int2BANDWIDTH((int) val);
                         return true;
                     case JK_SPREADINGFACTOR:
                         if (value->storage.bands.empty()) {
@@ -381,7 +382,7 @@ private:
                             applyErrorDescription("dataRates array size bigger than 8 elements");
                             return false;
                         }
-                        value->storage.bands.back().dataRates[dataRateCount - 1].bps = val;
+                        value->storage.bands.back().dataRates[dataRateCount - 1].bps = (uint32_t) val;
                         return true;
                 }
                 applyErrorDescription("Unexpected integer");
@@ -394,14 +395,14 @@ private:
                             applyErrorDescription(ERR_REGION_BAND_EMPTY);
                             return false;
                         }
-                        value->storage.bands.back().defaultDownlinkTXPower = val;
+                        value->storage.bands.back().defaultDownlinkTXPower = (int) val;
                         return true;
                     case JK_PINGSLOTFREQUENCY:
                         if (value->storage.bands.empty()) {
                             applyErrorDescription(ERR_REGION_BAND_EMPTY);
                             return false;
                         }
-                        value->storage.bands.back().pingSlotFrequency = val;
+                        value->storage.bands.back().pingSlotFrequency = (int) val;
                         return true;
                     case JK_MAXUPLINKEIRP:
                         if (value->storage.bands.empty()) {
@@ -415,7 +416,7 @@ private:
                             applyErrorDescription(ERR_REGION_BAND_EMPTY);
                             return false;
                         }
-                        value->storage.bands.back().id = val;
+                        value->storage.bands.back().id = (uint8_t) val;
                         return true;
                 }
                 applyErrorDescription("Unexpected integer value");
@@ -433,14 +434,13 @@ private:
         value->errDescription = ss.str();
     }
 
-
-public:
-    explicit RegionBandsJsonHandler(RegionalParameterChannelPlanFileJson *val)
-            : value(val), keyIndex(JK_NONE), state(JRB_NONE), prevState(JRB_NONE),
-              bandCount(0), dataRateCount(0), maxPayloadSizePerDataRateCount(0),
-              maxPayloadSizePerDataRateRepeaterCount(0),
-              rx1DataRateOffsetCount(0), txPowerOffsetCount(0),
-              uplinkChannelCount(0), downlinkChannelCount(0)
+public :
+        explicit RegionBandsJsonHandler(RegionalParameterChannelPlanFileJson *val)
+        : value(val), keyIndex(JK_NONE), state(JRB_NONE), prevState(JRB_NONE),
+        bandCount(0), dataRateCount(0), maxPayloadSizePerDataRateCount(0),
+        maxPayloadSizePerDataRateRepeaterCount(0),
+        rx1DataRateOffsetCount(0), txPowerOffsetCount(0),
+        uplinkChannelCount(0), downlinkChannelCount(0)
     {
     }
 

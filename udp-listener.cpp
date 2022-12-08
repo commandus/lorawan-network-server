@@ -4,12 +4,15 @@
 #include <syslog.h>
 #include <csignal>
 #include <cerrno>
-#include <sys/select.h>
-
 #include "third_party/get_rss/get_rss.h"
 #include "utildate.h"
 #include "utilstring.h"
 #include "errlist.h"
+
+#ifdef _MSC_VER
+#else
+#include <sys/select.h>
+#endif
 
 #define DEF_BUFFER_SIZE     4096
 
