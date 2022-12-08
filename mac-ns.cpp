@@ -7,10 +7,10 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <sstream>
 
 #include <csignal>
 #include <cerrno>
-
 
 #include "argtable3/argtable3.h"
 #include "utilstring.h"
@@ -25,6 +25,12 @@
 #include "config-filename.h"
 #include "control-packet.h"
 
+#ifdef _MSC_VER
+#define RECV_TYPE char*
+#else
+#define RECV_TYPE void*
+#endif
+
 const std::string programName = "mac-ns";
 // same config as mac-gw
 #define DEF_CONFIG_FILE_NAME "mac-gw.json"
@@ -36,9 +42,9 @@ const std::string programName = "mac-ns";
 #define DEF_S_FPORT		"223"
 #define MAX_RECV_BUFFER_SIZE	4096
 
-static Configuration *config = NULL;
-static MacGwConfig *macGwConfig = NULL;
-static GatewayList *gatewayList = NULL;
+static Configuration *config = nullptr;
+static MacGwConfig *macGwConfig = nullptr;
+static GatewayList *gatewayList = nullptr;
 
 static void done()
 {
@@ -264,7 +270,7 @@ int recvACK
 	recvBuffer.resize(MAX_RECV_BUFFER_SIZE + 1);
 	struct sockaddr_in6 cliAddr;
 	socklen_t cliAddrLen = sizeof(cliAddr);
-	int rr = (int) recvfrom(socket.sock, (void*) recvBuffer.c_str(), MAX_RECV_BUFFER_SIZE, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
+	int rr = (int) recvfrom(socket.sock, (RECV_TYPE) recvBuffer.c_str(), MAX_RECV_BUFFER_SIZE, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
 	if (rr < 0) { 
 		std::cerr << ERR_SOCKET_READ
 			<< " " << UDPSocket::addrString(&socket.addrStorage)
@@ -544,7 +550,7 @@ int main(
 			// TODO form correct data
 			// packet.setPayload();
 			std::string response = packet.toString();
-			ssize_t r = sendto(socket.sock, response.c_str(), response.size(), 0,
+			size_t r = sendto(socket.sock, response.c_str(), response.size(), 0,
 				&socket.addrStorage,
 				((socket.addrStorage.sa_family == AF_INET6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in)));
 
