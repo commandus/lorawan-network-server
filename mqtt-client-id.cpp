@@ -5,6 +5,7 @@
 #include <cstring>
 
 #ifdef _MSC_VER
+#include <Windows.h>
 #include <Iphlpapi.h>
 #pragma comment(lib, "iphlpapi.lib")
 #else
