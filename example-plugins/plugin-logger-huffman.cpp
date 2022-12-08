@@ -1,10 +1,11 @@
 #include "payload-insert.h"
+#include <sstream>
 
 #include "db-any.h"
-#include "errlist.h"
 #include "logger-huffman/logger-parse.h"
 #include "logger-loader.h"
 #include "log-intf.h"
+#include "errlist.h"
 
 std::string payloadCreate(
     const std::string &message,

@@ -10,7 +10,6 @@
  */
 
 #include <sstream>
-#include <syslog.h>
 
 #include "payload-insert.h"
 #include "pkt2/str-pkt2.h"

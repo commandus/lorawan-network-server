@@ -13,13 +13,12 @@
  *  ]
  */
 #include <sstream>
-#include <syslog.h>
 
 #include "plugin-mqtt-wss.h"
 
-#include "errlist.h"
 #include "mqtt-client-id.h"
 #include "utilstring.h"
+#include "errlist.h"
 
 void MqttSubscribeListener::on_failure(
     const mqtt::token& tok
