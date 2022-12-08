@@ -322,7 +322,7 @@ if(ENABLE_LOGGER_HUFFMAN)
 	add_library(plugin-logger-huffman SHARED ${SRC_PLUGIN_LOGGER_HUFFMAN})
 	target_include_directories(plugin-logger-huffman PRIVATE ${BACKEND_DB_INC} )
 	target_compile_definitions(plugin-logger-huffman PRIVATE ENABLE_DB_SQLITE)
-	target_link_libraries(plugin-logger-huffman lorawan ${LIBLOGGER_PASSPORT} ${LIBLOGGER_HUFFMAN})
+	target_link_libraries(plugin-logger-huffman lorawan ${LIBLOGGER_PASSPORT} ${LIBLOGGER_HUFFMAN} ${BACKEND_DB_LIB})
 endif(ENABLE_LOGGER_HUFFMAN)
 
 INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/lorawan-network-server DESTINATION cmake)
