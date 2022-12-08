@@ -1,9 +1,18 @@
+#
 # Options:
+#
 # -DENABLE_CURL=on
 # -DENABLE_JWT=on
-# -DENABLE_PKT2=on
+#
+# Embedded USB gateway
+#
 # -DENABLE_LISTENER_EMBEDDED=on
+#
+#  Plugins:
+#
+# -DENABLE_PKT2=on
 # -DENABLE_MQTT=on
+# -DENABLE_LOGGER_HUFFMAN=on
 #
 
 cmake_minimum_required(VERSION 3.9)
@@ -15,10 +24,13 @@ set(CMAKE_MODULE_PATH ${MQTTAPP_CMAKE_DIR} ${CMAKE_MODULE_PATH})
 
 set(CMAKE_CXX_STANDARD 11)
 
-option(ENABLE_PKT2 "Build with pkt2" OFF)
-option(ENABLE_MQTT "Build with MQTT" OFF)
 option(ENABLE_CURL "Build with CURL" OFF)
 option(ENABLE_JWT  "Build with JWT" OFF)
+
+# Plugins
+option(ENABLE_PKT2 "Build pkt2 plugin" OFF)
+option(ENABLE_MQTT "Build MQTT plugin" OFF)
+option(ENABLE_LOGGER_HUFFMAN "Build logger-huffman plugin" OFF)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set(LIB_OS_SPECIFIC_SOURCE usleep.cpp)
@@ -41,8 +53,13 @@ if(ENABLE_JWT)
 endif(ENABLE_JWT)
 
 if(ENABLE_WS)
-	set(WS_SRC 	ws-handler.cpp)
-	set(WS_LIB ws-sqlite microhttpd)
+	set(WS_SRC ws-handler.cpp)
+	find_library(WS_LIB_SQLITE
+		NAMES ws-sqlite
+		HINTS "." ".." "../../lorawan-ws" "~/src/lorawan-ws"
+			"../lorawan-ws/build/Release"
+	)
+	set(WS_LIB ${WS_LIB_SQLITE} microhttpd)
 endif(ENABLE_WS)
 
 if(ENABLE_CURL)
@@ -54,8 +71,22 @@ if(ENABLE_PKT2)
 	find_library(LIBPKT2
 		NAMES pkt2
 		HINTS "." ".." "../../pkt2" "~/src/pkt2"
+			"../pkt2/build/Release"
 	)
 endif(ENABLE_PKT2)
+
+if(ENABLE_LOGGER_HUFFMAN)
+	find_library(LIBLOGGER_PASSPORT
+		NAMES logger-passport
+		HINTS "." ".." "../../logger-passport" "~/src/logger-passport"
+		"../logger-passport/build/Release"
+	)
+	find_library(LIBLOGGER_HUFFMAN
+		NAMES logger-huffman
+		HINTS "." ".." "../../logger-huffman" "~/src/logger-huffman"
+		"../logger-huffman/build/Release"
+	)
+endif(ENABLE_LOGGER_HUFFMAN)
 
 if(ENABLE_MQTT)
 	find_package(Paho REQUIRED)
@@ -74,10 +105,12 @@ if(ENABLE_LISTENER_EMBEDDED)
 	find_library(LIBLORAGW
 			NAMES loragw
 			HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder"
+			"../packet_forwarder/build/Release"
 	)
 	find_library(LIBTINYMT32
 			NAMES tinymt32
 			HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder"
+			"../packet_forwarder/build/Release"
 	)
 	set(SRC_LISTENER_EMBEDDED
 			usb-listener.cpp
@@ -151,7 +184,7 @@ endif()
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${WS_LIB}
+	lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
 	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(lorawan-network-server PRIVATE ${BACKEND_DB_INC} )
@@ -164,11 +197,24 @@ set(SRC_MAC_GW
 	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp
 	third_party/argtable3/argtable3.c
 )
+
 add_executable(mac-gw ${SRC_MAC_GW})
 target_link_libraries(mac-gw PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+	lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(mac-gw PRIVATE ${BACKEND_DB_INC} )
+
+set (SRC_MAC_NS
+	mac-ns.cpp macgw-config-json.cpp config-json.cpp lora-packet-handler-impl.cpp config-filename.cpp
+	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp device-history-service-json.cpp control-packet.cpp
+	${C_STORAGE} db-any.cpp  ${BACKEND_DB_SRC}
+	third_party/argtable3/argtable3.c
+)
+add_executable(mac-ns ${SRC_MAC_NS})
+target_link_libraries(mac-ns PRIVATE Threads::Threads
+	lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+)
+target_include_directories(mac-ns PRIVATE ${BACKEND_DB_INC} )
 
 set(SRC_PRINT_NETID
 	print-netid.cpp
@@ -188,7 +234,7 @@ set(LORA_PRINT_SOURCES
 )
 add_executable(lora-print ${LORA_PRINT_SOURCES})
 target_link_libraries(lora-print PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+	lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(lora-print PRIVATE ${BACKEND_DB_INC} )
 
@@ -200,14 +246,13 @@ set(PROTO_DB_SOURCES
 )
 add_executable(proto-db ${PROTO_DB_SOURCES})
 target_link_libraries(proto-db PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
+	lorawan ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(proto-db PRIVATE ${BACKEND_DB_INC} )
 
 add_executable(dev-payload ${DEV_PAYLOAD_SOURCES})
 target_link_libraries(dev-payload PRIVATE Threads::Threads
-	lorawan
-	${LIBPKT2} ${OS_SPECIFIC_LIBS}
+	lorawan	${OS_SPECIFIC_LIBS}
 )
 
 # Strip binary for release builds
@@ -239,12 +284,29 @@ if(ENABLE_MQTT)
 	target_link_libraries(plugin-mqtt-wss paho-mqtt3as paho-mqttpp3)
 endif(ENABLE_MQTT)
 
+if(ENABLE_PKT2)
+	set (SRC_PLUGIN_PKT2
+		example-plugins/plugin-pkt2.cpp
+	)
+	add_library(plugin-pkt2 SHARED ${SRC_PLUGIN_PKT2})
+	target_link_libraries(plugin-pkt2 protobuf ${LIBPKT2})
+endif(ENABLE_PKT2)
+
+if(ENABLE_LOGGER_HUFFMAN)
+	set (SRC_PLUGIN_LOGGER_HUFFMAN
+		example-plugins/plugin-logger-huffman.cpp logger-loader.cpp
+		db-any.cpp ${BACKEND_DB_SRC}
+	)
+	add_library(plugin-logger-huffman SHARED ${SRC_PLUGIN_LOGGER_HUFFMAN})
+	target_link_libraries(plugin-logger-huffman ${LIBLOGGER_PASSPORT} ${LIBLOGGER_HUFFMAN})
+endif(ENABLE_LOGGER_HUFFMAN)
+
 INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/lorawan-network-server DESTINATION cmake)
 INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/mac-gw DESTINATION cmake)
 INSTALL(FILES README.md LICENSE HISTORY COPYING TODO CODE_OF_CONDUCT.md CONTRIBUTING.md DESTINATION doc)
 
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_PACKAGE_VERSION_MAJOR "${semtech_udp_packet_emitter_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${semtech_udp_packet_emitter_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "3")
 include(CPack)
