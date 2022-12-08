@@ -9,10 +9,8 @@
 #include <fstream>
 
 #include <csignal>
-#include <unistd.h>
-#include <sys/types.h>
 #include <cerrno>
-#include <sys/select.h>
+
 
 #include "argtable3/argtable3.h"
 #include "utilstring.h"
