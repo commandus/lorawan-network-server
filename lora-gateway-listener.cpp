@@ -3,8 +3,7 @@
  */
 #include <iomanip>
 #include <thread>
-#include <math.h>
-#include <syslog.h>
+#include <cmath>
 
 #include "lora-gateway-listener.h"
 #include "utilstring.h"

@@ -1,12 +1,6 @@
 #include "packet-listener.h"
 #include <iostream>
-#include <cstring>
-#include <unistd.h>
-#include <syslog.h>
-#include <csignal>
-#include <cerrno>
 
-#include "get_rss/get_rss.h"
 #include "utilstring.h"
 #include "errlist.h"
 

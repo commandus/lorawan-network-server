@@ -1,12 +1,11 @@
 #include "daemonize.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <cstdio>
+#include <cstdlib>
+#include <csignal>
 #include <iostream>
 
 #ifdef _MSC_VER
+
 #include <windows.h>
 #include <tchar.h>
 #include <strsafe.h>
@@ -16,11 +15,19 @@ SERVICE_STATUS        g_ServiceStatus = {0};
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
 #define DEF_PID_PATH ""
 
+#define	LOG(msg) {}
+
 #else
+
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <syslog.h>
+
+#define	LOG(msg) { syslog (LOG_NOTICE, msg); }
+
 #define DEF_PID_PATH "/var/run/"
+
 #endif
 
 static std::string serviceName;
@@ -29,12 +36,6 @@ static TDaemonRunner daemonStopRequest;
 static TDaemonRunner daemonDone;
 
 #define DEF_FD_LIMIT			1024*10
-
-#ifdef _MSC_VER
-#define	LOG(msg) {}
-#else
-#define	LOG(msg) { syslog (LOG_NOTICE, msg); }
-#endif
 
 Daemonize::Daemonize(
     const std::string &daemonName,
@@ -162,13 +163,12 @@ EXIT:
 int Daemonize::init()
 {
 	std::wstring sn(serviceName.begin(), serviceName.end());
-	SERVICE_TABLE_ENTRY ServiceTable[] =
-	{
-		{(LPWSTR)sn.c_str(), (LPSERVICE_MAIN_FUNCTION)ServiceMain},
-		{NULL, NULL}
+	SERVICE_TABLE_ENTRY ServiceTable[] = {
+		{(LPCSTR)sn.c_str(), (LPSERVICE_MAIN_FUNCTION)ServiceMain},
+		{nullptr, nullptr}
 	};
 	if (StartServiceCtrlDispatcher (ServiceTable) == FALSE)
-		return GetLastError ();
+		return GetLastError();
 	return 0;
 }
 

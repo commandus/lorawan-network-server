@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <sstream>
 #include <unistd.h>
-#include <syslog.h>
 
 #include "utilstring.h"
 #include "errlist.h"

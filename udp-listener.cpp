@@ -1,9 +1,9 @@
 #include "udp-listener.h"
 #include <iostream>
 #include <cstring>
-#include <syslog.h>
 #include <csignal>
 #include <cerrno>
+
 #include "third_party/get_rss/get_rss.h"
 #include "utildate.h"
 #include "utilstring.h"
