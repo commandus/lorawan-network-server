@@ -5,10 +5,14 @@
 #include <mutex>
 #include "device-history-service-abstract.h"
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
 #include "rapidjson/document.h"
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 class JsonFileDeviceHistoryService: public DeviceHistoryService {
 	private:

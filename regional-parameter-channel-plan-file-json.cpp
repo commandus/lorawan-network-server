@@ -241,13 +241,13 @@ private:
                         value->storage.bands.back().bandDefaults.ReceiveDelay1 = (int) val;
                         return true;
                     case JK_RECEIVEDELAY2:
-                        value->storage.bands.back().bandDefaults.ReceiveDelay2 = val;
+                        value->storage.bands.back().bandDefaults.ReceiveDelay2 = (int) val;
                         return true;
                     case JK_JOINACCEPTDELAY1:
-                        value->storage.bands.back().bandDefaults.JoinAcceptDelay1 = val;
+                        value->storage.bands.back().bandDefaults.JoinAcceptDelay1 = (int) val;
                         return true;
                     case JK_JOINACCEPTDELAY2:
-                        value->storage.bands.back().bandDefaults.JoinAcceptDelay2 = val;
+                        value->storage.bands.back().bandDefaults.JoinAcceptDelay2 = (int) val;
                         return true;
                     default:
                         applyErrorDescription(ERR_REGION_BAND_EMPTY);
@@ -264,7 +264,7 @@ private:
                 }
 
                 RegionalParameterChannelPlan &rb = value->storage.bands.back();
-                rb.rx1DataRateOffsets[rx1DataRateOffsetCount].push_back(val);
+                rb.rx1DataRateOffsets[rx1DataRateOffsetCount].push_back((uint8_t) val);
                 return true;
             }
             case JRB_BAND_CHANNEL: {
