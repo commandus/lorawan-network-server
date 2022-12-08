@@ -3,6 +3,11 @@
 #include <regex>
 #include <base64/base64.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -111,17 +116,17 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 		}
 
 		bool Int64(int64_t value) {
-			putUInt(value);
+			putUInt((unsigned int) value);
 			return true;
 		}
 
 		bool Uint64(uint64_t value) {
-			putUInt(value);
+			putUInt((unsigned int) value);
 			return true;
 		}
 
 		bool Double(double value) {
-			putUInt(value);
+			putUInt((unsigned int) value);
 			return true;
 		}
 
@@ -133,7 +138,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 						// base64
 						entry.value.payload = base64_decode(s, true);
 					}
-					catch (const std::exception& e) {
+					catch (const std::exception&) {
 						return false;
 					}
 					break;
@@ -159,7 +164,7 @@ class MessageQueueJsonHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 					break;
 				default:
 					{
-					unsigned long value = atoll(s.c_str());
+					unsigned long value = ((unsigned int)) atoll(s.c_str());
 					putUInt(value);
 					}
 					break;
