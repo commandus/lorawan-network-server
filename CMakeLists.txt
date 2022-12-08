@@ -35,11 +35,15 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 if(ENABLE_JWT)
-set(OPENSSL_USE_STATIC_LIBS TRUE)
-find_package(OpenSSL REQUIRED)
-set(LIBJWT OpenSSL::Crypto)
+	set(OPENSSL_USE_STATIC_LIBS TRUE)
+	find_package(OpenSSL REQUIRED)
+	set(LIBJWT OpenSSL::Crypto)
 endif(ENABLE_JWT)
 
+if(ENABLE_WS)
+	set(WS_SRC 	ws-handler.cpp)
+	set(WS_LIB ws-sqlite microhttpd)
+endif(ENABLE_WS)
 
 if(ENABLE_CURL)
 	find_package(CURL REQUIRED)
@@ -124,8 +128,8 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	db-any.cpp ${BACKEND_DB_SRC}
 	device-channel-plan-file-json.cpp device-history-service-json.cpp
 	regional-parameter-channel-plan-file-json.cpp
-	ws-handler.cpp database-config-json.cpp 
-    ${SRC_LISTENER_EMBEDDED}
+	database-config-json.cpp
+	${WS_SRC} ${SRC_LISTENER_EMBEDDED}
 	third_party/get_rss/get_rss.c
 	third_party/argtable3/argtable3.c
 )
@@ -147,7 +151,7 @@ endif()
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
-	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ws-sqlite microhttpd
+	${LIBPKT2} lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB} ${WS_LIB}
 	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(lorawan-network-server PRIVATE ${BACKEND_DB_INC} )

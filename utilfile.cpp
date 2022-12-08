@@ -430,8 +430,8 @@ int URL::getInt(
 std::string getCurrentDir()
 {
 #ifdef _MSC_VER
-    char buffer[MAX_PATH];
-    GetCurrentDirectory(MAX_PATH - 1, &buffer);
+    TCHAR buffer[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH - 1, buffer);
     return std::string((char *) buffer);
 #else
     char wd[PATH_MAX];
