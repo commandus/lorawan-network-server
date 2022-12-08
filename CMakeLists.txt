@@ -303,7 +303,7 @@ if(ENABLE_MQTT)
 		mqtt-client-id.cpp utilstring.cpp
 	)
 	add_library(plugin-mqtt-wss SHARED ${SRC_PLUGIN_MQTT_WSS})
-	target_link_libraries(plugin-mqtt-wss ${LIB_PAHO_MQTT})
+	target_link_libraries(plugin-mqtt-wss lorawan ${LIB_PAHO_MQTT})
 endif(ENABLE_MQTT)
 
 if(ENABLE_PKT2)
@@ -311,7 +311,7 @@ if(ENABLE_PKT2)
 		example-plugins/plugin-pkt2.cpp
 	)
 	add_library(plugin-pkt2 SHARED ${SRC_PLUGIN_PKT2})
-	target_link_libraries(plugin-pkt2 protobuf::libprotobuf ${LIBPKT2})
+	target_link_libraries(plugin-pkt2 lorawan protobuf::libprotobuf ${LIBPKT2})
 endif(ENABLE_PKT2)
 
 if(ENABLE_LOGGER_HUFFMAN)
@@ -322,7 +322,7 @@ if(ENABLE_LOGGER_HUFFMAN)
 	add_library(plugin-logger-huffman SHARED ${SRC_PLUGIN_LOGGER_HUFFMAN})
 	target_include_directories(plugin-logger-huffman PRIVATE ${BACKEND_DB_INC} )
 	target_compile_definitions(plugin-logger-huffman PRIVATE ENABLE_DB_SQLITE)
-	target_link_libraries(plugin-logger-huffman ${LIBLOGGER_PASSPORT} ${LIBLOGGER_HUFFMAN})
+	target_link_libraries(plugin-logger-huffman lorawan ${LIBLOGGER_PASSPORT} ${LIBLOGGER_HUFFMAN})
 endif(ENABLE_LOGGER_HUFFMAN)
 
 INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/lorawan-network-server DESTINATION cmake)
