@@ -29,12 +29,11 @@ option(ENABLE_JWT  "Build with JWT" OFF)
 
 # Plugins
 option(ENABLE_PKT2 "Build pkt2 plugin" OFF)
-option(ENABLE_MQTT "Build MQTT plugin" OFF)
+option(ENABLE_MQTT 1"Build MQTT plugin" OFF)
 option(ENABLE_LOGGER_HUFFMAN "Build logger-huffman plugin" OFF)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set(LIB_OS_SPECIFIC_SOURCE usleep.cpp)
-
 	find_package(unofficial-sqlite3 CONFIG REQUIRED)
 	set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
 else ()
@@ -73,6 +72,8 @@ if(ENABLE_PKT2)
 		HINTS "." ".." "../../pkt2" "~/src/pkt2"
 			"../pkt2/build/Release"
 	)
+	find_package(protobuf CONFIG REQUIRED)
+	# protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite
 endif(ENABLE_PKT2)
 
 if(ENABLE_LOGGER_HUFFMAN)
@@ -192,8 +193,13 @@ add_library(lorawan STATIC
 	${LIBLORAWANSRC}
 )
 
-if(WIN32)
-	set (OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv)
+#if(WIN32)
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	if(ENABLE_MQTT)
+		set (OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv iphlpapi)
+	else()
+		set (OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv)
+	endif()
 endif()
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
@@ -303,7 +309,7 @@ if(ENABLE_PKT2)
 		example-plugins/plugin-pkt2.cpp
 	)
 	add_library(plugin-pkt2 SHARED ${SRC_PLUGIN_PKT2})
-	target_link_libraries(plugin-pkt2 protobuf ${LIBPKT2})
+	target_link_libraries(plugin-pkt2 protobuf::libprotobuf ${LIBPKT2})
 endif(ENABLE_PKT2)
 
 if(ENABLE_LOGGER_HUFFMAN)
