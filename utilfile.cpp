@@ -426,3 +426,15 @@ int URL::getInt(
         return 0;
     return (int) strtoll(s.c_str(), nullptr, 10);
 }
+
+std::string getCurrentDir()
+{
+#ifdef _MSC_VER
+    LPSTR buffer[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH - 1, buffer);
+    return std::string((char *) buffer);
+#else
+    char wd[PATH_MAX];
+    return getcwd(wd, PATH_MAX);
+#endif
+}
