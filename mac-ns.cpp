@@ -8,28 +8,19 @@
 #include <cstring>
 #include <fstream>
 
-#include <sys/time.h>
 #include <csignal>
 #include <unistd.h>
 #include <sys/types.h>
-#include <climits>
 #include <cerrno>
 #include <sys/select.h>
 
 #include "argtable3/argtable3.h"
-#include "platform.h"
 #include "utilstring.h"
-#include "daemonize.h"
 
 #include "errlist.h"
 #include "utillora.h"
-#include "utilstring.h"
-#include "utildate.h"
-
-#include "udp-listener.h"
 #include "config-json.h"
 #include "macgw-config-json.h"
-#include "lora-packet-handler-impl.h"
 #include "identity-service-file-json.h"
 
 #include "gateway-list.h"
