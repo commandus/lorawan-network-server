@@ -80,8 +80,8 @@ void DeviceStatServiceFile::runner()
     while (state == 1) { // 0- stopped, 1- run, 2- stop request
         if (timeoutSeconds <= 0)
             timeoutSeconds = MIN_DEVICE_STAT_TIMEOUT_SECONDS;
-        struct timeval timeout{ .tv_sec = timeoutSeconds, .tv_usec = 0 };
-        int r = select(0, NULL, NULL, nullptr, &timeout);
+        struct timeval timeout {timeoutSeconds, 0 };
+        int r = select(0, nullptr, nullptr, nullptr, &timeout);
         switch (r) {
             case -1:
                 break;

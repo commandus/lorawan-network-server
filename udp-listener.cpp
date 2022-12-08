@@ -293,8 +293,13 @@ int UDPListener::listen(void *config) {
 			}
 			if (serrno == EINTR){ // Interrupted system call
 				if (sysSignalPtr) {
-					if (*sysSignalPtr == 0 || *sysSignalPtr == SIGUSR2)
+					if (*sysSignalPtr == 0)
 						continue;
+#ifdef _MSC_VER
+#else
+                    if (*sysSignalPtr == SIGUSR2)
+                        continue;
+#endif
 				}
 			}
 			return ERR_CODE_SELECT;

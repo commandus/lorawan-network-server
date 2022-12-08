@@ -164,7 +164,7 @@ int Daemonize::init()
 {
 	std::wstring sn(serviceName.begin(), serviceName.end());
 	SERVICE_TABLE_ENTRY ServiceTable[] = {
-		{(LPCSTR)sn.c_str(), (LPSERVICE_MAIN_FUNCTION)ServiceMain},
+		{(LPSTR) sn.c_str(), (LPSERVICE_MAIN_FUNCTION) ServiceMain},
 		{nullptr, nullptr}
 	};
 	if (StartServiceCtrlDispatcher (ServiceTable) == FALSE)
