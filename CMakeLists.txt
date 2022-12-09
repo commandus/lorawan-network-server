@@ -34,8 +34,6 @@ option(ENABLE_MQTT 1"Build MQTT plugin" OFF)
 option(ENABLE_LOGGER_HUFFMAN "Build logger-huffman plugin" OFF)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'
-	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 	set(LIB_OS_SPECIFIC_SOURCE usleep.cpp)
 	find_package(unofficial-sqlite3 CONFIG REQUIRED)
 	set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
@@ -206,6 +204,10 @@ target_compile_definitions(lorawan PRIVATE ${LNS_DEF})
 
 #if(WIN32)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'
+	# set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+
 	if(ENABLE_MQTT)
 		set (OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv iphlpapi)
 	else()
