@@ -1,8 +1,9 @@
 #
 # Options:
 #
-# -DENABLE_CURL=on
-# -DENABLE_JWT=on
+# -DENABLE_WS=on   enable embedded web service
+# -DENABLE_CURL=on enable Curl lib (read/write statistics to remote https:// )
+# -DENABLE_JWT=on  enable embedded web service user authentication
 #
 # Embedded USB gateway
 #
@@ -33,6 +34,8 @@ option(ENABLE_MQTT 1"Build MQTT plugin" OFF)
 option(ENABLE_LOGGER_HUFFMAN "Build logger-huffman plugin" OFF)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 	set(LIB_OS_SPECIFIC_SOURCE usleep.cpp)
 	find_package(unofficial-sqlite3 CONFIG REQUIRED)
 	set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
@@ -49,6 +52,7 @@ if(ENABLE_JWT)
 	set(OPENSSL_USE_STATIC_LIBS TRUE)
 	find_package(OpenSSL REQUIRED)
 	set(LIBJWT OpenSSL::Crypto)
+	set (LNS_DEF ${LNS_DEF} ENABLE_JWT)
 endif(ENABLE_JWT)
 
 if(ENABLE_WS)
@@ -59,6 +63,7 @@ if(ENABLE_WS)
 			"../lorawan-ws/build/Release"
 	)
 	set(WS_LIB ${WS_LIB_SQLITE} microhttpd)
+	set (LNS_DEF ${LNS_DEF} ENABLE_WS)
 endif(ENABLE_WS)
 
 if(ENABLE_CURL)
@@ -194,6 +199,10 @@ set(DEV_PAYLOAD_SOURCES
 add_library(lorawan STATIC
 	${LIBLORAWANSRC}
 )
+# -fPIC
+set_property(TARGET lorawan PROPERTY POSITION_INDEPENDENT_CODE ON)
+# auth-file depends on JWT
+target_compile_definitions(lorawan PRIVATE ${LNS_DEF})
 
 #if(WIN32)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -204,13 +213,15 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	endif()
 endif()
 
+set (LNS_DEF ${LNS_DEF} ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
+
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
-	lorawan ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
+	lorawan ${WS_LIB} ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
 	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(lorawan-network-server PRIVATE ${BACKEND_DB_INC} )
-target_compile_definitions(lorawan-network-server PRIVATE ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
+target_compile_definitions(lorawan-network-server PRIVATE ${LNS_DEF})
 
 set(SRC_MAC_GW
 	mac-gw.cpp macgw-config-json.cpp config-json.cpp lora-packet-handler-impl.cpp

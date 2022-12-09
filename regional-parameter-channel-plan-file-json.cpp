@@ -325,6 +325,8 @@ private:
                     case JK_N:
                         value->storage.bands.back().maxPayloadSizePerDataRate[maxPayloadSizePerDataRateCount].n = (uint8_t) val;
                         return true;
+                    default:
+                        break;
                 }
                 applyErrorDescription("Unexpected number in the maxPayloadSizePerDataRate");
                 return false;
@@ -345,6 +347,8 @@ private:
                     case JK_N:
                         value->storage.bands.back().maxPayloadSizePerDataRateRepeater[maxPayloadSizePerDataRateRepeaterCount].n = (uint8_t) val;
                         return true;
+                    default:
+                        break;
                 }
                 applyErrorDescription(ERR_REGION_BAND_EMPTY);
                 return false;
@@ -384,6 +388,8 @@ private:
                         }
                         value->storage.bands.back().dataRates[dataRateCount - 1].bps = (uint32_t) val;
                         return true;
+                    default:
+                        break;
                 }
                 applyErrorDescription("Unexpected integer");
                 return false;
@@ -418,6 +424,8 @@ private:
                         }
                         value->storage.bands.back().id = (uint8_t) val;
                         return true;
+                    default:
+                        break;
                 }
                 applyErrorDescription("Unexpected integer value");
                 return false;
@@ -505,6 +513,8 @@ public :
                             return false;
                         }
                         break;
+                    default:
+                        break;
                 }
                 Channel &channel = value->storage.bands.back().uplinkChannels.back();
 
@@ -572,8 +582,12 @@ public :
                         }
                         value->storage.bands.back().dataRates[dataRateCount - 1].bandwidth = double2BANDWIDTH(d);
                         return true;
+                    default:
+                        break;
                 }
             }
+            default:
+                break;
         }
         applyErrorDescription("Unexpected float number");
         return false;
@@ -656,6 +670,8 @@ public :
                     case JK_BANDDEFAULTS:
                         state = JRB_BAND_DEFAULTS;
                         return true;
+                    default:
+                        break;
                 }
                 applyErrorDescription("Object JRB_BAND JK_BANDDEFAULTS");
                 return false;

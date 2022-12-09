@@ -459,6 +459,7 @@ const host = window.location.origin + '/';
 
 Options:
 
+- -DENABLE_WS=on enable embedded web service
 - -DENABLE_JWT=on enable JWT web user authorization (OpenSSL lib required)
 - -DENABLE_PKT2=on enable PKT2 plugin (pkt2, protobuf libs required)
 - -DENABLE_MQTT=on enable MQTT plugin (paho libs required)
@@ -484,6 +485,7 @@ For instance, you can use Clang instead of gcc:
 mkdir build
 cd build
 export CC=/usr/bin/clang;export CXX=/usr/bin/clang++;cmake ..
+export CC=/usr/bin/clang;export CXX=/usr/bin/clang++;cmake -DENABLE_WS=on -DENABLE_JWT=on -DENABLE_PKT2=on -DENABLE_MQTT=on -DENABLE_LOGGER_HUFFMAN=on ..
 make
 ```
 

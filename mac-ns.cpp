@@ -387,7 +387,7 @@ int main(
 	// load device list
 	JsonFileIdentityService identityService;
 	if (identityService.init(config->serverConfig.identityStorageName, NULL) != 0) {
-		std::cerr << ERR_MESSAGE << identityService.errmessage << std::endl;
+		std::cerr << ERR_MESSAGE << identityService.errMessage << std::endl;
 	}
 
     if (config->serverConfig.verbosity > 2) {
