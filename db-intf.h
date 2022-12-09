@@ -20,6 +20,8 @@ public:
 	std::string type;
 	std::string errmsg;
 
+    virtual ~DatabaseIntf();
+
 	virtual int open(
 		const std::string &connection,
 		const std::string &login,

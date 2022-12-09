@@ -52,7 +52,7 @@ public:
 	LoraPacketHandler *handler;
 
 	PacketListener();
-	~PacketListener();
+	virtual ~PacketListener();
 
     virtual std::string toString() const;
 

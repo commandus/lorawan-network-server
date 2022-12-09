@@ -12,6 +12,7 @@ protected:
     std::string jwtClaims(const std::map<std::string, std::string> &claims);
 public:
     AuthUserService(const std::string &issuer, const std::string &secret);
+    virtual ~AuthUserService();
 
     // return true if user authorized
     virtual bool verify(const std::string &user, const std::string &password) = 0;

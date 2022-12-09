@@ -842,13 +842,19 @@ void PacketQueue::wakeUp()
     if ((!fdWakeup) || (!SetEvent(fdWakeup))) {
         if (onLog) {
             std::stringstream ss;
-            ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << " SetEvent() failed";
+            ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << " wakeup failed";
             onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
         }
     }
 #else
 	uint8_t u = 1;
-	write(fdWakeup, &u, sizeof(u)) != sizeof(u);
+	if (write(fdWakeup, &u, sizeof(u)) != sizeof(u)) {
+        if (onLog) {
+            std::stringstream ss;
+            ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT << " wakeup failed";
+            onLog->logMessage(this, LOG_ERR, LOG_PACKET_QUEUE, ERR_CODE_SELECT, ss.str());
+        }
+    }
 #endif
 }
 

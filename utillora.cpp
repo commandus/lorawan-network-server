@@ -2897,7 +2897,7 @@ void SemtechUDPPacket::appendMACs(const std::string &macsString) {
 
 JOIN_REQUEST_FRAME *SemtechUDPPacket::getJoinRequestFrame() const
 {
-    // if (errcode != ERR_CODE_IS_JOIN)  return NULL; // after parseRX
+    // if (errCode != ERR_CODE_IS_JOIN)  return NULL; // after parseRX
     size_t sz = payload.size();
     if (sz == sizeof(JOIN_REQUEST_FRAME))
         return (JOIN_REQUEST_FRAME *) payload.c_str();
@@ -2906,7 +2906,7 @@ JOIN_REQUEST_FRAME *SemtechUDPPacket::getJoinRequestFrame() const
 
 JOIN_ACCEPT_FRAME *SemtechUDPPacket::getJoinAcceptFrame() const
 {
-    // if (errcode != ERR_CODE_IS_JOIN) return NULL; // after parseRX
+    // if (errCode != ERR_CODE_IS_JOIN) return NULL; // after parseRX
     size_t sz = payload.size();
     if (sz == sizeof(JOIN_ACCEPT_FRAME))
         return (JOIN_ACCEPT_FRAME *) payload.c_str();
@@ -2915,7 +2915,7 @@ JOIN_ACCEPT_FRAME *SemtechUDPPacket::getJoinAcceptFrame() const
 
 JOIN_ACCEPT_FRAME_CFLIST *SemtechUDPPacket::getJoinAcceptCFListFrame() const
 {
-    // if (errcode != ERR_CODE_IS_JOIN) return NULL; // after parseRX
+    // if (errCode != ERR_CODE_IS_JOIN) return NULL; // after parseRX
     size_t sz = payload.size();
     if (sz == sizeof(JOIN_ACCEPT_FRAME_CFLIST))
         return (JOIN_ACCEPT_FRAME_CFLIST *) payload.c_str();

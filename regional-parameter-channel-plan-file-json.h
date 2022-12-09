@@ -75,7 +75,7 @@ class RegionalParameterChannelPlanFileJson : public RegionalParameterChannelPlan
 	public:
         RegionBands storage;
         RegionalParameterChannelPlanFileJson();
-		~RegionalParameterChannelPlanFileJson();
+		~RegionalParameterChannelPlanFileJson() override;
         int errCode;
         std::string errDescription;
 

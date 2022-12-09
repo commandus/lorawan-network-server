@@ -15,6 +15,9 @@ typedef enum {
  */
 class DeviceStatService {
 	public:
+        DeviceStatService();
+        DeviceStatService(const DeviceStatService &value);
+        virtual ~DeviceStatService();
         virtual bool get(SemtechUDPPacket &retval, size_t id) = 0;
         virtual size_t size() = 0;
 

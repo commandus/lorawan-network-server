@@ -15,6 +15,11 @@ AuthUserService::AuthUserService(
 
 }
 
+AuthUserService::~AuthUserService()
+{
+
+}
+
 std::string AuthUserService::jwtClaims(
     const std::map<std::string, std::string> &claims
 )

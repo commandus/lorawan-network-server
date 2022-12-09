@@ -12,6 +12,8 @@ class DeviceChannelPlan {
         const RegionalParameterChannelPlans *regionalParameterChannelPlans;
     public:
         DeviceChannelPlan();
+        DeviceChannelPlan(const DeviceChannelPlan &value);
+        virtual ~DeviceChannelPlan();
         virtual const RegionalParameterChannelPlan *get(const DEVADDRINT &value) const = 0;
         virtual const RegionalParameterChannelPlan *get() const = 0;    // return default
         virtual int init(const std::string &option, void *data) = 0;

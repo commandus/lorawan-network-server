@@ -28,6 +28,8 @@ class ConfigDatabasesIntf
 public:
     std::vector<ConfigDatabase> dbs;
 
+    virtual ~ConfigDatabasesIntf() {};
+
     virtual int load(const std::string &value) = 0;
     virtual std::string toString(int index) const = 0;
 

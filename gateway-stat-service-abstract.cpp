@@ -1,5 +1,22 @@
 #include "gateway-stat-service-abstract.h"
 
+GatewayStatService::GatewayStatService()
+{
+
+}
+
+GatewayStatService::GatewayStatService(
+    const GatewayStatService &value
+)
+{
+
+}
+
+GatewayStatService::~GatewayStatService()
+{
+
+}
+
 GW_STAT_STORAGE string2gwStatStorageType(
         const std::string &value
 ) {

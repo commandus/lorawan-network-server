@@ -93,7 +93,12 @@ typedef int (*payloadPrepareFunc)(
     const std::string &payload
 );
 
-typedef std::string (*payloadCreateFunc)(
+/**
+ * Return CREATE TABLE clauses
+ * Optional call.
+ */
+typedef int (*payloadCreateFunc)(
+    std::string &retVal,
     void *env,
     const std::string &message,
     int outputFormat,

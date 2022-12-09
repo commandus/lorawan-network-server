@@ -86,7 +86,7 @@ static std::string getActivationName(
 }
 
 JsonFileIdentityService::JsonFileIdentityService()
-        : path(""), errcode(0), errmessage(""), maxDevNwkAddr(0)
+        : path(""), errCode(0), errMessage(""), maxDevNwkAddr(0)
 {
 
 }
@@ -261,13 +261,13 @@ int JsonFileIdentityService::load()
     rapidjson::FileReadStream istrm(fp, readBuffer, sizeof(readBuffer));
     rapidjson::ParseResult r = reader.Parse<rapidjson::kParseCommentsFlag>(istrm, handler);
     if (r.IsError()) {
-        errcode = r.Code();
+        errCode = r.Code();
         std::stringstream ss;
         ss << rapidjson::GetParseError_En(r.Code()) << " at " << r.Offset();
-        errmessage = ss.str();
+        errMessage = ss.str();
     } else {
-        errcode = 0;
-        errmessage = "";
+        errCode = 0;
+        errMessage = "";
     }
     fclose(fp);
     return r.IsError() ? ERR_CODE_INVALID_JSON : 0;

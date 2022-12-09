@@ -66,8 +66,8 @@ class JsonFileIdentityService: public IdentityService {
 
 		// debug only
 		std::string toJsonString();
-		int errcode;
-		std::string errmessage;
+		int errCode;
+		std::string errMessage;
 
 		uint32_t getRightsMask(
 			const DEVADDR &addr
@@ -80,7 +80,7 @@ class JsonFileIdentityService: public IdentityService {
           * Return next network address if available
           * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
           */
-        int next(NetworkIdentity &retval);
+        int next(NetworkIdentity &retVal) override;
 };
 
 #endif

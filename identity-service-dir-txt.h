@@ -32,8 +32,8 @@ class DirTxtIdentityService: public JsonFileIdentityService {
 #endif
 		OnIdentitiesUpdate *onIdentitiesUpdate;
 		int loadTxtFile(const std::string &path);
-		int load();
-		int save();
+		int load() override;
+		int save() override;
 	public:
 		int startListen(OnIdentitiesUpdate *callback);
 		int stopListen();

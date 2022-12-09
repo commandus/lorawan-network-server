@@ -1,5 +1,22 @@
 #include "identity-service.h"
 
+IdentityService::IdentityService()
+{
+
+}
+
+IdentityService::IdentityService(
+    const IdentityService &value
+)
+    : netid(value.netid)
+{
+
+}
+ IdentityService::~IdentityService()
+{
+
+}
+
 int IdentityService::joinAccept(
         JOIN_ACCEPT_FRAME_HEADER &retval,
         NetworkIdentity &networkIdentity

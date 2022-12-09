@@ -13,6 +13,9 @@ protected:
     // LoraWAN network identifier
     NetId netid;
 public:
+    IdentityService();
+    IdentityService(const IdentityService &value);
+    virtual ~IdentityService();
     /**
     * get device identifier(w/o address) by network address. Return 0 if success, retval = EUI and keys
     * @param retval device identifier

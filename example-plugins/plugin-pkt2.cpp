@@ -49,7 +49,8 @@ extern "C" void pluginDone(
     donePkt2(env);
 }
 
-extern "C" std::string payloadCreate(
+extern "C" int payloadCreate(
+    std::string &retVal,
     void *env,
     const std::string &message,
     int outputFormat,
@@ -59,8 +60,9 @@ extern "C" std::string payloadCreate(
     const std::map<std::string, std::string> *properties
 )
 {
-    return createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, sqlDialect,
+    retVal = createTableSQLClause(env, message, OUTPUT_FORMAT_SQL, sqlDialect,
         tableAliases, fieldAliases, properties);
+    return 0;
 }
 
 /**

@@ -14,6 +14,9 @@ typedef enum {
  */
 class GatewayStatService {
 	public:
+        GatewayStatService();
+        GatewayStatService(const GatewayStatService &value);
+        virtual ~GatewayStatService();
         virtual bool get(GatewayStat &retval, size_t id) = 0;
         virtual size_t size() = 0;
 		virtual void put(GatewayStat *stat) = 0;

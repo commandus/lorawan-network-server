@@ -385,7 +385,7 @@ int main(
     JsonFileIdentityService identityService;
     // load device list
     if (identityService.init(identityFileName, NULL) != 0) {
-        std::cerr << ERR_MESSAGE << identityService.errmessage << std::endl;
+        std::cerr << ERR_MESSAGE << identityService.errMessage << std::endl;
         exit(ERR_CODE_NO_CONFIG);
     }
 

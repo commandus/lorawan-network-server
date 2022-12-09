@@ -11,6 +11,7 @@
  */ 
 class DeviceHistoryService {
 	public:
+        virtual ~DeviceHistoryService() {};
 		// Return 0, retval = DeviceHistoryItem and keys
 		virtual int get(DEVADDR &devaddr, DeviceHistoryItem &retval) = 0;
 		virtual void put(DEVADDR &devaddr, DEVICE_HISTORY_ITEM &value) = 0;

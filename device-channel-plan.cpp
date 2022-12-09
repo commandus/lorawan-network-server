@@ -1,7 +1,24 @@
 #include "device-channel-plan.h"
 
 DeviceChannelPlan::DeviceChannelPlan()
-    : defaultChannelPlanIdentifier(0), regionalParameterChannelPlans(nullptr)
+        : defaultChannelPlanIdentifier(0), regionalParameterChannelPlans(nullptr)
+{
+
+}
+
+/**
+ * Hope regionalParameterChannelPlans still alive
+ * @param value
+ */
+DeviceChannelPlan::DeviceChannelPlan(
+    const DeviceChannelPlan &value
+)
+    : defaultChannelPlanIdentifier(value.defaultChannelPlanIdentifier), regionalParameterChannelPlans(value.regionalParameterChannelPlans)
+{
+
+}
+
+DeviceChannelPlan::~DeviceChannelPlan()
 {
 
 }

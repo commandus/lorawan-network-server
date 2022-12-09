@@ -1,5 +1,22 @@
 #include "device-stat-service-abstract.h"
 
+DeviceStatService::DeviceStatService()
+{
+
+}
+
+DeviceStatService::DeviceStatService(
+    const DeviceStatService &value
+)
+{
+
+}
+
+DeviceStatService::~DeviceStatService()
+{
+
+}
+
 DEVICE_STAT_STORAGE string2deviceStatStorageType(
         const std::string &value
 ) {
