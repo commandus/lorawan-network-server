@@ -368,7 +368,7 @@ static int64_t paramValNum(
 ) {
 	const COMMAND_PARAM *p = cmd.param[paramIndex];
 	int choiceCount = p->count;
-	for (uint32_t c = 0; c < choiceCount; c++) {
+	for (uint32_t c = 0; c < (uint32_t) choiceCount; c++) {
 		const COMMAND_PARAM_CHOICE *choice = p->list[c];
 		if (((uint32_t) v >= choice->minvalue) && (c <= choice->maxvalue)) {
 			return v;
@@ -470,7 +470,7 @@ int MacGwConfig::parse(
 						+ std::string(gatewayCommands[cmdIdx].fullname);
 					return ERR_CODE_PARAM_INVALID;
 				}
-				paramval.push_back(val);
+				paramval.push_back((int) val);
 				if (paramval.size() >= gatewayCommands[cmdIdx].paramcount) {
 					// got all parameters, next command
 					MacData md;

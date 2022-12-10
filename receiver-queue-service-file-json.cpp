@@ -415,7 +415,7 @@ std::string JsonFileReceiverQueueService::toJsonString()
 
 int JsonFileReceiverQueueService::count()
 {
-	return storage.size();
+	return (int) storage.size();
 }
 
 int JsonFileReceiverQueueService::pop(

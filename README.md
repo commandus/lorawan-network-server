@@ -505,7 +505,7 @@ Then install curl, sqlite3 dependencies:
 vcpkg install curl:x86-windows-static
 vcpkg install curl:x64-windows-static
 vcpkg install sqlite3:x64-windows-static
-vcpkg install sqlite3:x86-windows-static
+vcpkg install paho-mqtt:x64-windows-static paho-mqttpp3:x64-windows-static
 ```
 
 Then build solution:
