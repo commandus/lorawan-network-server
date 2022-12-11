@@ -3,7 +3,9 @@
 
 #ifdef _MSC_VER
 #include <Windows.h>
+#define PLUGIN_FILE_NAME_SUFFIX ".dll"
 #else
+#define PLUGIN_FILE_NAME_SUFFIX ".so"
 typedef void * HINSTANCE;
 #endif
 
@@ -78,7 +80,7 @@ public:
     );
 
     // load plugins
-	int load(const std::string &pluginDirectory, const std::string &suffix = ".so");
+	int load(const std::string &pluginDirectory, const std::string &suffix = PLUGIN_FILE_NAME_SUFFIX);
 	void unload();
 };
 #endif
