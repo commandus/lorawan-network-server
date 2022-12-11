@@ -248,7 +248,7 @@ int MqttClientEnv::clientConnect() {
     return 0;
 }
 
-extern "C" void *pluginInit(
+EXPORT_PLUGIN_FUNC void *pluginInit(
     DatabaseByConfig *dbByConfig,
     const std::string &protoPath,
     const std::map<std::string, std::vector <std::string> > &params,
@@ -269,7 +269,7 @@ extern "C" void *pluginInit(
     return cliEnv;
 }
 
-extern "C" void pluginDone(
+EXPORT_PLUGIN_FUNC void pluginDone(
     void *env
 )
 {
@@ -353,7 +353,7 @@ std::string buildTopic(
  * timestamp string
  * id number of packet received by the server as decimal number string
  */
-extern "C" int payload2InsertClauses(
+EXPORT_PLUGIN_FUNC int payload2InsertClauses(
     std::vector<std::string> &retClauses,
     void *env,
     const std::string &message,

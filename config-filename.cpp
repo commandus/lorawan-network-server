@@ -18,7 +18,10 @@ std::string getDefaultConfigFileName(
     const std::string &filename
 )
 {
-	std::string r = filename;
+    // try to get in the current directory
+    if (util::fileExists(filename))
+        return filename;
+    std::string r = filename;
 	// Need a process with query permission set
 	HANDLE hToken = 0;
 	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))

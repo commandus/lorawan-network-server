@@ -1,10 +1,5 @@
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#include <iostream>
-
-#ifdef _MSC_VER
 #include <windows.h>
 #include <io.h>
 #include <wchar.h>
@@ -32,6 +27,8 @@
 #endif
 
 #endif
+
+#include <iostream>
 
 #include "utilfile.h"
 
@@ -109,13 +106,21 @@ bool util::rmDir(const std::string &path)
  */
 size_t util::filesInPath
 (
-	const std::string &path,
+	const std::string &aPath,
 	const std::string &suffix,
 	int flags,
 	std::vector<std::string> *retval
 )
 {
-	std::string search_path = path + "\\*.*";
+	std::string path;
+	std::string search_path;
+
+	if (aPath.size() > 3 && aPath[1] == ':' && aPath[2] =='\\')
+		path = aPath;
+	else
+		path = getCurrentDir() + "\\" + aPath;
+	search_path = path + "\\*.*";
+		
 	WIN32_FIND_DATA fd;
 	HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
 	size_t r = 0;
@@ -130,8 +135,19 @@ size_t util::filesInPath
 				r += filesInPath(f, suffix, flags, retval);
 			} else {
 				if (f.find(suffix) != std::string::npos) {
-					if (retval)
-						retval->push_back(fd.cFileName);
+					if (retval) {
+						switch (flags) {
+						case 1:
+						{
+							std::string s(path + "\\" + fd.cFileName);
+							retval->push_back(s);
+
+						}
+						break;
+						default:
+							retval->push_back(fd.cFileName);
+						}
+					}
 					r++;
 				}
 			}

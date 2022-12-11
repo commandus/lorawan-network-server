@@ -16,9 +16,15 @@
 #include "log-intf.h"
 #include "errlist.h"
 
+#ifdef _MSC_VER
+#define EXPORT_PLUGIN_FUNC extern "C" __declspec(dllexport)
+#else
+#define EXPORT_PLUGIN_FUNC extern "C"
+#endif
+
 LogIntf *errLog = nullptr;
 
-extern "C" void *pluginInit(
+EXPORT_PLUGIN_FUNC void *pluginInit(
     void *dbByConfig,   // DatabaseByConfig*
     const std::map<std::string, std::vector <std::string> > &params,
     LogIntf *log,

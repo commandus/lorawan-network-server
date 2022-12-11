@@ -7,6 +7,12 @@
 #include "log-intf.h"
 #include "errlist.h"
 
+#ifdef _MSC_VER
+#define EXPORT_PLUGIN_FUNC extern "C" __declspec(dllexport)
+#else
+#define EXPORT_PLUGIN_FUNC extern "C"
+#endif
+
 std::string payloadCreate(
     const std::string &message,
     int outputFormat,
@@ -19,7 +25,7 @@ std::string payloadCreate(
     return loggerSQLCreateTable1(sqlDialect);
 }
 
-extern "C" void *pluginInit(
+EXPORT_PLUGIN_FUNC void *pluginInit(
     DatabaseByConfig *dbByConfig,
     const std::map<std::string, std::vector <std::string> > &params,
     LogIntf *log,
@@ -85,7 +91,7 @@ extern "C" void *pluginInit(
     return env;
 }
 
-extern "C" void pluginDone(
+EXPORT_PLUGIN_FUNC void pluginDone(
     void *env
 )
 {
@@ -96,7 +102,7 @@ extern "C" void pluginDone(
     }
 }
 
-extern "C" void afterInsert(
+EXPORT_PLUGIN_FUNC void afterInsert(
     void *env
 )
 {
@@ -140,7 +146,7 @@ extern "C" void afterInsert(
  * timestamp string
  * id number of packet received by the server as decimal number string
  */
-extern "C" int payload2InsertClauses(
+EXPORT_PLUGIN_FUNC int payload2InsertClauses(
     std::vector<std::string> &retClauses,
     void *env,
     const std::string &message,
@@ -166,7 +172,7 @@ extern "C" int payload2InsertClauses(
     return r;
 }
 
-extern "C" int payloadPrepare(
+EXPORT_PLUGIN_FUNC int payloadPrepare(
     void *env,
     uint32_t addr,
     const std::string &payload
