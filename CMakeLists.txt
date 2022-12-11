@@ -75,10 +75,6 @@ if(ENABLE_PKT2)
 		HINTS "." ".." "../../pkt2" "~/src/pkt2"
 			"../pkt2/build/Release"
 	)
-
-	set(Protobuf_USE_STATIC_LIBS ON )
-	find_package(Protobuf REQUIRED)
-	# protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite
 endif(ENABLE_PKT2)
 
 if(ENABLE_LOGGER_HUFFMAN)
@@ -103,8 +99,8 @@ if(ENABLE_MQTT)
 		find_package(PahoMqttCpp CONFIG REQUIRED)
 		set(LIB_PAHO_MQTT
 			OpenSSL::Crypto
-			eclipse-paho-mqtt-c::paho-mqtt3as-static
-			PahoMqttCpp::paho-mqttpp3-static
+			eclipse-paho-mqtt-c::paho-mqtt3as
+			PahoMqttCpp::paho-mqttpp3
 		)
 	else()
 		find_package(Paho REQUIRED)
@@ -323,8 +319,11 @@ if(ENABLE_PKT2)
 	set (SRC_PLUGIN_PKT2
 		example-plugins/plugin-pkt2.cpp
 	)
+	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		set (OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv)
+	endif ()
 	add_library(plugin-pkt2 SHARED ${SRC_PLUGIN_PKT2})
-	target_link_libraries(plugin-pkt2 lorawan protobuf::libprotobuf ${LIBPKT2})
+	target_link_libraries(plugin-pkt2 lorawan ${LIBPKT2} ${OS_SPECIFIC_LIBS})
 endif(ENABLE_PKT2)
 
 if(ENABLE_LOGGER_HUFFMAN)
@@ -335,7 +334,11 @@ if(ENABLE_LOGGER_HUFFMAN)
 	add_library(plugin-logger-huffman SHARED ${SRC_PLUGIN_LOGGER_HUFFMAN})
 	target_include_directories(plugin-logger-huffman PRIVATE ${BACKEND_DB_INC} )
 	target_compile_definitions(plugin-logger-huffman PRIVATE ENABLE_DB_SQLITE)
-	target_link_libraries(plugin-logger-huffman lorawan ${LIBLOGGER_PASSPORT} ${LIBLOGGER_HUFFMAN} ${BACKEND_DB_LIB})
+
+	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		set (OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv)
+	endif ()
+	target_link_libraries(plugin-logger-huffman lorawan ${LIBLOGGER_PASSPORT} ${LIBLOGGER_HUFFMAN} ${BACKEND_DB_LIB} ${OS_SPECIFIC_LIBS})
 endif(ENABLE_LOGGER_HUFFMAN)
 
 INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/lorawan-network-server DESTINATION cmake)
