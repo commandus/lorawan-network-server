@@ -30,7 +30,7 @@ option(ENABLE_JWT  "Build with JWT" OFF)
 
 # Plugins
 option(ENABLE_PKT2 "Build pkt2 plugin" OFF)
-option(ENABLE_MQTT 1"Build MQTT plugin" OFF)
+option(ENABLE_MQTT "Build MQTT plugin" OFF)
 option(ENABLE_LOGGER_HUFFMAN "Build logger-huffman plugin" OFF)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -197,6 +197,8 @@ add_library(lorawan STATIC
 set_property(TARGET lorawan PROPERTY POSITION_INDEPENDENT_CODE ON)
 # auth-file depends on JWT
 target_compile_definitions(lorawan PRIVATE ${LNS_DEF})
+target_link_libraries(lorawan PRIVATE ${LIBJWT}
+)
 
 #if(WIN32)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
