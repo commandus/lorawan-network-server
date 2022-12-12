@@ -17,10 +17,12 @@ typedef enum {
 class DatabaseIntf
 {
 public:
+	bool isOpen;
 	std::string type;
 	std::string errmsg;
 
-    virtual ~DatabaseIntf();
+	DatabaseIntf() : isOpen(false) {};
+	virtual ~DatabaseIntf() {};
 
 	virtual int open(
 		const std::string &connection,

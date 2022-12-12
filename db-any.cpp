@@ -19,11 +19,6 @@
 
 #define JSON_TYPE_NAME "json"
 
-DatabaseIntf::~DatabaseIntf()
-{
-
-}
-
 DatabaseNConfig::DatabaseNConfig(
 	const ConfigDatabase *aConfig,
     PayloadInsertPlugins *aPlugins
