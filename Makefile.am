@@ -156,7 +156,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server lora-print print-netid \
+bin_PROGRAMS = lorawan-network-server lora-print print-netid gateway-config2cpp \
     dev-payload \
     mac-ns mac-gw proto-db	
 
@@ -354,6 +354,13 @@ print_netid_SOURCES = \
 	third_party/argtable3/argtable3.c
 print_netid_LDADD = $(L_LORAWAN)
 print_netid_CPPFLAGS = $(commoncppflags)
+
+gateway_config2cpp_SOURCES = \
+	gateway-config2cpp.cpp \
+	gateway-settings.cpp gateway-file-json.cpp utilstring.cpp \
+	third_party/argtable3/argtable3.c
+gateway_config2cpp_LDADD = $(L_LORAWAN)
+gateway_config2cpp_CPPFLAGS = $(commoncppflags)
 
 #
 # Configs, readme, CMake etc.

@@ -4,12 +4,16 @@
  * Copyright (c) 2022 andrey.ivanov@ikfia.ysn.ru
  * Yu.G. Shafer Institute of Cosmophysical Research and Aeronomy of Siberian Branch of the Russian Academy of Sciences
  * MIT license
+ * Usage:
+ *   ./gateway-config2cpp /home/andrei/git/rak_common_for_gateway/lora/rak2287/global_conf_usb/*.json > gateway_usb_conf.cpp
+ * @file /home/andrei/git/rak_common_for_gateway/lora/rak2287/global_conf_usb/*.json
  */
 #include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #include "argtable3/argtable3.h"
 #include "utilstring.h"
@@ -82,7 +86,100 @@ int parseCmd(
     return 0;
 }
 
-const char* TAB_DELIMITER = "\t";
+/**
+ * global_conf.as_915_921.json  global_conf.as_917_920.json  global_conf.au_915_928.json  global_conf.eu_433.json      global_conf.in_865_867.json  global_conf.ru_864_870.json
+ * global_conf.as_915_928.json  global_conf.as_920_923.json  global_conf.cn_470_510.json  global_conf.eu_863_870.json  global_conf.kr_920_923.json  global_conf.us_902_928.json
+ * -> as_915_921 ...
+ */
+static std::string fileName2VarName(std::string fileName) {
+    size_t last = fileName.find_last_of('.');
+    if (last == std::string::npos)
+        return fileName;
+    std::string r = fileName.substr(0, last);
+    last = r.find_last_of('.');
+    if (last == std::string::npos)
+        return r;
+    return r.substr(last + 1);
+}
+
+static std::string addPrefix()
+{
+    std::stringstream ss;
+    ss << "#include <string>\n"
+        << "#include <cstring>\n"
+        << "#include \"gateway-settings.h\"\n\n";
+
+    ss << "class MemGatewaySettingsStorage {\n"
+          "public:\n"
+          "    sx1261_config_t sx1261;\n"
+          "    sx130x_config_t sx130x;\n"
+          "    gateway_t gateway;\n"
+          "    struct lgw_conf_debug_s debug;\n"
+          "    std::string serverAddr;\n"
+          "    std::string gpsTtyPath;\n"
+          "    std::string name;\n"
+          "};\n\n";
+
+    ss << "typedef void (*setupMemGatewaySettingsStorageFunc)(MemGatewaySettingsStorage &value);\n\n";
+    ss << "typedef struct {\n"
+        << "    std::string name;\n"
+        << "    setupMemGatewaySettingsStorageFunc setup;\n"
+        << "} setupMemGatewaySettingsStorage;\n\n";
+
+    ss << "class MemGatewaySettings : public GatewaySettings {\n"
+          "public:\n"
+          "    MemGatewaySettingsStorage storage;\n"
+          "\n"
+          "    sx1261_config_t *sx1261() override { return &storage.sx1261; };\n"
+          "    sx130x_config_t *sx130x() override { return &storage.sx130x; };\n"
+          "    gateway_t *gateway() override { return &storage.gateway; };\n"
+          "    struct lgw_conf_debug_s *debug() override { return &storage.debug; };\n"
+          "    std::string *serverAddress() override { return &storage.serverAddr; };\n"
+          "    std::string *gpsTTYPath() override { return &storage.gpsTtyPath; };\n"
+          "};\n\n";
+    return ss.str();
+}
+
+static std::string addSuffix(
+    const std::vector<std::string> &fileNames
+) {
+    std::stringstream ss;
+    ss << "const setupMemGatewaySettingsStorage memSetupMemGatewaySettingsStorage[] = {\n";
+    bool isFirst = true;
+    for (std::vector<std::string>::const_iterator it(fileNames.begin()); it != fileNames.end(); it++) {
+        std::string vn = fileName2VarName(*it);
+        if (isFirst)
+            isFirst = false;
+        else
+            ss << ",\n";
+
+        std::string niceName(vn);
+        std::replace(niceName.begin(), niceName.end(), '_', ' ');
+        ss << "\t{\"" << niceName << "\", &setup_" << vn << "}";
+    }
+    ss << "\n};\n";
+    return ss.str();
+}
+
+static std::string addFilePrefix(
+    const GatewayConfigFileJson &value,
+    const std::string &varName
+)
+{
+    std::stringstream ss;
+        ss << "void setup_" << varName << "(MemGatewaySettingsStorage &" << varName << ") {\n";
+    return ss.str();
+}
+
+static std::string addFileSuffix(
+        const GatewayConfigFileJson&value,
+        const std::string &varName
+)
+{
+    std::stringstream ss;
+    ss << "};   // " << varName << "\n";
+    return ss.str();
+}
 
 int main(int argc, char **argv)
 {
@@ -90,10 +187,18 @@ int main(int argc, char **argv)
     int r = parseCmd(&config, argc, argv);
     if (r != 0)
         exit(ERR_CODE_COMMAND_LINE);
+    std::cout << addPrefix() << "\n\n";
     for (std::vector<std::string>::const_iterator it(config.fileNames.begin()); it != config.fileNames.end(); it++) {
         GatewayConfigFileJson gwcfj;
         std::string s = file2string(it->c_str());
         gwcfj.parseString(s);
-        std::cout << gwcfj.toCppString() << std::endl;
+        if (config.verbosity > 0)
+            std::cerr << gwcfj.toString();
+        std::string vn = fileName2VarName(*it);
+
+        std::cout << addFilePrefix(gwcfj, vn)
+            << gwcfj.toCppString(vn) << "\n"
+            << addFileSuffix(gwcfj, vn) << "\n";
     }
+    std::cout << addSuffix(config.fileNames);
 }

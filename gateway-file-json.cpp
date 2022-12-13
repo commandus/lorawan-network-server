@@ -3,7 +3,8 @@
 
 #include <iomanip>
 #include <sstream>
-#include <math.h>
+#include <cmath>
+#include <algorithm>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
@@ -54,6 +55,13 @@ std::string GatewayJsonConfig::toString()
     toJSON(doc, doc.GetAllocator());
     doc.Accept(writer);
     return std::string(buffer.GetString());
+}
+
+std::string GatewayJsonConfig::toCppString(const std::string &name)
+{
+    std::stringstream ss;
+    toCpp(ss, name);
+    return ss.str();
 }
 
 GatewaySX1261Config::GatewaySX1261Config()
@@ -239,6 +247,38 @@ static int bandwidthIndex2hz(
             return 20000;
         default:
             return 15000;
+    }
+}
+
+#define MAKE_STR2(x) #x
+#define ADD_STRING(V, SRC, VAL) retVal << V  << "." << MAKE_STR2(VAL) << " = \"" << SRC.VAL << "\";" << std::endl;
+#define ADD_PCHAR(V, SRC, VAL) retVal << "strcpy(" << V  << "." << MAKE_STR2(VAL) << ", \"" << SRC.VAL << "\");" << std::endl;
+
+#define ADD_CAST(V, SRC, VAL, CAST_TYPE) retVal << V << "." << MAKE_STR2(VAL) << " = (" << MAKE_STR2(CAST_TYPE) << ") " << SRC.VAL << ";" << std::endl;
+#define ADD_VAL(V, SRC, VAL) retVal << V  << "." << MAKE_STR2(VAL) << " = " << SRC.VAL << ";" << std::endl;
+#define ADD_INT(V, SRC, VAL) retVal << V  << "." << MAKE_STR2(VAL) << " = " << (int64_t) SRC.VAL << ";" << std::endl;
+#define ADD_BOOL(V, SRC, VAL) retVal << V << "." << MAKE_STR2(VAL) << " = " << (SRC.VAL ? "true" : "false") << ";" << std::endl;
+
+void GatewaySX1261Config::toCpp(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal << std::endl << "// SX1261 " << std::endl << std::endl;
+    ADD_PCHAR(name, value, sx1261.spi_path)
+    ADD_INT(name, value, sx1261.rssi_offset)
+    ADD_BOOL(name, value, spectralScan.enable)
+    ADD_VAL(name, value, spectralScan.freq_hz_start)
+    ADD_INT(name, value, spectralScan.nb_chan)
+    ADD_CAST(name, value, spectralScan.nb_scan, int)
+    ADD_VAL(name, value, spectralScan.pace_s)
+    ADD_BOOL(name, value, lbt.enable)
+    ADD_INT(name, value, lbt.nb_channel)
+    for (int i = 0; i < value.lbt.nb_channel; i++) {
+        ADD_VAL(name, value, lbt.channels[i].freq_hz)
+        ADD_VAL(name, value, lbt.channels[i].bandwidth)
+        ADD_VAL(name, value, lbt.channels[i].scan_time_us)
+        ADD_VAL(name, value, lbt.channels[i].transmit_time_ms)
     }
 }
 
@@ -736,69 +776,69 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                 if (jChannelEnable.IsBool()) {
                     value.ifStdConf.enable = jChannelEnable.GetBool();
                 }
-                if (value.ifStdConf.enable) {
-                    if (jChannelStd.HasMember("radio")) {
-                        rapidjson::Value &jChannelRadio = jChannelStd["radio"];
-                        if (jChannelRadio.IsUint()) {
-                            value.ifStdConf.rf_chain = jChannelRadio.GetUint();
-                        }
+
+                if (jChannelStd.HasMember("radio")) {
+                    rapidjson::Value &jChannelRadio = jChannelStd["radio"];
+                    if (jChannelRadio.IsUint()) {
+                        value.ifStdConf.rf_chain = jChannelRadio.GetUint();
                     }
-                    if (jChannelStd.HasMember("if")) {
-                        rapidjson::Value &jFrequency = jChannelStd["if"];
-                        if (jFrequency.IsInt()) {
-                            value.ifStdConf.freq_hz = jFrequency.GetInt();
-                        }
+                }
+                if (jChannelStd.HasMember("if")) {
+                    rapidjson::Value &jFrequency = jChannelStd["if"];
+                    if (jFrequency.IsInt()) {
+                        value.ifStdConf.freq_hz = jFrequency.GetInt();
                     }
-                    if (jChannelStd.HasMember("bandwidth")) {
-                        rapidjson::Value &jBw = jChannelStd["bandwidth"];
-                        if (jBw.IsUint()) {
-                            uint32_t bw = jBw.GetUint();
-                            switch(bw) {
-                                case 500000:
-                                    value.ifStdConf.bandwidth = BW_500KHZ;
-                                    break;
-                                case 250000:
-                                    value.ifStdConf.bandwidth = BW_250KHZ;
-                                    break;
-                                case 125000:
-                                    value.ifStdConf.bandwidth = BW_125KHZ;
-                                    break;
-                                default:
-                                    value.ifStdConf.bandwidth = BW_UNDEFINED;
-                            }
-                        }
-                    }
-                    if (jChannelStd.HasMember("spread_factor")) {
-                        rapidjson::Value &jSF = jChannelStd["spread_factor"];
-                        if (jSF.IsUint()) {
-                            value.ifStdConf.datarate = jSF.GetUint();
-                        }
-                    }
-                    if (jChannelStd.HasMember("implicit_hdr")) {
-                        rapidjson::Value &jImplicitHeader = jChannelStd["implicit_hdr"];
-                        if (jImplicitHeader.IsBool()) {
-                            value.ifStdConf.implicit_hdr = jImplicitHeader.GetBool();
-                        }
-                        if (jChannelStd.HasMember("implicit_payload_length")) {
-                            rapidjson::Value &jImplicitPayloadLength = jChannelStd["implicit_payload_length"];
-                            if (jImplicitPayloadLength.IsUint()) {
-                                value.ifStdConf.implicit_payload_length = jImplicitPayloadLength.GetUint();
-                            }
-                        }
-                        if (jChannelStd.HasMember("implicit_crc_en")) {
-                            rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_crc_en"];
-                            if (jImplicitCrcEn.IsBool()) {
-                                value.ifStdConf.implicit_crc_en = jImplicitCrcEn.GetBool();
-                            }
-                        }
-                        if (jChannelStd.HasMember("implicit_coderate")) {
-                            rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_coderate"];
-                            if (jImplicitCrcEn.IsUint()) {
-                                value.ifStdConf.implicit_coderate = jImplicitCrcEn.GetUint();
-                            }
+                }
+                if (jChannelStd.HasMember("bandwidth")) {
+                    rapidjson::Value &jBw = jChannelStd["bandwidth"];
+                    if (jBw.IsUint()) {
+                        uint32_t bw = jBw.GetUint();
+                        switch(bw) {
+                            case 500000:
+                                value.ifStdConf.bandwidth = BW_500KHZ;
+                                break;
+                            case 250000:
+                                value.ifStdConf.bandwidth = BW_250KHZ;
+                                break;
+                            case 125000:
+                                value.ifStdConf.bandwidth = BW_125KHZ;
+                                break;
+                            default:
+                                value.ifStdConf.bandwidth = BW_UNDEFINED;
                         }
                     }
                 }
+                if (jChannelStd.HasMember("spread_factor")) {
+                    rapidjson::Value &jSF = jChannelStd["spread_factor"];
+                    if (jSF.IsUint()) {
+                        value.ifStdConf.datarate = jSF.GetUint();
+                    }
+                }
+                if (jChannelStd.HasMember("implicit_hdr")) {
+                    rapidjson::Value &jImplicitHeader = jChannelStd["implicit_hdr"];
+                    if (jImplicitHeader.IsBool()) {
+                        value.ifStdConf.implicit_hdr = jImplicitHeader.GetBool();
+                    }
+                    if (jChannelStd.HasMember("implicit_payload_length")) {
+                        rapidjson::Value &jImplicitPayloadLength = jChannelStd["implicit_payload_length"];
+                        if (jImplicitPayloadLength.IsUint()) {
+                            value.ifStdConf.implicit_payload_length = jImplicitPayloadLength.GetUint();
+                        }
+                    }
+                    if (jChannelStd.HasMember("implicit_crc_en")) {
+                        rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_crc_en"];
+                        if (jImplicitCrcEn.IsBool()) {
+                            value.ifStdConf.implicit_crc_en = jImplicitCrcEn.GetBool();
+                        }
+                    }
+                    if (jChannelStd.HasMember("implicit_coderate")) {
+                        rapidjson::Value &jImplicitCrcEn = jChannelStd["implicit_coderate"];
+                        if (jImplicitCrcEn.IsUint()) {
+                            value.ifStdConf.implicit_coderate = jImplicitCrcEn.GetUint();
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -813,60 +853,59 @@ int GatewaySX130xConfig::parse(rapidjson::Value &jsonValue) {
                 if (jChannelEnable.IsBool()) {
                     value.ifFSKConf.enable = jChannelEnable.GetBool();
                 }
-                if (value.ifFSKConf.enable) {
-                    if (jChannelFSK.HasMember("radio")) {
-                        rapidjson::Value &jChannelRadio = jChannelFSK["radio"];
-                        if (jChannelRadio.IsInt()) {
-                            value.ifFSKConf.rf_chain = jChannelRadio.GetInt();
-                        }
-                    }
-                    if (jChannelFSK.HasMember("if")) {
-                        rapidjson::Value &jChain = jChannelFSK["if"];
-                        if (jChain.IsUint()) {
-                            value.ifFSKConf.freq_hz = jChain.GetUint();
-                        }
-                    }
 
-                    uint32_t bw = 0;
-                    if (jChannelFSK.HasMember("bandwidth")) {
-                        rapidjson::Value &jBw = jChannelFSK["bandwidth"];
-                        if (jBw.IsUint()) {
-                            bw = jBw.GetUint();
-                        }
+                if (jChannelFSK.HasMember("radio")) {
+                    rapidjson::Value &jChannelRadio = jChannelFSK["radio"];
+                    if (jChannelRadio.IsInt()) {
+                        value.ifFSKConf.rf_chain = jChannelRadio.GetInt();
                     }
-
-                    uint32_t frequencyDeviation = 0;
-                    if (jChannelFSK.HasMember("freq_deviation")) {
-                        rapidjson::Value &jFreqDeviation = jChannelFSK["freq_deviation"];
-                        if (jFreqDeviation.IsUint()) {
-                            frequencyDeviation = jFreqDeviation.GetUint();
-                        }
-                    }
-
-                    if (jChannelFSK.HasMember("datarate")) {
-                        rapidjson::Value &jDataRate = jChannelFSK["datarate"];
-                        if (jDataRate.IsUint()) {
-                            value.ifFSKConf.datarate = jDataRate.GetUint();
-                        }
-                    }
-
-                    if ((bw == 0) && (frequencyDeviation != 0)) {
-                        bw = 2 * frequencyDeviation + value.ifFSKConf.datarate;
-                    }
-                    if (bw == 0)
-                        value.ifFSKConf.bandwidth = BW_UNDEFINED;
-                    else
-                        if (bw <= 125000)
-                            value.ifFSKConf.bandwidth = BW_125KHZ;
-                        else
-                            if (bw <= 250000)
-                                value.ifFSKConf.bandwidth = BW_250KHZ;
-                            else
-                                if (bw <= 500000)
-                                    value.ifFSKConf.bandwidth = BW_500KHZ;
-                                else
-                                    value.ifFSKConf.bandwidth = BW_UNDEFINED;
                 }
+                if (jChannelFSK.HasMember("if")) {
+                    rapidjson::Value &jChain = jChannelFSK["if"];
+                    if (jChain.IsUint()) {
+                        value.ifFSKConf.freq_hz = jChain.GetUint();
+                    }
+                }
+
+                uint32_t bw = 0;
+                if (jChannelFSK.HasMember("bandwidth")) {
+                    rapidjson::Value &jBw = jChannelFSK["bandwidth"];
+                    if (jBw.IsUint()) {
+                        bw = jBw.GetUint();
+                    }
+                }
+
+                uint32_t frequencyDeviation = 0;
+                if (jChannelFSK.HasMember("freq_deviation")) {
+                    rapidjson::Value &jFreqDeviation = jChannelFSK["freq_deviation"];
+                    if (jFreqDeviation.IsUint()) {
+                        frequencyDeviation = jFreqDeviation.GetUint();
+                    }
+                }
+
+                if (jChannelFSK.HasMember("datarate")) {
+                    rapidjson::Value &jDataRate = jChannelFSK["datarate"];
+                    if (jDataRate.IsUint()) {
+                        value.ifFSKConf.datarate = jDataRate.GetUint();
+                    }
+                }
+
+                if ((bw == 0) && (frequencyDeviation != 0)) {
+                    bw = 2 * frequencyDeviation + value.ifFSKConf.datarate;
+                }
+                if (bw == 0)
+                    value.ifFSKConf.bandwidth = BW_UNDEFINED;
+                else
+                    if (bw <= 125000)
+                        value.ifFSKConf.bandwidth = BW_125KHZ;
+                    else
+                        if (bw <= 250000)
+                            value.ifFSKConf.bandwidth = BW_250KHZ;
+                        else
+                            if (bw <= 500000)
+                                value.ifFSKConf.bandwidth = BW_500KHZ;
+                            else
+                                value.ifFSKConf.bandwidth = BW_UNDEFINED;
             }
         }
     }
@@ -912,6 +951,82 @@ static const char *lgw_radio_type_t2string(
         default:
             return "none";
     }
+}
+
+void GatewaySX130xConfig::toCpp(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal << std::endl << "// SX130x " << std::endl << std::endl;
+    ADD_CAST(name, value, boardConf.com_type, lgw_com_type_t)
+    ADD_PCHAR(name, value, boardConf.com_path)
+    ADD_BOOL(name, value, boardConf.lorawan_public)
+    ADD_INT(name, value, boardConf.clksrc)
+    ADD_INT(name, value, antennaGain)
+    ADD_BOOL(name, value, boardConf.full_duplex)
+    ADD_BOOL(name, value, tsConf.enable)
+    ADD_CAST(name, value, tsConf.mode, lgw_ftime_mode_t)
+    for (int radioIndex = 0; radioIndex < LGW_RF_CHAIN_NB; radioIndex++) {
+        retVal << std::endl << "// Radio " << radioIndex << std::endl << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].enable = " << (value.rfConfs[radioIndex].enable ? "true" : "false") << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].type = (lgw_radio_type_t) " << value.rfConfs[radioIndex].type << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].freq_hz = " << value.rfConfs[radioIndex].freq_hz << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].rssi_offset = " << value.rfConfs[radioIndex].rssi_offset << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].rssi_tcomp.coeff_a = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_a << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].rssi_tcomp.coeff_b = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_b << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].rssi_tcomp.coeff_c = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_c << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].rssi_tcomp.coeff_d = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_d << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].rssi_tcomp.coeff_e = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_e << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].tx_enable = " << (value.rfConfs[radioIndex].tx_enable ? "true" : "false") << ";" << std::endl;
+        retVal << name << ".rfConfs[" << radioIndex << "].single_input_mode = " << (value.rfConfs[radioIndex].single_input_mode ? "true" : "false") << ";" << std::endl;
+        retVal << name << ".tx_freq_min[" << radioIndex << "] = " << value.tx_freq_min[radioIndex] << ";" << std::endl;
+        retVal << name << ".tx_freq_max[" << radioIndex << "] = " << value.tx_freq_max[radioIndex] << ";" << std::endl;
+
+        retVal << name << ".txLut[" << radioIndex << "].size = " << (int) value.txLut[radioIndex].size << ";" << std::endl;
+        retVal << std::endl << "// TX LUT radio " << radioIndex << ", count: " << (int) value.txLut[radioIndex].size  << std::endl << std::endl;
+        for (int i = 0; i < value.txLut[radioIndex].size; i++) {
+            retVal << name << ".txLut[" << radioIndex << "].lut[" << i << "].rf_power = " << (int) value.txLut[radioIndex].lut[i].rf_power << ";" << std::endl;
+            retVal << name << ".txLut[" << radioIndex << "].lut[" << i << "].pa_gain = " << (int) value.txLut[radioIndex].lut[i].pa_gain << ";" << std::endl;
+            retVal << name << ".txLut[" << radioIndex << "].lut[" << i << "].pwr_idx = " << (int) value.txLut[radioIndex].lut[i].pwr_idx << ";" << std::endl;
+            retVal << name << ".txLut[" << radioIndex << "].lut[" << i << "].dig_gain = " << (int) value.txLut[radioIndex].lut[i].dig_gain << ";" << std::endl;
+            retVal << name << ".txLut[" << radioIndex << "].lut[" << i << "].dac_gain = " << (int) value.txLut[radioIndex].lut[i].dac_gain << ";" << std::endl;
+            retVal << name << ".txLut[" << radioIndex << "].lut[" << i << "].mix_gain = " << (int) value.txLut[radioIndex].lut[i].mix_gain << ";" << std::endl;
+        }
+    }
+
+    retVal << std::endl << "// chan_multiSF_All spreading_factor_enable bit field" << std::endl << std::endl;
+    retVal << name << ".demodConf.multisf_datarate = 0x" << std::hex << (int) value.demodConf.multisf_datarate
+        << ";\t // " << std::dec << (int) value.demodConf.multisf_datarate << std::endl;
+
+    for (unsigned char ch = 0; ch < LGW_MULTI_NB; ch++) {
+        retVal  << "// chan_multiSF_" << (int) ch << std::endl;
+        retVal << name << ".ifConfs[" << (int) ch << "].enable = " << (value.ifConfs[ch].enable ? "true" : "false") << ";" << std::endl;
+        retVal << name << ".ifConfs[" << (int) ch << "].rf_chain = " << (int) value.ifConfs[ch].rf_chain  << ";" << std::endl;
+        retVal << name << ".ifConfs[" << (int) ch << "].freq_hz = " << value.ifConfs[ch].freq_hz  << ";" << std::endl;
+    }
+
+    retVal  << "// Lora std " << std::endl;
+
+    rapidjson::Value jChanLoraStd;
+    jChanLoraStd.SetObject();
+
+    retVal << name << ".ifStdConf.enable = " << (value.ifStdConf.enable ? "true" : "false") << ";" << std::endl;
+    retVal << name << ".ifStdConf.rf_chain = " << (int) value.ifStdConf.rf_chain << ";" << std::endl;
+    retVal << name << ".ifStdConf.freq_hz = " << value.ifStdConf.freq_hz << ";" << std::endl;
+    retVal << name << ".ifStdConf.bandwidth = " << (int) value.ifStdConf.bandwidth << ";" << std::endl;
+    retVal << name << ".ifStdConf.datarate = " << value.ifStdConf.datarate << ";" << std::endl;
+    retVal << name << ".ifStdConf.implicit_hdr = " << (value.ifStdConf.implicit_hdr ? "true" : "false") << ";" << std::endl;
+    retVal << name << ".ifStdConf.implicit_payload_length = " << (int) value.ifStdConf.implicit_payload_length << ";" << std::endl;
+    retVal << name << ".ifStdConf.implicit_crc_en = " << (value.ifStdConf.implicit_crc_en ? "true" : "false") << ";" << std::endl;
+    retVal << name << ".ifStdConf.implicit_coderate = " << (int) value.ifStdConf.implicit_coderate << ";" << std::endl;
+
+    retVal  << "// FSK " << std::endl;
+    retVal << name << ".ifFSKConf.enable = " << (value.ifFSKConf.enable ? "true" : "false") << ";" << std::endl;
+    retVal << name << ".ifFSKConf.rf_chain = " << (int) value.ifFSKConf.rf_chain << ";" << std::endl;
+    retVal << name << ".ifFSKConf.freq_hz = " << value.ifFSKConf.freq_hz << ";" << std::endl;
+    retVal << name << ".ifFSKConf.bandwidth = " << (int) value.ifFSKConf.bandwidth << ";" << std::endl;
+    retVal << name << ".ifFSKConf.datarate = " << value.ifFSKConf.datarate << ";" << std::endl;
 }
 
 void GatewaySX130xConfig::toJSON(
@@ -1382,6 +1497,37 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
     return LORA_OK;
 }
 
+void GatewayGatewayConfig::toCpp(
+        std::ostream &retVal,
+        const std::string &name
+) const
+{
+    std::stringstream ssGatewayId;
+    retVal << std::endl << "// Gateway " << std::endl << std::endl;
+    retVal << name << ".gatewayId = 0x" << std::hex << value.gatewayId << ";" << std::dec << std::endl;
+    ADD_VAL(name, value, serverPortUp)
+    ADD_VAL(name, value, serverPortDown)
+    ADD_VAL(name, value, keepaliveInterval)
+    ADD_VAL(name, value, statInterval)
+    ADD_VAL(name, value, pushTimeoutMs.tv_sec)
+    ADD_VAL(name, value, pushTimeoutMs.tv_usec)
+    ADD_BOOL(name, value, forwardCRCValid)
+    ADD_BOOL(name, value, forwardCRCError)
+    ADD_BOOL(name, value, forwardCRCDisabled)
+    ADD_VAL(name, value, refGeoCoordinates.lat)
+    ADD_VAL(name, value, refGeoCoordinates.lon)
+    ADD_VAL(name, value, refGeoCoordinates.alt)
+    ADD_BOOL(name, value, fakeGPS)
+    ADD_VAL(name, value, beaconPeriod)
+    ADD_VAL(name, value, beaconFreqHz)
+    ADD_INT(name, value, beaconFreqNb)
+    ADD_VAL(name, value, beaconFreqStep)
+    ADD_INT(name, value, beaconDataRate)
+    ADD_VAL(name, value, beaconBandwidthHz)
+    ADD_INT(name, value, beaconInfoDesc)
+    ADD_VAL(name, value, autoQuitThreshold)
+}
+
 void GatewayGatewayConfig::toJSON(
     rapidjson::Value &jsonValue,
     rapidjson::Document::AllocatorType& allocator
@@ -1390,7 +1536,7 @@ void GatewayGatewayConfig::toJSON(
     jsonValue.SetObject();
     rapidjson::Value jgatewayId;
     std::stringstream ssGatewayId;
-    ssGatewayId << std::hex << std::setw(16) << std::setfill('0') << value.gatewayId;
+    ssGatewayId << std::hex << std::setw(16) << std::setfill('0') << value.gatewayId << std::dec;
     std::string sGatewayId = ssGatewayId.str();
     jgatewayId.SetString(sGatewayId.c_str(), sGatewayId.size(), allocator);
     jsonValue.AddMember("gateway_ID", jgatewayId, allocator);
@@ -1570,6 +1716,21 @@ int GatewayDebugConfig::parse(rapidjson::Value &jsonValue)
     return LORA_OK;
 }
 
+void GatewayDebugConfig::toCpp(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal << std::endl << "// Debug nb_ref_payload, count: " << (int) value.nb_ref_payload << std::endl << std::endl;
+    retVal << name << ".nb_ref_payload = " << (int) value.nb_ref_payload << ";" << std::endl;
+    // identifiers
+    for (int i = 0; i < value.nb_ref_payload; i++) {
+        retVal << name << ".ref_payload[" << i << "].id = 0x" << std::hex << value.ref_payload[i].id << std::dec << ";" << std::endl;
+    }
+    // log file name
+    ADD_PCHAR(name, value, log_file_name)
+}
+
 void GatewayDebugConfig::toJSON(
     rapidjson::Value &jsonValue,
     rapidjson::Document::AllocatorType& allocator
@@ -1584,7 +1745,7 @@ void GatewayDebugConfig::toJSON(
         rapidjson::Value jrp;
         jrp.SetObject();
         std::stringstream ss;
-        ss << "0x" << std::hex << std::setfill('0') << std::setw(8) << value.ref_payload[i].id;
+        ss << "0x" << std::hex << std::setfill('0') << std::setw(8) << value.ref_payload[i].id << std::dec;
         std::string s = ss.str();
         rapidjson::Value jrpId;
         jrpId.SetString(s.c_str(), s.size(), allocator);
@@ -1645,6 +1806,22 @@ int GatewayConfigFileJson::parse(
         r = debugConf.parse(jDebug);
     }
     return r;
+}
+
+void GatewayConfigFileJson::toCpp(
+        std::ostream &retVal,
+        const std::string &name
+) const
+{
+    sx130xConf.sx1261Config.toCpp(retVal, name + ".sx1261");
+    sx130xConf.toCpp(retVal, name + ".sx130x");
+    gatewayConf.toCpp(retVal, name + ".gateway");
+    retVal << name << ".serverAddr = \"" << gatewayConf.serverAddr << "\";" << std::endl;
+    retVal << name << ".gpsTtyPath = \"" << gatewayConf.gpsTtyPath << "\";" << std::endl;
+    std::string niceName(name);
+    std::replace(niceName.begin(), niceName.end(), '_', ' ');
+    retVal << name << ".name = \"" << niceName << "\";" << std::endl;
+    debugConf.toCpp(retVal, name + ".debug");
 }
 
 void GatewayConfigFileJson::toJSON(

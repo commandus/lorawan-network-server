@@ -288,6 +288,11 @@ target_link_libraries(dev-payload PRIVATE Threads::Threads
 	lorawan	${OS_SPECIFIC_LIBS}
 )
 
+add_executable(gateway-config2cpp gateway-config2cpp.cpp gateway-settings.cpp gateway-file-json.cpp utilstring.cpp
+	third_party/argtable3/argtable3.c
+)
+target_link_libraries(gateway-config2cpp PRIVATE ${OS_SPECIFIC_LIBS})
+
 # Strip binary for release builds
 add_custom_command(TARGET proto-db POST_BUILD
 	COMMAND "$<$<CONFIG:release>:${CMAKE_STRIP}>" proto-db
