@@ -137,10 +137,10 @@ LISTENER_DEF = -DENABLE_LISTENER_UDP
 endif
 
 if ENABLE_LISTENER_USB
-LISTENER_SRC = usb-listener.cpp lora-gateway-listener.cpp \
+LISTENER_SRC = usb-listener.cpp lora-gateway-listener.cpp libloragw-helper.cpp \
     gateway-file-json.cpp \
     third_party/packet_forwarder/jitqueue.c
-LISTENER_LIB = -Lthird_party/packet_forwarder -lloragw -ltinymt32
+LISTENER_LIB = -L../libloragw -L../libloragw/build -lloragw
 LISTENER_DEF = -DENABLE_LISTENER_USB
 endif
 
@@ -149,7 +149,7 @@ LGW_HOME = third_party/packet_forwarder
 LGW_SRC = embedded-listener.cpp gateway-file-json.cpp gateway-settings.cpp \
     lora-gateway-listener.cpp usb-listener.cpp utilusb.cpp \
     third_party/packet_forwarder/jitqueue.c
-LGW_LIB = -L$(LGW_HOME) -lloragw -ltinymt32 -lusb
+LGW_LIB = -L$(LGW_HOME) -lloragw -lusb
 LGW_DEF = -DENABLE_LISTENER_SPI
 endif
 
@@ -238,7 +238,7 @@ nobase_dist_include_HEADERS = \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
 	device-channel-plan-file-json.h device-channel-plan.h regional-parameter-channel-plan.h regional-parameter-channel-plans.h regional-parameter-channel-plan-file-json.h \
 	third_party/get_rss/get_rss.h \
-	gateway-lora.h gateway-file-json.h lora-gateway-listener.h mqtt-client-id.h example-plugins/plugin-mqtt-wss.h \
+	gateway-lora.h gateway-file-json.h lora-gateway-listener.h client-id.h example-plugins/plugin-mqtt-wss.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -285,7 +285,7 @@ endif
 
 if ENABLE_MQTT
 libplugin_mqtt_wss_la_SOURCES = example-plugins/plugin-mqtt-wss.cpp \
-    mqtt-client-id.cpp utilstring.cpp
+    client-id.cpp utilstring.cpp
 libplugin_mqtt_wss_la_CPPFLAGS = -DENABLE_MQTT
 libplugin_mqtt_wss_la_LDFLAGS = -version-info $(VERSION_INFO)
 libplugin_mqtt_wss_la_LIBADD = -lpaho-mqtt3as -lpaho-mqttpp3
@@ -508,7 +508,7 @@ test_encrypt_join_accept_response_CPPFLAGS = $(commoncppflags)
 test_gateway_file_json_SOURCES = \
     tests/test-gateway-file-json.cpp \
     gateway-file-json.cpp utilstring.cpp
-test_gateway_file_json_LDADD = -Lthird_party/packet_forwarder -lloragw -ltinymt32
+test_gateway_file_json_LDADD = -Lthird_party/packet_forwarder -lloragw
 test_gateway_file_json_CPPFLAGS = $(commoncppflags)
 
 test_gateway_listen_SOURCES = \
@@ -516,7 +516,7 @@ test_gateway_listen_SOURCES = \
     lora-gateway-listener.cpp gateway-settings.cpp gateway-file-json.cpp utilstring.cpp utildate.cpp \
     errlist.cpp \
     third_party/packet_forwarder/jitqueue.c
-test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -ltinymt32 -lusb
+test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -lusb
 test_gateway_listen_CPPFLAGS = $(commoncppflags)
 
 check_PROGRAMS = \

@@ -5,9 +5,13 @@
 # -DENABLE_CURL=on enable Curl lib (read/write statistics to remote https:// )
 # -DENABLE_JWT=on  enable embedded web service user authentication
 #
-# Embedded USB gateway
+# Embedded USB gateway in the network server
 #
 # -DENABLE_LISTENER_EMBEDDED=on
+#
+# Build standalone USB gateway
+#
+# -DENABLE_LORAWAN_GATEWAY=on
 #
 #  Plugins:
 #
@@ -53,8 +57,8 @@ if(ENABLE_JWT)
 	set (LNS_DEF ${LNS_DEF} ENABLE_JWT)
 endif(ENABLE_JWT)
 
+set(WS_SRC ws-handler.cpp)
 if(ENABLE_WS)
-	set(WS_SRC ws-handler.cpp)
 	find_library(WS_LIB_SQLITE
 		NAMES ws-sqlite
 		HINTS "." ".." "../../lorawan-ws" "~/src/lorawan-ws"
@@ -116,26 +120,37 @@ if(ENABLE_MQTT)
 	endif()
 endif(ENABLE_MQTT)
 
-option(ENABLE_LISTENER_EMBEDDED "Build with embedded Lora gateway" OFF)
-if(ENABLE_LISTENER_EMBEDDED)
+option(ENABLE_LISTENER_EMBEDDED "Build with embedded LoraWAN gateway" OFF)
+option(ENABLE_LORAWAN_GATEWAY "Build with standalone LoraWAN gateway" OFF)
+
+set(SRC_LISTENER_EMBEDDED
+	usb-listener.cpp
+	lora-gateway-listener.cpp
+	gateway-settings.cpp
+	gateway-file-json.cpp
+	third_party/packet_forwarder/jitqueue.c
+)
+
+if(ENABLE_LISTENER_EMBEDDED OR ENABLE_LORAWAN_GATEWAY)
 	find_library(LIBLORAGW
 			NAMES loragw
-			HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder"
-			"../packet_forwarder/build/Release"
+			HINTS
+				"../libloragw" "../libloragw/build" "../libloragw/build/Release"
+				"../../libloragw" "../../libloragw/build" "../../libloragw/build/Release"
+				"~/src/libloragw" "~/src/libloragw/build" "~/src/libloragw/build/Release"
+				"third_party/packet_forwarder"
+				"." ".."
+				"../../packet_forwarder"
+				"~/src/packet_forwarder"
+				"../packet_forwarder/build/Release"
 	)
-	find_library(LIBTINYMT32
-			NAMES tinymt32
-			HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder"
-			"../packet_forwarder/build/Release"
-	)
-	set(SRC_LISTENER_EMBEDDED
-			usb-listener.cpp
-			lora-gateway-listener.cpp
-			gateway-settings.cpp
-			gateway-file-json.cpp
-			third_party/packet_forwarder/jitqueue.c
-	)
-endif(ENABLE_LISTENER_EMBEDDED)
+	#
+	# tinymt32 added to the loragw lib
+	# find_library(LIBTINYMT32 NAMES tinymt32
+	#		HINTS "third_party/packet_forwarder" "." ".." "../../packet_forwarder" "~/src/packet_forwarder" "../packet_forwarder/build/Release"
+	# )
+	#
+endif ()
 
 include_directories("third_party" ${CURL_INCLUDE_DIR} ".")
 link_directories(${CMAKE_SOURCE_DIR}/../lorawan-ws)
@@ -178,9 +193,35 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	device-channel-plan-file-json.cpp device-history-service-json.cpp
 	regional-parameter-channel-plan-file-json.cpp
 	database-config-json.cpp
-	${WS_SRC} ${SRC_LISTENER_EMBEDDED}
 	third_party/get_rss/get_rss.c
 	third_party/argtable3/argtable3.c
+)
+
+if(ENABLE_WS)
+	set(SRC_LORAWAN_NETWORK_SERVER ${SRC_LORAWAN_NETWORK_SERVER} ${WS_SRC})
+endif()
+
+if(ENABLE_LISTENER_EMBEDDED)
+	set(SRC_LORAWAN_NETWORK_SERVER ${SRC_LORAWAN_NETWORK_SERVER} ${SRC_LISTENER_EMBEDDED})
+endif()
+
+#
+# Auto generated file gateway_usb_conf.cpp:
+#   make gateway-config2cpp
+#   ./gateway-config2cpp /home/andrei/git/rak_common_for_gateway/lora/rak2287/global_conf_usb/*.json > gateway_usb_conf.cpp
+#   g++ -std=c++11 -I. -Ithird_party -I../../third_party gateway_usb_conf.cpp
+#
+set (SRC_LORAWAN_GATEWAY
+	lorawan-gateway.cpp
+	usb-listener.cpp
+	lora-gateway-listener.cpp
+	gateway-settings.cpp
+	identity-service-file-json.cpp
+	client-id.cpp
+	packet-listener.cpp
+	libloragw-helper.cpp
+	third_party/packet_forwarder/jitqueue.c
+	daemonize.cpp
 )
 
 set(DEV_PAYLOAD_SOURCES
@@ -218,7 +259,7 @@ set (LNS_DEF ${LNS_DEF} ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	lorawan ${WS_LIB} ${CURL_LIBRARIES} ${BACKEND_DB_LIB}
-	${LIBLORAGW} ${LIBTINYMT32} ${LIBJWT} ${OS_SPECIFIC_LIBS}
+	${LIBLORAGW} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(lorawan-network-server PRIVATE ${BACKEND_DB_INC} )
 target_compile_definitions(lorawan-network-server PRIVATE ${LNS_DEF})
@@ -293,6 +334,17 @@ add_executable(gateway-config2cpp gateway-config2cpp.cpp gateway-settings.cpp ga
 )
 target_link_libraries(gateway-config2cpp PRIVATE ${OS_SPECIFIC_LIBS})
 
+if (ENABLE_LORAWAN_GATEWAY)
+	add_executable(lorawan-gateway ${SRC_LORAWAN_GATEWAY}
+		third_party/argtable3/argtable3.c
+	)
+	target_link_libraries(lorawan-gateway PRIVATE Threads::Threads
+		lorawan ${LIBLORAGW} ${OS_SPECIFIC_LIBS}
+	)
+	# target_include_directories(lorawan-gateway PRIVATE ${BACKEND_DB_INC} )
+	# target_compile_definitions(lorawan-gateway PRIVATE ${LNS_DEF})
+endif()
+
 # Strip binary for release builds
 add_custom_command(TARGET proto-db POST_BUILD
 	COMMAND "$<$<CONFIG:release>:${CMAKE_STRIP}>" proto-db
@@ -316,7 +368,7 @@ add_custom_command(TARGET print-netid POST_BUILD
 if(ENABLE_MQTT)
 	set (SRC_PLUGIN_MQTT_WSS
 		example-plugins/plugin-mqtt-wss.cpp
-		mqtt-client-id.cpp utilstring.cpp
+		client-id.cpp utilstring.cpp
 	)
 	add_library(plugin-mqtt-wss SHARED ${SRC_PLUGIN_MQTT_WSS})
 	target_link_libraries(plugin-mqtt-wss lorawan ${LIB_PAHO_MQTT})
