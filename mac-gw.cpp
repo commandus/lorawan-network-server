@@ -163,7 +163,7 @@ int parseCmd(
 			arg_print_errors(stderr, a_end, programName.c_str());
 		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << MSG_PROG_NAME << std::endl;
+		std::cerr << MSG_PROG_NAME_NETWORK << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-25s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		// print commands available

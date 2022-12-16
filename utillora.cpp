@@ -2079,7 +2079,7 @@ SemtechUDPPacket::SemtechUDPPacket(
 		memmove(&gatewayAddress, gwAddress, sz);
 	}
 
-	parseData(data, NULL);
+	parseData(data, nullptr);
 }
 
 void SemtechUDPPacket::clearPrefix()
@@ -2096,12 +2096,12 @@ SemtechUDPPacket::SemtechUDPPacket(
     const std::string &payload,
     IdentityService *identityService
 )
-    : errcode(0), downlink(false)
+    : downlink(false)
 {
     gatewayAddress.sin6_family = PF_UNSPEC;
     memmove(&prefix, &aPrefix, sizeof(SEMTECH_PREFIX_GW));
     metadata.push_back(rfmMetaData(prefix, aMetadata));
-    parseData(payload, identityService);
+    errcode = parseData(payload, identityService);
 }
 
 SemtechUDPPacket::SemtechUDPPacket(
@@ -2131,7 +2131,7 @@ SemtechUDPPacket::SemtechUDPPacket(
 		memmove(&gatewayAddress, gwAddress, sz);
 	}
 
-	parseData(data, identityService);
+    errcode = parseData(data, identityService);
 }
 
 static std::string getMAC(
@@ -2460,10 +2460,11 @@ int SemtechUDPPacket::parseData(
                 direction, header.header.devaddr, devId.nwkSKey);
 			errcode = mic == micCalc ? LORA_OK : ERR_CODE_INVALID_MIC; 
 			if (errcode == LORA_OK) {
-				size_t payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
+				int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
 				if (payloadSize > 0) {
 					// FHDR FPort Fopts
-					std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen, payloadSize);
+					std::string p = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen,
+                        (size_t) payloadSize);
 					KEY128 *key;
 					if (header.fport == 0)
 						key = &devId.nwkSKey;
@@ -2476,10 +2477,17 @@ int SemtechUDPPacket::parseData(
 				}
 			}
 		} else {
-			// return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
+			errcode = ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 		}
-		
-	}
+	} else {
+        errcode = ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
+    }
+    if (errcode == ERR_CODE_DEVICE_ADDRESS_NOTFOUND) {
+        int payloadSize = data.size() - sizeof(RFM_HEADER) - sizeof(uint32_t) - sizeof(uint8_t) - header.header.fctrl.f.foptslen;
+        if (payloadSize > 0) {
+            payload = data.substr(sizeof(RFM_HEADER) + sizeof(uint8_t) + header.header.fctrl.f.foptslen,payloadSize);
+        }
+    }
 	return errcode;
 }
 

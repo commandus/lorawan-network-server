@@ -221,9 +221,11 @@
 #define ERR_CODE_PLUGIN_MQTT_CONNECT                        -668
 #define ERR_CODE_PLUGIN_MQTT_DISCONNECT                     -669
 #define ERR_CODE_PLUGIN_MQTT_SEND                           -670
+#define ERR_CODE_UNIDENTIFIED_MESSAGE                       -671
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
+#define ERR_INFO						"Info "
 #define ERR_WARNING						"Warning "
 #define ERR_TIMEOUT						"Timeout"
 
@@ -414,9 +416,11 @@
 #define ERR_PLUGIN_MQTT_CONNECT                         "MQTT connect failed "
 #define ERR_PLUGIN_MQTT_DISCONNECT                      "MQTT disconnect failed "
 #define ERR_PLUGIN_MQTT_SEND                            "MQTT send failed "
+#define ERR_UNIDENTIFIED_MESSAGE                        "Unidentified message "
 
 // Message en-us locale strings
-#define MSG_PROG_NAME					"LoRaWAN network listener"
+#define MSG_PROG_NAME_NETWORK			"LoRaWAN network listener"
+#define MSG_PROG_NAME_GATEWAY_USB       "LoRaWAN USB gateway"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
 #define MSG_LORA_PRINT_PROG_NAME		"lora-print helper utility"
 #define MSG_INTERRUPTED 				"Interrupted "

@@ -58,7 +58,11 @@ void onUpstream(
             int2deveui(prefix.mac, listener->config->gateway()->gatewayId);
             // construct Semtech packet
             SemtechUDPPacket p(prefix, metadata, payload, listener->packetListener->identityService);
-            listener->packetListener->handler->put(receivedTime, p);
+
+            if (p.errcode)
+                listener->packetListener->handler->putUnidentified(receivedTime, p);
+            else
+                listener->packetListener->handler->put(receivedTime, p);
         }
     }
 }
@@ -101,8 +105,13 @@ bool USBListener::add(
     int hint
 )
 {
+    return false;
 }
 
+/**
+ * @param config GatewaySettings* mandatory can not be NULL
+ * @return
+ */
 int USBListener::listen(void *config)
 {
     if (!config)
@@ -125,4 +134,5 @@ int USBListener::listen(void *config)
         // wait until all threads are stopped
         sleep(1);
     }
+    return 0;
 }

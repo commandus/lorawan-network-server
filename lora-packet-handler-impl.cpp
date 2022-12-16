@@ -210,6 +210,22 @@ int LoraPacketProcessor::ack
 	return LORA_OK;
 }
 
+int LoraPacketProcessor::putUnidentified(
+	const struct timeval &time,
+	SemtechUDPPacket &packet
+)
+{
+	if (onLog) {
+		// report error
+		std::stringstream ss;
+		ss << ERR_INFO << ERR_UNIDENTIFIED_MESSAGE
+		   << " " << MSG_DEVICE_EUI << DEVADDR2string(packet.getHeader()->header.devaddr)
+		   << ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
+		onLog->logMessage(this, LOG_INFO, LOG_IDENTITY_SVC, 0, ss.str());
+	}
+    return LORA_OK;
+}
+
 /**
  * Identify device, if device identified successfully, enqueueTxPacket packet or MAC
  * @param time received time

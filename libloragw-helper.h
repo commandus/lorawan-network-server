@@ -14,19 +14,12 @@
 #include <string>
 #include <sstream>
 
-class LibLoragwLog {
-    public:
-        void msg(const std::string &message);
-};
+#include "log-intf.h"
 
-class LibLoragwOpen {
+class LibLoragwOpenClose {
     public:
-        int open(const char *fileName, int mode);
-};
-
-class LibLoragwClose {
-    public:
-        int close(int fd);
+        virtual int open(const char *fileName, int mode) = 0;
+        virtual int close(int fd) = 0;
 };
 
 class LibLoragwHelper {
@@ -35,9 +28,8 @@ class LibLoragwHelper {
     public:
         // int fd; ///< USB gateway file descriptor
         // std::string fileName; ///< USB gateway file name called from open() - not used
-        LibLoragwOpen *onOpen;
-        LibLoragwClose *onClose;
-        LibLoragwLog *onLog;
+        LibLoragwOpenClose *onOpenClose;
+        LogIntf *onLog;
 
         LibLoragwHelper();
         LibLoragwHelper(const LibLoragwHelper&value);

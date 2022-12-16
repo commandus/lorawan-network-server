@@ -224,7 +224,10 @@ int UDPListener::parseBuffer(
                     }
 
                     if (handler) {
-                        handler->put(receivedTime, *itp);
+                        if (itp->errcode)
+                            handler->putUnidentified(receivedTime, *itp);
+                        else
+                            handler->put(receivedTime, *itp);
                     } else {
                         if (onLog) {
                             std::stringstream ss;

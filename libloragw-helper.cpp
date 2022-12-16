@@ -1,16 +1,13 @@
 #include "libloragw-helper.h"
 
-// libloragw.a: subst-call-c.c
-extern "C" {
-int open_c(const char *file, int flags, ...);
-int close_c (int fd);
-int printf_c(const char* format, ... );
-}
+#include "errlist.h"
+
+// libloragw.a: subst-call-c.c calls to LibLoragwHelper
 
 LibLoragwHelper *globalLibLoragwHelper = nullptr;
 
 LibLoragwHelper::LibLoragwHelper()
-    : onOpen(nullptr), onClose(nullptr), onLog(nullptr)
+    : onOpenClose(nullptr), onLog(nullptr)
 {
 
 }
@@ -18,7 +15,7 @@ LibLoragwHelper::LibLoragwHelper()
 LibLoragwHelper::LibLoragwHelper(
     const LibLoragwHelper&value
 )
-    : onOpen(value.onOpen), onClose(value.onClose), onLog(value.onLog)
+    : onOpenClose(value.onOpenClose), onLog(value.onLog)
 {
 
 }
@@ -32,8 +29,8 @@ int LibLoragwHelper::open(
     const char *fileName, int mode
 )
 {
-    if (onOpen)
-        return onOpen->open(fileName, mode);
+    if (onOpenClose)
+        return onOpenClose->open(fileName, mode);
     return -1;    
 }
 
@@ -41,8 +38,8 @@ int LibLoragwHelper::close(
     int fd
 )
 {
-    if (onClose)
-        return onClose->close(fd);
+    if (onOpenClose)
+        return onOpenClose->close(fd);
     return -1;    
 }
 
@@ -66,7 +63,7 @@ int LibLoragwHelper::log(
 void LibLoragwHelper::flush()
 {
     if (onLog)
-        onLog->msg(logBuffer.str());
+        onLog->logMessage(this, LOG_INFO, LOG_EMBEDDED_GATEWAY, 0, logBuffer.str());
     logBuffer.str("");
     logBuffer.clear();
 }
@@ -76,7 +73,7 @@ void LibLoragwHelper::bind()
     globalLibLoragwHelper = this;
 }
 
-void LibLoragwHelper::bind()
+void LibLoragwHelper::unbind()
 {
     globalLibLoragwHelper = nullptr;
 }

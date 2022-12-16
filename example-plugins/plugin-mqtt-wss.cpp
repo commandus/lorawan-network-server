@@ -16,7 +16,7 @@
 
 #include "plugin-mqtt-wss.h"
 
-#include "mqtt-client-id.h"
+#include "client-id.h"
 #include "utilstring.h"
 #include "errlist.h"
 
