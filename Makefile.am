@@ -156,9 +156,9 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server lora-print print-netid gateway-config2cpp \
-    dev-payload \
-    mac-ns mac-gw proto-db	
+bin_PROGRAMS = lorawan-network-server lorawan-gateway \
+    print-netid  \
+    lora-print dev-payload mac-ns mac-gw proto-db gateway-config2cpp
 
 lib_LTLIBRARIES = libplugin-esp32-demo.la
 if ENABLE_PKT2
@@ -362,6 +362,20 @@ gateway_config2cpp_SOURCES = \
 gateway_config2cpp_LDADD = $(L_LORAWAN)
 gateway_config2cpp_CPPFLAGS = $(commoncppflags)
 
+if ENABLE_LORAWAN_GATEWAY
+
+L_LORAGW=-L../libloragw -L../libloragw/build -lloragw
+
+lorawan_gateway_SOURCES = lorawan-gateway.cpp usb-listener.cpp lora-gateway-listener.cpp \
+    gateway-settings.cpp identity-service-file-json.cpp \
+    client-id.cpp packet-listener.cpp libloragw-helper.cpp daemonize.cpp \
+    third_party/packet_forwarder/jitqueue.c \
+    third_party/argtable3/argtable3.c
+lorawan_gateway_LDADD = $(L_LORAWAN) -lpthread $(L_LORAGW)
+lorawan_gateway_CPPFLAGS = $(commoncppflags)
+
+endif
+
 #
 # Configs, readme, CMake etc.
 #
@@ -531,3 +545,4 @@ check_PROGRAMS = \
 #	test-region-band-file-json
 
 TESTS = $(check_PROGRAMS)
+

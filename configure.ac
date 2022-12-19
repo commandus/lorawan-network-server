@@ -205,6 +205,17 @@ AC_ARG_ENABLE([ws],
 esac],[enable_ws=false])
 AM_CONDITIONAL([ENABLE_WS], [test x$enable_ws = xtrue])
 
+# Lorawan USB gateway
+
+AC_ARG_ENABLE([lorawan_gateway],
+[  --enable-lorawan-gateway    Turn on standalone USB LoRaWAN gateway],
+[case "${enableval}" in
+  yes) lorawan_gateway=true ;;
+  no)  lorawan_gateway=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-lorawan-gateway]) ;;
+esac],[lorawan_gateway=false])
+AM_CONDITIONAL([ENABLE_LORAWAN_GATEWAY], [test x$lorawan_gateway = xtrue])
+
 # Add database headers and libs
 
 if test "$db_sqlite" = "true"; then
@@ -273,16 +284,32 @@ if test x$pkt2 = xtrue; then
 AC_MSG_NOTICE([  pkt2 on])
 fi
 
-AC_MSG_NOTICE([Gateway:])
+AC_MSG_NOTICE([Semtech protocol support:])
 if test x$listener_udp = xtrue; then
-AC_MSG_NOTICE([  gateway udp on])
-fi
-if test x$listener_usb = xtrue; then
-AC_MSG_NOTICE([  gateway usb on])
+AC_MSG_NOTICE([  udp listener on])
+else
+AC_MSG_NOTICE([  udp listener off])
 fi
 
-if test x$listener_embedded = xtrue; then
-AC_MSG_NOTICE([embedded Lora gateway on])
+AC_MSG_NOTICE([Gateway:])
+
+if test x$listener_usb = xtrue; then
+AC_MSG_NOTICE([  embedded gateway USB on])
+else
+AC_MSG_NOTICE([  embedded gateway USB off])
+fi
+
+if test x$listener_spi = xtrue; then
+AC_MSG_NOTICE([  standalone gateway SPI on])
+fi
+
+if test x$lorawan_gateway = xtrue; then
+AC_MSG_NOTICE([  standalone gateway USB on])
+fi
+
+AC_MSG_NOTICE([Web service:])
+if test x$enable_ws = xtrue; then
+AC_MSG_NOTICE([  ws http on])
 fi
 
 AC_OUTPUT

@@ -120,8 +120,8 @@ if(ENABLE_MQTT)
 	endif()
 endif(ENABLE_MQTT)
 
-option(ENABLE_LISTENER_EMBEDDED "Build with embedded LoraWAN gateway" OFF)
-option(ENABLE_LORAWAN_GATEWAY "Build with standalone LoraWAN gateway" OFF)
+option(ENABLE_LISTENER_EMBEDDED "Build with embedded LoRaWAN gateway" OFF)
+option(ENABLE_LORAWAN_GATEWAY "Build with standalone LoRaWAN gateway" OFF)
 
 set(SRC_LISTENER_EMBEDDED
 	usb-listener.cpp
