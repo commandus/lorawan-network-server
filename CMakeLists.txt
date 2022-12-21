@@ -5,6 +5,9 @@
 # -DENABLE_CURL=on enable Curl lib (read/write statistics to remote https:// )
 # -DENABLE_JWT=on  enable embedded web service user authentication
 #
+# Semtech protocol UDP listener
+# -DENABLE_LISTENER_UDP=on
+#
 # Embedded USB gateway in the network server
 #
 # -DENABLE_LISTENER_EMBEDDED=on
@@ -120,6 +123,7 @@ if(ENABLE_MQTT)
 	endif()
 endif(ENABLE_MQTT)
 
+option(ENABLE_LISTENER_UDP "Build with Semtech UDP protocol" ON)
 option(ENABLE_LISTENER_EMBEDDED "Build with embedded LoRaWAN gateway" OFF)
 option(ENABLE_LORAWAN_GATEWAY "Build with standalone LoRaWAN gateway" OFF)
 
@@ -128,6 +132,7 @@ set(SRC_LISTENER_EMBEDDED
 	lora-gateway-listener.cpp
 	gateway-settings.cpp
 	gateway-file-json.cpp
+	libloragw-helper.cpp
 	third_party/packet_forwarder/jitqueue.c
 )
 
@@ -184,7 +189,7 @@ set(LIBLORAWANSRC
 )
 
 set(SRC_LORAWAN_NETWORK_SERVER
-	lorawan-network-server.cpp run-listener.cpp daemonize.cpp udp-listener.cpp
+	lorawan-network-server.cpp run-listener.cpp daemonize.cpp
 	packet-listener.cpp config-json.cpp lora-packet-handler-impl.cpp config-filename.cpp
 	identity-service-dir-txt.cpp ${C_STORAGE} ${C_QUEUE_STORAGE}
 	gateway-stat-service-file.cpp gateway-stat-service-post.cpp
@@ -192,7 +197,7 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	db-any.cpp ${BACKEND_DB_SRC}
 	device-channel-plan-file-json.cpp device-history-service-json.cpp
 	regional-parameter-channel-plan-file-json.cpp
-	database-config-json.cpp
+	database-config-json.cpp subst-call-c.cpp
 	third_party/get_rss/get_rss.c
 	third_party/argtable3/argtable3.c
 )
@@ -205,6 +210,10 @@ if(ENABLE_LISTENER_EMBEDDED)
 	set(SRC_LORAWAN_NETWORK_SERVER ${SRC_LORAWAN_NETWORK_SERVER} ${SRC_LISTENER_EMBEDDED})
 endif()
 
+if(ENABLE_LISTENER_UDP)
+	set(SRC_LORAWAN_NETWORK_SERVER ${SRC_LORAWAN_NETWORK_SERVER} udp-listener.cpp)
+endif()
+
 #
 # Auto generated file gateway_usb_conf.cpp:
 #   make gateway-config2cpp
@@ -212,21 +221,14 @@ endif()
 #   g++ -std=c++11 -I. -Ithird_party -I../../third_party gateway_usb_conf.cpp
 #
 set (SRC_LORAWAN_GATEWAY
-	lorawan-gateway.cpp
-	usb-listener.cpp
-	lora-gateway-listener.cpp
-	gateway-settings.cpp
-	identity-service-file-json.cpp
-	client-id.cpp
-	packet-listener.cpp
-	libloragw-helper.cpp
+	lorawan-gateway.cpp usb-listener.cpp lora-gateway-listener.cpp gateway-settings.cpp
+	identity-service-file-json.cpp client-id.cpp packet-listener.cpp libloragw-helper.cpp
+	subst-call-c.cpp daemonize.cpp
 	third_party/packet_forwarder/jitqueue.c
-	daemonize.cpp
 )
 
 set(DEV_PAYLOAD_SOURCES
-	dev-payload.cpp
-	config-json.cpp config-filename.cpp
+	dev-payload.cpp config-json.cpp config-filename.cpp
 	${C_STORAGE}
     third_party/argtable3/argtable3.c
 )
@@ -237,7 +239,7 @@ add_library(lorawan STATIC
 # -fPIC
 set_property(TARGET lorawan PROPERTY POSITION_INDEPENDENT_CODE ON)
 # auth-file depends on JWT
-target_compile_definitions(lorawan PRIVATE ${LNS_DEF})
+target_compile_definitions(lorawan PRIVATE ${LNS_DEF} ENABLE_DB_SQLITE)
 target_link_libraries(lorawan PRIVATE ${LIBJWT}
 )
 
@@ -254,7 +256,13 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	endif()
 endif()
 
-set (LNS_DEF ${LNS_DEF} ENABLE_DB_SQLITE ENABLE_LISTENER_UDP)
+set (LNS_DEF ${LNS_DEF} )
+if (ENABLE_LISTENER_UDP)
+	set (LNS_DEF ${LNS_DEF} ENABLE_LISTENER_UDP )
+endif()
+if (ENABLE_LISTENER_EMBEDDED)
+	set (LNS_DEF ${LNS_DEF} ENABLE_LISTENER_EMBEDDED )
+endif()
 
 add_executable(lorawan-network-server ${SRC_LORAWAN_NETWORK_SERVER})
 target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
@@ -262,7 +270,7 @@ target_link_libraries(lorawan-network-server PRIVATE Threads::Threads
 	${LIBLORAGW} ${LIBJWT} ${OS_SPECIFIC_LIBS}
 )
 target_include_directories(lorawan-network-server PRIVATE ${BACKEND_DB_INC} )
-target_compile_definitions(lorawan-network-server PRIVATE ${LNS_DEF})
+target_compile_definitions(lorawan-network-server PRIVATE ${LNS_DEF} ENABLE_DB_SQLITE)
 
 set(SRC_MAC_GW
 	mac-gw.cpp macgw-config-json.cpp config-json.cpp lora-packet-handler-impl.cpp
