@@ -222,6 +222,7 @@
 #define ERR_CODE_PLUGIN_MQTT_DISCONNECT                     -669
 #define ERR_CODE_PLUGIN_MQTT_SEND                           -670
 #define ERR_CODE_UNIDENTIFIED_MESSAGE                       -671
+#define ERR_CODE_LORA_GATEWAY_SPECTRAL_SCAN_RESULT          -672
 
 #define ERR_MESSAGE						"Error "
 #define ERR_DEBUG						"Info "
@@ -368,7 +369,7 @@
 #define ERR_LORA_GATEWAY_GPS_DISABLED                  "GPS disabled"
 #define ERR_LORA_GATEWAY_GPS_GET_COORDS                "Could not get GPS coordinates"
 #define ERR_LORA_GATEWAY_SPECTRAL_SCAN_START_FAILED    "Spectral scan start failed"
-#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_TIMEOUT         "Timeout on Spectral Scan"
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_TIMEOUT         "Timeout on spectral scan"
 #define ERR_LORA_GATEWAY_SPECTRAL_SCAN_FAILED          "Spectral scan status failed"
 
 #define ERR_LORA_GATEWAY_SPECTRAL_SCAN_ABORTED         "Spectral scan has been aborted"
@@ -417,6 +418,8 @@
 #define ERR_PLUGIN_MQTT_DISCONNECT                      "MQTT disconnect failed "
 #define ERR_PLUGIN_MQTT_SEND                            "MQTT send failed "
 #define ERR_UNIDENTIFIED_MESSAGE                        "Unidentified message "
+
+#define ERR_LORA_GATEWAY_SPECTRAL_SCAN_RESULT           "Spectral scan get results failed"
 
 // Message en-us locale strings
 #define MSG_PROG_NAME_NETWORK			"LoRaWAN network listener"
@@ -522,6 +525,26 @@
 #define MSG_PLUGIN_MQTT_DISCONNECTING   "Shutting down and disconnecting from the MQTT server..."
 #define MSG_PLUGIN_MQTT_SENDING         "Sending to the MQTT server "
 #define MSG_PLUGIN_MQTT_SENT            "Sent successfully to the MQTT server "
+
+#define MSG_JIT_QUEUE_STARTED           "JIT thread started"
+#define MSG_JIT_QUEUE_FINISHED          "JIT thread finished"
+#define MSG_SPECTRAL_SCAN_FINISHED      "Spectral scan thread finished"
+#define MSG_SPECTRAL_SCAN_STARTED       "Spectral scan thread started"
+#define MSG_GPS_STARTED                 "GPS thread started"
+#define MSG_GPS_FINISHED                "GPS thread finished"
+#define MSG_CHECK_TIME_STARTED          "Check time thread started."
+#define MSG_CHECK_TIME_FINISHED         "Check time thread finished"
+#define MSG_UPSTREAM_STARTED            "Upstream thread started"
+#define MSG_UPSTREAM_FINISHED           "Upstream thread finished"
+#define MSG_BEACON_DOWNSTREAM_STARTED   "Beacon downstream thread started"
+#define MSG_BEACON_DOWNSTREAM_FINISHED  "Beacon downstream thread finished"
+
+#define MSG_BEACON_DOWNSTREAM_NO_GPS    "Beacon downstream thread: no GPS enabled"
+#define MSG_BEACON_TIME                 "Beacon GPS time now "
+#define MSG_BEACON_TIME_LAST            ", last "
+#define MSG_BEACON_TIME_NEXT            ", next "
+#define MSG_BEACON_QUEUED               "Beacon queued, count_us "
+#define MSG_BEACON_DEQUEUED             "Beacon dequeued, count_us "
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

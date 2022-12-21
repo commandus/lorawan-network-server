@@ -99,14 +99,6 @@ private:
 
     // thread control
     bool stopRequest;               ///< set to true to stop all threads
-    // thread finish indicators
-    bool upstreamThreadRunning;
-    bool downstreamBeaconThreadRunning;
-    bool jitThreadRunning;
-    bool gpsThreadRunning;
-    bool gpsCheckTimeThreadRunning;
-    bool spectralScanThreadRunning;
-
     bool gps_ref_valid;             ///< is GPS reference acceptable (ie. not too old)
     // control access
     std::mutex mutexGPSTimeReference;        ///< control access to set system time
@@ -141,6 +133,14 @@ protected:
     // Apply config
     int setup();
 public:
+    // thread finish indicators
+    bool upstreamThreadRunning;
+    bool downstreamBeaconThreadRunning;
+    bool jitThreadRunning;
+    bool gpsThreadRunning;
+    bool gpsCheckTimeThreadRunning;
+    bool spectralScanThreadRunning;
+
     PacketListener *packetListener;
     int lastLgwCode;
     GatewaySettings *config;
@@ -168,8 +168,8 @@ public:
     bool getStatus(LGWStatus &status);
     int start();
     int stop(int waitSeconds);
-    bool isRunning();
-    bool isStopped();
+    bool isRunning() const;
+    bool isStopped() const;
 
     void setOnSpectralScan(
         std::function<void(

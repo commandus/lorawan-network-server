@@ -1,4 +1,3 @@
-#include <iostream>
 #include <iomanip>
 
 #include "usb-listener.h"
@@ -86,7 +85,6 @@ USBListener::USBListener()
 }
 
 USBListener::~USBListener() {
-	clear();
 }
 
 std::string USBListener::toString() const{
@@ -131,6 +129,7 @@ int USBListener::listen(void *config)
     if (r)
         return r;
     while (!listener.isStopped()) {
+        // spectral scan?
         // wait until all threads are stopped
         sleep(1);
     }

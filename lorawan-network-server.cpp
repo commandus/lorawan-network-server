@@ -42,6 +42,27 @@
 #include "logger-loader.h"
 #endif
 
+
+#ifdef ENABLE_LISTENER_USB
+
+#include "libloragw-helper.h"
+#include <fcntl.h>
+
+class PosixLibLoragwOpenClose : public LibLoragwOpenClose {
+public:
+    int openDevice(const char *fileName, int mode) override
+    {
+        return open(fileName, mode);
+    };
+
+    int closeDevice(int fd) override
+    {
+        return close(fd);
+    };
+};
+
+#endif
+
 const std::string programName = "lorawan-network-server";
 #define DEF_CONFIG_FILE_NAME ".lorawan-network-server"
 #define DEF_IDENTITY_STORAGE_NAME "identity.json"
@@ -421,6 +442,10 @@ static void run()
     if (runListener && runListener->listener) {
         void *config;
 #ifdef ENABLE_LISTENER_USB
+        LibLoragwHelper libLoragwHelper;
+        libLoragwHelper.bind(&stdErrLog, new PosixLibLoragwOpenClose());
+        if (!libLoragwHelper.onOpenClose)
+            return;
         // config must of GatewaySettings* type
         config = &runListener->config->gatewayConfig;
 #endif
@@ -436,9 +461,10 @@ static void run()
             ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
             runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
         }
-        // Here is stopped
-        // runListener->stop();
-        runListener->listener->clear();
+#ifdef ENABLE_LISTENER_USB
+        delete libLoragwHelper.onOpenClose;
+        libLoragwHelper.onOpenClose = nullptr;
+#endif
     }
 }
 

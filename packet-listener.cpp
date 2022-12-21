@@ -89,7 +89,8 @@ void PacketListener::setSysSignalPtr
 	sysSignalPtr = value;
 }
 
-void PacketListener::clear() {
+void PacketListener::clear()
+{
 }
 
 std::string PacketListener::toString() const {
