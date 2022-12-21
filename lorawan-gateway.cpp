@@ -303,6 +303,9 @@ static void printTrace() {
 #endif
 }
 
+static LibLoragwHelper libLoragwHelper;
+static StdErrLog errLog;
+
 void stop()
 {
     if (listener)
@@ -311,14 +314,6 @@ void stop()
 
 void done()
 {
-    if (listener) {
-        delete listener;
-        listener = nullptr;
-    }
-    if (identityService) {
-        delete identityService;
-        identityService = nullptr;
-    }
 }
 
 void signalHandler(int signal)
@@ -372,9 +367,6 @@ void setSignalHandler()
 }
 #endif
 
-static LibLoragwHelper libLoragwHelper;
-static StdErrLog errLog;
-
 static void run()
 {
     libLoragwHelper.bind(&errLog, new PosixLibLoragwOpenClose(localConfig.devicePath));
@@ -395,11 +387,18 @@ static void run()
         ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
         listener->onLog->logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
     }
-    // Here is stopped
-    listener->clear();
-
     delete libLoragwHelper.onOpenClose;
     libLoragwHelper.onOpenClose = nullptr;
+
+    if (listener) {
+        delete listener;
+        listener = nullptr;
+    }
+    if (identityService) {
+        delete identityService;
+        identityService = nullptr;
+    }
+
 }
 
 static StdoutLoraPacketHandler packetHandler;
@@ -450,6 +449,19 @@ int main(
     listener->setLogger(localConfig.verbosity, &errLog);
     listener->setHandler(&packetHandler);
     listener->setIdentityService(identityService);
+    ((USBListener*) listener)->listener.setOnStop(
+            [] (const LoraGatewayListener *lsnr,
+                bool gracefullyStopped
+            ) {
+                if (!gracefullyStopped) {
+                    // wait until all threads done
+                    while(!lsnr->isStopped()) {
+                        std::cerr << ".";
+                        sleep(1);
+                    }
+                }
+            }
+    );
 
     if (localConfig.daemonize)	{
         if (listener->onLog)
