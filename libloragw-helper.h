@@ -11,6 +11,9 @@
  *
 */
 
+#ifndef LIBLORAGW_HELPER_H_
+#define LIBLORAGW_HELPER_H_	1
+
 #include <string>
 #include <sstream>
 
@@ -18,8 +21,8 @@
 
 class LibLoragwOpenClose {
     public:
-        virtual int open(const char *fileName, int mode) = 0;
-        virtual int close(int fd) = 0;
+        virtual int openDevice(const char *fileName, int mode) = 0;
+        virtual int closeDevice(int fd) = 0;
 };
 
 class LibLoragwHelper {
@@ -39,6 +42,8 @@ class LibLoragwHelper {
         int close(int fd);
         int log(char ch);
         void flush();
-        void bind();    ///< bind to the library using global
+        void bind(LogIntf *aOnLog, LibLoragwOpenClose *aOnOpenClose);    ///< bind to the library using global
         void unbind();    ///< bind to the library using global
 };
+
+#endif

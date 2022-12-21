@@ -41,6 +41,7 @@ public:
 };
 
 void setup_as_915_921(MemGatewaySettingsStorage &as_915_921) {
+	memset(&as_915_921, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -291,6 +292,7 @@ strcpy(as_915_921.debug.log_file_name, "loragw_hal.log");
 };   // as_915_921
 
 void setup_as_915_928(MemGatewaySettingsStorage &as_915_928) {
+	memset(&as_915_928, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -541,6 +543,7 @@ strcpy(as_915_928.debug.log_file_name, "loragw_hal.log");
 };   // as_915_928
 
 void setup_as_917_920(MemGatewaySettingsStorage &as_917_920) {
+	memset(&as_917_920, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -791,6 +794,7 @@ strcpy(as_917_920.debug.log_file_name, "loragw_hal.log");
 };   // as_917_920
 
 void setup_as_920_923(MemGatewaySettingsStorage &as_920_923) {
+	memset(&as_920_923, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -1041,6 +1045,7 @@ strcpy(as_920_923.debug.log_file_name, "loragw_hal.log");
 };   // as_920_923
 
 void setup_au_915_928(MemGatewaySettingsStorage &au_915_928) {
+	memset(&au_915_928, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -1291,6 +1296,7 @@ strcpy(au_915_928.debug.log_file_name, "loragw_hal.log");
 };   // au_915_928
 
 void setup_cn_470_510(MemGatewaySettingsStorage &cn_470_510) {
+	memset(&cn_470_510, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -1541,6 +1547,7 @@ strcpy(cn_470_510.debug.log_file_name, "loragw_hal.log");
 };   // cn_470_510
 
 void setup_eu_433(MemGatewaySettingsStorage &eu_433) {
+	memset(&eu_433, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -1791,6 +1798,7 @@ strcpy(eu_433.debug.log_file_name, "loragw_hal.log");
 };   // eu_433
 
 void setup_eu_863_870(MemGatewaySettingsStorage &eu_863_870) {
+	memset(&eu_863_870, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -2041,6 +2049,7 @@ strcpy(eu_863_870.debug.log_file_name, "loragw_hal.log");
 };   // eu_863_870
 
 void setup_in_865_867(MemGatewaySettingsStorage &in_865_867) {
+	memset(&in_865_867, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -2291,6 +2300,7 @@ strcpy(in_865_867.debug.log_file_name, "loragw_hal.log");
 };   // in_865_867
 
 void setup_kr_920_923(MemGatewaySettingsStorage &kr_920_923) {
+	memset(&kr_920_923, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -2541,6 +2551,7 @@ strcpy(kr_920_923.debug.log_file_name, "loragw_hal.log");
 };   // kr_920_923
 
 void setup_ru_864_870(MemGatewaySettingsStorage &ru_864_870) {
+	memset(&ru_864_870, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 
@@ -2791,6 +2802,7 @@ strcpy(ru_864_870.debug.log_file_name, "loragw_hal.log");
 };   // ru_864_870
 
 void setup_us_902_928(MemGatewaySettingsStorage &us_902_928) {
+	memset(&us_902_928, 0, sizeof(MemGatewaySettingsStorage));
 
 // SX1261 
 

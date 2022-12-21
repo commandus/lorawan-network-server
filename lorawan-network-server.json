@@ -37,7 +37,7 @@
 		"netId": 1
 	},
 	"ws": {
-		"enabled": true,
+		"enabled": false,
 		"port": 5002,
 		"html": "/home/andrei/src/lorawan-ws-angular/dist/lorawan-ws-angular",
 		"defaultDatabase": "sqlite-logger",

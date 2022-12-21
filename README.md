@@ -1879,3 +1879,21 @@ utillora.cpp SemtechUDPPacket::mkJoinAcceptResponse()
 - [Typescript implementation](https://github.com/anthonykirby/lora-packet/blob/master/src/lib/crypto.ts)
 
 vega SI-13 Bus 003 Device 014: ID 0483:5740 STMicroelectronics STM32F407
+
+## Appendix A
+
+Setup
+
+```
+git clone https://github.com/RAKWireless/rak_common_for_gateway.git
+cd rak_common_for_gateway
+vi rak/install.sh
+Comment line systemctl disable hciuart
+sudo ./install.sh
+```
+
+Run
+
+```
+/home/andrei/git/1/rak_common_for_gateway/lora/rak2287/packet_forwarder/lora_pkt_fwd
+```

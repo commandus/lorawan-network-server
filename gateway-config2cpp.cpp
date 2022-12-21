@@ -6,7 +6,7 @@
  * MIT license
  * Usage:
  *   ./gateway-config2cpp /home/andrei/git/rak_common_for_gateway/lora/rak2287/global_conf_usb/*.json > gateway_usb_conf.cpp
- * @file /home/andrei/git/rak_common_for_gateway/lora/rak2287/global_conf_usb/*.json
+ * @file /home/andrei/git/rak_common_for_gateway/lora/rak2287/global_conf_usb/
  */
 #include <string>
 #include <vector>
@@ -203,7 +203,8 @@ static std::string addFilePrefix(
 )
 {
     std::stringstream ss;
-        ss << "void setup_" << varName << "(MemGatewaySettingsStorage &" << varName << ") {\n";
+        ss << "void setup_" << varName << "(MemGatewaySettingsStorage &" << varName << ") {\n"
+            << "\tmemset(&" << varName << ", 0, sizeof(MemGatewaySettingsStorage));\n";
     return ss.str();
 }
 

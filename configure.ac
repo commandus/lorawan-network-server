@@ -177,7 +177,7 @@ esac],[listener_udp=true])
 AM_CONDITIONAL([ENABLE_LISTENER_UDP], [test x$listener_udp = xtrue])
 
 AC_ARG_ENABLE([listener-usb],
-[  --enable-listener-usb    Turn on embedded USB gateway],
+[  --enable-listener-usb    Turn on embedded USB listener],
 [case "${enableval}" in
   yes) listener_usb=true ;;
   no)  listener_usb=false ;;
@@ -186,7 +186,7 @@ esac],[listener_usb=false])
 AM_CONDITIONAL([ENABLE_LISTENER_USB], [test x$listener_usb = xtrue])
 
 AC_ARG_ENABLE([listener-spi],
-[  --enable-listener-spi    Turn on embedded SPI Lora gateway],
+[  --enable-listener-spi    Turn on embedded SPI Lora listener],
 [case "${enableval}" in
   yes) listener_spi=true ;;
   no)  listener_spi=false ;;

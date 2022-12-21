@@ -5,8 +5,8 @@
  * of Sciences
  * MIT license {@link file://LICENSE}
  */
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <cstring>
 #include <csignal>
 #include <climits>
@@ -15,6 +15,8 @@
 #else
 #include <execinfo.h>
 #endif
+
+#include <fcntl.h>
 
 #include "argtable3/argtable3.h"
 
@@ -35,13 +37,18 @@
 #include "gateway_usb_conf.cpp"
 
 class PosixLibLoragwOpenClose : public LibLoragwOpenClose {
+private:
+        std::string devicePath;
 public:
-    int open(const char *fileName, int mode) override
+    
+    explicit PosixLibLoragwOpenClose(const std::string &aDevicePath) : devicePath(aDevicePath) {};
+
+    int openDevice(const char *fileName, int mode) override
     {
-        return open(fileName, mode);
+        return open(devicePath.c_str(), mode);
     };
 
-    int close(int fd) override
+    int closeDevice(int fd) override
     {
         return close(fd);
     };
@@ -160,10 +167,10 @@ public:
 
 GatewaySettings* getGatewayConfig(LocalGatewayConfiguration *config) {
     MemGatewaySettingsStorage settings;
-    // not actually required, it is opened in other place
-    strncpy(settings.sx130x.boardConf.com_path, config->devicePath.c_str(), sizeof(settings.sx130x.boardConf.com_path));
     // set regional settings
     memSetupMemGatewaySettingsStorage[config->regionIdx].setup(settings);
+    // set COM port device path, just in case
+    strncpy(settings.sx130x.boardConf.com_path, config->devicePath.c_str(), sizeof(settings.sx130x.boardConf.com_path));
     gwSettings.set(settings);
     return &gwSettings;
 }
@@ -220,7 +227,7 @@ int parseCmd(
 {
     // device path
     struct arg_str *a_device_path = arg_str1(nullptr, nullptr, "<device-file-name>", "USB gateway device file name e.g. /dev/ttyACM0");
-    struct arg_str *a_region_name = arg_str1("g", "region", "<region-name>", "Region name, e.g. \"EU433\" or \"US\"");
+    struct arg_str *a_region_name = arg_str1("c", "region", "<region-name>", "Region name, e.g. \"EU433\" or \"US\"");
     struct arg_str *a_identity_file_name = arg_str0("i", "id", "<id-file-name>", "Device identities JSON file name");
     struct arg_str *a_gateway_identifier = arg_str0("g", "gw", "<gw-id>", "Gateway identifier, e.g. aa555a0000000000");
     struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "Run as daemon");
@@ -365,8 +372,23 @@ void setSignalHandler()
 }
 #endif
 
+static LibLoragwHelper libLoragwHelper;
+static StdErrLog errLog;
+
 static void run()
 {
+    libLoragwHelper.bind(&errLog, new PosixLibLoragwOpenClose(localConfig.devicePath));
+    if (!libLoragwHelper.onOpenClose)
+        return;
+
+    if (listener->onLog) {
+        std::stringstream ss;
+        ss << ERR_INFO "Region "
+            << memSetupMemGatewaySettingsStorage[localConfig.regionIdx].name
+            << " (settings #" << localConfig.regionIdx << ")" << std::endl;
+        listener->onLog->logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
+    }
+
     int r = listener->listen(getGatewayConfig(&localConfig));
     if (r && listener->onLog) {
         std::stringstream ss;
@@ -375,11 +397,12 @@ static void run()
     }
     // Here is stopped
     listener->clear();
+
+    delete libLoragwHelper.onOpenClose;
+    libLoragwHelper.onOpenClose = nullptr;
 }
 
-static StdErrLog errLog;
 static StdoutLoraPacketHandler packetHandler;
-static LibLoragwHelper libLoragwHelper;
 
 int main(
 	int argc,
@@ -414,9 +437,7 @@ int main(
         }
     }
 
-    libLoragwHelper.onLog = &errLog;
-    libLoragwHelper.onOpenClose = nullptr;
-    libLoragwHelper.bind();
+    libLoragwHelper.bind(&errLog, nullptr);
 
     listener = new USBListener();
     if (!listener) {

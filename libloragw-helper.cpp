@@ -30,8 +30,8 @@ int LibLoragwHelper::open(
 )
 {
     if (onOpenClose)
-        return onOpenClose->open(fileName, mode);
-    return -1;    
+        return onOpenClose->openDevice(fileName, mode);
+    return -1;
 }
 
 int LibLoragwHelper::close(
@@ -39,7 +39,7 @@ int LibLoragwHelper::close(
 )
 {
     if (onOpenClose)
-        return onOpenClose->close(fd);
+        return onOpenClose->closeDevice(fd);
     return -1;    
 }
 
@@ -68,8 +68,13 @@ void LibLoragwHelper::flush()
     logBuffer.clear();
 }
 
-void LibLoragwHelper::bind()
+void LibLoragwHelper::bind(
+    LogIntf *aOnLog,
+    LibLoragwOpenClose *aOnOpenClose
+)
 {
+    onLog = aOnLog;
+    onOpenClose = aOnOpenClose;
     globalLibLoragwHelper = this;
 }
 

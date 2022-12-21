@@ -1521,7 +1521,7 @@ int rfmMetaData::parseRX(
 		if (v.IsString()) {
 			try {
 				// base64
-				retData = base64_decode(v.GetString());
+				retData = base64_decode(std::string(v.GetString()), false);
 			} catch (const std::exception&) {
 				retData = "";
 			}
@@ -1615,14 +1615,12 @@ int rfmMetaData::parseTX(
         if (v.IsString()) {
             try {
                 // base64
-                retData = base64_decode(v.GetString());
+                retData = base64_decode(std::string(v.GetString()));
             } catch (const std::exception&) {
                 retData = "";
             }
-
         }
     }
-
     return 0;
 }
 

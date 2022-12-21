@@ -5,28 +5,19 @@
 
 #include "libloragw-helper.h"
 
-#include <iostream>
-
 // libloragw-helper.cpp must be linked
 extern LibLoragwHelper *globalLibLoragwHelper;
 
 extern "C" int open_c(const char *file, int flags)
 {
-
-    std::cerr << "=== Open " << file << " flags: " << flags << std::endl;
-
     if (!globalLibLoragwHelper) {
-        std::cerr << "=== globalLibLoragwHelper NONE" << std::endl;
         return -1;
     }
-    std::cerr << "=== globalLibLoragwHelper open ---" << std::endl;
     return globalLibLoragwHelper->open(file, flags);
 }
 
-extern "C" int close_c (int fd) {
-
-    std::cerr << "=== Close " << fd <<std::endl;
-
+extern "C" int close_c (int fd)
+{
     if (!globalLibLoragwHelper)
         return -1;
     return globalLibLoragwHelper->close(fd);
@@ -155,10 +146,8 @@ static int ft_printf_aux(const char *fmt, va_list ap, int len) {
     return len;
 }
 
-extern "C" int printf_c(const char* format, ... ) {
-
-    std::cerr << "=== printf_c " << format << std::endl;
-
+extern "C" int printf_c(const char* format, ... )
+{
     va_list ap;
     int n;
     va_start(ap, format);

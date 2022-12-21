@@ -3,12 +3,12 @@ ACLOCAL_AMFLAGS = -I m4
 
 VERSION_INFO = 0:2:0
 
-commoncppflags = -I. -Ithird_party -I../../third_party
+common_flags = -I. -Ithird_party -I../../third_party
 
 GEN = 
 
-AM_CPPFLAGS=$(commoncppflags) -std=c++11
-AM_CXXFLAGS=$(commoncppflags) -std=c++11
+AM_CPPFLAGS=$(common_flags)
+AM_CXXFLAGS=$(common_flags) -std=c++11
 COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
 BUILT_SOURCES = $(GEN)
@@ -156,9 +156,12 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-network-server lorawan-gateway \
-    print-netid  \
+bin_PROGRAMS = lorawan-network-server print-netid \
     lora-print dev-payload mac-ns mac-gw proto-db gateway-config2cpp
+
+if ENABLE_LORAWAN_GATEWAY
+    bin_PROGRAMS += lorawan-gateway
+endif
 
 lib_LTLIBRARIES = libplugin-esp32-demo.la
 if ENABLE_PKT2
@@ -190,7 +193,7 @@ endif
 #
 lib_LIBRARIES = liblorawan.a
 liblorawan_a_SOURCES = $(LIBLORAWANSRC)
-liblorawan_a_CXXFLAGS = $(commoncppflags) $(PACKET_PARSER_DEF) -fPIC -DLNS_VERSION=$VERSION $(WS_AUTH_DEF)
+liblorawan_a_CXXFLAGS = $(PACKET_PARSER_DEF) -fPIC -DLNS_VERSION=$VERSION $(WS_AUTH_DEF)
 
 L_LORAWAN = -L. -llorawan
 
@@ -239,6 +242,7 @@ nobase_dist_include_HEADERS = \
 	device-channel-plan-file-json.h device-channel-plan.h regional-parameter-channel-plan.h regional-parameter-channel-plans.h regional-parameter-channel-plan-file-json.h \
 	third_party/get_rss/get_rss.h \
 	gateway-lora.h gateway-file-json.h lora-gateway-listener.h client-id.h example-plugins/plugin-mqtt-wss.h \
+	subst-call-c.h \
 	$(rapid_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
@@ -248,6 +252,7 @@ lorawan_network_server_SOURCES = \
 	config-filename.cpp identity-service-dir-txt.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp \
 	device-stat-service-file.cpp device-stat-service-post.cpp packet-listener.cpp db-any.cpp \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp regional-parameter-channel-plan-file-json.cpp \
+	subst-call-c.cpp \
 	auth-file.cpp third_party/get_rss/get_rss.c third_party/argtable3/argtable3.c \
 	$(C_STORAGE) $(C_QUEUE_STORAGE) $(LISTENER_SRC) $(LGW_SRC) $(BACKEND_DB_SRC) $(WS_SRC) $(PACKET_PARSER_SRC)
 
@@ -255,7 +260,7 @@ lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthre
     $(PACKET_PARSER_LIB) $(LISTENER_LIB) $(LGW_LIB) \
     $(BACKEND_DB_LIB) $(THIRD_PARTY_LIB) $(WS_AUTH_LIB) $(WS_LIB)
 
-lorawan_network_server_CPPFLAGS = $(commoncppflags) \
+lorawan_network_server_CPPFLAGS = \
     $(BACKEND_DB_DEF) $(LISTENER_DEF) $(LGW_DEF) $(PACKET_PARSER_DEF) -DLNS_VERSION=$(VERSION) $(WS_AUTH_DEF) $(WS_DEF) \
     $(THIRD_PARTY_DEF)
 
@@ -303,7 +308,7 @@ mac_gw_SOURCES = \
 mac_gw_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
     $(BACKEND_DB_LIB)
-mac_gw_CPPFLAGS = $(commoncppflags) $(THIRD_PARTY_DEF)
+mac_gw_CPPFLAGS = $(THIRD_PARTY_DEF)
 
 mac_ns_SOURCES = \
 	mac-ns.cpp macgw-config-json.cpp config-json.cpp \
@@ -316,7 +321,6 @@ mac_ns_SOURCES = \
 mac_ns_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
     $(BACKEND_DB_LIB)
-mac_ns_CPPFLAGS = $(commoncppflags)
 
 dev_payload_SOURCES = \
 	dev-payload.cpp \
@@ -327,7 +331,6 @@ dev_payload_SOURCES = \
 dev_payload_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) \
     $(BACKEND_DB_LIB)
-dev_payload_CPPFLAGS = $(commoncppflags)
 
 proto_db_SOURCES = \
 	proto-db.cpp identity-service-dir-txt.cpp $(C_STORAGE) \
@@ -337,7 +340,7 @@ proto_db_SOURCES = \
 proto_db_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lpthread $(BACKEND_DB_LIB)
-proto_db_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
+proto_db_CPPFLAGS = $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 lora_print_SOURCES = \
 	lora-print.cpp utilfile.cpp config-filename.cpp db-any.cpp \
@@ -347,34 +350,26 @@ lora_print_SOURCES = \
 lora_print_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lpthread $(BACKEND_DB_LIB)
-lora_print_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
+lora_print_CPPFLAGS = $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 print_netid_SOURCES = \
 	print-netid.cpp \
 	third_party/argtable3/argtable3.c
 print_netid_LDADD = $(L_LORAWAN)
-print_netid_CPPFLAGS = $(commoncppflags)
 
 gateway_config2cpp_SOURCES = \
 	gateway-config2cpp.cpp \
 	gateway-settings.cpp gateway-file-json.cpp utilstring.cpp \
 	third_party/argtable3/argtable3.c
 gateway_config2cpp_LDADD = $(L_LORAWAN)
-gateway_config2cpp_CPPFLAGS = $(commoncppflags)
-
-if ENABLE_LORAWAN_GATEWAY
 
 L_LORAGW=-L../libloragw -L../libloragw/build -lloragw
-
 lorawan_gateway_SOURCES = lorawan-gateway.cpp usb-listener.cpp lora-gateway-listener.cpp \
     gateway-settings.cpp identity-service-file-json.cpp \
     client-id.cpp packet-listener.cpp libloragw-helper.cpp daemonize.cpp \
-    third_party/packet_forwarder/jitqueue.c \
+    third_party/packet_forwarder/jitqueue.c subst-call-c.cpp \
     third_party/argtable3/argtable3.c
 lorawan_gateway_LDADD = $(L_LORAWAN) -lpthread $(L_LORAGW)
-lorawan_gateway_CPPFLAGS = $(commoncppflags)
-
-endif
 
 #
 # Configs, readme, CMake etc.
@@ -402,57 +397,49 @@ test_1_SOURCES = \
 	tests/test1.cpp
 	
 test_1_LDADD = $(commonlibs) $(L_LORAWAN)
-test_1_CPPFLAGS = $(commoncppflags)
 
 test_identity_file_json_SOURCES = \
 	tests/test-identity-file-json.cpp \
 	identity-service-file-json.cpp
 	
 test_identity_file_json_LDADD = $(L_LORAWAN)
-test_identity_file_json_CPPFLAGS = $(commoncppflags)
 
 test_identity_lmdb_SOURCES = \
 	tests/test-identity-lmdb.cpp \
 	$(C_STORAGE) db-identity.cpp identity-service-lmdb.cpp
 	
 test_identity_lmdb_LDADD = $(L_LORAWAN) $(LIB_STORAGE) -llmdb
-test_identity_lmdb_CPPFLAGS = $(commoncppflags) -DENABLE_LMDB
+test_identity_lmdb_CPPFLAGS = -DENABLE_LMDB
 
 test_udp_listen_SOURCES = \
 	tests/test-udp-listen.cpp
 test_udp_listen_LDADD = $(L_LORAWAN)
-test_udp_listen_CPPFLAGS = $(commoncppflags)
 
 test_packet_queue_SOURCES = \
 	tests/test-packet-queue.cpp \
 test_packet_queue_LDADD = $(L_LORAWAN) -lpthread
-test_packet_queue_CPPFLAGS = $(commoncppflags)
 
 test_mac_gw_SOURCES = \
 	tests/test-mac-gw.cpp \
 	macgw-config-json.cpp
 	
 test_mac_gw_LDADD = $(L_LORAWAN)
-test_mac_gw_CPPFLAGS = $(commoncppflags)
 
 test_file_watch_SOURCES = \
 	tests/test-file-watch.cpp  
 test_file_watch_LDADD = $(L_LORAWAN) -lpthread
-test_file_watch_CPPFLAGS = $(commoncppflags)
 
 test_dir_txt_SOURCES = \
 	tests/test-dir-txt.cpp \
 	identity-service-file-json.cpp identity-service-dir-txt.cpp
 	
 test_dir_txt_LDADD = $(L_LORAWAN) -lpthread
-test_dir_txt_CPPFLAGS = $(commoncppflags)
 
 test_join_accept_decrypt_SOURCES = \
 	tests/test-join-accept-decrypt.cpp   \
 	identity-service-file-json.cpp identity-service-dir-txt.cpp
 	
 test_join_accept_decrypt_LDADD = $(L_LORAWAN) -lpthread
-test_join_accept_decrypt_CPPFLAGS = $(commoncppflags)
 
 if ENABLE_PKT2
 test_pkt2_parse_SOURCES = \
@@ -460,7 +447,6 @@ test_pkt2_parse_SOURCES = \
 test_pkt2_parse_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lpthread
-test_pkt2_parse_CPPFLAGS = $(commoncppflags)
 endif
 
 test_sqlite_SOURCES = \
@@ -468,7 +454,7 @@ test_sqlite_SOURCES = \
 test_sqlite_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lpthread $(BACKEND_DB_LIB)
-test_sqlite_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
+test_sqlite_CPPFLAGS = $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 test_fb_SOURCES = \
 	tests/test-fb.cpp
@@ -480,7 +466,6 @@ test_message_queue_SOURCES = \
 	receiver-queue-service-file-json.cpp receiver-queue-service-dir-txt.cpp
      
 test_message_queue_LDADD = $(L_LORAWAN)
-test_message_queue_CPPFLAGS = $(commoncppflags)
 
 test_queue_processor_SOURCES = \
 	tests/test-queue-processor.cpp \
@@ -490,7 +475,7 @@ test_queue_processor_SOURCES = \
 test_queue_processor_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lpthread $(BACKEND_DB_LIB)
-test_queue_processor_CPPFLAGS = $(commoncppflags) $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
+test_queue_processor_CPPFLAGS = $(BACKEND_DB_DEF) $(PACKET_PARSER_DEF)
 
 test_region_band_file_json_SOURCES = \
 	tests/test-region-band-file-json.cpp \
@@ -498,32 +483,26 @@ test_region_band_file_json_SOURCES = \
 	regional-parameter-channel-plan-file-json.cpp
 	
 test_region_band_file_json_LDADD = $(L_LORAWAN)
-test_region_band_file_json_CPPFLAGS = $(commoncppflags)
 
 test_join_request_SOURCES = \
 	tests/test-join-request.cpp
 	
 test_join_request_LDADD = $(L_LORAWAN)
-test_join_request_CPPFLAGS = $(commoncppflags)
 
 test_dev_addr_SOURCES = \
 	tests/test-dev-addr.cpp \
 	identity-service-file-json.cpp
 
 test_dev_addr_LDADD = $(L_LORAWAN)
-test_dev_addr_CPPFLAGS = $(commoncppflags)
-
 
 test_encrypt_join_accept_response_SOURCES = \
 	tests/test-encrypt-join-accept-response.cpp
 test_encrypt_join_accept_response_LDADD = $(L_LORAWAN)
-test_encrypt_join_accept_response_CPPFLAGS = $(commoncppflags)
 
 test_gateway_file_json_SOURCES = \
     tests/test-gateway-file-json.cpp \
     gateway-file-json.cpp utilstring.cpp
 test_gateway_file_json_LDADD = -Lthird_party/packet_forwarder -lloragw
-test_gateway_file_json_CPPFLAGS = $(commoncppflags)
 
 test_gateway_listen_SOURCES = \
     tests/test-gateway-listen.cpp \
@@ -531,7 +510,6 @@ test_gateway_listen_SOURCES = \
     errlist.cpp \
     third_party/packet_forwarder/jitqueue.c
 test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -lusb
-test_gateway_listen_CPPFLAGS = $(commoncppflags)
 
 check_PROGRAMS = \
 	test-gateway-listen

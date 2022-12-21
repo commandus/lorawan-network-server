@@ -222,6 +222,18 @@
 			"MIMode": "gdb"
 		},
 		{
+			"name": "lorawan-gateway",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/lorawan-gateway",
+			"args": ["/dev/ttyACM1", "-c", "RU", "-g", "aabbccdd", "-i", "identity.json", "-vvvvvvv"],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb"
+		},
+		{
 			"name": "test-udp-listen",
 			"type": "cppdbg",
 			"request": "launch",
