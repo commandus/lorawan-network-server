@@ -951,6 +951,7 @@ Id  | Channel Plan | Common Name
 
 ## Tools
 
+- lorawan-gateway
 - print-netid Print NetId details
 - lora-print
 - proto-db
@@ -958,6 +959,45 @@ Id  | Channel Plan | Common Name
 - mac-ns
 - dev-payload simulate sending Semtech gateway protocol packet from the end device to the network server.
 
+### lorawan-gateway
+
+```
+/lorawan-gateway /dev/ttyACM1 -c RU -i identity.json -vvvvvvv
+```
+
+Standalone gateway, print out received packets (hex). In contrary of lorawan-network-server, it does not parse payload
+to put parsed data to he database, it just print out payload as hex string.
+
+RAK2287 USB device must to be connected to the computer with installed lorawan-gateway. 
+
+[libloragw](https://github.com/commandus/libloragw) library is required, it tested with RAK2287 USB gateway without GPS.
+
+Mandatory parameter ("/dev/ttyACM1" in example given) is USB device name of RAK2287.
+
+Region name is one of these:
+
+- AS915-921
+- AS915-928
+- AS917-920
+- AS920-923
+- AU915-928
+- CN470-510
+- EU433
+- EU863-870
+- IN865-867
+- KR920-923
+- RU864-870
+- US902-928
+
+In -c parameter you can use short name (first letters)  
+
+Parameter -i specify device credentials JSON file.
+
+Output format
+```
+Date&time, time zone    Device EUI          Name            Payload       Frequency   SF  RSSI SNR
+2022-12-22T10:24:32+09	3434383566378112	SI-13-23		0100219cdc6.. 864100000	12	-49	 7
+```
 ### print-netid
 
 NetId if 3 bytes long network identifier contains:
