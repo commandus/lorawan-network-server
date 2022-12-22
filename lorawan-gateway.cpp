@@ -116,11 +116,26 @@ public:
         SemtechUDPPacket &packet
     ) override
     {
-        std::cout << timeval2string(time) << "\t"
-            << DEVADDRINT2string(packet.getDeviceAddr()) << "\t"
+        uint32_t f = 0;
+        uint32_t sf = 0;
+        int16_t rssi = 0;
+        float lsnr = 0.0f;
+        if (!packet.metadata.empty()) {
+            rfmMetaData &m = packet.metadata[0];
+            f = m.freq;
+            sf = m.spreadingFactor;
+            rssi = m.rssi;
+            lsnr = m.lsnr;
+        }
+        std::cout << time2string(time.tv_sec) << "\t"
             << DEVEUI2string(packet.devId.devEUI) << "\t"
             << DEVICENAME2string(packet.devId.name) << "\t"
-            << hexString(packet.payload) << std::endl;
+            << hexString(packet.payload) << "\t"
+            << f << "\t"
+            << sf << "\t"
+            << rssi << "\t"
+            << lsnr << "\t"
+            << std::endl;
         return 0;
     }
 

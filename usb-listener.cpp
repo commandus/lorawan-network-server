@@ -13,18 +13,6 @@ void onUpstream(
     if (!listener)
         return;
     std::stringstream ss;
-    if (metadata) {
-        ss << "gatewayId: " << std::hex << metadata->gatewayId
-           << std::dec << " frequency: " << metadata->freq
-           << " CRC status: " << (int) metadata->stat
-           << " modulation: " << (int) metadata->modu
-           << " bandwidth: " << (int) metadata->bandwith
-           << " SF" << (int) metadata->spreadingFactor
-           << " coding rate: " << (int) metadata->codingRate
-           << " bps: " << (int) metadata->bps
-           << " RSSI: " << (int) metadata->rssi
-           << " lsnr: " << metadata->lsnr;
-    }
     size_t sz = payload.size();
     if (sz >= 8) {
         uint32_t addr;
@@ -37,10 +25,19 @@ void onUpstream(
 #if BYTE_ORDER == BIG_ENDIAN
         fcnt = be16toh(fcnt);
 #endif
+        if (metadata) {
+            ss
+                    << std::hex << std::right << std::setw(8) << std::setfill('0') << addr
+                    << " " << std::dec << metadata->freq
+                    << "Hz SF" << (int) metadata->spreadingFactor
+                    << " " << (int) metadata->rssi
+                    << "dBm " << metadata->lsnr << "dB ";
+        }
         ss
-            << " addr: " << std::hex << std::right << std::setw(8) << std::setfill('0') << addr
-            << " FCnt: " << std::dec << fcnt
-            << " payload: " << hexString(payload) << std::endl;
+            << hexString(payload)
+            << " FCnt " << std::dec << fcnt
+            << std::endl;
+
     }
     listener->log(LOG_INFO, LOG_EMBEDDED_GATEWAY, ss.str());
     if (listener->packetListener) {

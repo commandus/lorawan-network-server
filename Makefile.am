@@ -252,9 +252,12 @@ lorawan_network_server_SOURCES = \
 	config-filename.cpp identity-service-dir-txt.cpp gateway-stat-service-file.cpp gateway-stat-service-post.cpp \
 	device-stat-service-file.cpp device-stat-service-post.cpp packet-listener.cpp db-any.cpp \
 	device-channel-plan-file-json.cpp device-history-service-json.cpp regional-parameter-channel-plan-file-json.cpp \
-	subst-call-c.cpp \
 	auth-file.cpp third_party/get_rss/get_rss.c third_party/argtable3/argtable3.c \
 	$(C_STORAGE) $(C_QUEUE_STORAGE) $(LISTENER_SRC) $(LGW_SRC) $(BACKEND_DB_SRC) $(WS_SRC) $(PACKET_PARSER_SRC)
+
+if ENABLE_LISTENER_USB
+    lorawan_network_server_SOURCES += subst-call-c.cpp
+endif
 
 lorawan_network_server_LDADD = $(commonlibs) $(L_LORAWAN) $(LIB_STORAGE) -lpthread \
     $(PACKET_PARSER_LIB) $(LISTENER_LIB) $(LGW_LIB) \
