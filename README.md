@@ -966,7 +966,16 @@ Id  | Channel Plan | Common Name
 ```
 
 Standalone gateway, print out received packets (hex). In contrary of lorawan-network-server, it does not parse payload
-to put parsed data to he database, it just print out payload as hex string.
+to put parsed data to he database, it just print out payload as hex string and metadata delimited by tabulation character (\t):
+
+- Date&time, time zone e.g. 2022-12-22T10:24:32+09
+- Device EUI
+- Device name
+- Payload, hexadecimal string
+- Frequency, Hz
+- Lora spreading factor (SF)
+- received signal strength indicator, dBm (RSSI)
+- Lora signal/noise ratio, dB (SNR)
 
 RAK2287 USB device must to be connected to the computer with installed lorawan-gateway. 
 
@@ -995,8 +1004,8 @@ Parameter -i specify device credentials JSON file.
 
 Output format
 ```
-Date&time, time zone    Device EUI          Name            Payload       Frequency   SF  RSSI SNR
-2022-12-22T10:24:32+09	3434383566378112	SI-13-23		0100219cdc6.. 864100000	12	-49	 7
+Date&time, time zone    Device EUI          Name            Payload       Frequency  SF  RSSI  SNR
+2022-12-22T10:24:32+09	3434383566378112	SI-13-23		0100219cdc6.. 864100000	 12	 -49   7
 ```
 ### print-netid
 
