@@ -465,11 +465,12 @@ Options:
 - -DENABLE_MQTT=on enable MQTT plugin (paho libs required)
 - -DENABLE_LOGGER_HUFFMAN=on enable logger-huffman plugin (logger-huffman, logger-passport libs required)
 - -DENABLE_LISTENER_EMBEDDED=on enable Lora gateway
+- -DENABLE_LORAWAN_GATEWAY=on enable standalone Lora gateway
 
 ```
 mkdir build
 cd build
-cmake -D ENABLE_LGW_EMBEDDED=on ..
+cmake -DENABLE_LORAWAN_GATEWAY=on -DENABLE_LISTENER_EMBEDDED=on ..
 make
 ```
 

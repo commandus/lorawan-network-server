@@ -132,7 +132,7 @@ set(SRC_LISTENER_EMBEDDED
 	lora-gateway-listener.cpp
 	gateway-settings.cpp
 	gateway-file-json.cpp
-	libloragw-helper.cpp
+	subst-call-c.cpp libloragw-helper.cpp
 	third_party/packet_forwarder/jitqueue.c
 )
 
@@ -197,7 +197,7 @@ set(SRC_LORAWAN_NETWORK_SERVER
 	db-any.cpp ${BACKEND_DB_SRC}
 	device-channel-plan-file-json.cpp device-history-service-json.cpp
 	regional-parameter-channel-plan-file-json.cpp
-	database-config-json.cpp subst-call-c.cpp
+	database-config-json.cpp
 	third_party/get_rss/get_rss.c
 	third_party/argtable3/argtable3.c
 )
@@ -222,8 +222,8 @@ endif()
 #
 set (SRC_LORAWAN_GATEWAY
 	lorawan-gateway.cpp usb-listener.cpp lora-gateway-listener.cpp gateway-settings.cpp
-	identity-service-file-json.cpp client-id.cpp packet-listener.cpp libloragw-helper.cpp
-	subst-call-c.cpp daemonize.cpp
+	identity-service-file-json.cpp client-id.cpp packet-listener.cpp daemonize.cpp
+	libloragw-helper.cpp subst-call-c.cpp
 	third_party/packet_forwarder/jitqueue.c
 )
 
