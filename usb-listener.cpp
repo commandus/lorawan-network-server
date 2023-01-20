@@ -110,7 +110,7 @@ bool USBListener::add(
 int USBListener::listen(void *config)
 {
     if (!config)
-        return ERR_CODE_LORA_GATEWAY_START_FAILED;
+        return ERR_CODE_NO_CONFIG;
     // set itself
     listener.packetListener = this;
     // set config
