@@ -12,6 +12,12 @@
 
 #define MEASUREMENT_COUNT_SIZE 23
 
+// listen() flags parameter values
+// 1- Do not send messages
+#define FLAG_GATEWAY_LISTENER_NO_SEND   1
+// 2- Do not send beacons
+#define FLAG_GATEWAY_LISTENER_NO_BEACON 2
+
 typedef enum {
     meas_nb_rx_rcv,             ///< count packets received
     meas_nb_rx_ok,              ///< count packets received with PAYLOAD CRC OK
@@ -144,6 +150,7 @@ public:
     PacketListener *packetListener;
     int lastLgwCode;
     GatewaySettings *config;
+    int flags;
     GatewayMeasurements measurements;
 
     int fdGpsTty;        ///< file descriptor of the GPS TTY port

@@ -60,7 +60,7 @@ public:
     int add(const std::vector<std::string> &value, int hint);
 	virtual void clear();
 
-	virtual int listen(void *config) = 0;
+	virtual int listen(void *config, int flags) = 0;
 
 	void setLogger(int aVerbosity, LogIntf *value);
 
