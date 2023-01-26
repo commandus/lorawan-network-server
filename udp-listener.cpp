@@ -261,7 +261,7 @@ int UDPListener::parseBuffer(
  * @param config not used,
  * @return
  */
-int UDPListener::listen(void *config) {
+int UDPListener::listen(void *config, int flags) {
     int sz = sockets.size();
 	if (!sz)
 		return ERR_CODE_SOCKET_NO_ONE;

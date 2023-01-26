@@ -176,8 +176,11 @@ public:
     std::string identityFileName;
     uint64_t gatewayIdentifier;
     size_t regionIdx;
+    bool enableSend;
+    bool enableBeacon;
     bool daemonize;
     int verbosity;
+
 };
 
 GatewaySettings* getGatewayConfig(LocalGatewayConfiguration *config) {
@@ -241,10 +244,12 @@ int parseCmd(
     char *argv[])
 {
     // device path
-    struct arg_str *a_device_path = arg_str1(nullptr, nullptr, "<device-file-name>", "USB gateway device file name e.g. /dev/ttyACM0");
+    struct arg_str *a_device_path = arg_str1(nullptr, nullptr, "<device-name>", "USB gateway device e.g. /dev/ttyACM0");
     struct arg_str *a_region_name = arg_str1("c", "region", "<region-name>", "Region name, e.g. \"EU433\" or \"US\"");
     struct arg_str *a_identity_file_name = arg_str0("i", "id", "<id-file-name>", "Device identities JSON file name");
     struct arg_str *a_gateway_identifier = arg_str0("g", "gw", "<gw-id>", "Gateway identifier, e.g. aa555a0000000000");
+    struct arg_lit *a_enable_send = arg_lit0("s", "allow-send", "Allow send");
+    struct arg_lit *a_enable_beacon = arg_lit0("b", "allow-beacon", "Allow send beacon");
     struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "Run as daemon");
     struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 7, "Verbosity level 1- alert, 2-critical error, 3- error, 4- warning, 5- siginicant info, 6- info, 7- debug");
     struct arg_lit *a_help = arg_lit0("?", "help", "Show this help");
@@ -252,7 +257,9 @@ int parseCmd(
 
     void *argtable[] = {
         a_device_path, a_region_name, a_identity_file_name, a_gateway_identifier,
-        a_daemonize, a_verbosity, a_help, a_end};
+        a_enable_send, a_enable_beacon,
+        a_daemonize, a_verbosity, a_help, a_end
+    };
 
     // verify the argtable[] entries were allocated successfully
     if (arg_nullcheck(argtable) != 0) {
@@ -279,6 +286,9 @@ int parseCmd(
         config->regionIdx = findRegionIndex(*a_region_name->sval);
     else
         config->regionIdx = 0;
+
+    config->enableSend = (a_enable_send->count > 0);
+    config->enableBeacon = (a_enable_beacon->count > 0);
 
     config->daemonize = (a_daemonize->count > 0);
     config->verbosity = a_verbosity->count;
@@ -396,7 +406,13 @@ static void run()
         listener->onLog->logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
     }
 
-    int r = listener->listen(getGatewayConfig(&localConfig));
+    int flags = 0;
+    if (!localConfig.enableSend)
+        flags |= FLAG_GATEWAY_LISTENER_NO_SEND;
+    if (!localConfig.enableBeacon)
+        flags |= FLAG_GATEWAY_LISTENER_NO_BEACON;
+
+    int r = listener->listen(getGatewayConfig(&localConfig), flags);
     if (r && listener->onLog) {
         std::stringstream ss;
         ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;

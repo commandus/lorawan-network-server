@@ -26,7 +26,7 @@ bool EmbeddedListener::add(
     return true;
 }
 
-int EmbeddedListener::listen(void *config)
+int EmbeddedListener::listen(void *config, int flags)
 {
     onLog->logMessage(this, LOG_INFO, LOG_UDP_LISTENER, 0, MSG_LISTEN_EMBEDDED_PCI);
 	return LORA_OK;

@@ -300,7 +300,7 @@ make
 
 Embedded gateway require UDP listener off:
 ```
-./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-ws --enable-jwt --enable-listener-udp=no --enable-listener-usb
+./configure --enable-logger-huffman --enable-db-sqlite --enable-db-postgres=no --enable-ws --enable-jwt --enable-listener-udp=no --enable-listener-usb --enable-lorawan-gateway
 ```
 
 Create a new SQLite database file:
