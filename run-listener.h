@@ -52,13 +52,19 @@ public:
     RunListener(Configuration *config, int *lastSysSignal);
 
     void flushFiles();
-    void logMessage(
+    void onInfo(
         void *env,
         int level,
         int moduleCode,
         int errorCode,
         const std::string &message
     ) override;
+    void onConnected(bool connected) override;
+    void onDisconnected() override;
+    void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex) override;
+    void onFinished(const std::string &message) override;
+    void onValue(Payload &value) override;
+
     void init(Configuration *config, int *lastSysSignal);
     void start();
     void stop();

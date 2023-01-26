@@ -3,10 +3,11 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "pkt2/str-pkt2.h"
+// #include "pkt2/str-pkt2.h"
 #include "receiver-queue-service-file-json.h"
 #include "receiver-queue-processor.h"
 #include "identity-service-file-json.h"
+#include "database-config-json.h"
 #include "errlist.h"
 #include "utilstring.h"
 #include "utillora.h"
@@ -18,19 +19,20 @@ int main(int argc, char** argv)
 	// create processor to serve queue
 	ReceiverQueueProcessor *recieverQueueProcessor = new ReceiverQueueProcessor();
 
+	/*
 	void *pkt2env = initPkt2("proto", 0);
 	if (!pkt2env) {
 		std::cerr << ERR_LOAD_PROTO << std::endl;
 		exit(ERR_CODE_LOAD_PROTO);
 	}
-
-	recieverQueueProcessor->setPkt2Env(pkt2env);
-	ConfigDatabases configDatabases("dbs.js");
+	*/
+	
+	ConfigDatabasesJson configDatabases("dbs.js");
 	if (configDatabases.dbs.size() == 0) {
 		std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_DATABASE_CONFIG << ": " << ERR_LOAD_DATABASE_CONFIG << std::endl;
 		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
-	DatabaseByConfig *dbByConfig = new DatabaseByConfig(&configDatabases);
+	DatabaseByConfig *dbByConfig = new DatabaseByConfig(&configDatabases, nullptr);
 	recieverQueueProcessor->setDatabaseByConfig(dbByConfig);	
 
 	DeviceId deviceId;
@@ -82,6 +84,6 @@ int main(int argc, char** argv)
 	// stop processor
 	recieverQueueProcessor->stop();
 	delete dbByConfig;
-	donePkt2(pkt2env);
+	// donePkt2(pkt2env);
 	return 0;
 }            

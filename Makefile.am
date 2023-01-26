@@ -474,7 +474,8 @@ test_queue_processor_SOURCES = \
 	tests/test-queue-processor.cpp \
 	identity-service-file-json.cpp \
 	receiver-queue-service-file-json.cpp \
-	db-any.cpp $(BACKEND_DB_SRC) \
+	database-config-json.cpp \
+	db-any.cpp $(BACKEND_DB_SRC)
 test_queue_processor_LDADD = $(L_LORAWAN) \
     $(PACKET_PARSER_LIB) \
     -lpthread $(BACKEND_DB_LIB)
@@ -514,16 +515,16 @@ test_gateway_listen_SOURCES = \
     third_party/packet_forwarder/jitqueue.c
 test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -lusb
 
+#	test-gateway-listen
 check_PROGRAMS = \
-	test-gateway-listen
-#   test-gateway-file-json \
-#	test-encrypt-join-accept-response \
-#   test-dev-addr \
-#   test-queue-processor \
-#	test-join-request \
-#	test-message-queue test-fb test-sqlite test-pkt2-parseRX test-join-accept-decrypt test-dir-txt test-identity-file-json \
-#	test-file-watch test-mac-gw	test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json \
-#	test-region-band-file-json
+	test-gateway-file-json \
+	test-encrypt-join-accept-response \
+	test-dev-addr \
+	test-queue-processor \
+	test-join-request \
+	test-message-queue test-fb test-sqlite test-pkt2-parseRX test-join-accept-decrypt test-dir-txt test-identity-file-json \
+	test-file-watch test-mac-gw	test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json \
+	test-region-band-file-json
 
 TESTS = $(check_PROGRAMS)
 

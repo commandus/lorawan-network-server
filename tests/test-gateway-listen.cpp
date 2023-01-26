@@ -69,27 +69,60 @@ void setSignalHandler()
 }
 #endif
 
-void onLog(
-    void *listener,
-    int level,
-    int moduleCode,
-    int errorCode,
-    const std::string &message
-) {
-    struct timeval t;
-    gettimeofday(&t, nullptr);
-    std::cerr << timeval2string(t) << " ";
+class PrintError: public LogIntf {
+public:
+    int verbosity;
+    PrintError() : verbosity(0) {};
+    void onInfo(
+        void *listener,
+        int level,
+        int moduleCode,
+        int errorCode,
+        const std::string &message
+    )
+    {
+        struct timeval t;
+        gettimeofday(&t, nullptr);
+        std::cerr << timeval2string(t) << " ";
 #ifdef ENABLE_TERM_COLOR
-    if (isatty(2))  // if stderr is piped to the file, do not put ANSI color to the file
-        std::cerr << "\033[" << logLevelColor(level)  << "m";
+        if (isatty(2))  // if stderr is piped to the file, do not put ANSI color to the file
+            std::cerr << "\033[" << logLevelColor(level)  << "m";
 #endif
-    std::cerr << std::setfill(' ') << std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
+        std::cerr << std::setfill(' ') << std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
 #ifdef ENABLE_TERM_COLOR
-    if (isatty(2))
-        std::cerr << "\033[0m";
+        if (isatty(2))
+            std::cerr << "\033[0m";
 #endif
-    std::cerr << message << std::endl;
-}
+        std::cerr << message << std::endl;
+    }
+
+    void onConnected(bool connected) override
+    {
+
+    }
+
+    void onDisconnected() override
+    {
+
+    }
+
+    void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex) override
+    {
+
+    }
+
+    void onFinished(const std::string &message) override
+    {
+
+    }
+
+    void onValue(Payload &value) override
+    {
+
+    }
+};
+
+PrintError printError;
 
 void onUpstream(
     const LoraGatewayListener *listener,
@@ -209,7 +242,7 @@ int main(int argc, char **argv)
     std::cout << "USB path " << devUsb << std::endl;
 
     listener.setLogVerbosity(LOG_DEBUG);
-    listener.setOnLog(onLog);
+    listener.setOnLog(&printError);
     listener.setOnSpectralScan(onSpectralScan);
     listener.setOnUpstream(onUpstream);
     r = listener.start();

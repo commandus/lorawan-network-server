@@ -8,6 +8,7 @@
 #ifdef WIN32
 #else
 #include <execinfo.h>
+#include <signal.h>
 #endif
 
 void testEmpty()

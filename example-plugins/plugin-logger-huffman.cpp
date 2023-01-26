@@ -67,24 +67,24 @@ EXPORT_PLUGIN_FUNC void *pluginInit(
         std::stringstream sskldb;
         sskldb << MSG_INIT_LOGGER_HUFFMAN << loggerDbName;
         if (log)
-            log->logMessage(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
+            log->onInfo(nullptr, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
     } else {
         if (log) {
             std::stringstream ss;
             ss << ERR_INIT_LOGGER_HUFFMAN_DB << " \"" << loggerDbName << "\"";
-            log->logMessage(nullptr, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB,
+            log->onInfo(nullptr, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB,
             ss.str());
         }
     }
     env->env = initLoggerParser(passportDirs,
        [log](void *lenv, int level, int moduleCode, int errorCode, const std::string &message) {
             if (log)
-                log->logMessage(nullptr, level, moduleCode, errorCode, message);
+                log->onInfo(nullptr, level, moduleCode, errorCode, message);
         },
         &env->loader);
     if (!env->env) {
         if (log)
-            log->logMessage(nullptr, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER,
+            log->onInfo(nullptr, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER,
                 ERR_INIT_LOGGER_HUFFMAN_PARSER);
         exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
     }
