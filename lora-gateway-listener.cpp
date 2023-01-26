@@ -15,6 +15,11 @@
 #define XERR_INIT_AVG       16          // number of measurements the XTAL correction is averaged on as initial value
 #define XERR_FILT_COEF      256         // coefficient for low-pass XTAL error tracking
 
+#define SPECTRAL_SCAN_CHECK_STATUS_DELAY_MS   10
+#define JIT_DELAY               10
+#define SPECTRAL_SCAN_DELAY_MS  1000
+#define GPS_DELAY_MS            1000
+
 const char *MEASUREMENT_NAME[MEASUREMENT_COUNT_SIZE] = {
     "Received",
     "CRC OK",
@@ -251,7 +256,7 @@ void LoraGatewayListener::spectralScanRunner()
         for (int i = 0; i < (int)(config->sx1261()->spectralScan.pace_s ? config->sx1261()->spectralScan.pace_s : 1); i++) {
             if (stopRequest)
                 break;
-            wait_ms(1000);
+            wait_ms(SPECTRAL_SCAN_DELAY_MS);
         }
         spectralScanStarted = false;
 
@@ -305,7 +310,7 @@ void LoraGatewayListener::spectralScanRunner()
                 }
 
                 // wait a bit before checking status again
-                wait_ms(10);
+                wait_ms(SPECTRAL_SCAN_CHECK_STATUS_DELAY_MS);
             } while (status != LGW_SPECTRAL_SCAN_STATUS_COMPLETED && status != LGW_SPECTRAL_SCAN_STATUS_ABORTED);
             if (status == LGW_SPECTRAL_SCAN_STATUS_COMPLETED) {
                 // Get spectral scan results
@@ -444,7 +449,7 @@ void LoraGatewayListener::gpsCheckTimeRunner() {
     double x;
 
     while (!stopRequest) {
-        wait_ms(1000);
+        wait_ms(GPS_DELAY_MS);
         // calculate when the time reference was last updated
         mutexGPSTimeReference.lock();
         gps_ref_age = (long)difftime(time(nullptr), gpsTimeReference.systime);
@@ -499,7 +504,7 @@ void LoraGatewayListener::gpsCheckTimeRunner() {
 #define NB_PKT_MAX         255
 #define TX_BUFF_SIZE       ((540 * NB_PKT_MAX) + 30 + STATUS_SIZE)
 // ms waited when a fetch return no packets
-#define FETCH_SLEEP_MS     10
+#define UPSTREAM_FETCH_DELAY_MS     10
 #define GATEWAY_PROTOCOL    2
 #define UNIX_GPS_EPOCH_OFFSET 315964800 // Number of seconds ellapsed between 01.Jan.1970 00:00:00 and 06.Jan.1980 00:00:00
 
@@ -539,7 +544,7 @@ void LoraGatewayListener::upstreamRunner()
 
         // wait a short time if no packets, nor status report
         if (nb_pkt == 0) {
-            wait_ms(FETCH_SLEEP_MS);
+            wait_ms(UPSTREAM_FETCH_DELAY_MS);
             continue;
         }
 
@@ -1220,7 +1225,7 @@ void LoraGatewayListener::jitRunner() {
     uint8_t tx_status;
 
     while (!stopRequest) {
-        wait_ms(10);
+        wait_ms(JIT_DELAY);
         for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
             // transfer data and metadata to the concentrator, and schedule TX
             mLGW.lock();
