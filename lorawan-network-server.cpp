@@ -251,7 +251,7 @@ int parseCmd(
 
 class StdErrLog: public LogIntf {
 public:
-    void logMessage(
+    void onInfo(
         void *env,
         int level,
         int moduleCode,
@@ -280,6 +280,30 @@ public:
 #endif
         std::cerr << message << std::endl;
     }
+    void onConnected(bool connected) override
+    {
+
+    }
+
+    void onDisconnected() override
+    {
+
+    }
+
+    void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex) override
+    {
+
+    }
+
+    void onFinished(const std::string &message) override
+    {
+
+    }
+
+    void onValue(Payload &value) override
+    {
+
+    }
 };
 
 static StdErrLog stdErrLog;
@@ -302,7 +326,7 @@ static void wsRun(char *programPath, Configuration* config) {
     wsSpecialPathHandler->deviceStatService = runListener->deviceStatService;
     std::string userListFileName = getDefaultConfigFileName(programPath, config->wsConfig.userPasswordListFileName);
     if (!util::fileExists(userListFileName)) {
-        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND,
+        runListener->onInfo(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND,
                                 ERR_LOAD_WS_PASSWD_NOT_FOUND);
         exit(ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND);
     }
@@ -333,7 +357,7 @@ static void wsRun(char *programPath, Configuration* config) {
         ss << ERR_NO_DEFAULT_WS_DATABASE << config->wsConfig.defaultDatabase        // just warning
             << std::endl;
 
-        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC,
+        runListener->onInfo(runListener->listener, LOG_ERR, LOG_MAIN_FUNC,
             ERR_CODE_NO_DEFAULT_WS_DATABASE, ss.str());
     }
 
@@ -377,17 +401,17 @@ static void wsRun(char *programPath, Configuration* config) {
         if (hasLoggerKosaPacketsLoader) {
             std::stringstream sskldb;
             sskldb << MSG_INIT_LOGGER_HUFFMAN << loggerDatabaseName;
-            runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
+            runListener->onInfo(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, sskldb.str());
         } else {
-            runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
+            runListener->onInfo(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_INIT_LOGGER_HUFFMAN_DB, ERR_INIT_LOGGER_HUFFMAN_DB);
         }
         void *env = initLoggerParser(config->pluginsParams["logger-huffman-passport"],
            [](void *lenv, int level, int moduleCode, int errorCode, const std::string &message) {
-               stdErrLog.logMessage(runListener->listener, level, moduleCode, errorCode, message);
+               stdErrLog.onInfo(runListener->listener, level, moduleCode, errorCode, message);
             },
             &loggerHuffmanEnv.loader);
         if (!env) {
-            runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC,
+            runListener->onInfo(runListener->listener, LOG_ERR, LOG_MAIN_FUNC,
                 ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER, ERR_INIT_LOGGER_HUFFMAN_PARSER);
             exit(ERR_CODE_INIT_LOGGER_HUFFMAN_PARSER);
         }
@@ -407,7 +431,7 @@ static void wsRun(char *programPath, Configuration* config) {
            << ", log verbosity: " << wsConfig.verbosity
            << ", JWT issuer: " << wsConfig.issuer
            << std::endl;
-        runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
+        runListener->onInfo(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
 
         std::stringstream ss2;
         ss2 << MSG_DATABASE_LIST << std::endl;
@@ -418,19 +442,19 @@ static void wsRun(char *programPath, Configuration* config) {
             ss2 << "\t" << n << std::endl;
         }
         ss2 << std::endl;
-        runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss2.str());
+        runListener->onInfo(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss2.str());
     }
 #ifdef ENABLE_WS
     if (startWS(wsConfig)) {
         if (config->serverConfig.verbosity > 5)
-            runListener->logMessage(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
+            runListener->onInfo(runListener->listener, LOG_INFO, LOG_MAIN_FUNC, 0, MSG_WS_START_SUCCESS);
     } else {
-        runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
+        runListener->onInfo(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
             ERR_WS_START_FAILED);
         exit(ERR_CODE_WS_START_FAILED);
     }
 #else
-    runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
+    runListener->onInfo(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_WS_START_FAILED,
         ERR_WS_START_FAILED);
 #endif
 }
@@ -459,7 +483,7 @@ static void run()
         if (r) {
             std::stringstream ss;
             ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
-            runListener->logMessage(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
+            runListener->onInfo(runListener->listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
         }
 #ifdef ENABLE_LISTENER_USB
         delete libLoragwHelper.onOpenClose;
@@ -566,7 +590,7 @@ int main(
 	}
 
 	if (config.serverConfig.daemonize)	{
-        runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
+        runListener->onInfo(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
         std::string progpath = getCurrentDir();
 		if (config.serverConfig.verbosity > 1) {
             std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
@@ -584,7 +608,7 @@ int main(
 #else
 		setSignalHandler();
 #endif
-        runListener->logMessage(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
+        runListener->onInfo(runListener->listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
 		run();
 		done();
 	}

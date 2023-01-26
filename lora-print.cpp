@@ -67,13 +67,37 @@ class PrintError: public LogIntf {
 public:
     int verbosity;
     PrintError() : verbosity(0) {};
-    void logMessage(void *env, int level, int moduleCode, int errorCode, const std::string &message) override {
+    void onInfo(void *env, int level, int moduleCode, int errorCode, const std::string &message) override {
         if (level > verbosity)
             return;
         std::cerr << logLevelString(level) << " "
             << (errorCode ? std::to_string(errorCode) + ": " : " ")
             << message
             << std::endl;
+    }
+    void onConnected(bool connected)
+    {
+
+    }
+
+    void onDisconnected()
+    {
+
+    }
+
+    void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex)
+    {
+
+    }
+
+    void onFinished(const std::string &message)
+    {
+
+    }
+
+    void onValue(Payload &value)
+    {
+
     }
 };
 
@@ -196,7 +220,7 @@ int parseCmd(
 				config->payload = base64_decode(*a_payload_base64->sval, false);
 			}
 			catch (const std::exception&) {
-                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT,
+                printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT,
                                       ERR_CODE_INVALID_BASE64, ERR_INVALID_BASE64);
 				nerrors++;
 			}
@@ -227,12 +251,12 @@ int parseCmd(
 	config->identityStorageType = string2storageType(sidentityStorageType);
 
 	if (config->outputFormat < 0) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_WRONG_PARAM, ERR_WRONG_PARAM);
+        printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_WRONG_PARAM, ERR_WRONG_PARAM);
         nerrors++;
 	}
 
 	if (config->payload.empty()) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_NO_PAYLOAD, ERR_NO_PAYLOAD);
+        printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_NO_PAYLOAD, ERR_NO_PAYLOAD);
 		nerrors++;
 	}
 
@@ -265,7 +289,7 @@ void doInsert(
 		if (!db) {
             std::stringstream ss;
             ss << ERR_DB_DATABASE_NOT_FOUND << *it;
-            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
 			exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
 		}
         std::vector<std::string> clauses;
@@ -275,26 +299,26 @@ void doInsert(
         for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++) {
             std::stringstream ss;
             ss << "Execute " << *it << "..";
-            printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0, ss.str());
+            printError.onInfo(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0, ss.str());
         }
         int r = db->open();
         if (r) {
             std::stringstream ss;
             ss << "Open " << db->config->type << " database  " << db->config->name <<  " error " << r;
-            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss.str());
+            printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss.str());
             continue;
         }
         r = db->insert(config->messageType, INPUT_FORMAT_BINARY, binData, &validProperties);
         if (r) {
             std::stringstream ss2;
             ss2 << "Database " << db->config->type <<  " error " << r;
-            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss2.str());
+            printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss2.str());
         }
         r = db->close();
         if (r) {
             std::stringstream ss;
             ss << "Close " << db->config->type << " database  " << db->config->name <<  " error " << r;
-            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss.str());
+            printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, r, ss.str());
             continue;
         }
 	}
@@ -321,7 +345,7 @@ void doPrint(
         if (!db) {
             std::stringstream ss;
             ss << ERR_DB_DATABASE_NOT_FOUND << *it;
-            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
             exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
         }
 
@@ -334,7 +358,7 @@ void doPrint(
             << "\" type \"" << db->config->type
             << "\" dialect \"" << dialect
             << "\" payload \"" << hexString(binData);
-        printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0,ss.str());
+        printError.onInfo(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0,ss.str());
 
         std::vector<std::string> clauses;
         std::map<std::string, std::string> validProperties;
@@ -384,13 +408,13 @@ int main(
         }
     }
     if (config.pluginsPath.empty()) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, MSG_NO_PLUGINS_LOADED);
+        printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, MSG_NO_PLUGINS_LOADED);
         exit(ERR_CODE_INIT_PLUGINS_FAILED);
     }
 
     configDatabases = new ConfigDatabasesJson(config.dbConfig);
 	if (configDatabases->dbs.empty()) {
-        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_LOAD_DATABASE_CONFIG, ERR_LOAD_DATABASE_CONFIG);
+        printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_LOAD_DATABASE_CONFIG, ERR_LOAD_DATABASE_CONFIG);
         done();
         exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
@@ -422,7 +446,7 @@ int main(
     if (r <= 0) {
         std::stringstream ss;
         ss << ERR_LOAD_PLUGINS_FAILED << "plugins directory: \"" << config.pluginsPath << "\"";
-        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_LOAD_PLUGINS_FAILED, ss.str());
+        printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_LOAD_PLUGINS_FAILED, ss.str());
         exit(ERR_CODE_LOAD_PLUGINS_FAILED);
     }
     std::string dbName;
@@ -443,7 +467,7 @@ int main(
                 ss << "\t" << *itv << "\n";
             }
         }
-        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+        printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
         exit(ERR_CODE_INIT_PLUGINS_FAILED);
     }
 
@@ -451,7 +475,7 @@ int main(
     ss
        << "plugins directory: \"" << config.pluginsPath << "\""
        << ", database name: \"" << dbName << "\"";
-    printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+    printError.onInfo(nullptr, LOG_DEBUG, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
 
     // parse packet
     SEMTECH_PREFIX_GW dataPrefix;
@@ -479,7 +503,7 @@ int main(
                         {
                             JOIN_ACCEPT_FRAME *joinAcceptFrame = packets[0].getJoinAcceptFrame();
                             if (isDEVEUIEmpty(config.devEUI)) {
-                                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, "Device EUI missed. Provide -e <EUI> option.");
+                                printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, "Device EUI missed. Provide -e <EUI> option.");
                                 done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
@@ -489,7 +513,7 @@ int main(
                             if (ir) {
                                 std::stringstream ss1;
                                 ss1 << "Device EUI " << DEVEUI2string(config.devEUI) << " not found.";
-                                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss1.str());
+                                printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss1.str());
                                 done();
                                 exit(ERR_CODE_PARAM_INVALID);
                             }
@@ -524,7 +548,7 @@ int main(
             break;
         default:
             if (r)
-                printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, r, strerror_lorawan_ns(r));
+                printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, r, strerror_lorawan_ns(r));
 	}
 
 	if (gatewayStat.errcode == 0) {
@@ -542,7 +566,7 @@ int main(
 
 	for (std::vector<SemtechUDPPacket>::iterator it(packets.begin()); it != packets.end(); it++) {
 		if (it->errcode) {
-            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INVALID_PACKET, ERR_INVALID_PACKET);
+            printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INVALID_PACKET, ERR_INVALID_PACKET);
             continue;
 		}
 		if (config.verbosity > 2) {

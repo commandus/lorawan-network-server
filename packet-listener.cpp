@@ -107,7 +107,7 @@ int PacketListener::add(
         if (!add(*it, hint)) {
             std::stringstream ss;
             ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
-            onLog->logMessage(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
+            onLog->onInfo(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
             exit(ERR_CODE_SOCKET_BIND);
         }
         r++;

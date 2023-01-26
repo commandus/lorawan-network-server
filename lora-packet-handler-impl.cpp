@@ -25,7 +25,7 @@ int LoraPacketProcessor::enqueuePayload(
         if (onLog) {
             ss << ERR_MESSAGE
                << ERR_CODE_INIT_QUEUE << ": " << ERR_INIT_QUEUE;
-            onLog->logMessage(this, LOG_ERR, LOG_PACKET_HANDLER, ERR_CODE_INIT_QUEUE, ss.str());
+            onLog->onInfo(this, LOG_ERR, LOG_PACKET_HANDLER, ERR_CODE_INIT_QUEUE, ss.str());
         }
         return ERR_CODE_INIT_QUEUE;
     }
@@ -37,7 +37,7 @@ int LoraPacketProcessor::enqueuePayload(
                << ") " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
                //		<< " " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
                << " " << value.devId.toJsonString() << ": " << hexString(p);
-            onLog->logMessage(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+            onLog->onInfo(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
         }
     } else {
         if (onLog) {
@@ -48,7 +48,7 @@ int LoraPacketProcessor::enqueuePayload(
                 // << " FCnt: " << value.getRfmHeader()->fcnt
                 << " RFM: " << RFMHeader(*value.getRfmHeader()).toJson()
                 << ", device: " << value.devId.toJsonString() << ", data: " << hexString(p);
-            onLog->logMessage(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss2.str());
+            onLog->onInfo(this, LOG_INFO, LOG_PACKET_HANDLER, ERR_CODE_DUPLICATED_PACKET, ss2.str());
         }
     }
 	return 0;
@@ -71,7 +71,7 @@ int LoraPacketProcessor::enqueueControl(
        << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI) << ", "
        << MSG_PAYLOAD << ": " << hexString(value.payload);
-	onLog->logMessage(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+	onLog->onInfo(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
 	// wait until gateways all send packet
 	struct timeval t;
@@ -100,7 +100,7 @@ int LoraPacketProcessor::putMACRequests(
         << hexString(value.getMACs())  << MSG_TO_BE_SEND_TO
         << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
         << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI);
-    onLog->logMessage(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+    onLog->onInfo(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
     return LORA_OK;
 }
@@ -123,7 +123,7 @@ int LoraPacketProcessor::enqueueMAC(
 		// << " " << value.devId.toJsonString()
         << ", " << MSG_PAYLOAD << ": " << hexString(value.payload)
         << ", MACs: " << hexString(macs);
-	onLog->logMessage(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+	onLog->onInfo(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 	// wait until gateways all send packet
 	struct timeval t;
 	t.tv_sec = time.tv_sec;
@@ -173,7 +173,7 @@ int LoraPacketProcessor::enqueueJoinResponse(
        << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress)
        << ", " << MSG_DEVICE_EUI << DEVEUI2string(value.devId.devEUI)
        << ", received time: " << timeval2string(time);
-    onLog->logMessage(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+    onLog->onInfo(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 
     return LORA_OK;
 }
@@ -221,7 +221,7 @@ int LoraPacketProcessor::putUnidentified(
 		ss << ERR_INFO << ERR_UNIDENTIFIED_MESSAGE
 		   << " " << MSG_DEVICE_EUI << DEVADDR2string(packet.getHeader()->header.devaddr)
 		   << ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
-		onLog->logMessage(this, LOG_INFO, LOG_IDENTITY_SVC, 0, ss.str());
+		onLog->onInfo(this, LOG_INFO, LOG_IDENTITY_SVC, 0, ss.str());
 	}
     return LORA_OK;
 }
@@ -246,7 +246,7 @@ int LoraPacketProcessor::put(
 			ss << ERR_MESSAGE << ERR_CODE_INIT_IDENTITY << ": " << ERR_INIT_IDENTITY
 				<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
 				<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
-			onLog->logMessage(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+			onLog->onInfo(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
 		}
 		return ERR_CODE_INIT_IDENTITY;
 	}
@@ -265,7 +265,7 @@ int LoraPacketProcessor::put(
 					ss << MSG_RECEIVED_CONTROL_FRAME
 						<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
 						<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
-					onLog->logMessage(this, LOG_DEBUG, LOG_IDENTITY_SVC, 0, ss.str());
+					onLog->onInfo(this, LOG_DEBUG, LOG_IDENTITY_SVC, 0, ss.str());
                     // enqueueTxPacket packet route to the target device or network server itself
 					enqueueControl(time, packet);
 				}
@@ -276,7 +276,7 @@ int LoraPacketProcessor::put(
 					ss << ERR_MESSAGE << ERR_CODE_CONTROL_NOT_AUTHORIZED << ": " << ERR_CONTROL_NOT_AUTHORIZED
 						<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
 						<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
-					onLog->logMessage(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+					onLog->onInfo(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
 				}
 			}
 		} else {
@@ -303,7 +303,7 @@ int LoraPacketProcessor::put(
 			ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r)
 				<< ", " << MSG_DEVICE_EUI << DEVADDR2string(addr)
 				<< ", " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
-			onLog->logMessage(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
+			onLog->onInfo(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
 		}
 	}
 	return r;
@@ -429,7 +429,7 @@ int LoraPacketProcessor::join(
             // report error
             std::stringstream ss;
             ss << ERR_MESSAGE << ERR_CODE_INIT_IDENTITY << ": " << ERR_INIT_IDENTITY;
-			onLog->logMessage(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+			onLog->onInfo(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
         }
         return ERR_CODE_INIT_IDENTITY;
     }
@@ -445,7 +445,7 @@ int LoraPacketProcessor::join(
                 << " " << MSG_EXPECTED << " " << sizeof(JOIN_REQUEST_FRAME) << " " << MSG_BYTES;
 
 
-            onLog->logMessage(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
+            onLog->onInfo(this, LOG_ERR, LOG_IDENTITY_SVC, ERR_CODE_INIT_IDENTITY, ss.str());
         }
         return ERR_CODE_BAD_JOIN_REQUEST;
     }
@@ -470,7 +470,7 @@ int LoraPacketProcessor::join(
                 << " " << MSG_JOIN_EUI << DEVEUI2string(joinRequestFrame->joinEUI)
                 << " " << MSG_DEV_NONCE << DEVNONCE2string(joinRequestFrame->devNonce)
                 << ", gateway address " << UDPSocket::addrString((const struct sockaddr *) &packet.gatewayAddress);
-            onLog->logMessage(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
+            onLog->onInfo(this, LOG_ERR, LOG_IDENTITY_SVC, r, ss.str());
         }
     }
     return r;

@@ -63,7 +63,7 @@ int LibLoragwHelper::log(
 void LibLoragwHelper::flush()
 {
     if (onLog)
-        onLog->logMessage(this, LOG_INFO, LOG_EMBEDDED_GATEWAY, 0, logBuffer.str());
+        onLog->onInfo(this, LOG_INFO, LOG_EMBEDDED_GATEWAY, 0, logBuffer.str());
     logBuffer.str("");
     logBuffer.clear();
 }

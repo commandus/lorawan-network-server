@@ -201,7 +201,32 @@ static IdentityService *identityService = nullptr;
 
 class StdErrLog: public LogIntf {
 public:
-    void logMessage(
+    void onConnected(bool connected) override
+    {
+
+    }
+
+    void onDisconnected() override
+    {
+
+    }
+
+    void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex) override
+    {
+
+    }
+
+    void onFinished(const std::string &message) override
+    {
+
+    }
+
+    void onValue(Payload &value) override
+    {
+
+    }
+
+    void onInfo(
             void *env,
             int level,
             int moduleCode,
@@ -403,7 +428,7 @@ static void run()
         ss << ERR_INFO "Region "
             << memSetupMemGatewaySettingsStorage[localConfig.regionIdx].name
             << " (settings #" << localConfig.regionIdx << ")" << std::endl;
-        listener->onLog->logMessage(listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
+        listener->onLog->onInfo(listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
     }
 
     int flags = 0;
@@ -416,7 +441,7 @@ static void run()
     if (r && listener->onLog) {
         std::stringstream ss;
         ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
-        listener->onLog->logMessage(listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
+        listener->onLog->onInfo(listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
     }
     delete libLoragwHelper.onOpenClose;
     libLoragwHelper.onOpenClose = nullptr;
@@ -496,7 +521,7 @@ int main(
 
     if (localConfig.daemonize)	{
         if (listener->onLog)
-            listener->onLog->logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
+            listener->onLog->onInfo(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_DAEMON_RUN);
         std::string progpath = getCurrentDir();
         if (localConfig.verbosity > 1) {
             std::cerr << MSG_DAEMON_STARTED << progpath << "/" << programName << MSG_DAEMON_STARTED_1 << std::endl;
@@ -512,7 +537,7 @@ int main(
         setSignalHandler();
 #endif
         if (listener->onLog)
-            listener->onLog->logMessage(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
+            listener->onLog->onInfo(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
         run();
         done();
     }

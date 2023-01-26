@@ -48,7 +48,7 @@ int ReceiverQueueProcessor::onPacket(
 	std::stringstream ss;
 	ss << timeval2string(time) << MSG_DEVICE_EUI << DEVEUI2string(id.devEUI) << ", " << UDPSocket::addrString((const struct sockaddr *) &value.gatewayAddress);
 	if (onLog)
-		onLog->logMessage(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+		onLog->onInfo(this, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
 	return 0;
 }
 
@@ -142,7 +142,7 @@ void ReceiverQueueProcessor::put2databases() {
             if (onLog) {
                 std::stringstream ss;
                 ss << ERR_DB_DATABASE_NOT_FOUND << " " << j;
-                onLog->logMessage(nullptr, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+                onLog->onInfo(nullptr, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
             }
             continue;
         }
@@ -155,7 +155,7 @@ void ReceiverQueueProcessor::put2databases() {
             if (r && onLog) {
                 std::stringstream ss;
                 ss << ERR_DB_DATABASE_OPEN << db->config->name << " " << r << ": " << strerror_lorawan_ns(r);
-                onLog->logMessage(nullptr, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
+                onLog->onInfo(nullptr, LOG_INFO, LOG_PACKET_HANDLER, 0, ss.str());
                 continue;
             }
 
@@ -173,7 +173,7 @@ void ReceiverQueueProcessor::put2databases() {
                     }
                     ss
                        << ": " << hexString(entry.value.payload);
-                    onLog->logMessage(this, LOG_DEBUG, LOG_PACKET_HANDLER, r, ss.str());
+                    onLog->onInfo(this, LOG_DEBUG, LOG_PACKET_HANDLER, r, ss.str());
                 }
                 prepared = true;
             }
@@ -187,11 +187,11 @@ void ReceiverQueueProcessor::put2databases() {
                        << ": " << db->db->errmsg
                        << ", SQL statement: " << db->lastErroneousStatement
                        << ", payload: " << hexString(entry.value.payload);
-                    onLog->logMessage(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
+                    onLog->onInfo(this, LOG_ERR, LOG_PACKET_HANDLER, r, ss.str());
                 } else {
                     ss << MSG_DB_INSERT
                        << ". " << MSG_DATABASE << db->config->id << " " << db->config->name;
-                    onLog->logMessage(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
+                    onLog->onInfo(this, LOG_DEBUG, LOG_PACKET_HANDLER, 0, ss.str());
                 }
             }
             db->close();
@@ -202,7 +202,7 @@ void ReceiverQueueProcessor::put2databases() {
                 if (onLog) {
                     std::stringstream ss;
                     ss << MSG_DATABASE << dbId << " " << db->config->name << " pop() error";
-                    onLog->logMessage(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
+                    onLog->onInfo(this, LOG_ERR, LOG_PACKET_HANDLER, 0, ss.str());
                 }
             }
         }

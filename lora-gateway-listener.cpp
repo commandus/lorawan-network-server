@@ -1557,7 +1557,7 @@ void LoraGatewayListener::log(
     if (level > logVerbosity)
         return;
     mLog.lock();
-    onLog->logMessage((void *) this, LOG_EMBEDDED_GATEWAY, level, errorcode, message);
+    onLog->onInfo((void *) this, LOG_EMBEDDED_GATEWAY, level, errorcode, message);
     mLog.unlock();
 }
 

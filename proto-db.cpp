@@ -67,13 +67,38 @@ class PrintError: public LogIntf {
 public:
     int verbosity;
     PrintError() : verbosity(0) {};
-    void logMessage(void *env, int level, int moduleCode, int errorCode, const std::string &message) override {
+    void onInfo(void *env, int level, int moduleCode, int errorCode, const std::string &message) override {
         if (level > verbosity)
             return;
         std::cerr << logLevelString(level) << " "
                   << (errorCode ? std::to_string(errorCode) + ": " : " ")
                   << message
                   << std::endl;
+    }
+
+    void onConnected(bool connected) override
+    {
+
+    }
+
+    void onDisconnected() override
+    {
+
+    }
+
+    void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex) override
+    {
+
+    }
+
+    void onFinished(const std::string &message) override
+    {
+
+    }
+
+    void onValue(Payload &value) override
+    {
+
     }
 };
 
@@ -533,7 +558,7 @@ void doPrint(
         if (!db) {
             std::stringstream ss;
             ss << ERR_DB_DATABASE_NOT_FOUND << *it;
-            printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
+            printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_DB_DATABASE_NOT_FOUND, ss.str());
             exit(ERR_CODE_DB_DATABASE_NOT_FOUND);
         }
 
@@ -546,7 +571,7 @@ void doPrint(
            << "\" type \"" << db->config->type
            << "\" dialect \"" << dialect
            << "\" payload \"" << hexString(payload);
-        printError.logMessage(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0,ss.str());
+        printError.onInfo(nullptr, LOG_DEBUG, LOG_LORA_PRINT, 0,ss.str());
 
         std::vector<std::string> clauses;
         std::map<std::string, std::string> validProperties;
@@ -618,7 +643,7 @@ int main(
                 ss << "\t" << *itv << "\n";
             }
         }
-        printError.logMessage(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
+        printError.onInfo(nullptr, LOG_ERR, LOG_LORA_PRINT, ERR_CODE_INIT_PLUGINS_FAILED, ss.str());
         exit(ERR_CODE_INIT_PLUGINS_FAILED);
     }
 
