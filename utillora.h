@@ -355,6 +355,7 @@ typedef struct {
 	DEVICENAME name;
 } DEVICEID;					// 44 bytes + 8 + 18 = 70
 
+class DeviceId;
 /**
  * Section 6.3 Activating an end-device by personalization 
  * - DevAddr ->
@@ -387,10 +388,8 @@ public:
 	NetworkIdentity();
 	NetworkIdentity(const DEVADDRINT &a, const DEVICEID &id);
     NetworkIdentity(const DEVICEID &id);
-	void set(
-		const DEVADDRINT &addr,
-		const DEVICEID &value
-	);
+	void set(const DEVADDRINT &addr, const DEVICEID &value);
+	void set(const DEVADDR &addr, const DeviceId &value);
 	std::string toString() const;
     std::string toJsonString() const;
 };

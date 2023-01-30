@@ -791,11 +791,11 @@ void DeviceId::set(
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
 	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
-    memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
-    memmove(&appKey, &value.appKey, sizeof(KEY128));
-    memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
-    devNonce = value.devNonce;
-    memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
+	memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+	memmove(&appKey, &value.appKey, sizeof(KEY128));
+	memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
+	devNonce = value.devNonce;
+	memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
@@ -886,11 +886,31 @@ void NetworkIdentity::set(
 	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
 	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
 	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
-    memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
-    memmove(&appKey, &value.appKey, sizeof(KEY128));
-    memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
-    devNonce = value.devNonce;
-    memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
+	memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+	memmove(&appKey, &value.appKey, sizeof(KEY128));
+	memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
+	devNonce = value.devNonce;
+	memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
+	memmove(&name, &value.name, sizeof(DEVICENAME));
+	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
+}
+
+void NetworkIdentity::set(
+	const DEVADDR &addr,
+	const DeviceId &value
+)
+{
+	memmove(&devaddr, &addr, sizeof(DEVADDR));
+	memmove(&activation, &value.activation, sizeof(activation));
+	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
+	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
+	memmove(&nwkSKey, &value.nwkSKey, sizeof(KEY128));
+	memmove(&appSKey, &value.appSKey, sizeof(KEY128));
+	memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
+	memmove(&appKey, &value.appKey, sizeof(KEY128));
+	memmove(&nwkKey, &value.nwkKey, sizeof(KEY128));
+	devNonce = value.devNonce;
+	memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
 	memmove(&name, &value.name, sizeof(DEVICENAME));
 	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
 }

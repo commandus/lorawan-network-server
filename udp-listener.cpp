@@ -58,7 +58,7 @@ bool UDPListener::addSocket(
 				<< strerror_lorawan_ns(s.errcode) << " " << address
 				<< ", errno " << s.lasterrno << ": " << strerror(s.lasterrno)
 				;
-			onLog->logMessage(this, LOG_ERR, LOG_UDP_LISTENER, s.errcode, ss.str());
+			onLog->onInfo(this, LOG_ERR, LOG_UDP_LISTENER, s.errcode, ss.str());
 		}
 		return false;
 	}
@@ -129,7 +129,7 @@ int UDPListener::parseBuffer(
                     sse << strerror_lorawan_ns(pr)
                         << " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
                         << ", token: " << std::hex << dataPrefix.token;
-                    onLog->logMessage(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
+                    onLog->onInfo(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
                     // send PULL ACK immediately
                     if (handler) {
                         handler->ack(socket, (const sockaddr_in *) &gwAddress, dataPrefix);
@@ -142,7 +142,7 @@ int UDPListener::parseBuffer(
                                << " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
                                << " gateway: " << DEVEUI2string(dataPrefix.mac);
                             ;
-                            onLog->logMessage(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
+                            onLog->onInfo(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SEND_ACK, ss.str());
                             break;
                         }
                     }
@@ -164,7 +164,7 @@ int UDPListener::parseBuffer(
                     ss << "TX ACK " << getTXAckCodeName(r)
                        << " from " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
                        << " gateway: " << DEVEUI2string(dataPrefix.mac);
-                    onLog->logMessage(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+                    onLog->onInfo(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
                     pr = LORA_OK;
                 }
                 break;
@@ -196,7 +196,7 @@ int UDPListener::parseBuffer(
                 << " " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
                 << " (" << bytesReceived
                 << " bytes): " << hexString(buffer.c_str(), bytesReceived);
-            onLog->logMessage(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
+            onLog->onInfo(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, sse.str());
         }
             break;
         case ERR_CODE_PULLOUT:
@@ -213,14 +213,14 @@ int UDPListener::parseBuffer(
                        << ": " << ERR_INVALID_PACKET
                        << ", gateway address: " << UDPSocket::addrString((const struct sockaddr *) &gwAddress)
                        << ", packet: " << hexString(v);
-                    onLog->logMessage(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
+                    onLog->onInfo(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_INVALID_PACKET, ss.str());
                     continue;
                 } else {
                     if (onLog) {
                         std::stringstream ss;
                         ss << MSG_RXPK
                            << itp->toDebugString();
-                        onLog->logMessage(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+                        onLog->onInfo(this, LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
                     }
 
                     if (handler) {
@@ -234,7 +234,7 @@ int UDPListener::parseBuffer(
                             ss << MSG_READ_BYTES
                                << UDPSocket::addrString((const struct sockaddr *) &gwAddress) << ": "
                                << itp->toString();
-                            onLog->logMessage(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+                            onLog->onInfo(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
                         }
                     }
 
@@ -247,7 +247,7 @@ int UDPListener::parseBuffer(
                 std::stringstream ss;
                 ss << MSG_GATEWAY_STAT
                    << gatewayStat.toString() << ". Server memory " << getCurrentRSS()/ 1024 << "K";
-                onLog->logMessage(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+                onLog->onInfo(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
                 if (onGatewayStatDump)
                     onGatewayStatDump(gwStatEnv, &gatewayStat);
             }
@@ -272,7 +272,7 @@ int UDPListener::listen(void *config, int flags) {
         ss << it->toString() << " ";
     }
     ss << sz << MSG_LISTEN_SOCKET_COUNT;
-    onLog->logMessage(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+    onLog->onInfo(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 
     while (!stopped) {
 		fd_set readHandles;
@@ -292,7 +292,7 @@ int UDPListener::listen(void *config, int flags) {
 				std::stringstream ss;
 				ss << ERR_MESSAGE << ERR_CODE_SELECT << ": " << ERR_SELECT
 					<< ", errno " << serrno << ": " << strerror(errno);
-				onLog->logMessage(this, LOG_WARNING, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
+				onLog->onInfo(this, LOG_WARNING, LOG_UDP_LISTENER, ERR_CODE_SELECT, ss.str());
 			}
 			if (serrno == EINTR){ // Interrupted system call
 				if (sysSignalPtr) {
@@ -309,7 +309,7 @@ int UDPListener::listen(void *config, int flags) {
 		}
 		if (rs == 0) {
 			// timeout, nothing to do
-			// std::stringstream ss;ss << MSG_TIMEOUT;logMessage(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
+			// std::stringstream ss;ss << MSG_TIMEOUT;onInfo(LOG_DEBUG, LOG_UDP_LISTENER, 0, ss.str());
 			continue;
 		}
 		struct timeval receivedTime;
@@ -326,7 +326,7 @@ int UDPListener::listen(void *config, int flags) {
 					ss << ERR_MESSAGE << ERR_CODE_SOCKET_READ << " "
 						<< UDPSocket::addrString((const struct sockaddr *) &gwAddress) << ", errno "
 						<< errno << ": " << strerror(errno);
-					onLog->logMessage(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
+					onLog->onInfo(this, LOG_ERR, LOG_UDP_LISTENER, ERR_CODE_SOCKET_READ, ss.str());
 				}
 				continue;
 			}
@@ -340,7 +340,7 @@ int UDPListener::listen(void *config, int flags) {
 				<< " bytes): " << hexString(buffer.c_str(), bytesReceived);
 			if (json)
 				ss << "; " << json;
-			onLog->logMessage(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
+			onLog->onInfo(this, LOG_INFO, LOG_UDP_LISTENER, 0, ss.str());
 
 			// parseRX packet result code
 			int pr = parseBuffer(buffer, bytesReceived, it->sock, receivedTime, gwAddress);

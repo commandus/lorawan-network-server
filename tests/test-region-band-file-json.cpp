@@ -35,13 +35,13 @@ void doSmth(RegionalParameterChannelPlanFileJson &value)
     rb.defaultRegion = true;
     rb.supportsExtraChannels = true;
     rb.bandDefaults.setValue(869100000, 0, 1, 2, 5, 6);
-    rb.dataRates[0].setLora(BW_125KHZ, DRLORA_SF12);
-    rb.dataRates[1].setLora(BW_125KHZ, DRLORA_SF11);
-    rb.dataRates[2].setLora(BW_125KHZ, DRLORA_SF10);
-    rb.dataRates[3].setLora(BW_125KHZ, DRLORA_SF9);
-    rb.dataRates[4].setLora(BW_125KHZ, DRLORA_SF8);
-    rb.dataRates[5].setLora(BW_125KHZ, DRLORA_SF7);
-    rb.dataRates[6].setLora(BW_250KHZ, DRLORA_SF7);
+    rb.dataRates[0].setLora(BANDWIDTH_INDEX_125KHZ, DRLORA_SF12);
+    rb.dataRates[1].setLora(BANDWIDTH_INDEX_125KHZ, DRLORA_SF11);
+    rb.dataRates[2].setLora(BANDWIDTH_INDEX_125KHZ, DRLORA_SF10);
+    rb.dataRates[3].setLora(BANDWIDTH_INDEX_125KHZ, DRLORA_SF9);
+    rb.dataRates[4].setLora(BANDWIDTH_INDEX_125KHZ, DRLORA_SF8);
+    rb.dataRates[5].setLora(BANDWIDTH_INDEX_125KHZ, DRLORA_SF7);
+    rb.dataRates[6].setLora(BANDWIDTH_INDEX_250KHZ, DRLORA_SF7);
     rb.dataRates[7].setFSK(5000);
 
     rb.maxPayloadSizePerDataRate[0].setValue(59, 51);
@@ -86,7 +86,7 @@ void doSmth(RegionalParameterChannelPlanFileJson &value)
 
 int main(int argc, char **argv) {
 
-    config::rmFile(TEST_FN);
+    util::rmFile(TEST_FN);
 
     RegionalParameterChannelPlanFileJson rbFile;
 

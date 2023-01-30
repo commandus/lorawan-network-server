@@ -109,7 +109,7 @@ JsonFileIdentityService::~JsonFileIdentityService()
  *		..
  *	]
  */
-class RegionBandsJsonEmptyHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, RegionBandsJsonEmptyHandler> {
+class NetworkIdentityHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, NetworkIdentityHandler> {
 private:
     JsonFileIdentityService *service;
     bool isNetworkIdentity;
@@ -118,7 +118,7 @@ private:
     DEVICEID v;
     uint32_t flags;
 public:
-    RegionBandsJsonEmptyHandler(JsonFileIdentityService *svc)
+    NetworkIdentityHandler(JsonFileIdentityService *svc)
             : service(svc), isNetworkIdentity(false), idx(-1)
     {
         memset(&k.devaddr, 0, sizeof(DEVADDR));
@@ -148,7 +148,12 @@ public:
         return true;
     }
 
-    bool String(const char* str, rapidjson::SizeType length, bool copy) {
+    bool String(
+        const char* str,
+        rapidjson::SizeType length,
+        bool copy
+    )
+    {
         std::string s;
         /*
          * 0- addr 1- activation 2- eui 3- nwkSKey 4- appSKey 5- class 6- version, 7- name
@@ -252,7 +257,7 @@ void JsonFileIdentityService::clear()
 int JsonFileIdentityService::load()
 {
     clear();
-    RegionBandsJsonEmptyHandler handler(this);
+    NetworkIdentityHandler handler(this);
     rapidjson::Reader reader;
     FILE* fp = fopen(path.c_str(), "rb");
     if (!fp)
@@ -518,8 +523,7 @@ std::string JsonFileIdentityService::toJsonString()
     return ss.str();
 }
 
-uint32_t JsonFileIdentityService::getRightsMask
-(
+uint32_t JsonFileIdentityService::getRightsMask(
     const DEVADDR &addr
 )
 {
@@ -559,7 +563,9 @@ bool JsonFileIdentityService::canControlService
   * Return next network address if available
   * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
   */
-int JsonFileIdentityService::next(NetworkIdentity &retval)
+int JsonFileIdentityService::next(
+    NetworkIdentity &retval
+)
 {
     DevAddr nextAddr(netid, maxDevNwkAddr);
     if (nextAddr.increment())   // if reach last address
@@ -577,8 +583,7 @@ int JsonFileIdentityService::next(NetworkIdentity &retval)
   * Return next available network address
   * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
   */
-int JsonFileIdentityService::nextBruteForce
-(
+int JsonFileIdentityService::nextBruteForce(
     NetworkIdentity &retval
 )
 {

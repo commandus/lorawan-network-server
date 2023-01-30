@@ -122,6 +122,13 @@ int getAddr
 );
 
 /**
+ * @return count
+*/
+size_t count(
+	dbenv *env
+);
+
+/**
  * @brief List address
  * @param env database env
  * @param onRecord callback
@@ -143,6 +150,20 @@ int rmAddr
 (
 	dbenv *env,
 	const DEVADDR &addr
+);
+
+/**
+ * Return max (as integer) address
+*/
+uint32_t getMaxAddrInt(
+	dbenv *env
+);
+
+/**
+ * Return max network part of address found in the database
+*/
+uint32_t getMaxDevNwkAddr(
+	dbenv *env
 );
 
 #endif

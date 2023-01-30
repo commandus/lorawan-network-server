@@ -211,6 +211,23 @@ rapid_headers = \
 	third_party/rapidjson/internal/regex.h   third_party/rapidjson/internal/strfunc.h third_party/rapidjson/internal/swap.h \
 	third_party/rapidjson/msinttypes/inttypes.h third_party/rapidjson/msinttypes/stdint.h
 
+packet_forwarder_headers = \
+	third_party/packet_forwarder/jitqueue.h    third_party/packet_forwarder/loragw_aux.h  third_party/packet_forwarder/loragw_com.h \
+	third_party/packet_forwarder/loragw_gps.h  third_party/packet_forwarder/loragw_hal.h  third_party/packet_forwarder/loragw_reg.h \
+	third_party/packet_forwarder/parson.h      third_party/packet_forwarder/trace.h
+
+different_third_party_headers = \
+	third_party/filewatch.hpp \
+	third_party/argtable3/argtable3.h \
+	third_party/base64/base64.h \
+	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
+	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
+	third_party/logger-huffman/logger-parse.h third_party/logger-huffman/logger-collection.h \
+	third_party/logger-huffman/logger-huffman.h \
+	third_party/lorawan-ws/lorawan-ws.h \
+	third_party/jwt-cpp/jwt.h third_party/jwt-cpp/base.h third_party/jwt-cpp/traits/kazuho-picojson/traits.h \
+	third_party/jwt-cpp/traits/kazuho-picojson/defaults.h third_party/picojson/picojson.h
+
 nobase_dist_include_HEADERS = \
 	run-listener.h platform.h utilstring.h utildate.h utilfile.h utilusb.h strptime.h lora-radio.h \
 	utillora.h utilthread.h net-id.h dev-addr.h udp-socket.h udp-emitter.h lora-encrypt.h \
@@ -226,16 +243,6 @@ nobase_dist_include_HEADERS = \
 	lora-rejoin.h utilidentity.h control-packet.h database-config-json.h ws-handler.h gateway-settings.h \
 	payload-insert.h payload-insert-plugin.h log-intf.h usleep.h \
 	auth-user.h auth-file.h \
-	third_party/filewatch.hpp \
-	third_party/argtable3/argtable3.h \
-	third_party/base64/base64.h \
-	third_party/system/crypto/aes.h third_party/system/crypto/cmac.h \
-	third_party/pkt2/str-pkt2.h third_party/pkt2/database-config.h \
-	third_party/logger-huffman/logger-parse.h third_party/logger-huffman/logger-collection.h \
-	third_party/logger-huffman/logger-huffman.h \
-	third_party/lorawan-ws/lorawan-ws.h \
-	third_party/jwt-cpp/jwt.h third_party/jwt-cpp/base.h third_party/jwt-cpp/traits/kazuho-picojson/traits.h \
-	third_party/jwt-cpp/traits/kazuho-picojson/defaults.h third_party/picojson/picojson.h \
 	db-intf.h db-any.h db-sqlite.h db-pg.h db-mysql.h db-fb.h db-json.h \
 	receiver-queue-processor.h device-history-item.h device-history-service-abstract.h device-history-service-json.h \
 	device-stat-service-abstract.h device-stat-service-post.h device-stat-service-file.h utilcurl.h \
@@ -243,7 +250,7 @@ nobase_dist_include_HEADERS = \
 	third_party/get_rss/get_rss.h \
 	gateway-lora.h gateway-file-json.h lora-gateway-listener.h client-id.h example-plugins/plugin-mqtt-wss.h \
 	subst-call-c.h \
-	$(rapid_headers)
+	$(different_third_party_headers) $(rapid_headers) $(packet_forwarder_headers)
 
 SRC_AES = third_party/system/crypto/aes.c third_party/system/crypto/cmac.c
 
@@ -391,7 +398,9 @@ dist_config_DATA = \
    proto/iridium/animals.proto proto/iridium/gps16.proto proto/iridium/ie_ioheader.proto proto/iridium/ie_location.proto proto/iridium/packet8.proto proto/iridium/time5.proto \
    proto/logger/logger60.proto proto/logger/rec16.proto \
    proto/probe/probe.proto proto/probe/text.proto \
-   proto/vega/sh2.proto proto/vega/si13_1.proto proto/vega/si13_2.proto
+   proto/vega/sh2.proto proto/vega/si13_1.proto proto/vega/si13_2.proto \
+   third_party/packet_forwarder/README.packet_forwarder.md third_party/packet_forwarder/build.sh third_party/packet_forwarder/LICENSE.TXT \
+   third_party/packet_forwarder/loragw_hal.h.patch
 
 #
 # Tests
@@ -420,6 +429,7 @@ test_udp_listen_LDADD = $(L_LORAWAN)
 
 test_packet_queue_SOURCES = \
 	tests/test-packet-queue.cpp \
+	packet-queue.cpp
 test_packet_queue_LDADD = $(L_LORAWAN) -lpthread
 
 test_mac_gw_SOURCES = \
@@ -509,22 +519,26 @@ test_gateway_file_json_SOURCES = \
 test_gateway_file_json_LDADD = -Lthird_party/packet_forwarder -lloragw
 
 test_gateway_listen_SOURCES = \
-    tests/test-gateway-listen.cpp \
-    lora-gateway-listener.cpp gateway-settings.cpp gateway-file-json.cpp utilstring.cpp utildate.cpp \
-    errlist.cpp \
+    tests/test-gateway-listen.cpp lora-gateway-listener.cpp gateway-settings.cpp gateway-file-json.cpp \
+	utilstring.cpp utildate.cpp subst-call-c.cpp libloragw-helper.cpp errlist.cpp utilthread.cpp \
     third_party/packet_forwarder/jitqueue.c
 test_gateway_listen_LDADD = -Lthird_party/packet_forwarder -lloragw -lusb
 
-#	test-gateway-listen
+#
+# test-gateway-listen, test-gateway-file-json depends on libloragw project and require RAK2287 device attached to /dev/ttyACM1 US port
+#
 check_PROGRAMS = \
-	test-gateway-file-json \
 	test-encrypt-join-accept-response \
 	test-dev-addr \
 	test-queue-processor \
 	test-join-request \
-	test-message-queue test-fb test-sqlite test-pkt2-parseRX test-join-accept-decrypt test-dir-txt test-identity-file-json \
+	test-message-queue test-fb test-sqlite \
+	test-join-accept-decrypt test-dir-txt test-identity-file-json \
 	test-file-watch test-mac-gw	test-1 test-udp-listen test-identity-file-json test-identity-lmdb test-packet-queue test-identity-file-json \
 	test-region-band-file-json
+if ENABLE_PKT2
+	check_PROGRAMS += test-pkt2-parse
+endif
 
 TESTS = $(check_PROGRAMS)
 

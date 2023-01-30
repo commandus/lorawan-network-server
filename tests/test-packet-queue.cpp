@@ -131,18 +131,19 @@ class PacketHandlerTest : public PacketHandler {
 	public:
 		// Return 0, retval = EUI and keys
 		int enqueuePayload(
-                const struct timeval &time,
-                SemtechUDPPacket &value
+			const struct timeval &time,
+			SemtechUDPPacket &value
 		)  {
 			packetsRead++;
 			// std::cerr << value.getDeviceAddrStr() << " " << value.metadataToJsonString() << std::endl;
+			return 0;
 		}
 
 		virtual int enqueueMAC(
-                const struct timeval &time,
-                SemtechUDPPacket &value
+			const struct timeval &time,
+			SemtechUDPPacket &value
 		) {
-
+			return 0;
 		}
 };
 

@@ -27,10 +27,11 @@ int main(int argc, char** argv)
 	}
 	*/
 	
-	ConfigDatabasesJson configDatabases("dbs.js");
+	ConfigDatabasesJson configDatabases("dbs.json");
 	if (configDatabases.dbs.size() == 0) {
-		std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_DATABASE_CONFIG << ": " << ERR_LOAD_DATABASE_CONFIG << std::endl;
-		exit(ERR_CODE_LOAD_DATABASE_CONFIG);
+		std::cerr << ERR_WARNING << ERR_CODE_LOAD_DATABASE_CONFIG << ": " << ERR_LOAD_DATABASE_CONFIG << std::endl;
+		// just warning
+		// exit(ERR_CODE_LOAD_DATABASE_CONFIG);
 	}
 	DatabaseByConfig *dbByConfig = new DatabaseByConfig(&configDatabases, nullptr);
 	recieverQueueProcessor->setDatabaseByConfig(dbByConfig);	
@@ -48,10 +49,14 @@ int main(int argc, char** argv)
 	SEMTECH_PREFIX_GW dataprefix;
 	GatewayStat gatewayStat;
 	JsonFileIdentityService identityService;
-	identityService.init("identity.json", NULL);
+	identityService.init("identity.json", nullptr);
 
 	struct sockaddr_in6 clientAddress;
 	int r = SemtechUDPPacket::parse((const struct sockaddr *) &clientAddress, dataprefix, gatewayStat, packets, packet.c_str(), packet.size(), &identityService);
+	if (r || packets.empty()) {
+		std::cerr << ERR_WARNING << " Packet empty, file identity.json does not exists?" << std::endl;
+		exit(0);
+	}
 	packets[0].devId = deviceId;
 	std::string payload = packets[0].payload;
 

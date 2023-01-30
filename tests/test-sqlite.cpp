@@ -4,20 +4,22 @@
 #include <google/protobuf/message.h>
 
 #include "pkt2/str-pkt2.h"
-
 #include "db-any.h"
+#include "database-config-json.h"
 
 int main(int argc, char **argv) {
 	std::string protoPath = "proto";
+	/*
 	void* env = initPkt2(protoPath, 0);
 	if (!env) {
 		std::cerr << "Init error" << std::endl;
 		exit(1);
 	}
+	*/
 
-	ConfigDatabases configDatabases("tests/dbs.js");
+	ConfigDatabasesJson configDatabases("tests/dbs.js");
 	std::cerr << configDatabases.toString() << std::endl;
-	DatabaseByConfig dbAny(&configDatabases);
+	DatabaseByConfig dbAny(&configDatabases, nullptr);
 	
 	std::string mt = "iridium.IEPacket";
 	std::string hexData = "01004e01001c9a0ba5f633303032333430363032333533343000011900005ab8f59303000b003e68a68143d40000000502001e0810003e01b21200004e812b4e160000390000221400829486247a0d1c09";
@@ -43,16 +45,22 @@ int main(int argc, char **argv) {
 			exit(r);
 		}
 
-		r = db->createTable(env, mt);
+		r = db->createTable(mt);
 		if (r) {
 			std::cerr << "Error CREATE table " << r << ": " << db->db->errmsg << std::endl;
-			std::cerr << "Clause " << db->createClause(env, mt) << std::endl;
+			std::cerr << "Clause " << db->createClause(mt) << std::endl;
 		}
 
-		r = db->insert(env, mt, INPUT_FORMAT_HEX, hexData, NULL);
+		r = db->insert(mt, INPUT_FORMAT_HEX, hexData, nullptr);
 		if (r) {
 			std::cerr << "Error INSERT " << r << ": " << db->db->errmsg << std::endl;
-			std::cerr << "Clause " << db->insertClause(env, mt, INPUT_FORMAT_HEX, hexData, NULL) << std::endl;
+			std::cerr << "Clauses ";
+			std::vector<std::string> clauses;
+			db->insertClauses(clauses, mt, INPUT_FORMAT_HEX, hexData, nullptr);
+			for (std::vector<std::string>::const_iterator it(clauses.begin()); it != clauses.end(); it++ ) {
+				std::cerr << *it << " ";
+			}
+			std::cerr << std::endl;
 		}
 
 		std::string selectClause = "SELECT * FROM iridium_packet";
@@ -77,6 +85,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	donePkt2(env);
+	// donePkt2(env);
 
 }

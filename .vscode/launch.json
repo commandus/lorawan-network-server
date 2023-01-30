@@ -306,13 +306,13 @@
 			"MIMode": "gdb"
 		},
 		{
-			"name": "test-queue-processor",
+			"name": "test-queue-processor (distcheck)",
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/test-queue-processor",
 			"args": [],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}",
+			"cwd": "${workspaceFolder}/lorawan-network-server-0.2/_build/sub",
 			"environment": [],
 			"externalConsole": false,
 			"MIMode": "gdb"

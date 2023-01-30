@@ -6,6 +6,7 @@
 #include "rapidjson/filereadstream.h"
  
 #include "identity-service-lmdb.h"
+#include "identity-service-file-json.h"
 #include "utilstring.h"
 #include "errlist.h"
 
@@ -42,7 +43,10 @@ int LmdbIdentityService::close()
 	return LORA_OK;
 }
 
-int LmdbIdentityService::get(DeviceId &retval, DEVADDR &devaddr)
+int LmdbIdentityService::get(
+	DeviceId &retval,
+	DEVADDR &devaddr
+)
 {
 	DEVICEID v;
 	int r = getAddr(env, devaddr, v);
@@ -138,6 +142,11 @@ void LmdbIdentityService::list(
 	lsAddr(env, &onRecord, &listenv);
 }
 
+size_t LmdbIdentityService::size()
+{
+	return count(env);
+}
+
 void LmdbIdentityService::put(
 	DEVADDR &devaddr,
 	DEVICEID &deviceid
@@ -159,7 +168,7 @@ int LmdbIdentityService::init(
 )
 {
 	filename = option;
-	open();
+	return open();
 }
 
 void LmdbIdentityService::flush()
@@ -278,4 +287,53 @@ bool LmdbIdentityService::canControlService
 )
 {
 	return false;
+}
+
+/**
+ * Return next network address if available
+ * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
+ */
+int LmdbIdentityService::next(NetworkIdentity &retval)
+{
+	uint32_t maxDevNwkAddr = getMaxDevNwkAddr(env);
+    DevAddr nextAddr(netid, maxDevNwkAddr);
+    if (nextAddr.increment())   // if reach last address
+        return nextBruteForce(retval);  // try harder
+    DEVADDRINT dai;
+    nextAddr.get(dai);
+	DeviceId check;
+	if (get(check, (DEVADDR&) dai.a) != 0)
+        return nextBruteForce(retval);
+    nextAddr.get(retval.devaddr);
+    return 0;
+}
+
+/**
+  * Return next available network address
+  * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
+  */
+int LmdbIdentityService::nextBruteForce(
+    NetworkIdentity &retval
+)
+{
+    int r;
+    DevAddr nextAddr(netid, false);
+    while (true) {
+        DEVADDRINT dai;
+		nextAddr.get(dai);
+		DeviceId di;
+		r = get(di, nextAddr.devaddr);
+        if (r) {
+            // not used. This is first free address. Return it
+			retval.set(nextAddr.devaddr, di);
+			return LORA_OK;
+        }
+        // go to next address
+        r = nextAddr.increment();
+        if (r) {
+            // full of space
+            return ERR_CODE_ADDR_SPACE_FULL;
+        }
+    }
+    return LORA_OK; // never happens
 }

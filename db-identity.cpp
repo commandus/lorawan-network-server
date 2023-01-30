@@ -192,8 +192,6 @@ int getAddr
 		return ERR_CODE_LMDB_TXN_BEGIN;
 
 	DEVADDR a;
-	int sz;
-		
 	memset(a, 0, sizeof(DEVADDR));
 	MDB_val dbkey;
 	dbkey.mv_size = sizeof(DEVADDR);
@@ -223,6 +221,84 @@ int getAddr
 	return r;
 }
 
+size_t count(
+	dbenv *env
+) 
+{
+	// start transaction
+	int r = mdb_txn_begin(env->env, NULL, 0, &env->txn);
+	if (r)
+		return 0;
+
+	DEVADDR a;
+		
+	memset(a, 0, sizeof(DEVADDR));
+	MDB_val dbkey;
+	dbkey.mv_size = sizeof(DEVADDR);
+	dbkey.mv_data = &a;
+	MDB_cursor *cursor;
+	MDB_val dbval;
+	r = mdb_cursor_open(env->txn, env->dbi, &cursor);
+	if (r != MDB_SUCCESS) {
+		mdb_txn_commit(env->txn);
+		return 0;
+	}
+
+	size_t cnt = 0;
+	while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS) {
+		cnt++;
+	}
+
+	mdb_txn_commit(env->txn);
+	return cnt;	
+}
+
+uint32_t getMaxDevNwkAddr(
+	dbenv *env
+) 
+{
+	DEVADDR a;
+	int2DEVADDR(a, getMaxAddrInt(env));
+	DevAddr da(a);
+
+	return da.getNwkId();
+}
+
+uint32_t getMaxAddrInt(
+	dbenv *env
+) 
+{
+	// start transaction
+	int r = mdb_txn_begin(env->env, NULL, 0, &env->txn);
+	if (r)
+		return 0;
+
+	DEVADDR a;
+		
+	memset(a, 0, sizeof(DEVADDR));
+	MDB_val dbkey;
+	dbkey.mv_size = sizeof(DEVADDR);
+	dbkey.mv_data = &a;
+	// Get the last key
+	MDB_cursor *cursor;
+	MDB_val dbval;
+	r = mdb_cursor_open(env->txn, env->dbi, &cursor);
+	if (r != MDB_SUCCESS) {
+		mdb_txn_commit(env->txn);
+		return 0;
+	}
+
+	uint32_t m = 0;
+	while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS) {
+		uint32_t a = DEVADDR2int(*(DEVADDR*) dbkey.mv_data);
+		if (m < a)
+			m = a;
+	}
+
+	mdb_txn_commit(env->txn);
+	return m;
+}
+
 /**
  * @brief List address
  * @param env database env
@@ -242,7 +318,6 @@ int lsAddr
 	}
 
 	DEVADDR a;
-	int sz;
 		
 	memset(a, 0, sizeof(DEVADDR));
 	MDB_val dbkey;

@@ -6,13 +6,24 @@
 
 int main(int argc, char **argv) {
 	LmdbIdentityService s;
-	int r = s.init("db", NULL);
+	int r = s.init("db", nullptr);
 	if (r) {
 		std::cerr << "Error " <<  r << ": " << strerror_lorawan_ns(r) << std::endl;
-        if (r == -527) {
-            std::cerr << "Probably run 'mkdir db' first." << std::endl;
-        }
-        exit(r);
+        if (r == ERR_CODE_LMDB_OPEN) {
+            std::cerr << "Trying 'mkdir db'.." << std::endl;
+			r = system("mkdir db");
+			if (r) {
+				std::cerr << "create directory 'db' failed. Manually create directory 'db' and try again" << std::endl;
+				exit(r);
+			}
+			r = s.init("db", nullptr);
+			if (r) {
+				std::cerr << "Something wrong with directory 'db', database creation failed" << std::endl;
+				exit(r);
+			}
+			std::cerr << "db subdirectory successlully created" << std::endl;
+        } else 
+        	exit(r);
 	}
 	DEVADDR a;
 	a[0] = 1;

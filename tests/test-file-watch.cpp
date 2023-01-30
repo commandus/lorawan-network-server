@@ -36,6 +36,6 @@ int main(int argc, char **argv) {
 
 	const std::string fn("test-file-watch.tmp.json");
 	string2file(fn, "1");
-	config::rmFile(fn);
+	util::rmFile(fn);
 	sleep(1);
 }

@@ -9,6 +9,8 @@
 #include "lora-rejoin.h"
 #include "identity-service-dir-txt.h"
 
+#include "filewatch.hpp"
+
 void getIdentityTest(
 	JsonFileIdentityService &s,
 	uint32_t address
@@ -117,10 +119,13 @@ void decodeTest(
 void onIdentitiesUpdate
 (
 	DirTxtIdentityService *service,
-	const std::string &path,
-	const filewatch::Event &event
+	const std::string &path
+#ifdef ENABLE_WATCHER	
+	,const filewatch::Event &event
+#endif	
 ) {
 	std::cout << path << ": ";
+#ifdef ENABLE_WATCHER	
 	switch (event)
 	{
 		case filewatch::Event::added:
@@ -139,6 +144,7 @@ void onIdentitiesUpdate
 			std::cout << "The file was renamed and this is the new name." << '\n';
 			break;
 	};
+#endif	
 	std::cerr << service->toJsonString() << std::endl;
 }
 

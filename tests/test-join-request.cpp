@@ -18,7 +18,7 @@ void testJoinRequest2(const std::string &data)
     SemtechUDPPacket packet(gwAddress, &retPrefix, &m, data, nullptr);
     if (packet.errcode == ERR_CODE_IS_JOIN) {
         std::cerr << "Join request: "
-                  << JOIN_REQUEST_FRAME2string(packet.getJoinRequestFrame())
+                  << JOIN_REQUEST_FRAME2string(*packet.getJoinRequestFrame())
           << std::endl;
     }
 }
