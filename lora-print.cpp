@@ -96,12 +96,12 @@ public:
     }
     void onReceive(Payload &value)
     {
-        std::cerr << value.hexPayload;
+        std::cerr << value.payload;
     }
 
     void onValue(Payload &value)
     {
-        std::cout << value.hexPayload;
+        std::cout << value.payload;
     }
 };
 

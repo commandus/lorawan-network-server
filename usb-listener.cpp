@@ -26,12 +26,11 @@ void onUpstream(
         fcnt = be16toh(fcnt);
 #endif
         if (metadata) {
-            ss
-                    << std::hex << std::right << std::setw(8) << std::setfill('0') << addr
-                    << " " << std::dec << metadata->freq
-                    << "Hz SF" << (int) metadata->spreadingFactor
-                    << " " << (int) metadata->rssi
-                    << "dBm " << metadata->lsnr << "dB ";
+            ss  << std::hex << std::right << std::setw(8) << std::setfill('0') << addr
+                << " " << std::dec << metadata->freq
+                << "Hz SF" << (int) metadata->spreadingFactor
+                << " " << (int) metadata->rssi
+                << "dBm " << metadata->lsnr << "dB ";
         }
         ss
             << hexString(payload)
@@ -54,7 +53,16 @@ void onUpstream(
             int2deveui(prefix.mac, listener->config->gateway()->gatewayId);
             // construct Semtech packet
             SemtechUDPPacket p(prefix, metadata, payload, listener->packetListener->identityService);
-
+            if (listener->onLog) {
+                Payload pl;
+                pl.eui = p.getDeviceEUI();
+                pl.received = receivedTime.tv_sec;
+                pl.frequency = metadata->freq;
+                pl.rssi = metadata->rssi;
+                pl.lsnr = metadata->lsnr;
+                pl.payload = payload;
+                listener->onLog->onValue(pl);
+            }
             if (p.errcode)
                 listener->packetListener->handler->putUnidentified(receivedTime, p);
             else

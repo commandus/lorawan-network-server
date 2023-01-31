@@ -63,6 +63,7 @@ public:
     void onDisconnected() override;
     void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex) override;
     void onFinished(const std::string &message) override;
+    void onReceive(Payload &value) override;
     void onValue(Payload &value) override;
 
     void init(Configuration *config, int *lastSysSignal);

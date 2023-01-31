@@ -591,7 +591,7 @@ void LoraGatewayListener::upstreamRunner()
             measurements.inc(meas_up_pkt_fwd);
             measurements.inc(meas_up_payload_byte, p->size);
 
-            log(LOG_INFO, ERR_CODE_LORA_GATEWAY_RECEIVED, ERR_LORA_GATEWAY_RECEIVED);
+            // log(LOG_INFO, ERR_CODE_LORA_GATEWAY_RECEIVED, ERR_LORA_GATEWAY_RECEIVED);
 
             // time
             metadata.tmst = p->count_us;
@@ -732,7 +732,18 @@ void LoraGatewayListener::upstreamRunner()
         if (pkt_in_dgram == 0)
             continue;
 
-        // send to the network server
+        // log received message (payload ciphered)
+        if (onLog) {
+            Payload p;
+            p.received = metadata.tmst;
+            p.frequency = metadata.freq;
+            p.rssi = metadata.rssi;
+            p.lsnr = metadata.lsnr;
+            p.payload = payload;
+            onLog->onReceive(p);
+        }
+
+        // send to the network server, network server must call onValue
         if (onUpstream)
             onUpstream(this, &metadata, payload);
 
@@ -743,7 +754,6 @@ void LoraGatewayListener::upstreamRunner()
     }
     upstreamThreadRunning = false;
     log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, MSG_UPSTREAM_FINISHED);
-
 }
 
 #define PROTOCOL_VERSION            2           // v1.6

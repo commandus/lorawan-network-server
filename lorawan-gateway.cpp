@@ -223,12 +223,12 @@ public:
 
     void onReceive(Payload &value) override
     {
-        std::cerr << value.hexPayload << std::endl;
+        std::cerr << value.payload << std::endl;
     }
 
     void onValue(Payload &value) override
     {
-        std::cout << value.hexPayload << std::endl;
+        std::cout << value.payload << std::endl;
     }
 
     void onInfo(

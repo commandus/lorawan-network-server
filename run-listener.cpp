@@ -120,12 +120,12 @@ void RunListener::onFinished(const std::string &message)
 
 void RunListener::onReceive(Payload &value)
 {
-    std::cerr << value.hexPayload;
+    std::cerr << value.payload;
 }
 
 void RunListener::onValue(Payload &value)
 {
-    std::cout << value.hexPayload;
+    std::cout << value.payload;
 }
 
 void RunListener::done()

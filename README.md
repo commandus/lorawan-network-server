@@ -963,7 +963,7 @@ Id  | Channel Plan | Common Name
 ### lorawan-gateway
 
 ```
-./lorawan-gateway /dev/ttyACM1 -c RU -i identity.json -vvvvvvv
+./lorawan-gateway /dev/ttyACM1 -c RU -i identity.json -g aa555a0000000000 -vvvvvvv
 ```
 
 Standalone gateway, print out received packets (hex). In contrary of lorawan-network-server, it does not parse payload
