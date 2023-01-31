@@ -101,8 +101,6 @@ private:
         bool gracefullyStopped
     )> onStop;
 
-    LogIntf *onLog;
-
     // thread control
     bool stopRequest;               ///< set to true to stop all threads
     bool gps_ref_valid;             ///< is GPS reference acceptable (ie. not too old)
@@ -203,6 +201,8 @@ public:
     int enqueueTxPacket(TxPacket &tx);
 
     std::string toString() const;
+
+    LogIntf *onLog;
 };
 
 #endif
