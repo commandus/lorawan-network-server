@@ -1436,10 +1436,12 @@ int LoraGatewayListener::start()
     int r = setup();
     if (r)
         return r;
+
     // starting the concentrator
     lastLgwCode = lgw_start();
     if (lastLgwCode)
         return ERR_CODE_LORA_GATEWAY_START_FAILED;
+
     // get the concentrator EUI
     lastLgwCode = lgw_get_eui(&eui);
     if (lastLgwCode)
@@ -1494,6 +1496,10 @@ int LoraGatewayListener::start()
             gpsCheckTimeThread.detach();
         }
     }
+
+    if (onLog)
+        onLog->onStarted(eui, "", 0);
+
     return 0;
 }
 
@@ -1543,6 +1549,9 @@ int LoraGatewayListener::stop(int waitSeconds)
     if (onStop) {
         onStop(this, success);
     }
+    if (onLog)
+        onLog->onFinished("");
+
     return success ? LORA_OK : ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT;
 }
 

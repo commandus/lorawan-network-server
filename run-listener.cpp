@@ -118,9 +118,14 @@ void RunListener::onFinished(const std::string &message)
 
 }
 
+void RunListener::onReceive(Payload &value)
+{
+    std::cerr << value.hexPayload;
+}
+
 void RunListener::onValue(Payload &value)
 {
-
+    std::cout << value.hexPayload;
 }
 
 void RunListener::done()

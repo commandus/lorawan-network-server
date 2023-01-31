@@ -302,6 +302,11 @@ public:
 
     void onValue(Payload &value) override
     {
+        std::cout << value.hexPayload << std::endl;
+    }
+
+    void onReceive(Payload &value) override
+    {
 
     }
 };

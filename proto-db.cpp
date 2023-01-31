@@ -96,9 +96,14 @@ public:
 
     }
 
+    void onReceive(Payload &value)
+    {
+        std::cerr << value.hexPayload;
+    }
+
     void onValue(Payload &value) override
     {
-
+        std::cout << value.hexPayload;
     }
 };
 

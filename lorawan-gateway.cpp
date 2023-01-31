@@ -221,17 +221,22 @@ public:
 
     }
 
+    void onReceive(Payload &value) override
+    {
+        std::cerr << value.hexPayload << std::endl;
+    }
+
     void onValue(Payload &value) override
     {
-
+        std::cout << value.hexPayload << std::endl;
     }
 
     void onInfo(
-            void *env,
-            int level,
-            int moduleCode,
-            int errorCode,
-            const std::string &message
+        void *env,
+        int level,
+        int moduleCode,
+        int errorCode,
+        const std::string &message
     ) override {
         if (localConfig.daemonize) {
             SYSLOG(level, message.c_str());
