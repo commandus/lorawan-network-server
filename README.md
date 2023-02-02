@@ -1008,6 +1008,15 @@ Output format
 Date&time, time zone    Device EUI          Name            Payload       Frequency  SF  RSSI  SNR
 2022-12-22T10:24:32+09	3434383566378112	SI-13-23		0100219cdc6.. 864100000	 12	 -49   7
 ```
+
+#### Signals
+
+- SIGINT interrupt
+- SIGHUP 
+- SIGUSR2 (12) flush files
+- 42 re-run
+
+
 ### print-netid
 
 NetId if 3 bytes long network identifier contains:
