@@ -545,6 +545,9 @@
 #define MSG_BEACON_TIME_NEXT            ", next "
 #define MSG_BEACON_QUEUED               "Beacon queued, count_us "
 #define MSG_BEACON_DEQUEUED             "Beacon dequeued, count_us "
+#define MSG_NO_IDENTITIES               "No identities provided"
+
+#define MSG_RESTART_REQUEST             "Restart"
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

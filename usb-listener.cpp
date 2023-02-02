@@ -60,7 +60,7 @@ void onUpstream(
                 pl.frequency = metadata->freq;
                 pl.rssi = metadata->rssi;
                 pl.lsnr = metadata->lsnr;
-                pl.payload = payload;
+                pl.payload = p.payload;
                 listener->onLog->onValue(pl);
             }
             if (p.errcode)

@@ -87,8 +87,6 @@ public:
     void set(MemGatewaySettingsStorage &value) { storage = value;};
 };
 
-static GatewayConfigMem gwSettings;
-
 const std::string programName = "lorawan-gateway";
 #ifdef _MSC_VER
 #undef ENABLE_TERM_COLOR
@@ -183,6 +181,8 @@ public:
 
 };
 
+static GatewayConfigMem gwSettings;
+
 GatewaySettings* getGatewayConfig(LocalGatewayConfiguration *config) {
     MemGatewaySettingsStorage settings;
     // set regional settings
@@ -194,9 +194,8 @@ GatewaySettings* getGatewayConfig(LocalGatewayConfiguration *config) {
 }
 
 static LocalGatewayConfiguration localConfig;
+
 static PacketListener *listener = nullptr;
-// static int lastSysSignal = 0;
-static GatewaySettings *gatewaySettings = nullptr;
 static IdentityService *identityService = nullptr;
 
 class StdErrLog: public LogIntf {
@@ -223,12 +222,12 @@ public:
 
     void onReceive(Payload &value) override
     {
-        std::cerr << value.payload << std::endl;
+        std::cerr << hexString(value.payload) << std::endl;
     }
 
     void onValue(Payload &value) override
     {
-        std::cout << value.payload << std::endl;
+        std::cout << hexString(value.payload) << std::endl;
     }
 
     void onInfo(
@@ -361,15 +360,30 @@ static void printTrace() {
 static LibLoragwHelper libLoragwHelper;
 static StdErrLog errLog;
 
-void stop()
+static void stop()
 {
     if (listener)
         listener->clear();
 }
 
-void done()
+static void done()
 {
+    if (libLoragwHelper.onOpenClose) {
+        delete libLoragwHelper.onOpenClose;
+        libLoragwHelper.onOpenClose = nullptr;
+    }
+    if (listener) {
+        delete listener;
+        listener = nullptr;
+    }
+    if (identityService) {
+        delete identityService;
+        identityService = nullptr;
+    }
 }
+
+static void init();
+static void run();
 
 void signalHandler(int signal)
 {
@@ -398,19 +412,21 @@ void signalHandler(int signal)
             // flushFiles();
             break;
 #endif
+        case 42:	// restart
+            std::cerr << MSG_RESTART_REQUEST << std::endl;
+            stop();
+            done();
+            init();
+            run();
+            break;
         default:
             break;
     }
 }
 
-#ifdef _MSC_VER
-// TODO
 void setSignalHandler()
 {
-}
-#else
-void setSignalHandler()
-{
+#ifndef _MSC_VER
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = &signalHandler;
@@ -419,11 +435,18 @@ void setSignalHandler()
     sigaction(SIGSEGV, &action, nullptr);
     sigaction(SIGABRT, &action, nullptr);
     sigaction(SIGUSR2, &action, nullptr);
-}
+    sigaction(42, &action, nullptr);
 #endif
+}
 
 static void run()
 {
+    if (!localConfig.daemonize)
+        setSignalHandler();
+
+    if (listener->onLog)
+        listener->onLog->onInfo(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
+
     libLoragwHelper.bind(&errLog, new PosixLibLoragwOpenClose(localConfig.devicePath));
     if (!libLoragwHelper.onOpenClose)
         return;
@@ -448,38 +471,12 @@ static void run()
         ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
         listener->onLog->onInfo(listener, LOG_ERR, LOG_MAIN_FUNC, r, ss.str());
     }
-    delete libLoragwHelper.onOpenClose;
-    libLoragwHelper.onOpenClose = nullptr;
-
-    if (listener) {
-        delete listener;
-        listener = nullptr;
-    }
-    if (identityService) {
-        delete identityService;
-        identityService = nullptr;
-    }
-
 }
 
 static StdoutLoraPacketHandler packetHandler;
 
-int main(
-	int argc,
-	char *argv[])
+static void init()
 {
-    if (parseCmd(&localConfig, argc, argv) != 0) {
-        // std::cerr << ERR_MESSAGE << ERR_CODE_COMMAND_LINE << ": " << ERR_COMMAND_LINE << std::endl;
-        exit(ERR_CODE_COMMAND_LINE);
-    }
-
-    if (!localConfig.gatewayIdentifier) {
-        // std::cerr << ERR_WARNING << ERR_CODE_INVALID_GATEWAY_ID << ": " << ERR_INVALID_GATEWAY_ID << std::endl;
-        localConfig.gatewayIdentifier = getGatewayId();
-        if (localConfig.verbosity > 0)
-            std::cerr << "gateway id " << std::hex << localConfig.gatewayIdentifier << std::dec << std::endl;
-    }
-
     identityService = new JsonFileIdentityService();
     if (!identityService) {
         std::cerr << ERR_MESSAGE << ERR_CODE_FAIL_IDENTITY_SERVICE << ": " << ERR_FAIL_IDENTITY_SERVICE << std::endl;
@@ -489,7 +486,7 @@ int main(
     if (localConfig.identityFileName.empty()) {
         // std::cerr << ERR_WARNING << ERR_CODE_INIT_IDENTITY << ": " << ERR_INIT_IDENTITY << std::endl;
         if (localConfig.verbosity > 0)
-            std::cerr << "No identities provided" << std::endl;
+            std::cerr << MSG_NO_IDENTITIES << std::endl;
     } else {
         if (int r = identityService->init(localConfig.identityFileName, nullptr) != 0) {
             std::cerr << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;
@@ -511,18 +508,37 @@ int main(
     listener->setHandler(&packetHandler);
     listener->setIdentityService(identityService);
     ((USBListener*) listener)->listener.setOnStop(
-            [] (const LoraGatewayListener *lsnr,
-                bool gracefullyStopped
-            ) {
-                if (!gracefullyStopped) {
-                    // wait until all threads done
-                    while(!lsnr->isStopped()) {
-                        std::cerr << ".";
-                        sleep(1);
-                    }
+        [] (const LoraGatewayListener *lsnr,
+            bool gracefullyStopped
+        ) {
+            if (!gracefullyStopped) {
+                // wait until all threads done
+                while(!lsnr->isStopped()) {
+                    std::cerr << ".";
+                    sleep(1);
                 }
             }
+        }
     );
+}
+
+int main(
+	int argc,
+	char *argv[])
+{
+    if (parseCmd(&localConfig, argc, argv) != 0) {
+        // std::cerr << ERR_MESSAGE << ERR_CODE_COMMAND_LINE << ": " << ERR_COMMAND_LINE << std::endl;
+        exit(ERR_CODE_COMMAND_LINE);
+    }
+
+    if (!localConfig.gatewayIdentifier) {
+        // std::cerr << ERR_WARNING << ERR_CODE_INVALID_GATEWAY_ID << ": " << ERR_INVALID_GATEWAY_ID << std::endl;
+        localConfig.gatewayIdentifier = getGatewayId();
+        if (localConfig.verbosity > 0)
+            std::cerr << "gateway id " << std::hex << localConfig.gatewayIdentifier << std::dec << std::endl;
+    }
+
+    init();
 
     if (localConfig.daemonize)	{
         if (listener->onLog)
@@ -537,12 +553,6 @@ int main(
         std::cerr << MSG_DAEMON_STOPPED << std::endl;
         CLOSE_SYSLOG()
     } else {
-#ifdef _MSC_VER
-#else
-        setSignalHandler();
-#endif
-        if (listener->onLog)
-            listener->onLog->onInfo(listener, LOG_DEBUG, LOG_MAIN_FUNC, LORA_OK, MSG_LISTENER_RUN);
         run();
         done();
     }
