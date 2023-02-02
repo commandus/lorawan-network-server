@@ -222,12 +222,13 @@ public:
 
     void onReceive(Payload &value) override
     {
-        std::cerr << hexString(value.payload) << std::endl;
+        // std::cerr << hexString(value.payload) << std::endl;
     }
 
     void onValue(Payload &value) override
     {
-        std::cout << hexString(value.payload) << std::endl;
+        // TODO send to another program or service
+        // std::cout << hexString(value.payload) << std::endl;
     }
 
     void onInfo(
