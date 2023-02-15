@@ -278,9 +278,9 @@ static void deriveKey(
  * @param devEUI Device EUI
  */
 void deriveJSIntKey(
-        KEY128 &retval,
-        const KEY128 &nwkKey,
-        const DEVEUI &devEUI
+    KEY128 &retval,
+    const KEY128 &nwkKey,
+    const DEVEUI &devEUI
 )
 {
     deriveKey(retval, 6, nwkKey, &devEUI, sizeof(DEVEUI));
@@ -1343,8 +1343,7 @@ std::string DEVADDR2string(
 {
 	uint32_t v;
 	memmove(&v, &value, sizeof(v));
-	// hex string is MSB first, swap if need it
-	v = NTOH4(v);
+	// hex string is MSB first, no swap
 	return hexString(&v, sizeof(v));
 }
 
@@ -1376,7 +1375,7 @@ std::string DEVEUI2string(
 	uint64_t v;
 	memmove(&v, &value, sizeof(DEVEUI));
 	// hex string is MSB first, swap if need it
-	v = NTOH8(v);
+	v = SWAP_BYTES_8(v);
 	return hexString(&v, sizeof(v));
 }
 

@@ -1,6 +1,8 @@
 #ifndef LOG_INTF_H_
 #define LOG_INTF_H_	1
 
+#include "utillora.h"   // DeviceId
+
 class Payload {
 public:
     time_t received;
@@ -29,6 +31,11 @@ public:
     virtual void onReceive(Payload &value) = 0;
     // after payload deciphered and plugin successfully processed payload
     virtual void onValue(Payload &value) = 0;
+    // identity callbacks
+    virtual int identityGet(DeviceId &retVal, DEVADDR &devAddr) = 0;
+    virtual int identityGetNetworkIdentity(NetworkIdentity &retVal, const DEVEUI &eui) = 0;
+    // Entries count
+    virtual size_t identitySize() = 0;
 };
 
 #endif
