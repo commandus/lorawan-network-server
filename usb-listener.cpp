@@ -61,7 +61,6 @@ void onUpstream(
                 pl.rssi = metadata->rssi;
                 pl.lsnr = metadata->lsnr;
                 pl.payload = p.payload;
-                listener->onLog->onValue(pl);
             }
             if (p.errcode)
                 listener->packetListener->handler->putUnidentified(receivedTime, p);

@@ -420,6 +420,7 @@ public:
 
 	void set(const DEVICEID &value);
 	void setEUIString(const std::string &value);
+	void setEUIHex(const std::string &hex);
 	void setNwkSKeyString(const std::string &value);
 	void setAppSKeyString(const std::string &value);
 	void setName(const std::string &value);
