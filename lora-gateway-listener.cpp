@@ -1536,6 +1536,8 @@ bool LoraGatewayListener::isStopped() const
 
 int LoraGatewayListener::stop(int waitSeconds)
 {
+    if (stopRequest)
+        return ERR_CODE_LORA_GATEWAY_STOP_FAILED;
     stopRequest = true;
     if (fdGpsTty >= 0) {
         lastLgwCode = lgw_gps_disable(fdGpsTty);
@@ -1555,6 +1557,14 @@ int LoraGatewayListener::stop(int waitSeconds)
     }
 
     success &= lgw_stop() == 0;
+
+    // force close
+    upstreamThreadRunning = false;
+    downstreamBeaconThreadRunning = false;
+    jitThreadRunning = false;
+    gpsThreadRunning = false;
+    gpsCheckTimeThreadRunning = false;
+    spectralScanThreadRunning = false;
 
     if (onStop) {
         onStop(this, success);

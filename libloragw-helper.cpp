@@ -62,8 +62,18 @@ int LibLoragwHelper::log(
 
 void LibLoragwHelper::flush()
 {
-    if (onLog)
-        onLog->onInfo(this, LOG_INFO, LOG_EMBEDDED_GATEWAY, 0, logBuffer.str());
+    if (!onLog)
+        return;
+    std::string msg = logBuffer.str();
+    int emergency = LOG_INFO;
+    if (msg.find("ERROR:") == 0) {
+        if (msg.find("failed to write", 7) == 7) {
+            emergency = LOG_ALERT;
+        } else {
+            emergency = LOG_ERR;
+        }
+    }
+    onLog->onInfo(this, emergency, LOG_EMBEDDED_GATEWAY, 0, msg);
     logBuffer.str("");
     logBuffer.clear();
 }

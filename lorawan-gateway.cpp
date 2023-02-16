@@ -198,6 +198,30 @@ static LocalGatewayConfiguration localConfig;
 static PacketListener *listener = nullptr;
 static IdentityService *identityService = nullptr;
 
+static void stop()
+{
+    if (listener)
+        listener->clear();
+}
+
+static LibLoragwHelper libLoragwHelper;
+
+static void done()
+{
+    if (libLoragwHelper.onOpenClose) {
+        delete libLoragwHelper.onOpenClose;
+        libLoragwHelper.onOpenClose = nullptr;
+    }
+    if (listener) {
+        delete listener;
+        listener = nullptr;
+    }
+    if (identityService) {
+        delete identityService;
+        identityService = nullptr;
+    }
+}
+
 class StdErrLog: public LogIntf {
 public:
     void onConnected(bool connected) override
@@ -248,17 +272,38 @@ public:
         }
         struct timeval t;
         gettimeofday(&t, nullptr);
-        std::cerr << timeval2string(t) << " ";
+        std::cerr << timeval2string(t);
 #ifdef ENABLE_TERM_COLOR
         if (isatty(2))  // if stderr is piped to the file, do not put ANSI color to the file
             std::cerr << "\033[" << logLevelColor(level)  << "m";
 #endif
-        std::cerr<< std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
+        std::cerr << " " << std::setw(LOG_LEVEL_FIELD_WIDTH) << std::left << logLevelString(level);
 #ifdef ENABLE_TERM_COLOR
         if (isatty(2))
             std::cerr << "\033[0m";
 #endif
         std::cerr << message << std::endl;
+        if (level == LOG_ALERT) {
+            stop();
+        }
+    }
+
+    // not used
+    int identityGet(DeviceId& deviceid, DEVADDR& addr)
+    {
+        return 0;
+    }
+
+    // not used
+    int identityGetNetworkIdentity(NetworkIdentity &retVal, const DEVEUI &eui)
+    {
+        return 0;
+    }
+
+    // not used
+    size_t identitySize()
+    {
+        return 0;
     }
 };
 
@@ -358,30 +403,7 @@ static void printTrace() {
 #endif
 }
 
-static LibLoragwHelper libLoragwHelper;
 static StdErrLog errLog;
-
-static void stop()
-{
-    if (listener)
-        listener->clear();
-}
-
-static void done()
-{
-    if (libLoragwHelper.onOpenClose) {
-        delete libLoragwHelper.onOpenClose;
-        libLoragwHelper.onOpenClose = nullptr;
-    }
-    if (listener) {
-        delete listener;
-        listener = nullptr;
-    }
-    if (identityService) {
-        delete identityService;
-        identityService = nullptr;
-    }
-}
 
 static void init();
 static void run();
@@ -514,9 +536,12 @@ static void init()
         ) {
             if (!gracefullyStopped) {
                 // wait until all threads done
-                while(!lsnr->isStopped()) {
+                int seconds2wait = 0;
+                while(!lsnr->isStopped() && seconds2wait < 60)
+                {
                     std::cerr << ".";
                     sleep(1);
+                    seconds2wait++;
                 }
             }
         }

@@ -226,7 +226,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/lorawan-gateway",
-			"args": ["/dev/ttyACM1", "-c", "RU", "-g", "aa555a0000000000", "-i", "identity.json", "-vvvvvvv"],
+			"args": ["/dev/ttyACM0", "-c", "RU", "-g", "aa555a0000000000", "-i", "identity.json", "-vvvvvvv"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],
