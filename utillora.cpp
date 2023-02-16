@@ -1343,7 +1343,8 @@ std::string DEVADDR2string(
 {
 	uint32_t v;
 	memmove(&v, &value, sizeof(v));
-	// hex string is MSB first, no swap
+	// hex string is MSB first
+    v = SWAP_BYTES_4(v);
 	return hexString(&v, sizeof(v));
 }
 
