@@ -5,8 +5,8 @@ package hlogger;
 option cc_enable_arenas = true;
 
 import "pkt2.proto";
-import "hlogger/ie_ioheader.proto";
-import "hlogger/ie_location.proto";
+import "hlogger/ie_ioheaderhlogger.proto";
+import "hlogger/ie_locationhlogger.proto";
 import "hlogger/packet46420.proto";
 
 /*

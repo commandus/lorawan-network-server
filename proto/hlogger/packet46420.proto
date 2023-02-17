@@ -5,8 +5,8 @@ package hlogger;
 option cc_enable_arenas = true;
 
 import "pkt2.proto";
-import "hlogger/time5.proto";
-import "hlogger/gps16.proto";
+import "hlogger/time5hlogger.proto";
+import "hlogger/gps16hlogger.proto";
 
 /// A lot of flags
 message Packet46420

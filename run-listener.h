@@ -79,6 +79,14 @@ public:
         void *env,
         const SemtechUDPPacket &value
     );
+    // not used
+    int identityGet(DeviceId& deviceid, DEVADDR& addr);
+
+    // not used
+    int identityGetNetworkIdentity(NetworkIdentity &retVal, const DEVEUI &eui);
+
+    // not used
+    size_t identitySize();
 };
 
 #endif

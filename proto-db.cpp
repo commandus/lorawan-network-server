@@ -105,6 +105,25 @@ public:
     {
         std::cout << value.payload;
     }
+
+    // not used
+    int identityGet(DeviceId& deviceid, DEVADDR& addr)
+    {
+        return 0;
+    }
+
+    // not used
+    int identityGetNetworkIdentity(NetworkIdentity &retVal, const DEVEUI &eui)
+    {
+        return 0;
+    }
+
+    // not used
+    size_t identitySize()
+    {
+        return 0;
+    }
+
 };
 
 PrintError printError;

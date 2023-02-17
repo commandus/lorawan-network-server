@@ -576,3 +576,21 @@ void RunListener::start() {
     if (processor && receiverQueueProcessor)
         processor->setReceiverQueueProcessor(receiverQueueProcessor);
 }
+
+// not used
+int RunListener::identityGet(DeviceId& deviceid, DEVADDR& addr)
+{
+    return 0;
+}
+
+// not used
+int RunListener::identityGetNetworkIdentity(NetworkIdentity &retVal, const DEVEUI &eui)
+{
+    return 0;
+}
+
+// not used
+size_t RunListener::identitySize()
+{
+    return 0;
+}
