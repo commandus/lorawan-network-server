@@ -807,17 +807,6 @@ void DeviceId::setEUIString
 	string2DEVEUI(devEUI, value);
 }
 
-void DeviceId::setEUIHex
-(
-    const std::string &hex
-)
-{
-    std::string v = hex2string(hex);
-    uint64_t *s = (uint64_t *) v.c_str();
-    *s = SWAP_BYTES_8(*s);
-    string2DEVEUI(devEUI, v);
-}
-
 void DeviceId::setNwkSKeyString
 (
 	const std::string &value
@@ -1282,7 +1271,7 @@ void string2DEVEUI(
 	memmove(&retval, str.c_str(), len);
 	if (len < sizeof(DEVEUI))
 		memset(&retval + len, 0, sizeof(DEVEUI) - len);
-	*((uint64_t*) &retval) = NTOH8(*((uint64_t*) &retval));
+	*((uint64_t*) &retval) = SWAP_BYTES_8(*((uint64_t*) &retval));
 }
 
 void string2KEY(
