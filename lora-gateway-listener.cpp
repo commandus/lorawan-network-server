@@ -1570,7 +1570,7 @@ int LoraGatewayListener::stop(int waitSeconds)
         onStop(this, success);
     }
     if (onLog)
-        onLog->onFinished("");
+        onLog->onFinished(success ? ERR_LORA_GATEWAY_SHUTDOWN_SUCCESS : ERR_LORA_GATEWAY_SHUTDOWN_TIMEOUT);
 
     return success ? LORA_OK : ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT;
 }

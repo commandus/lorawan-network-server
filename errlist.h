@@ -410,6 +410,7 @@
 
 #define ERR_LORA_GATEWAY_USB_NOT_FOUND                  "Gateway USB path not found"
 #define ERR_LORA_GATEWAY_SHUTDOWN_TIMEOUT               "Gateway shutdown timeout"
+#define ERR_LORA_GATEWAY_SHUTDOWN_SUCCESS               "Gateway shutdown successfully"
 #define ERR_LORA_GATEWAY_STOP_FAILED                    "Gateway stop failed"
 
 #define ERR_INIT_PLUGINS_FAILED                         "Initialize plugin(s) failed "

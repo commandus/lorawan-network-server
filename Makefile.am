@@ -7,12 +7,15 @@ common_flags = -I. -Ithird_party -I../../third_party
 
 GEN = 
 
+TEST_FILES = region-band.json.tmp \
+	db/lock.mdb db/data.mdb
+
 AM_CPPFLAGS=$(common_flags)
 AM_CXXFLAGS=$(common_flags) -std=c++11
 COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
 BUILT_SOURCES = $(GEN)
-CLEANFILES = $(GEN)
+CLEANFILES = $(GEN) $(TEST_FILES)
 
 THIRD_PARTY_LIB =
 THIRD_PARTY_DEF =
@@ -390,11 +393,11 @@ dist_config_DATA = \
    service/lorawan-network-server.service \
    third_party/argtable3/README \
    tests/netid-list.sh tests/netid-list.txt \
-   http/html/index.html http/php/gw-stat.txt http/php/post.php http/README \
+   http/html/index.html http/php/gw-stat.txt http/php/post.php http/README.http \
    proto/example/example1.proto \
    proto/google/protobuf/descriptor.proto \
-   proto/hlogger/gps16.proto proto/hlogger/ie_ioheader.proto proto/hlogger/ie_location.proto \
-   proto/hlogger/iridiumpacket46420.proto proto/hlogger/packet46420.proto proto/hlogger/time5.proto \
+   proto/hlogger/gps16hlogger.proto proto/hlogger/ie_ioheaderhlogger.proto proto/hlogger/ie_locationhlogger.proto \
+   proto/hlogger/iridiumpacket46420.proto proto/hlogger/packet46420.proto proto/hlogger/time5hlogger.proto \
    proto/iridium/animals.proto proto/iridium/gps16.proto proto/iridium/ie_ioheader.proto proto/iridium/ie_location.proto proto/iridium/packet8.proto proto/iridium/time5.proto \
    proto/logger/logger60.proto proto/logger/rec16.proto \
    proto/probe/probe.proto proto/probe/text.proto \

@@ -102,7 +102,6 @@ private:
     )> onStop;
 
     // thread control
-    bool stopRequest;               ///< set to true to stop all threads
     bool gps_ref_valid;             ///< is GPS reference acceptable (ie. not too old)
     // control access
     std::mutex mutexGPSTimeReference;        ///< control access to set system time
@@ -137,6 +136,8 @@ protected:
     // Apply config
     int setup();
 public:
+    // thread control
+    bool stopRequest;               ///< set to true to stop all threads
     // thread finish indicators
     bool upstreamThreadRunning;
     bool downstreamBeaconThreadRunning;
