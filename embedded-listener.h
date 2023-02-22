@@ -25,7 +25,7 @@ public:
 
 	void clear() override;
     bool add(const std::string &value, int hint) override;
-	int listen(void *config, int flags) override;
+	int listen(void *config, int flags, ThreadStartFinish *threadStartFinish) override;
 };
 
 #endif

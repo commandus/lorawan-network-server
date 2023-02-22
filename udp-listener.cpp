@@ -9,6 +9,7 @@
 #include "utildate.h"
 #include "utilstring.h"
 #include "errlist.h"
+#include "lora-gateway-listener.h"
 
 #ifdef _MSC_VER
 #else
@@ -261,7 +262,7 @@ int UDPListener::parseBuffer(
  * @param config not used,
  * @return
  */
-int UDPListener::listen(void *config, int flags) {
+int UDPListener::listen(void *config, int flags, ThreadStartFinish *threadStartFinish) {
     int sz = sockets.size();
 	if (!sz)
 		return ERR_CODE_SOCKET_NO_ONE;

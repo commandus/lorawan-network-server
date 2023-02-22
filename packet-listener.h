@@ -12,6 +12,23 @@
 #include "gateway-list.h"
 #include "log-intf.h"
 
+typedef enum {
+    THREAD_MAIN = 0,
+    THREAD_UPSTREAM,
+    THREAD_DOWNSTREAM,
+    THREAD_JIT,
+    THREAD_GPS,
+    THREAD_GPSCHECKTIME,
+    THREAD_SPECTRALSCAN
+} ENUM_GATEWAY_THREAD;
+
+// interface
+class ThreadStartFinish {
+public:
+    virtual void onThreadStart(ENUM_GATEWAY_THREAD thread) = 0;
+    virtual void onThreadFinish(ENUM_GATEWAY_THREAD thread) = 0;
+};
+
 /**
  * Abstract class listen for packets sent by Semtech's gateway
  * from gateways listed in the GatewayList.
@@ -60,7 +77,7 @@ public:
     int add(const std::vector<std::string> &value, int hint);
 	virtual void clear();
 
-	virtual int listen(void *config, int flags) = 0;
+	virtual int listen(void *config, int flags, ThreadStartFinish *threadStartFinish) = 0;
 
 	void setLogger(int aVerbosity, LogIntf *value);
 

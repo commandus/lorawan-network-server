@@ -80,23 +80,6 @@ public:
     TxPacket();
 };
 
-typedef enum {
-    THREAD_MAIN = 0,
-    THREAD_UPSTREAM,
-    THREAD_DOWNSTREAM,
-    THREAD_JIT,
-    THREAD_GPS,
-    THREAD_GPSCHECKTIME,
-    THREAD_SPECTRALSCAN
-} ENUM_GATEWAY_THREAD;
-
-// interface
-class ThreadStartFinish {
-public:
-    virtual void onThreadStart(ENUM_GATEWAY_THREAD thread) = 0;
-    virtual void onThreadFinish(ENUM_GATEWAY_THREAD thread) = 0;
-};
-
 class LoraGatewayListener {
 private:
     int logVerbosity;

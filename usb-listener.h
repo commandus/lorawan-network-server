@@ -32,7 +32,7 @@ public:
      * @param config GatewaySettings
      * @return 0- success
      */
-    int listen(void *config, int flags) override;
+    int listen(void *config, int flags, ThreadStartFinish *threadStartFinish) override;
 };
 
 #endif

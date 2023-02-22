@@ -488,7 +488,7 @@ static void run()
     if (!localConfig.enableBeacon)
         flags |= FLAG_GATEWAY_LISTENER_NO_BEACON;
 
-    int r = listener->listen(getGatewayConfig(&localConfig), flags);
+    int r = listener->listen(getGatewayConfig(&localConfig), flags, nullptr);
     if (r && listener->onLog) {
         std::stringstream ss;
         ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;

@@ -11,6 +11,7 @@
 #include "identity-service.h"
 #include "device-history-service-abstract.h"
 #include "gateway-list.h"
+#include "lora-gateway-listener.h"
 
 /**
  * Listen UDP port(s) for packets sent by Semtech's gateway on interfaces with IPv4 or IPv6 address
@@ -52,7 +53,7 @@ public:
 
 	void clear() override;
     bool add(const std::string &value, int hint) override;
-	int listen(void *config, int flags) override;
+	int listen(void *config, int flags, ThreadStartFinish *threadStartFinish) override;
     void setBufferSize(size_t value);
 };
 
