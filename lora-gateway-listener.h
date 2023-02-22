@@ -80,6 +80,23 @@ public:
     TxPacket();
 };
 
+typedef enum {
+    THREAD_MAIN = 0,
+    THREAD_UPSTREAM,
+    THREAD_DOWNSTREAM,
+    THREAD_JIT,
+    THREAD_GPS,
+    THREAD_GPSCHECKTIME,
+    THREAD_SPECTRALSCAN
+} ENUM_GATEWAY_THREAD;
+
+// interface
+class ThreadStartFinish {
+public:
+    virtual void onThreadStart(ENUM_GATEWAY_THREAD thread) = 0;
+    virtual void onThreadFinish(ENUM_GATEWAY_THREAD thread) = 0;
+};
+
 class LoraGatewayListener {
 private:
     int logVerbosity;
@@ -124,13 +141,16 @@ private:
     int syncGPSTime();
     int syncGPSLocation();
 
+    // thread control
+    ThreadStartFinish *threadStartFinish;
     // threads
-    void upstreamRunner();      // receive Lora packets from end-device(s)
-    void downstreamBeaconRunner();    // transmit beacons
-    void jitRunner();           // transmit from JIT queue
+    void upstreamRunner();              // receive Lora packets from end-device(s)
+    void downstreamBeaconRunner();      // transmit beacons
+    void jitRunner();                   // transmit from JIT queue
     void spectralScanRunner();
     void gpsRunner();
     void gpsCheckTimeRunner();
+
     bool getTxGainLutIndex(uint8_t rf_chain, int8_t rf_power, uint8_t * lut_index);
 protected:
     // Apply config
@@ -176,6 +196,8 @@ public:
     int stop(int waitSeconds);
     bool isRunning() const;
     bool isStopped() const;
+
+    void setThreadStartFinish(ThreadStartFinish *value);
 
     void setOnSpectralScan(
         std::function<void(
