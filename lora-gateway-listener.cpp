@@ -552,6 +552,12 @@ void LoraGatewayListener::upstreamRunner()
         // fetch packets
         mLGW.lock();
         int nb_pkt = lgw_receive(NB_PKT_MAX, rxpkt);
+        if (stopRequest) {
+            std::stringstream ss;
+            ss << "lgw_receive stopRequest: " << stopRequest;
+            log(LOG_INFO, 0, ss.str());
+        }
+
         mLGW.unlock();
         if (nb_pkt == LGW_HAL_ERROR) {
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_FETCH, ERR_LORA_GATEWAY_FETCH);
@@ -771,7 +777,6 @@ void LoraGatewayListener::upstreamRunner()
         measurements.inc(meas_up_ack_rcv);
     }
     upstreamThreadRunning = false;
-    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, MSG_UPSTREAM_FINISHED);
     if (threadStartFinish)
         threadStartFinish->onThreadFinish(THREAD_UPSTREAM);
 }
@@ -1241,7 +1246,6 @@ void LoraGatewayListener::downstreamBeaconRunner() {
         sleep(1);
     }
     downstreamBeaconThreadRunning = false;
-    log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, MSG_BEACON_DOWNSTREAM_FINISHED);
     if (threadStartFinish)
         threadStartFinish->onThreadFinish(THREAD_DOWNSTREAM);
 }
@@ -1568,15 +1572,12 @@ int LoraGatewayListener::stop(int waitSeconds)
 {
     if (stopRequest)
         return ERR_CODE_LORA_GATEWAY_STOP_FAILED;
-    stopRequest = true;
-    if (fdGpsTty >= 0) {
-        lastLgwCode = lgw_gps_disable(fdGpsTty);
-        fdGpsTty = -1;
-    }
-    if (waitSeconds <= 0) {
+    // wait threads up to 60s
+    if (waitSeconds <= 0)
         waitSeconds = DEF_WAIT_SECONDS;
-    }
 
+    stopRequest = true;
+    // wait threads
     bool success = false;
     for (int i = 0; i < waitSeconds; i++) {
         if (!isStopped()) {
@@ -1585,9 +1586,11 @@ int LoraGatewayListener::stop(int waitSeconds)
         }
         success = true;
     }
-
+    if (fdGpsTty >= 0) {
+        lastLgwCode = lgw_gps_disable(fdGpsTty);
+        fdGpsTty = -1;
+    }
     success &= lgw_stop() == 0;
-
     // force close
     upstreamThreadRunning = false;
     downstreamBeaconThreadRunning = false;
