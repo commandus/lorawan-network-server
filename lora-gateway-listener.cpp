@@ -552,12 +552,6 @@ void LoraGatewayListener::upstreamRunner()
         // fetch packets
         mLGW.lock();
         int nb_pkt = lgw_receive(NB_PKT_MAX, rxpkt);
-        if (stopRequest) {
-            std::stringstream ss;
-            ss << "lgw_receive stopRequest: " << stopRequest;
-            log(LOG_INFO, 0, ss.str());
-        }
-
         mLGW.unlock();
         if (nb_pkt == LGW_HAL_ERROR) {
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_FETCH, ERR_LORA_GATEWAY_FETCH);
