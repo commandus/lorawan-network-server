@@ -1470,6 +1470,7 @@ int LoraGatewayListener::start()
             // return ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED;
         }
     }
+
     // load config
     int r = setup();
     if (r)
@@ -1492,6 +1493,7 @@ int LoraGatewayListener::start()
         setThreadName(&upstreamThread, MODULE_NAME_GW_UPSTREAM);
         upstreamThread.detach();
     }
+
     if ((flags & FLAG_GATEWAY_LISTENER_NO_BEACON) == 0) {
         if (!downstreamBeaconThreadRunning) {
             downstreamBeaconThreadRunning = true;
@@ -1520,6 +1522,7 @@ int LoraGatewayListener::start()
             spectralScanThread.detach();
         }
     }
+
     if (gpsEnabled) {
         if (!gpsThreadRunning) {
             gpsThreadRunning = true;
@@ -1534,10 +1537,8 @@ int LoraGatewayListener::start()
             gpsCheckTimeThread.detach();
         }
     }
-
     if (onLog)
-        onLog->onStarted(eui, "", 0);
-
+        onLog->onStarted(eui, packetListener->regionName, packetListener->regionIndex);
     return 0;
 }
 
@@ -1573,6 +1574,7 @@ int LoraGatewayListener::stop(int waitSeconds)
     stopRequest = true;
     // wait threads
     bool success = false;
+
     for (int i = 0; i < waitSeconds; i++) {
         if (!isStopped()) {
             sleep(1);
@@ -1584,6 +1586,7 @@ int LoraGatewayListener::stop(int waitSeconds)
         lastLgwCode = lgw_gps_disable(fdGpsTty);
         fdGpsTty = -1;
     }
+
     success &= lgw_stop() == 0;
     // force close
     upstreamThreadRunning = false;
@@ -1598,7 +1601,6 @@ int LoraGatewayListener::stop(int waitSeconds)
     }
     if (onLog)
         onLog->onFinished(success ? ERR_LORA_GATEWAY_SHUTDOWN_SUCCESS : ERR_LORA_GATEWAY_SHUTDOWN_TIMEOUT);
-
     return success ? LORA_OK : ERR_CODE_LORA_GATEWAY_SHUTDOWN_TIMEOUT;
 }
 
