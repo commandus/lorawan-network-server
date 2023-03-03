@@ -503,7 +503,9 @@ static void run()
         runListener->listener->add(runListener->config->serverConfig.listenAddressIPv4, MODE_FAMILY_HINT_IPV4);
         runListener->listener->add(runListener->config->serverConfig.listenAddressIPv6, MODE_FAMILY_HINT_IPV6);
 #endif
-        int r = runListener->listener->listen(config, 0, nullptr);
+        std::string regionName = "";
+        int regionIndex = 0;
+        int r = runListener->listener->listen(regionName, regionIndex, config, 0, nullptr);
         if (r) {
             std::stringstream ss;
             ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;

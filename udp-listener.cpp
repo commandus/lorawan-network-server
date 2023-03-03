@@ -262,7 +262,8 @@ int UDPListener::parseBuffer(
  * @param config not used,
  * @return
  */
-int UDPListener::listen(void *config, int flags, ThreadStartFinish *threadStartFinish) {
+int UDPListener::listen(const std::string &regionName, int regionIndex,
+                        void *config, int flags, ThreadStartFinish *threadStartFinish) {
     int sz = sockets.size();
 	if (!sz)
 		return ERR_CODE_SOCKET_NO_ONE;

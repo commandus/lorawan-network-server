@@ -236,7 +236,8 @@ public:
 
     void onStarted(uint64_t gatewayId, const std::string regionName, size_t regionIndex) override
     {
-
+        std::cout << "gateway " << std::hex << gatewayId
+            << " region " << regionName << " (settings #" << std::dec << regionIndex << ")" << std::endl;
     }
 
     void onFinished(const std::string &message) override
@@ -322,7 +323,6 @@ int parseCmd(
     struct arg_str *a_device_path = arg_str1(nullptr, nullptr, "<device-name>", "USB gateway device e.g. /dev/ttyACM0");
     struct arg_str *a_region_name = arg_str1("c", "region", "<region-name>", "Region name, e.g. \"EU433\" or \"US\"");
     struct arg_str *a_identity_file_name = arg_str0("i", "id", "<id-file-name>", "Device identities JSON file name");
-    struct arg_str *a_gateway_identifier = arg_str0("g", "gw", "<gw-id>", "Gateway identifier, e.g. aa555a0000000000");
     struct arg_lit *a_enable_send = arg_lit0("s", "allow-send", "Allow send");
     struct arg_lit *a_enable_beacon = arg_lit0("b", "allow-beacon", "Allow send beacon");
     struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "Run as daemon");
@@ -331,7 +331,7 @@ int parseCmd(
     struct arg_end *a_end = arg_end(20);
 
     void *argtable[] = {
-        a_device_path, a_region_name, a_identity_file_name, a_gateway_identifier,
+        a_device_path, a_region_name, a_identity_file_name,
         a_enable_send, a_enable_beacon,
         a_daemonize, a_verbosity, a_help, a_end
     };
@@ -348,10 +348,7 @@ int parseCmd(
         config->devicePath = std::string(*a_device_path->sval);
     else
         config->devicePath = "";
-    if (a_gateway_identifier->count)
-        config->gatewayIdentifier = strtoull(*a_gateway_identifier->sval, nullptr, 16);
-    else
-        config->gatewayIdentifier = 0;
+    config->gatewayIdentifier = 0;
     if (a_identity_file_name->count)
         config->identityFileName = *a_identity_file_name->sval;
     else
@@ -474,21 +471,14 @@ static void run()
     if (!libLoragwHelper.onOpenClose)
         return;
 
-    if (listener->onLog) {
-        std::stringstream ss;
-        ss << ERR_INFO "Region "
-            << memSetupMemGatewaySettingsStorage[localConfig.regionIdx].name
-            << " (settings #" << localConfig.regionIdx << ")" << std::endl;
-        listener->onLog->onInfo(listener, LOG_INFO, LOG_MAIN_FUNC, 0, ss.str());
-    }
-
     int flags = 0;
     if (!localConfig.enableSend)
         flags |= FLAG_GATEWAY_LISTENER_NO_SEND;
     if (!localConfig.enableBeacon)
         flags |= FLAG_GATEWAY_LISTENER_NO_BEACON;
 
-    int r = listener->listen(getGatewayConfig(&localConfig), flags, nullptr);
+    int r = listener->listen(memSetupMemGatewaySettingsStorage[localConfig.regionIdx].name,
+                             localConfig.regionIdx, getGatewayConfig(&localConfig), flags, nullptr);
     if (r && listener->onLog) {
         std::stringstream ss;
         ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;

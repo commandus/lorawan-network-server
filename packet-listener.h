@@ -45,6 +45,8 @@ protected:
     int *sysSignalPtr;
 public:
 	int verbosity;
+	std::string regionName;
+	int regionIndex;
 	IdentityService *identityService;
 	DeviceHistoryService *deviceHistoryService;
 
@@ -77,7 +79,8 @@ public:
     int add(const std::vector<std::string> &value, int hint);
 	virtual void clear();
 
-	virtual int listen(void *config, int flags, ThreadStartFinish *threadStartFinish) = 0;
+	virtual int listen(const std::string &regionName, int regionIndex, void *config, int flags,
+					   ThreadStartFinish *threadStartFinish) = 0;
 
 	void setLogger(int aVerbosity, LogIntf *value);
 

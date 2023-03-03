@@ -53,7 +53,8 @@ public:
 
 	void clear() override;
     bool add(const std::string &value, int hint) override;
-	int listen(void *config, int flags, ThreadStartFinish *threadStartFinish) override;
+	int listen(const std::string &regionName, int regionIndex, void *config, int flags,
+               ThreadStartFinish *threadStartFinish) override;
     void setBufferSize(size_t value);
 };
 

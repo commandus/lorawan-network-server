@@ -8,9 +8,10 @@
 #define DEF_BUFFER_SIZE     4096
 
 PacketListener::PacketListener() :
-    sysSignalPtr(nullptr), verbosity(0), stopped(false), onLog(nullptr), onGatewayStatDump(nullptr), gwStatEnv(nullptr),
-    onDeviceStatDump(nullptr), deviceStatEnv(nullptr),
-    handler(nullptr), identityService(nullptr), gatewayList(nullptr), deviceHistoryService(nullptr)
+	regionIndex(0),
+    sysSignalPtr(nullptr), verbosity(0), stopped(false), onLog(nullptr), onGatewayStatDump(nullptr),
+	gwStatEnv(nullptr), onDeviceStatDump(nullptr), deviceStatEnv(nullptr), handler(nullptr),
+	identityService(nullptr), gatewayList(nullptr), deviceHistoryService(nullptr)
 {
 }
 
@@ -105,9 +106,12 @@ int PacketListener::add(
     int r = 0;
     for (std::vector<std::string>::const_iterator it(values.begin()); it != values.end(); it++) {
         if (!add(*it, hint)) {
-            std::stringstream ss;
-            ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " <<  ERR_SOCKET_BIND << *it << std::endl;
-            onLog->onInfo(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
+			if (onLog) {
+				std::stringstream ss;
+				ss << ERR_MESSAGE << ERR_CODE_SOCKET_BIND << ": " << ERR_SOCKET_BIND << *it
+				   << std::endl;
+				onLog->onInfo(this, LOG_ERR, LOG_MAIN_FUNC, ERR_CODE_SOCKET_BIND, ss.str());
+			}
             exit(ERR_CODE_SOCKET_BIND);
         }
         r++;

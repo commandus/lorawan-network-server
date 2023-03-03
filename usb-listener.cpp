@@ -115,10 +115,17 @@ bool USBListener::add(
  * @param flags optional flags
  * @return
  */
-int USBListener::listen(void *config, int flags, ThreadStartFinish *threadStartFinish)
+int USBListener::listen(
+    const std::string &regionName,
+    int regionIndex,
+    void *config,
+    int flags,
+    ThreadStartFinish *threadStartFinish)
 {
     if (!config)
         return ERR_CODE_NO_CONFIG;
+    this->regionName = regionName;
+    this->regionIndex = regionIndex;
     // set itself
     listener.packetListener = this;
     // set config
