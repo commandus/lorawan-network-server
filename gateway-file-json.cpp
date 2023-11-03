@@ -275,10 +275,10 @@ void GatewaySX1261Config::toCpp(
     ADD_BOOL(name, value, lbt.enable)
     ADD_INT(name, value, lbt.nb_channel)
     for (int i = 0; i < value.lbt.nb_channel; i++) {
-        ADD_VAL(name, value, lbt.channels[i].freq_hz)
-        ADD_VAL(name, value, lbt.channels[i].bandwidth)
-        ADD_VAL(name, value, lbt.channels[i].scan_time_us)
-        ADD_VAL(name, value, lbt.channels[i].transmit_time_ms)
+        retVal << name  << "." << "lbt.channels[" << i << "].freq_hz = " << value.lbt.channels[i].freq_hz << ";" << std::endl;
+        retVal << name  << "." << "lbt.channels[" << i << "].bandwidth = " << (int) value.lbt.channels[i].bandwidth << ";" << std::endl;
+        retVal << name  << "." << "lbt.channels[" << i << "].scan_time_us = (lgw_lbt_scan_time_t) " << value.lbt.channels[i].scan_time_us << ";" << std::endl;
+        retVal << name  << "." << "lbt.channels[" << i << "].transmit_time_ms = " << value.lbt.channels[i].transmit_time_ms << ";" << std::endl;
     }
 }
 
