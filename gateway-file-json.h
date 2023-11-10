@@ -35,8 +35,8 @@ public:
     virtual int parse(rapidjson::Value &jsonValue) = 0;
     virtual void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const = 0;
     virtual void toCpp(std::ostream &retVal, const std::string &name) const = 0;
+    virtual void toHeader(std::ostream &retVal, const std::string &name) const = 0;
     std::string toString();
-    std::string toCppString(const std::string &name);
 };
 
 class GatewaySX1261Config : public GatewayJsonConfig {
@@ -47,6 +47,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     void toCpp(std::ostream &retVal, const std::string &name) const override;
+    void toHeader(std::ostream &retVal, const std::string &name) const override;
     void reset();
 
     bool operator==(const GatewaySX1261Config &value) const;
@@ -62,6 +63,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     void toCpp(std::ostream &retVal, const std::string &name) const override;
+    void toHeader(std::ostream &retVal, const std::string &name) const override;
 
     bool operator==(const GatewaySX130xConfig &value) const;
 
@@ -79,6 +81,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     void toCpp(std::ostream &retVal, const std::string &name) const override;
+    void toHeader(std::ostream &retVal, const std::string &name) const override;
 
     bool operator==(const GatewayGatewayConfig &value) const;
 };
@@ -91,6 +94,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     void toCpp(std::ostream &retVal, const std::string &name) const override;
+    void toHeader(std::ostream &retVal, const std::string &name) const override;
 
     bool operator==(const GatewayDebugConfig &value) const;
 };
@@ -108,6 +112,7 @@ public:
     int parse(rapidjson::Value &jsonValue) override;
     void toJSON(rapidjson::Value &jsonValue, rapidjson::Document::AllocatorType& allocator) const override;
     void toCpp(std::ostream &retVal, const std::string &name) const override;
+    void toHeader(std::ostream &retVal, const std::string &name) const override;
 
     std::string toString() const;
     bool operator==(const GatewayConfigFileJson &value) const;

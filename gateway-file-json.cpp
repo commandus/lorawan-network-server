@@ -57,13 +57,6 @@ std::string GatewayJsonConfig::toString()
     return std::string(buffer.GetString());
 }
 
-std::string GatewayJsonConfig::toCppString(const std::string &name)
-{
-    std::stringstream ss;
-    toCpp(ss, name);
-    return ss.str();
-}
-
 GatewaySX1261Config::GatewaySX1261Config()
 {
     reset();
@@ -258,6 +251,48 @@ static int bandwidthIndex2hz(
 #define ADD_VAL(V, SRC, VAL) retVal << V  << "." << MAKE_STR2(VAL) << " = " << SRC.VAL << ";" << std::endl;
 #define ADD_INT(V, SRC, VAL) retVal << V  << "." << MAKE_STR2(VAL) << " = " << (int64_t) SRC.VAL << ";" << std::endl;
 #define ADD_BOOL(V, SRC, VAL) retVal << V << "." << MAKE_STR2(VAL) << " = " << (SRC.VAL ? "true" : "false") << ";" << std::endl;
+
+void GatewaySX1261Config::toHeader(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal << "\t// " << name << "\n\t\t.sx1261 = {\n"
+        "\t\t\t.sx1261 = {\n"
+        "\t\t\t\t.spi_path = \"" << value.sx1261.spi_path << "\",\n"
+        "\t\t\t\t.rssi_offset = " << (int) value.sx1261.rssi_offset << "\n"
+        "\t\t\t},\n"
+        "\t\t\t.spectralScan = {\n"
+        "\t\t\t\t.enable = " << (value.spectralScan.enable ? "true" : "false") << ",\n"
+        "\t\t\t\t.freq_hz_start = " << value.spectralScan.freq_hz_start << ",\n"
+        "\t\t\t\t.nb_chan = " << (int) value.spectralScan.nb_chan << ",\n"
+        "\t\t\t\t.nb_scan = " << value.spectralScan.nb_scan << ",\n"
+        "\t\t\t\t.pace_s = " << value.spectralScan.pace_s << "\n"
+        "\t\t\t},\n"
+        "\t\t\t.lbt = {\n"
+        "\t\t\t\t.enable = " << (value.lbt.enable ? "true" : "false") << ",\n"
+        "\t\t\t\t.nb_channel = " << (int) value.lbt.nb_channel << "\n";
+
+    if (value.lbt.nb_channel) {
+        retVal << "\t\t\t\t.channel = {\n";
+        bool isFirst = true;
+        for (int i = 0; i < value.lbt.nb_channel; i++) {
+            if (isFirst)
+                isFirst = false;
+            else
+                retVal << ",\n";
+            retVal <<
+                "\t\t\t\t\t{\n"
+                "\t\t\t\t\t\t.freq_hz = " << value.lbt.channels[i].freq_hz << ",\n"
+                "\t\t\t\t\t\t.bandwidth = " << (int) value.lbt.channels[i].bandwidth << ",\n"
+                "\t\t\t\t\t\t.scan_time_us = (lgw_lbt_scan_time_t) " << (int) value.lbt.channels[i].scan_time_us << ",\n"
+                "\t\t\t\t\t\t.transmit_time_ms = " << value.lbt.channels[i].transmit_time_ms << "\n"
+            "\t\t\t\t\t}\n";
+        }
+        retVal << "\t\t\t\t},\n";
+    }
+    retVal << "\t\t\t}\n\t\t}";
+}
 
 void GatewaySX1261Config::toCpp(
     std::ostream &retVal,
@@ -953,6 +988,121 @@ static const char *lgw_radio_type_t2string(
     }
 }
 
+void GatewaySX130xConfig::toHeader(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal << "\t\t.sx130x = {\n"                                                                   // .sx130x {
+        "\t\t\t.boardConf = {\n"                                                                    // .boardConf = {
+        "\t\t\t\t.lorawan_public = " << (value.boardConf.lorawan_public ? "true" : "false") << ",\n"
+        "\t\t\t\t.clksrc = " << (int) value.boardConf.clksrc << ",\n"
+        "\t\t\t\t.full_duplex = " << (value.boardConf.full_duplex ? "true" : "false") << ",\n"
+        "\t\t\t\t.com_type = (lgw_com_type_t) " << (int) value.boardConf.com_type << ",\n"
+        "\t\t\t\t.com_path = \"" << value.boardConf.com_path << "\"\n"
+        "\t\t\t},\n"                                                                                // }
+        "\t\t\t.antennaGain = " << (int) value.antennaGain << ",\n"
+        "\t\t\t.tsConf = {\n"                                                                       // .tsConf = {
+        "\t\t\t\t.enable = " << (value.tsConf.enable ? "true" : "false") << ",\n"
+        "\t\t\t\t.mode = (lgw_ftime_mode_t) " << (int) value.tsConf.mode << "\n"
+        "\t\t\t},\n"                                                                                // }
+        "\t\t\t.rfConfs = {\n";                                                                     // .rfConfs = {
+
+    for (int radioIndex = 0; radioIndex < LGW_RF_CHAIN_NB; radioIndex++) {
+        retVal << "\t\t\t\t// Radio " << radioIndex << "\n\t\t\t\t{\n"                              // { // [] Radio
+            "\t\t\t\t\t.enable = " << (value.rfConfs[radioIndex].enable ? "true" : "false") << ",\n"
+            "\t\t\t\t\t.freq_hz = " << value.rfConfs[radioIndex].freq_hz << ",\n"
+            "\t\t\t\t\t.rssi_offset = " << value.rfConfs[radioIndex].rssi_offset << ",\n"
+            "\t\t\t\t\t.rssi_tcomp = {\n"                                                           // .rssi_tcomp {
+            "\t\t\t\t\t\t.coeff_a = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_a << ",\n"
+            "\t\t\t\t\t\t.coeff_b = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_b << ",\n"
+            "\t\t\t\t\t\t.coeff_c = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_c << ",\n"
+            "\t\t\t\t\t\t.coeff_d = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_d << ",\n"
+            "\t\t\t\t\t\t.coeff_e = " << value.rfConfs[radioIndex].rssi_tcomp.coeff_e << "\n"
+            "\t\t\t\t\t},\n"                                                                        // }
+            "\t\t\t\t\t.type = (lgw_radio_type_t) " << (int) value.rfConfs[radioIndex].type << ",\n"
+            "\t\t\t\t\t.tx_enable = " << (value.rfConfs[radioIndex].tx_enable ? "true" : "false") << ",\n"
+            "\t\t\t\t\t.single_input_mode = " << (value.rfConfs[radioIndex].single_input_mode ? "true" : "false") << "\n"
+            "\t\t\t\t}";
+        if (radioIndex < LGW_RF_CHAIN_NB - 1)
+            retVal << ",";
+    }
+    retVal << "\t\t\t\t},\n\t\t\t\t.tx_freq_min = {\n";                                               // } rfConfs, tx_freq_min = {
+    for (int radioIndex = 0; radioIndex < LGW_RF_CHAIN_NB; radioIndex++) {
+        retVal << "\t\t\t\t\t" << value.tx_freq_min[radioIndex];
+        if (radioIndex < LGW_RF_CHAIN_NB - 1)
+            retVal << ",";
+        retVal << "\n";
+    }
+    retVal << "\t\t\t\t},\n\t\t\t\t.tx_freq_max = {\n";                                               // }, tx_freq_max = {
+    for (int radioIndex = 0; radioIndex < LGW_RF_CHAIN_NB; radioIndex++) {
+        retVal << "\t\t\t\t\t" << value.tx_freq_max[radioIndex];
+        if (radioIndex < LGW_RF_CHAIN_NB - 1)
+            retVal << ",";
+        retVal << "\n";
+    }
+    retVal << "\t\t\t\t},\n\t\t\t\t.txLut = {\n";                                                   // .txLut = {
+    for (int radioIndex = 0; radioIndex < LGW_RF_CHAIN_NB; radioIndex++) {
+        retVal << "\t\t\t\t\t{\n";
+        if (value.txLut[radioIndex].size) {
+            retVal << "\t\t\t\t\t\t.lut = {\n"                                                     // .lut= {
+                "\t\t\t\t\t\t\t// TX LUT radio " << radioIndex << ", count: " << (int) value.txLut[radioIndex].size << "\n";
+            bool isFirst = true;
+            for (int i = 0; i < value.txLut[radioIndex].size; i++) {
+                if (isFirst)
+                    isFirst = false;
+                else
+                    retVal << ",\n";
+                retVal << "\t\t\t\t\t\t\t{\n"                                                         // { []lut
+                    "\t\t\t\t\t\t\t\t\t.rf_power = " << (int) value.txLut[radioIndex].lut[i].rf_power << ",\n"
+                    "\t\t\t\t\t\t\t\t\t.pa_gain = " << (int) value.txLut[radioIndex].lut[i].pa_gain << ",\n"
+                    "\t\t\t\t\t\t\t\t\t.pwr_idx = " << (int) value.txLut[radioIndex].lut[i].pwr_idx << ",\n"
+                    "\t\t\t\t\t\t\t\t\t.dig_gain = " << (int) value.txLut[radioIndex].lut[i].dig_gain << ",\n"
+                    "\t\t\t\t\t\t\t\t\t.dac_gain = " << (int) value.txLut[radioIndex].lut[i].dac_gain << ",\n"
+                    "\t\t\t\t\t\t\t\t\t.mix_gain = " << (int) value.txLut[radioIndex].lut[i].mix_gain << "\n"
+                    "\t\t\t\t\t\t\t}";                                                              // } []lut
+            }
+        }
+        retVal << "\t\t\t\t\t\t\t},\n\n\t\t\t\t\t\t.size = " << (int) value.txLut[radioIndex].size;
+        retVal << "\n\t\t\t\t\t}";                                                                  // } .lut
+        if (radioIndex < LGW_RF_CHAIN_NB - 1)
+            retVal << ",";
+        retVal << "\n";
+    }
+    retVal << "\t\t\t}\n\t\t},\n\t\t.demodConf = {\n"                                                        // }, .demodConf = {
+        "\t\t\t// chan_multiSF_All spreading_factor_enable bit field\n"
+        "\t\t\t.multisf_datarate = 0x" << std::hex << (int) value.demodConf.multisf_datarate << std::dec << "\n"
+        "\t\t},\n\t\t.ifConfs = {\n";                                                                 // }, .ifConfs = {
+    for (unsigned char ch = 0; ch < LGW_MULTI_NB; ch++) {
+        retVal
+            << "\t\t\t{\n\t\t\t// chan_multiSF_" << (int) ch << "\n"                                    // {
+            "\t\t\t\t.enable = " << (value.ifConfs[ch].enable ? "true" : "false") << ",\n"
+            "\t\t\t\t.rf_chain = " << (int) value.ifConfs[ch].rf_chain << ",\n"
+            "\t\t\t\t.freq_hz = " << value.ifConfs[ch].freq_hz << "\n"
+            "\t\t\t}";                                                                                  // }
+        if (ch < LGW_MULTI_NB - 1)
+            retVal << ",";
+        retVal << "\n";
+    }
+    retVal << "\t\t},\n\t\t// Lora std \n\t\t.ifStdConf = {\n"                                      // }, .ifStdConf = {
+        "\t\t\t.enable = " << (value.ifStdConf.enable ? "true" : "false") << ",\n"
+        "\t\t\t.rf_chain = " << (int) value.ifStdConf.rf_chain << ",\n"
+        "\t\t\t.freq_hz = " << value.ifStdConf.freq_hz << ",\n"
+        "\t\t\t.bandwidth = " << (int) value.ifStdConf.bandwidth << ",\n"
+        "\t\t\t.datarate = " << value.ifStdConf.datarate << ",\n"
+        "\t\t\t.implicit_hdr = " << (value.ifStdConf.implicit_hdr ? "true" : "false") << ",\n"
+        "\t\t\t.implicit_payload_length = " << (int) value.ifStdConf.implicit_payload_length << ",\n"
+        "\t\t\t.implicit_crc_en = " << (value.ifStdConf.implicit_crc_en ? "true" : "false") << ",\n"
+        "\t\t\t.implicit_coderate = " << (int) value.ifStdConf.implicit_coderate << "\n"
+        "\t\t},\n\t\t// FSK \n\t\t.ifFSKConf = {\n"                                                  // }, .ifFSKConf = {
+        "\t\t\t.enable = " << (value.ifFSKConf.enable ? "true" : "false") << ",\n"
+        "\t\t\t.rf_chain = " << (int) value.ifFSKConf.rf_chain << ",\n"
+        "\t\t\t.freq_hz = " << value.ifFSKConf.freq_hz << ",\n"
+        "\t\t\t.bandwidth = " << (int) value.ifFSKConf.bandwidth << ",\n"
+        "\t\t\t.datarate = " << value.ifFSKConf.datarate << "\n"
+    "\t\t}\n\t}";                                                                                   // } }
+}
+
 void GatewaySX130xConfig::toCpp(
     std::ostream &retVal,
     const std::string &name
@@ -1497,9 +1647,44 @@ int GatewayGatewayConfig::parse(rapidjson::Value &jsonValue)
     return LORA_OK;
 }
 
+void GatewayGatewayConfig::toHeader(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal <<
+        "\t.gateway = {\n"
+        "\t\t.gatewayId = 0x" << std::hex << value.gatewayId << std::dec << ",\n"
+        "\t\t.serverPortUp = " << value.serverPortUp << ",\n"
+        "\t\t.serverPortDown = " << value.serverPortDown << ",\n"
+        "\t\t.keepaliveInterval = " << value.keepaliveInterval << ",\n"
+        "\t\t.statInterval = " << value.statInterval << ",\n"
+        "\t\t.pushTimeoutMs = {\n\t\t\ttv_sec:  " << value.pushTimeoutMs.tv_sec << ",\n"
+        "\t\t\t.tv_usec = " << value.pushTimeoutMs.tv_usec << "\n\t\t},\n"
+
+        "\t\t.forwardCRCValid = " << (value.forwardCRCValid ? "true" : "false") << ",\n"
+        "\t\t.forwardCRCError = " << (value.forwardCRCError ? "true" : "false") << ",\n"
+        "\t\t.forwardCRCDisabled = " << (value.forwardCRCDisabled ? "true" : "false") << ",\n"
+        "\t\t.refGeoCoordinates = {\n"
+        "\t\t\t.lat = " << value.refGeoCoordinates.lat << ",\n"
+        "\t\t\t.lon = " << value.refGeoCoordinates.lon << ",\n"
+        "\t\t\t.alt = " << value.refGeoCoordinates.alt << "\n"
+        "\t\t},\n"
+        "\t\t.fakeGPS = " << (value.fakeGPS ? "true" : "false") << ",\n"
+        "\t\t.beaconPeriod = " << value.beaconPeriod << ",\n"
+        "\t\t.beaconFreqHz = " << value.beaconFreqHz << ",\n"
+        "\t\t.beaconFreqNb = " << (int) value.beaconFreqNb << ",\n"
+        "\t\t.beaconFreqStep = " << value.beaconFreqStep << ",\n"
+        "\t\t.beaconDataRate = " << (int) value.beaconDataRate << ",\n"
+        "\t\t.beaconBandwidthHz = " << value.beaconBandwidthHz << ",\n"
+        "\t\t.beaconInfoDesc = " << (int) value.beaconInfoDesc << ",\n"
+        "\t\t.autoQuitThreshold = " << value.autoQuitThreshold << "\n"
+        "\t}";
+}
+
 void GatewayGatewayConfig::toCpp(
-        std::ostream &retVal,
-        const std::string &name
+    std::ostream &retVal,
+    const std::string &name
 ) const
 {
     std::stringstream ssGatewayId;
@@ -1716,6 +1901,32 @@ int GatewayDebugConfig::parse(rapidjson::Value &jsonValue)
     return LORA_OK;
 }
 
+void GatewayDebugConfig::toHeader(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal << "\t// Debug nb_ref_payload, count: " << (int) value.nb_ref_payload << "\n"
+        "\t.debug = {\n"
+        "\t\t.nb_ref_payload = " << (int) value.nb_ref_payload << ",\n";
+    if (value.nb_ref_payload) {
+        // identifiers
+        retVal << "\t\t.ref_payload = {\n";
+        bool isFirst = true;
+        for (int i = 0; i < value.nb_ref_payload; i++) {
+            if (isFirst)
+                isFirst = false;
+            else
+                retVal << ",\n";
+            retVal << "\t\t\t{\n\t\t\t\tid: 0x" << std::hex << value.ref_payload[i].id << "\n\t\t\t}" << std::dec;
+        }
+        retVal << "\n\t\t},\n";
+    }
+    // log file name
+    retVal << "\t\t.log_file_name = \"" << value.log_file_name << "\"\n";
+    retVal << "\t}\n";
+}
+
 void GatewayDebugConfig::toCpp(
     std::ostream &retVal,
     const std::string &name
@@ -1808,9 +2019,31 @@ int GatewayConfigFileJson::parse(
     return r;
 }
 
+void GatewayConfigFileJson::toHeader(
+    std::ostream &retVal,
+    const std::string &name
+) const
+{
+    retVal << "{\n";
+    sx130xConf.sx1261Config.toHeader(retVal, name + ".sx1261");
+    retVal << ",\n";
+    sx130xConf.toHeader(retVal, name + ".sx130x");
+    retVal << ",\n";
+    gatewayConf.toHeader(retVal, name + ".gateway");
+    retVal << ",\n";
+    std::string niceName(name);
+    std::replace(niceName.begin(), niceName.end(), '_', ' ');
+
+    retVal << "\t.serverAddr = \"" << gatewayConf.serverAddr << "\",\n"
+        "\t.gpsTtyPath = \"" << gatewayConf.gpsTtyPath << "\",\n"
+        "\t.name = \"" << niceName << "\",\n";
+    debugConf.toHeader(retVal, name + ".debug");
+    retVal << "}";
+}
+
 void GatewayConfigFileJson::toCpp(
-        std::ostream &retVal,
-        const std::string &name
+    std::ostream &retVal,
+    const std::string &name
 ) const
 {
     sx130xConf.sx1261Config.toCpp(retVal, name + ".sx1261");
