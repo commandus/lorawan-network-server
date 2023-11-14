@@ -164,7 +164,7 @@ static void addPrefixCPP(
           "    struct lgw_conf_debug_s debug;\n"
           "    std::string serverAddr;\n"
           "    std::string gpsTtyPath;\n"
-          "    std::string name;\n"
+          "    const char *name;\n"
           "};\n\n"
 
         << "typedef void (*setupMemGatewaySettingsStorageFunc)(MemGatewaySettingsStorage &value);\n\n"
@@ -203,17 +203,7 @@ static void addPrefixHeader(
     }
     strm << "\n *\n */\n\n"
         "#include \"gateway-settings.h\"\n\n"
-        "class LorawanGatewaySettings {\n"
-               "public:\n"
-               "    sx1261_config_t sx1261;\n"
-               "    sx130x_config_t sx130x;\n"
-               "    gateway_t gateway;\n"
-               "    struct lgw_conf_debug_s debug;\n"
-               "    std::string serverAddr;\n"
-               "    std::string gpsTtyPath;\n"
-               "    std::string name;\n"
-               "};\n\n"
-               "const LorawanGatewaySettings lorawanGatewaySettings[] = {";
+        "LorawanGatewaySettings lorawanGatewaySettings[] = {";
 }
 
 static void addSuffixCPP(

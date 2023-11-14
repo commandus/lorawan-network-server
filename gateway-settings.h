@@ -7,7 +7,7 @@
 #include <string>
 #include "gateway-lora.h"
 
-class GatewaySettings {
+class LorawanGatewaySettings {
 public:
     virtual sx1261_config_t *sx1261() = 0;
     virtual sx130x_config_t *sx130x() = 0;
