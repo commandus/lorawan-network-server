@@ -2037,7 +2037,13 @@ void GatewayConfigFileJson::toHeader(
     gatewayConf.toHeader(retVal, name + ".gateway");
     retVal << ",\n";
     std::string niceName(name);
-    std::replace(niceName.begin(), niceName.end(), '_', ' ');
+    std::replace(niceName.begin(), niceName.end(), '_', '-');
+    std::transform(niceName.begin(), niceName.end(), niceName.begin(), [](char x) {
+        if (::isalpha(x))
+            return x ^ 32;
+        else
+            return (int) x;
+    });
     debugConf.toHeader(retVal, name + ".debug");
     retVal << ",\n\t.serverAddr = \"" << gatewayConf.serverAddr << "\",\n"
         "\t.gpsTtyPath = \"" << gatewayConf.gpsTtyPath << "\",\n"
