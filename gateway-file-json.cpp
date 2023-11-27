@@ -1664,7 +1664,7 @@ void GatewayGatewayConfig::toHeader(
         "\t\t.serverPortDown = " << value.serverPortDown << ",\n"
         "\t\t.keepaliveInterval = " << value.keepaliveInterval << ",\n"
         "\t\t.statInterval = " << value.statInterval << ",\n"
-        "\t\t.pushTimeoutMs = {\n\t\t\ttv_sec:  " << value.pushTimeoutMs.tv_sec << ",\n"
+        "\t\t.pushTimeoutMs = {\n\t\t\t.tv_sec = " << value.pushTimeoutMs.tv_sec << ",\n"
         "\t\t\t.tv_usec = " << value.pushTimeoutMs.tv_usec << "\n\t\t},\n"
 
         "\t\t.forwardCRCValid = " << (value.forwardCRCValid ? "true" : "false") << ",\n"
@@ -1923,7 +1923,7 @@ void GatewayDebugConfig::toHeader(
                 isFirst = false;
             else
                 retVal << ",\n";
-            retVal << "\t\t\t{\n\t\t\t\tid: 0x" << std::hex << value.ref_payload[i].id << "\n\t\t\t}" << std::dec;
+            retVal << "\t\t\t{\n\t\t\t\t.id = 0x" << std::hex << value.ref_payload[i].id << "\n\t\t\t}" << std::dec;
         }
         retVal << "\n\t\t},\n";
     }
