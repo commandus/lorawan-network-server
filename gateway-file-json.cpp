@@ -271,10 +271,12 @@ void GatewaySX1261Config::toHeader(
         "\t\t\t},\n"
         "\t\t\t.lbt = {\n"
         "\t\t\t\t.enable = " << (value.lbt.enable ? "true" : "false") << ",\n"
-        "\t\t\t\t.nb_channel = " << (int) value.lbt.nb_channel << "\n";
-
+        "\t\t\t\t.nb_channel = " << (int) value.lbt.nb_channel;
+    if (value.lbt.nb_channel)
+        retVal << ",";
+    retVal << "\n";
     if (value.lbt.nb_channel) {
-        retVal << "\t\t\t\t.channel = {\n";
+        retVal << "\t\t\t\t.channels = {\n";
         bool isFirst = true;
         for (int i = 0; i < value.lbt.nb_channel; i++) {
             if (isFirst)
