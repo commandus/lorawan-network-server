@@ -116,13 +116,6 @@ public:
 
     std::string toString() const;
     bool operator==(const GatewayConfigFileJson &value) const;
-
-    sx1261_config_t *sx1261() override;
-    sx130x_config_t *sx130x() override;
-    gateway_t *gateway() override;
-    struct lgw_conf_debug_s *debug() override;
-    std::string *serverAddress() override;
-    std::string *gpsTTYPath() override;
 };
 
 #endif

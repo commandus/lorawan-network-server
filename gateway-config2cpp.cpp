@@ -203,7 +203,7 @@ static void addPrefixHeader(
     }
     strm << "\n *\n */\n\n"
         "#include \"gateway-settings.h\"\n\n"
-        "LorawanGatewaySettings lorawanGatewaySettings[] = {";
+        "GatewaySettings lorawanGatewaySettings[] = {";
 }
 
 static void addSuffixCPP(

@@ -50,7 +50,7 @@ void onUpstream(
             prefix.token = 0;   // random number 0
             prefix.tag = SEMTECH_GW_PUSH_DATA;
             // set gateway identifier
-            int2deveui(prefix.mac, listener->config->gateway()->gatewayId);
+            int2deveui(prefix.mac, listener->config->gateway.gatewayId);
             // construct Semtech packet
             SemtechUDPPacket p(prefix, metadata, payload, listener->packetListener->identityService);
             if (listener->onLog) {

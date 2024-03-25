@@ -242,8 +242,8 @@ void LoraGatewayListener::spectralScanRunner()
         return;
     log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, MSG_SPECTRAL_SCAN_STARTED);
 
-    uint32_t freqHz = config->sx1261()->spectralScan.freq_hz_start;
-    uint32_t freqHzStop = config->sx1261()->spectralScan.freq_hz_start + config->sx1261()->spectralScan.nb_chan * 200E3;
+    uint32_t freqHz = config->sx1261.spectralScan.freq_hz_start;
+    uint32_t freqHzStop = config->sx1261.spectralScan.freq_hz_start + config->sx1261.spectralScan.nb_chan * 200E3;
     int16_t levels[LGW_SPECTRAL_SCAN_RESULT_SIZE];
     uint16_t results[LGW_SPECTRAL_SCAN_RESULT_SIZE];
     struct timeval startTime;
@@ -256,7 +256,7 @@ void LoraGatewayListener::spectralScanRunner()
 
     while (!stopRequest) {
         // Pace the scan thread (1 sec min), and avoid waiting several seconds when exit
-        for (int i = 0; i < (int)(config->sx1261()->spectralScan.pace_s ? config->sx1261()->spectralScan.pace_s : 1); i++) {
+        for (int i = 0; i < (int)(config->sx1261.spectralScan.pace_s ? config->sx1261.spectralScan.pace_s : 1); i++) {
             if (stopRequest)
                 break;
             wait_ms(SPECTRAL_SCAN_DELAY_MS);
@@ -267,7 +267,7 @@ void LoraGatewayListener::spectralScanRunner()
         mLGW.lock();
         // Check if there is a downlink programmed
         for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-            if (config->sx130x()->rfConfs[i].tx_enable) {
+            if (config->sx130x.rfConfs[i].tx_enable) {
                 int x = lgw_status((uint8_t)i, TX_STATUS, &tx_status);
                 if (x != LGW_HAL_SUCCESS) {
                     log(LOG_ERR, ERR_CODE_LORA_GATEWAY_GET_TX_STATUS, ERR_LORA_GATEWAY_GET_TX_STATUS);
@@ -280,7 +280,7 @@ void LoraGatewayListener::spectralScanRunner()
             }
         }
         if (tx_status != TX_SCHEDULED && tx_status != TX_EMITTING) {
-            int x = lgw_spectral_scan_start(freqHz, config->sx1261()->spectralScan.nb_scan);
+            int x = lgw_spectral_scan_start(freqHz, config->sx1261.spectralScan.nb_scan);
             if (x != 0) {
                 mLGW.unlock();
                 // write to log
@@ -336,7 +336,7 @@ void LoraGatewayListener::spectralScanRunner()
                 // Next frequency to scan
                 freqHz += 200000; // 200kHz channels
                 if (freqHz >= freqHzStop) {
-                    freqHz = config->sx1261()->spectralScan.freq_hz_start;
+                    freqHz = config->sx1261.spectralScan.freq_hz_start;
                 }
             } else if (status == LGW_SPECTRAL_SCAN_STATUS_ABORTED) {
                 // write to log
@@ -531,7 +531,7 @@ void LoraGatewayListener::upstreamRunner()
     SEMTECH_PROTOCOL_METADATA metadata;
     std::string payload;
 
-    metadata.gatewayId = config->gateway()->gatewayId;
+    metadata.gatewayId = config->gateway.gatewayId;
 
     log(LOG_DEBUG, LOG_EMBEDDED_GATEWAY, MSG_UPSTREAM_STARTED);
 
@@ -567,7 +567,7 @@ void LoraGatewayListener::upstreamRunner()
         }
 
         // get a copy of GPS time reference (avoid 1 mutex per metadata)
-        if (config->gateway()->gpsEnabled) {
+        if (config->gateway.gpsEnabled) {
             mutexGPSTimeReference.lock();
             ref_ok = gps_ref_valid;
             local_ref = gpsTimeReference;
@@ -585,19 +585,19 @@ void LoraGatewayListener::upstreamRunner()
             switch(p->status) {
                 case STAT_CRC_OK:
                     measurements.inc(meas_nb_rx_ok);
-                    if (!config->gateway()->forwardCRCValid) {
+                    if (!config->gateway.forwardCRCValid) {
                         continue; // skip that metadata
                     }
                     break;
                 case STAT_CRC_BAD:
                     measurements.inc(meas_nb_rx_bad);
-                    if (!config->gateway()->forwardCRCError) {
+                    if (!config->gateway.forwardCRCError) {
                         continue; // skip that metadata
                     }
                     break;
                 case STAT_NO_CRC:
                     measurements.inc(meas_nb_rx_nocrc);
-                    if (!config->gateway()->forwardCRCDisabled) {
+                    if (!config->gateway.forwardCRCDisabled) {
                         continue; // skip that metadata
                     }
                     break;
@@ -824,8 +824,8 @@ bool LoraGatewayListener::getTxGainLutIndex(
         return false;
 
     // Search requested power in TX gain LUT
-    for (pow_index = 0; pow_index < config->sx130x()->txLut[rf_chain].size; pow_index++) {
-        diff = rf_power - config->sx130x()->txLut[rf_chain].lut[pow_index].rf_power;
+    for (pow_index = 0; pow_index < config->sx130x.txLut[rf_chain].size; pow_index++) {
+        diff = rf_power - config->sx130x.txLut[rf_chain].lut[pow_index].rf_power;
         if (diff < 0) {
             // The selected power must be lower or equal to requested one
             continue;
@@ -875,7 +875,7 @@ int LoraGatewayListener::enqueueTxPacket(
             // otherwise send on GPS time (converted to timestamp packet)
             // tx.pkt.count_us is time stamp
             struct tref local_ref; // time reference used for UTC <-> timestamp conversion
-            if (config->gateway()->gpsEnabled) {
+            if (config->gateway.gpsEnabled) {
                 mutexGPSTimeReference.lock();
                 if (gps_ref_valid) {
                     local_ref = gpsTimeReference;
@@ -916,13 +916,13 @@ int LoraGatewayListener::enqueueTxPacket(
     }
 
     // Validate is channel allowed
-    if (!config->sx130x()->rfConfs[tx.pkt.rf_chain].tx_enable) {
+    if (!config->sx130x.rfConfs[tx.pkt.rf_chain].tx_enable) {
         log(LOG_ERR, ERR_CODE_LORA_GATEWAY_TX_CHAIN_DISABLED, ERR_LORA_GATEWAY_TX_CHAIN_DISABLED);
         return ERR_CODE_LORA_GATEWAY_TX_CHAIN_DISABLED;
     }
 
     // Correct radio transmission power
-    tx.pkt.rf_power -= config->sx130x()->antennaGain;
+    tx.pkt.rf_power -= config->sx130x.antennaGain;
 
     // Validate preamble length
     switch (tx.pkt.modulation) {
@@ -953,7 +953,7 @@ int LoraGatewayListener::enqueueTxPacket(
     int warning_result = JIT_ERROR_OK;
 
     // check TX frequency before trying to queue packet
-    if ((tx.pkt.freq_hz < config->sx130x()->tx_freq_min[tx.pkt.rf_chain]) || (tx.pkt.freq_hz > config->sx130x()->tx_freq_max[tx.pkt.rf_chain])) {
+    if ((tx.pkt.freq_hz < config->sx130x.tx_freq_min[tx.pkt.rf_chain]) || (tx.pkt.freq_hz > config->sx130x.tx_freq_max[tx.pkt.rf_chain])) {
         jit_result = JIT_ERROR_TX_FREQ;
         log(LOG_ERR, ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY, ERR_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY);
         return ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_FREQUENCY;
@@ -963,11 +963,11 @@ int LoraGatewayListener::enqueueTxPacket(
     if (jit_result == JIT_ERROR_OK) {
         uint8_t tx_lut_idx;
         int r = getTxGainLutIndex(tx.pkt.rf_chain, tx.pkt.rf_power, &tx_lut_idx);
-        if ((r < 0) || (config->sx130x()->txLut[tx.pkt.rf_chain].lut[tx_lut_idx].rf_power != tx.pkt.rf_power)) {
+        if ((r < 0) || (config->sx130x.txLut[tx.pkt.rf_chain].lut[tx_lut_idx].rf_power != tx.pkt.rf_power)) {
             // this RF power is not supported, throw a warning, and use the closest lower power supported
             warning_result = JIT_ERROR_TX_POWER;
             log(LOG_WARNING, ERR_CODE_LORA_GATEWAY_TX_UNSUPPORTED_POWER, ERR_LORA_GATEWAY_TX_UNSUPPORTED_POWER);
-            tx.pkt.rf_power = config->sx130x()->txLut[tx.pkt.rf_chain].lut[tx_lut_idx].rf_power;
+            tx.pkt.rf_power = config->sx130x.txLut[tx.pkt.rf_chain].lut[tx_lut_idx].rf_power;
         }
     }
 
@@ -1043,9 +1043,9 @@ void LoraGatewayListener::downstreamBeaconRunner() {
     // beacon packet parameters
     beacon_pkt.tx_mode = ON_GPS; // send on PPS pulse
     beacon_pkt.rf_chain = 0; // antenna A
-    beacon_pkt.rf_power = config->gateway()->beaconPower;
+    beacon_pkt.rf_power = config->gateway.beaconPower;
     beacon_pkt.modulation = MOD_LORA;
-    switch (config->gateway()->beaconBandwidthHz) {
+    switch (config->gateway.beaconBandwidthHz) {
         case 125000:
             beacon_pkt.bandwidth = BW_125KHZ;
             break;
@@ -1056,7 +1056,7 @@ void LoraGatewayListener::downstreamBeaconRunner() {
             log(LOG_ERR, ERR_CODE_LORA_GATEWAY_UNKNOWN_BANDWIDTH, ERR_LORA_GATEWAY_UNKNOWN_BANDWIDTH);
             stop(0);
     }
-    switch (config->gateway()->beaconDataRate) {
+    switch (config->gateway.beaconDataRate) {
         case 8:
             beacon_pkt.datarate = DR_LORA_SF8;
             beacon_RFU1_size = 1;
@@ -1098,13 +1098,13 @@ void LoraGatewayListener::downstreamBeaconRunner() {
     beacon_pyld_idx += 2; // crc1 (variable), filled later
 
     // calculate the latitude and longitude that must be publicly reported
-    field_latitude = (int32_t)((config->gateway()->refGeoCoordinates.lat / 90.0) * (double)(1<<23));
+    field_latitude = (int32_t)((config->gateway.refGeoCoordinates.lat / 90.0) * (double)(1<<23));
     if (field_latitude > (int32_t) 0x007fffff) {
         field_latitude = (int32_t) 0x007ffffF; // +90 N is represented as 89.99999 N
     } else if (field_latitude < (int32_t) 0xff800000) {
         field_latitude = (int32_t) 0xff800000;
     }
-    field_longitude = (int32_t)((config->gateway()->refGeoCoordinates.lon / 180.0) * (double)(1<<23));
+    field_longitude = (int32_t)((config->gateway.refGeoCoordinates.lon / 180.0) * (double)(1<<23));
     if (field_longitude > (int32_t) 0x007fffff) {
         field_longitude = (int32_t) 0x007fffff; // +180 E is represented as 179.99999 E
     } else if (field_longitude < (int32_t) 0xff800000) {
@@ -1112,7 +1112,7 @@ void LoraGatewayListener::downstreamBeaconRunner() {
     }
 
     // gateway specific beacon fields
-    beacon_pkt.payload[beacon_pyld_idx++] = config->gateway()->beaconInfoDesc;
+    beacon_pkt.payload[beacon_pyld_idx++] = config->gateway.beaconInfoDesc;
     beacon_pkt.payload[beacon_pyld_idx++] = 0xff &  field_latitude;
     beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_latitude >> 8);
     beacon_pkt.payload[beacon_pyld_idx++] = 0xff & (field_latitude >> 16);
@@ -1137,7 +1137,7 @@ void LoraGatewayListener::downstreamBeaconRunner() {
         // Pre-allocate beacon slots in JiT queue, to check downlink collisions
         int retry = 0;
         int beacon_loop = JIT_NUM_BEACON_IN_QUEUE - jit_queue[0].num_beacon;
-        while (beacon_loop > 0 && config->gateway()->beaconPeriod > 0) {
+        while (beacon_loop > 0 && config->gateway.beaconPeriod > 0) {
             mutexGPSTimeReference.lock();
             // Wait for GPS to be ready before inserting beacons in JiT queue
             if (gps_ref_valid && xtal_correct_ok) {
@@ -1146,14 +1146,14 @@ void LoraGatewayListener::downstreamBeaconRunner() {
                 //            with TBeaconDelay = [1.5ms +/- 1µs]*/
                 if (last_beacon_gps_time.tv_sec == 0) {
                     // if no beacon has been queued, get next slot from current GPS time
-                    diff_beacon_time = gpsTimeReference.gps.tv_sec % ((time_t) config->gateway()->beaconPeriod);
-                    next_beacon_gps_time.tv_sec = gpsTimeReference.gps.tv_sec + ((time_t) config->gateway()->beaconPeriod - diff_beacon_time);
+                    diff_beacon_time = gpsTimeReference.gps.tv_sec % ((time_t) config->gateway.beaconPeriod);
+                    next_beacon_gps_time.tv_sec = gpsTimeReference.gps.tv_sec + ((time_t) config->gateway.beaconPeriod - diff_beacon_time);
                 } else {
                     // if there is already a beacon, take it as reference
-                    next_beacon_gps_time.tv_sec = last_beacon_gps_time.tv_sec + config->gateway()->beaconPeriod;
+                    next_beacon_gps_time.tv_sec = last_beacon_gps_time.tv_sec + config->gateway.beaconPeriod;
                 }
                 // now we can add a beacon_period to the reference to get next beacon GPS time
-                next_beacon_gps_time.tv_sec += (retry * config->gateway()->beaconPeriod);
+                next_beacon_gps_time.tv_sec += (retry * config->gateway.beaconPeriod);
                 next_beacon_gps_time.tv_nsec = 0;
 #if DEBUG_BEACON
                 {
@@ -1172,14 +1172,14 @@ void LoraGatewayListener::downstreamBeaconRunner() {
                 mutexGPSTimeReference.unlock();
 
                 // apply frequency correction to beacon TX frequency
-                if (config->gateway()->beaconFreqNb > 1) {
+                if (config->gateway.beaconFreqNb > 1) {
                     // floor rounding
-                    beacon_chan = (next_beacon_gps_time.tv_sec / config->gateway()->beaconPeriod) % config->gateway()->beaconFreqNb;
+                    beacon_chan = (next_beacon_gps_time.tv_sec / config->gateway.beaconPeriod) % config->gateway.beaconFreqNb;
                 } else {
                     beacon_chan = 0;
                 }
                 // Compute beacon frequency
-                beacon_pkt.freq_hz = config->gateway()->beaconFreqHz + (beacon_chan * config->gateway()->beaconFreqStep);
+                beacon_pkt.freq_hz = config->gateway.beaconFreqHz + (beacon_chan * config->gateway.beaconFreqStep);
 
                 // load time in beacon payload
                 beacon_pyld_idx = beacon_RFU1_size;
@@ -1313,7 +1313,7 @@ void LoraGatewayListener::jitRunner() {
 
                         // send packet to concentrator
                         mLGW.lock(); // may have to wait for a fetch to finish
-                        if (config->sx1261()->spectralScan.enable) {
+                        if (config->sx1261.spectralScan.enable) {
                             result = lgw_spectral_scan_abort();
                             if (result) {
                                 // write to log
@@ -1387,51 +1387,51 @@ int LoraGatewayListener::setup()
     lastLgwCode = 0;
     if (!config)
         return ERR_CODE_INSUFFICIENT_PARAMS;
-    lastLgwCode = lgw_board_setconf(&config->sx130x()->boardConf);
+    lastLgwCode = lgw_board_setconf(&config->sx130x.boardConf);
     if (lastLgwCode)
         return ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED;
-    if (config->sx130x()->tsConf.enable) {
-        lastLgwCode = lgw_ftime_setconf(&config->sx130x()->tsConf);
+    if (config->sx130x.tsConf.enable) {
+        lastLgwCode = lgw_ftime_setconf(&config->sx130x.tsConf);
         if (lastLgwCode)
             return ERR_CODE_LORA_GATEWAY_CONFIGURE_TIME_STAMP;
     }
-    lastLgwCode = lgw_sx1261_setconf(&config->sx1261()->sx1261);
+    lastLgwCode = lgw_sx1261_setconf(&config->sx1261.sx1261);
     if (lastLgwCode)
         return ERR_CODE_LORA_GATEWAY_CONFIGURE_SX1261_RADIO;
 
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-        if (config->sx130x()->txLut[i].size) {
-            lastLgwCode = lgw_txgain_setconf(i, &config->sx130x()->txLut[i]);
+        if (config->sx130x.txLut[i].size) {
+            lastLgwCode = lgw_txgain_setconf(i, &config->sx130x.txLut[i]);
             if (lastLgwCode)
                 return ERR_CODE_LORA_GATEWAY_CONFIGURE_TX_GAIN_LUT;
         }
     }
 
     for (int i = 0; i < LGW_RF_CHAIN_NB; i++) {
-        lastLgwCode = lgw_rxrf_setconf(i, &config->sx130x()->rfConfs[i]);
+        lastLgwCode = lgw_rxrf_setconf(i, &config->sx130x.rfConfs[i]);
         if (lastLgwCode)
             return ERR_CODE_LORA_GATEWAY_CONFIGURE_INVALID_RADIO;
     }
-    lastLgwCode = lgw_demod_setconf(&config->sx130x()->demodConf);
+    lastLgwCode = lgw_demod_setconf(&config->sx130x.demodConf);
     if (lastLgwCode)
         return ERR_CODE_LORA_GATEWAY_CONFIGURE_DEMODULATION;
 
     for (int i = 0; i < LGW_MULTI_NB; i++) {
-        lastLgwCode = lgw_rxif_setconf(i, &config->sx130x()->ifConfs[i]);
+        lastLgwCode = lgw_rxif_setconf(i, &config->sx130x.ifConfs[i]);
         if (lastLgwCode)
             return ERR_CODE_LORA_GATEWAY_CONFIGURE_MULTI_SF_CHANNEL;
     }
-    if (config->sx130x()->ifStdConf.enable) {
-        lastLgwCode = lgw_rxif_setconf(8, &config->sx130x()->ifStdConf);
+    if (config->sx130x.ifStdConf.enable) {
+        lastLgwCode = lgw_rxif_setconf(8, &config->sx130x.ifStdConf);
         if (lastLgwCode)
             return ERR_CODE_LORA_GATEWAY_CONFIGURE_STD_CHANNEL;
     } else; // TODO
-    if (config->sx130x()->ifStdConf.enable) {
-        lastLgwCode = lgw_rxif_setconf(9, &config->sx130x()->ifFSKConf);
+    if (config->sx130x.ifStdConf.enable) {
+        lastLgwCode = lgw_rxif_setconf(9, &config->sx130x.ifFSKConf);
         if (lastLgwCode)
             return ERR_CODE_LORA_GATEWAY_CONFIGURE_FSK_CHANNEL;
     } else; // TODO
-    lastLgwCode = lgw_debug_setconf(config->debug());
+    lastLgwCode = lgw_debug_setconf(&config->debug);
     if (lastLgwCode)
         return ERR_CODE_LORA_GATEWAY_CONFIGURE_DEBUG;
     return LORA_OK;
@@ -1462,11 +1462,11 @@ int LoraGatewayListener::start()
     stopRequest = false;
     lastLgwCode = 0;
     // GPS sync
-    if (config->gateway()->gpsEnabled) {
-        lastLgwCode = lgw_gps_enable((char *) config->gpsTTYPath()->c_str(),
+    if (config->gateway.gpsEnabled) {
+        lastLgwCode = lgw_gps_enable((char *) config->gpsTtyPath.c_str(),
             (char *) DEF_GPS_FAMILY, 0, &fdGpsTty);
         if (lastLgwCode) {
-            config->gateway()->gpsEnabled = false;
+            config->gateway.gpsEnabled = false;
             // return ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED;
         }
     }
@@ -1514,7 +1514,7 @@ int LoraGatewayListener::start()
     } else
         jitThreadRunning = false;
 
-    if (config->sx1261()->spectralScan.enable) {
+    if (config->sx1261.spectralScan.enable) {
         if (!spectralScanThreadRunning) {
             spectralScanThreadRunning = true;
             std::thread spectralScanThread(&LoraGatewayListener::spectralScanRunner, this);
@@ -1548,7 +1548,7 @@ bool LoraGatewayListener::isRunning() const
         && ((flags & FLAG_GATEWAY_LISTENER_NO_BEACON) || (!gpsEnabled) || downstreamBeaconThreadRunning)
         && ((flags & FLAG_GATEWAY_LISTENER_NO_SEND) || jitThreadRunning)
         && ((!gpsEnabled) || (gpsThreadRunning && gpsCheckTimeThreadRunning))
-        && ((!config) || (!config->sx1261()->spectralScan.enable) || spectralScanThreadRunning);
+        && ((!config) || (!config->sx1261.spectralScan.enable) || spectralScanThreadRunning);
 }
 
 bool LoraGatewayListener::isStopped() const

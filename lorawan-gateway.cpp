@@ -57,8 +57,8 @@ public:
 static std::string getRegionNames()
 {
     std::stringstream ss;
-    for (size_t i = 0; i < sizeof(memSetupMemGatewaySettingsStorage) / sizeof(setupMemGatewaySettingsStorage); i++) {
-        ss << "\"" << memSetupMemGatewaySettingsStorage[i].name << "\" ";
+    for (size_t i = 0; i < sizeof(lorawanGatewaySettings) / sizeof(GatewaySettings); i++) {
+        ss << "\"" << lorawanGatewaySettings[i].name << "\" ";
     }
     return ss.str();
 }
@@ -67,25 +67,13 @@ size_t findRegionIndex(
     const std::string &namePrefix
 )
 {
-    for (size_t i = 0; i < sizeof(memSetupMemGatewaySettingsStorage) / sizeof(setupMemGatewaySettingsStorage); i++) {
-        if (memSetupMemGatewaySettingsStorage[i].name.find(namePrefix) != std::string::npos) {
+    for (size_t i = 0; i < sizeof(lorawanGatewaySettings) / sizeof(GatewaySettings); i++) {
+        if (lorawanGatewaySettings[i].name.find(namePrefix) != std::string::npos) {
             return i;
         }
     }
     return 0;
 }
-
-class GatewayConfigMem : public GatewaySettings {
-public:
-    MemGatewaySettingsStorage storage;
-    sx1261_config_t *sx1261() override { return &storage.sx1261; };
-    sx130x_config_t *sx130x() override { return &storage.sx130x; };
-    gateway_t *gateway() override { return &storage.gateway; };
-    struct lgw_conf_debug_s *debug() override { return &storage.debug; };
-    std::string *serverAddress() override { return &storage.serverAddr; };
-    std::string *gpsTTYPath() override { return &storage.gpsTtyPath; };;
-    void set(MemGatewaySettingsStorage &value) { storage = value;};
-};
 
 const std::string programName = "lorawan-gateway";
 #ifdef _MSC_VER
@@ -178,19 +166,13 @@ public:
     bool enableBeacon;
     bool daemonize;
     int verbosity;
-
 };
 
-static GatewayConfigMem gwSettings;
-
 GatewaySettings* getGatewayConfig(LocalGatewayConfiguration *config) {
-    MemGatewaySettingsStorage settings;
-    // set regional settings
-    memSetupMemGatewaySettingsStorage[config->regionIdx].setup(settings);
     // set COM port device path, just in case
-    strncpy(settings.sx130x.boardConf.com_path, config->devicePath.c_str(), sizeof(settings.sx130x.boardConf.com_path));
-    gwSettings.set(settings);
-    return &gwSettings;
+    strncpy(lorawanGatewaySettings[config->regionIdx].sx130x.boardConf.com_path, config->devicePath.c_str(),
+        sizeof(lgw_conf_board_s::com_path));
+    return &lorawanGatewaySettings[config->regionIdx];
 }
 
 static LocalGatewayConfiguration localConfig;
@@ -477,8 +459,8 @@ static void run()
     if (!localConfig.enableBeacon)
         flags |= FLAG_GATEWAY_LISTENER_NO_BEACON;
 
-    int r = listener->listen(memSetupMemGatewaySettingsStorage[localConfig.regionIdx].name,
-                             localConfig.regionIdx, getGatewayConfig(&localConfig), flags, nullptr);
+    int r = listener->listen(lorawanGatewaySettings[localConfig.regionIdx].name,
+        localConfig.regionIdx, getGatewayConfig(&localConfig), flags, nullptr);
     if (r && listener->onLog) {
         std::stringstream ss;
         ss << ERR_MESSAGE << r << ": " << strerror_lorawan_ns(r) << std::endl;

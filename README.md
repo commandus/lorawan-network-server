@@ -958,6 +958,7 @@ In accordance to 2.1 Regional Parameter Channel Plan Common Names
 - mac-gw
 - mac-ns
 - dev-payload simulate sending Semtech gateway protocol packet from the end device to the network server.
+- gateway-config2cpp
 
 ### lorawan-gateway
 
@@ -1418,6 +1419,13 @@ Otherwise, there are several error codes:
 - ERR_CODE_SOCKET_WRITE (-518) Error send Semtech gateway protocol packet to the network server
 - ERR_CODE_SOCKET_READ (-517) Error read Semtech gateway protocol ACK packet from network server
 - ERR_CODE_INVALID_PACKET (-521) Network server sent invalid Semtech gateway protocol packet
+
+## gateway-config2cpp
+
+Generate gateway_usb_conf.cpp file from gateway config JSON files:
+```
+./gateway-config2cpp -h ~/src/rak_common_for_gateway/lora/rak2287/global_conf_usb/* > gateway_usb_conf.cpp
+```
 
 ## Trapped signals
 
@@ -1891,10 +1899,6 @@ echo 02bbe50000006cc3743eed467b227278706b223a5b7b22746d7374223a34303233313131353
 # Send Join request
 # 00111213141516171801020304050607088aaacbeb32a2
 echo 02030b0000006cc3743eed467b227278706b223a5b7b22746d7374223a313236313338333435322c226368616e223a362c2272666368223a312c2266726571223a3836382e3930303030302c2273746174223a312c226d6f6475223a224c4f5241222c2264617472223a225346374257313235222c22636f6472223a22342f35222c226c736e72223a31302e302c2272737369223a2d33372c2273697a65223a32332c2264617461223a2241424553457851564668635941514944424155474277694b717376724d71493d227d5d7d| xxd -r -p | nc -q1 -4u 84.237.104.128 5000
-```
-
-```
-
 ```
 
 ## Extra files

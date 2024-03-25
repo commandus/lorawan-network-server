@@ -2102,33 +2102,3 @@ std::string GatewayConfigFileJson::toString() const {
     doc.Accept(writer);
     return std::string(buffer.GetString());
 }
-
-sx1261_config_t *GatewayConfigFileJson::sx1261()
-{
-    return &sx130xConf.sx1261Config.value;
-}
-
-sx130x_config_t *GatewayConfigFileJson::sx130x()
-{
-    return &sx130xConf.value;
-}
-
-gateway_t *GatewayConfigFileJson::gateway()
-{
-    return &gatewayConf.value;
-}
-
-struct lgw_conf_debug_s *GatewayConfigFileJson::debug()
-{
-    return &debugConf.value;
-}
-
-std::string *GatewayConfigFileJson::serverAddress()
-{
-    return &gatewayConf.serverAddr;
-}
-
-std::string *GatewayConfigFileJson::gpsTTYPath()
-{
-    return &gatewayConf.gpsTtyPath;
-}

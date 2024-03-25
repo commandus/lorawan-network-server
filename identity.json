@@ -50,6 +50,28 @@
 	"version": "1.0.0",
 	"name": "oledotaa",
 	"flags": 0
+  },
+  {
+	"addr": "007e6ae2",
+	"activation": "ABP",
+	"deveui": "2232330000000223",
+	"nwkSKey": "15b1d0efa463dfbe3d11181e1ec7da85",
+	"appSKey": "d72c78758cdccabf55ee4a778d16ef67",
+	"class": "A",
+	"version": "1.0.0",
+	"name": "bt-lora",
+	"flags": 0
+  },
+  {
+	"addr": "007e6ae1",
+	"activation": "ABP",
+	"deveui": "2232330000000023",
+	"nwkSKey": "15b1d0efa463dfbe3d11181e1ec7da85",
+	"appSKey": "d72c78758cdccabf55ee4a778d16ef67",
+	"class": "A",
+	"version": "1.0.0",
+	"name": "collar-lora",
+	"flags": 0
   }
   ]
   
