@@ -89,15 +89,15 @@
 				"custom": false
 			}],
 			"downlinkChannels": [{
-				"frequency": 0,
+				"frequency": 868900000,
 				"minDR": 0,
-				"maxDR": 0,
+				"maxDR": 5,
 				"enabled": true,
 				"custom": false
 			}, {
-				"frequency": 0,
+				"frequency": 869100000,
 				"minDR": 0,
-				"maxDR": 0,
+				"maxDR": 5,
 				"enabled": true,
 				"custom": false
 			}],
@@ -252,15 +252,15 @@
 			"custom": false
 		}],
 		"downlinkChannels": [{
-			"frequency": 0,
+			"frequency": 868900000,
 			"minDR": 0,
-			"maxDR": 0,
+			"maxDR": 5,
 			"enabled": true,
 			"custom": false
 		}, {
-			"frequency": 0,
+			"frequency": 869100000,
 			"minDR": 0,
-			"maxDR": 0,
+			"maxDR": 5,
 			"enabled": true,
 			"custom": false
 		}],
