@@ -5,6 +5,7 @@
 #define NET_ID_H_ 1
 
 #include <string>
+#include <cinttypes>
 
 #include "platform.h"
 
