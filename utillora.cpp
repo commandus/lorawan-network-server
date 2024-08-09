@@ -241,7 +241,7 @@ static void deriveKeyBlock(
     AES_CMAC_CTX aesCmacCtx;
     AES_CMAC_Init(&aesCmacCtx);
     AES_CMAC_SetKey(&aesCmacCtx, nwkKey);
-    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &value, (std::uint32_t) size);
+    AES_CMAC_Update(&aesCmacCtx, (const uint8_t *) &value, (uint32_t) size);
     AES_CMAC_Final(retval, &aesCmacCtx);
 }
 

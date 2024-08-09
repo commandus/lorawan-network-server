@@ -393,7 +393,7 @@ dist_config_DATA = \
    service/lorawan-network-server.service \
    third_party/argtable3/README \
    tests/netid-list.sh tests/netid-list.txt \
-   http/html/index.html http/php/gw-stat.txt http/php/post.php http/README.http \
+   http/html/index.html http/php/post.php http/README.http \
    proto/example/example1.proto \
    proto/google/protobuf/descriptor.proto \
    proto/hlogger/gps16hlogger.proto proto/hlogger/ie_ioheaderhlogger.proto proto/hlogger/ie_locationhlogger.proto \
@@ -404,6 +404,8 @@ dist_config_DATA = \
    proto/vega/sh2.proto proto/vega/si13_1.proto proto/vega/si13_2.proto \
    third_party/packet_forwarder/README.packet_forwarder.md third_party/packet_forwarder/build.sh third_party/packet_forwarder/LICENSE.TXT \
    third_party/packet_forwarder/loragw_hal.h.patch
+
+# removed http/php/gw-stat.txt
 
 #
 # Tests
