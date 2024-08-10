@@ -1,8 +1,6 @@
 #include <string>
 #include <iostream>
 
-#include <google/protobuf/message.h>
-
 #include "pkt2/str-pkt2.h"
 #include "db-any.h"
 #include "database-config-json.h"
