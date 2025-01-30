@@ -3,6 +3,9 @@
 
 #include <string>
 
-std::string getDefaultConfigFileName(char *programPath, const std::string &filename);
+std::string getDefaultConfigFileName(
+    const char *programPath,
+    const std::string &filename
+);
 
 #endif
